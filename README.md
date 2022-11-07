@@ -23,7 +23,7 @@ This repo is split up into several child-projects:
 Note: The documentation of CPSign is located in a separate [CPSign docs repo](https://github.com/arosbio/cpsign_docs).
 
 ## License
-CPSign is dual licensed, where the user can choose between an open source [GNU General Public License Version 3](http://www.gnu.org/licenses/gpl-3.0.html) license or for commercial purposes use the [commercial license](license/META-INF/comm-license.txt).
+CPSign is dual licensed, where the user can choose between the [GNU General Public License](http://www.gnu.org/licenses/gpl-3.0.html) or a [commercial license](license/META-INF/comm-license.txt).
 
 ## Java version
 CPSign is written and developed on Java 11, but can with a few changes compile and run on Java 8. 
