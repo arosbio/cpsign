@@ -1,0 +1,20 @@
+# Mac extra files
+**.DS_Store
+
+# Settings from IDEs
+**/.settings/*.prefs
+.vscode/
+.project
+
+# All target folders (i.e. all generated output from maven)
+target/
+
+# Explicit class paths
+.classpath
+
+# Logfile(s) written from tests
+cpsign*.log
+
+# testoutput directories
+testoutput/
+

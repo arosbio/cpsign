@@ -1,0 +1,71 @@
+[
+	{
+		"Molecular Signature" : "[C]([C](p[C](p[C](p[C,2]([O]([C]))))p[C](p[C](p[C,2])))p[N](p[C]([C](p[C](p[C](p[C,1]))p[C](p[C](p[C,1])))p[C,3]))p[N](p[C,3]([C](p[C](p[C](p[C,0]))p[C](p[C](p[C,0]))))))",
+		"cdk:Title" : "1728-95-6",
+		"Ames test categorisation" : "mutagen",
+		"smiles" : "C1(=C(C=2C=CC=CC2)N=C(N1)C3=CC=C(OC)C=C3)C=4C=CC=CC4"
+	},
+
+	{
+		"Molecular Signature" : "[C](=[N]([C](p[C](p[C](p[C,0]))p[C]([C]p[C](p[C,0][N](=[C](=[O]))))))=[O])",
+		"cdk:Title" : "91-08-7",
+		"Ames test categorisation" : "mutagen",
+		"smiles" : "C=1(C(=C(C=CC1)N=C=O)C)N=C=O"
+	},
+
+	{
+		"Molecular Signature" : "[C]([C]([C,2](=[O]))[N]([C]([C]([O]=[O])[C,1])[C,2])[S]([C,1]([C][C]([N](p[C](p[C](p[N,0]))p[N](p[N,0]))))=[O]=[O]))",
+		"cdk:Title" : "89786-04-9",
+		"Ames test categorisation" : "nonmutagen",
+		"smiles" : "C1(C(N2C(=O)CC2S1(=O)=O)C(O)=O)(CN3C=CN=N3)C"
+	},
+
+	{
+		"Molecular Signature" : "[C](=[C]([C](=[O][O]([C]([C]([N]([C][C])))))))",
+		"cdk:Title" : "2439-35-2",
+		"Ames test categorisation" : "nonmutagen",
+		"smiles" : "C(OCCN(C)C)(C=C)=O"
+	},
+
+	{
+		"Molecular Signature" : "[C](p[C](p[C](p[C,0]([Cl])[Cl]))p[C](p[C](p[C,0])[Cl])[Cl])",
+		"cdk:Title" : "95-94-3",
+		"Ames test categorisation" : "nonmutagen",
+		"smiles" : "C1(=C(C=C(Cl)C(=C1)Cl)Cl)Cl"
+	},
+
+	{
+		"Molecular Signature" : "[C]([C]([C]([O]))p[C](p[N](p[C,1][N](=[O])))p[C](p[C](p[C](p[C,0]))p[C,1](p[C](p[C,0]))))",
+		"cdk:Title" : "120314-14-9",
+		"Ames test categorisation" : "mutagen",
+		"smiles" : "C12=C(N(N=O)C=C1CCO)C=CC=C2"
+	},
+
+	{
+		"Molecular Signature" : "[Br]([C](p[C](p[C](p[C,1]))p[C](p[C](p[C,1][N]([C]([C](p[C](p[S](p[C,0]))p[C](p[C,0]([N]([O]=[O]))))=[O]))))))",
+		"cdk:Title" : "146795-42-8",
+		"Ames test categorisation" : "mutagen",
+		"smiles" : "C=1(C=C([N+](=O)[O-])SC1)C(NC=2C=C(C=CC2)Br)=O"
+	},
+
+	{
+		"Molecular Signature" : "[C](=[C]([C]([C,2](p[C](p[C,0]))=[O]))[C](p[C](p[C](p[C,1]))p[C](p[C](p[C,1])))[O]([C](p[C](p[C](p[C,0][O]([C]([C](=[O][O]([C]([C])))))))p[C,2])))",
+		"cdk:Title" : "119-41-5",
+		"Ames test categorisation" : "nonmutagen",
+		"smiles" : "C1=2C(C(C=C(O1)C3=CC=CC=C3)=O)=CC=C(C2)OCC(OCC)=O"
+	},
+
+	{
+		"Molecular Signature" : "[C]([N]([C](p[C](p[C](p[C,0]))p[C](p[C](p[C,0])))[N](=[O])))",
+		"cdk:Title" : "614-00-6",
+		"Ames test categorisation" : "mutagen",
+		"smiles" : "C=1(N(N=O)C)C=CC=CC1"
+	},
+
+	{
+		"Molecular Signature" : "[C]([C]([C]([C]([C][C]([O,1])[O,1])[O,4]))p[C](p[C](p[C,3]([O]))[O,4])p[C](p[C]([C]([C,2](p[C](p[C,0]))=[O])p[C,3])[N]([C][C](p[C](p[C](p[C,0]))p[C,2]))))",
+		"cdk:Title" : "77996-03-3",
+		"Ames test categorisation" : "mutagen",
+		"smiles" : "C=12C3=C(OC(C3)C4(CO4)C)C=C(C1C(C=5C=CC=CC5N2C)=O)O"
+	}
+]

@@ -1,0 +1,49 @@
+# Classification
+com.arosbio.ml.metrics.classification.ClassifierAccuracy
+com.arosbio.ml.metrics.classification.BalancedAccuracy
+#com.arosbio.ml.metrics.classification.BinaryBrierScore
+com.arosbio.ml.metrics.classification.BrierScore
+com.arosbio.ml.metrics.classification.LogLoss
+com.arosbio.ml.metrics.classification.F1Score
+com.arosbio.ml.metrics.classification.Precision
+com.arosbio.ml.metrics.classification.Recall
+com.arosbio.ml.metrics.classification.NPV
+com.arosbio.ml.metrics.classification.ROC_AUC
+
+
+
+# Regression
+com.arosbio.ml.metrics.regression.MAE
+com.arosbio.ml.metrics.regression.R2
+com.arosbio.ml.metrics.regression.RMSE
+
+
+# CP 
+com.arosbio.ml.metrics.cp.CPAccuracy
+
+
+# CP Classification
+com.arosbio.ml.metrics.cp.classification.ObservedFuzziness
+com.arosbio.ml.metrics.cp.classification.BalancedObservedFuzziness
+com.arosbio.ml.metrics.cp.classification.UnobservedConfidence
+com.arosbio.ml.metrics.cp.classification.UnobservedCredibility
+com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictions
+com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictions
+com.arosbio.ml.metrics.cp.classification.CPClassificationCalibrationPlotBuilder
+com.arosbio.ml.metrics.cp.classification.EmptyLabelPredictionsPlotBuilder
+com.arosbio.ml.metrics.cp.classification.MultiLabelPredictionsPlotBuilder
+com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder
+
+
+# CP Regression
+com.arosbio.ml.metrics.cp.regression.ConfidenceGivenPredictionIntervalWidth
+com.arosbio.ml.metrics.cp.regression.CPRegressionCalibrationPlotBuilder
+com.arosbio.ml.metrics.cp.regression.CPRegressionEfficiencyPlotBuilder
+com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth
+com.arosbio.ml.metrics.cp.regression.MedianPredictionIntervalWidth
+
+
+# VAP Classification
+com.arosbio.ml.metrics.vap.MeanVAPInterval
+com.arosbio.ml.metrics.vap.MedianVAPInterval
+com.arosbio.ml.metrics.vap.VAPCalibrationPlotBuilder

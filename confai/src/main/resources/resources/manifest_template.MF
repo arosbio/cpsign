@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: ${MODEL_NAME}
+Bundle-SymbolicName: ${MODEL_ID}
+Bundle-Version: ${MODEL_VERSION}
+Bundle-Vendor: Aros Bio AB
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+DS-Model: cpsign.json
+Main-Class: RunMe
+
+Name: cpsign-version
+Specification-Title: cpsign-version
+Specification-Version: ${BUILD_VERSION}
+Specification-Vendor: Aros Bio AB
+Implementation-Title: cpsign-version
+Implementation-Version: ${BUILD_VERSION}
+Implementation-Vendor: Aros Bio AB

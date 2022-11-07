@@ -1,0 +1,5 @@
+
+-td csv ../test-utils/src/test/resources/chem/regression/solubility_10.csv
+-pr solubility
+-mo
+testoutput/acp_reg/model_single_run.jar

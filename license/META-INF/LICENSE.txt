@@ -1,0 +1,19 @@
+Copyright(c) Aros Bio AB
+
+CPSign is an Open Source Software that is dual licensed to allow you to choose a license that best suits your requirements.
+
+== GPLv3 (GNU General Public License Version 3) with Additional Terms
+CPSign is licensed under the terms of the GPLv3 (GNU General Public License Version 3) license with additional terms listed below according to section 7 of GPLv3 (GNU General Public License Version 3) license. Please see http://www.gnu.org/licenses/gpl-3.0.html for the license text.
+
+# Additional Terms
+In addition to the terms listed by GPLv3 (GNU General Public License Version 3) license, the following additional terms must be agreed to use the software. If you are using this software, it is implied that you agree to these additional terms:
+
+1. All copies of CPSign in Executable and Source Code form must, as a form of attribution to the original author, include a clearly visible "Powered by CPSign" clickable link or "Powered by CPSign (https://arosbio.com)" text wherever putting a clickable link is not feasible. Clicking on the link should redirect the user to https://arosbio.com website. 
+
+2. CPSign may not be used for commercial purposes, such as in a revenue-generating operation or environment.
+
+3. Unless agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either expressed or implied.
+
+
+== CPSign Proprietary License
+CPSign is also licensed under the terms of CPSign Proprietary License. This allows you to use CPSign for commercial purposes, such as in a revenue-generating operation or environment, or integrate CPSign in your proprietary software without worrying about disclosing the source code of your proprietary software, which is required if you choose to use the software under GPLv3 license. You can read the terms of CPSign Proprietary License in comm-license.txt file or at https://arosbio.com/cpsign/commercial-license

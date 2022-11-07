@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (C) Aros Bio AB.
+
+    CPSign is an Open Source Software that is dual licensed to allow you to choose a license that best suits your requirements:
+
+    1) GPLv3 (GNU General Public License Version 3) with Additional Terms, including an attribution clause as well as a limitation to use the software for commercial purposes.
+
+    2) CPSign Proprietary License that allows you to use CPSign for commercial activities, such as in a revenue-generating operation or environment, or integrate CPSign in your proprietary software without worrying about disclosing the source code of your proprietary software, which is required if you choose to use the software under GPLv3 license. See arosbio.com/cpsign/commercial-license for details.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>com.arosbio</groupId>
+		<artifactId>parent</artifactId>
+		<version>2.0.0-beta16-SNAPSHOT</version>
+	</parent>
+
+	<artifactId>cpsign</artifactId>
+	<name>cpsign</name>
+	<packaging>jar</packaging>
+
+	<properties>
+		<cpsign.final.name>${project.name}-${project.version}</cpsign.final.name>
+
+		<main.class>com.arosbio.cpsign.app.CPSignApp</main.class>
+		<exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
+		<parent.basedir>${project.basedir}/..</parent.basedir>
+		
+	</properties>
+
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+			<resource>
+				<directory>${parent.basedir}/license/</directory>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
+
+		<plugins>
+
+			<!-- For testing -->
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.0.0-M5</version>
+				<executions>
+
+					<!-- CLI TESTS -->
+					<execution>
+						<id>cli</id>
+						<goals>
+							<goal>test</goal>
+						</goals>
+
+						<configuration>
+							<groups>${test.pkg}.CLITest</groups>
+							<excludedGroups>${test.pkg}.NonSuiteTest,${test.pkg}.UnitTest,${test.pkg}.PerformanceTest</excludedGroups>
+							<skip>${maven.test.skip}</skip>
+						</configuration>
+					</execution>
+
+
+				</executions>
+				<!-- General config -->
+				<configuration>
+
+					<skip>true</skip>
+					<failIfNoTests>false</failIfNoTests>
+					<reuseForks>false</reuseForks>
+					<forkCount>1</forkCount>
+					<argLine>-Xmx2048m</argLine>
+				</configuration>
+			</plugin>
+
+			<!-- FAT JAR - with all deps -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>${shade.plugin.version}</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<!-- Note: this finalName appends ".jar" -->
+							<finalName>${cpsign.final.name}</finalName>
+							<createDependencyReducedPom>false</createDependencyReducedPom>
+
+							<!-- FILTERS -->
+							<filters>
+								<filter>
+									<artifact>*:*</artifact>
+									<excludes>
+										<exclude>header.txt</exclude>
+										<exclude>jena-*</exclude>
+										<exclude>log4j.properties</exclude>
+									</excludes>
+								</filter>
+							</filters>
+
+							<transformers>
+								<!-- Handles the external third party licenses -->
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer" />
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<manifestEntries>
+										<Main-Class>${main.class}</Main-Class>
+
+										<Implementation-Title>Aros Bio ${project.artifactId}</Implementation-Title>
+										<Implementation-Version>${project.version}</Implementation-Version>
+										<Implementation-Vendor-Id>${mf.impl.vendor}</Implementation-Vendor-Id>
+										<X-Compile-Source-JDK>${maven.compiler.source}</X-Compile-Source-JDK>
+                    					<X-Compile-Target-JDK>${maven.compiler.target}</X-Compile-Target-JDK>
+									</manifestEntries>
+								</transformer>
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+								<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer" />
+								<!-- Manually add the CPSign license file -->
+								<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+									<resource>META-INF/LICENSE.txt</resource>
+									<file>${parent.basedir}/license/META-INF/LICENSE.txt</file>
+								</transformer>
+
+							</transformers>
+
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- now make the jar chmod +x style executable -->
+			<plugin>
+				<groupId>org.skife.maven</groupId>
+				<artifactId>really-executable-jar-maven-plugin</artifactId>
+				<version>1.5.0</version>
+				<configuration>
+					<!-- value of flags will be interpolated into the java invocation -->
+					<!-- as "java $flags -jar ..." -->
+					<!-- <flags>-Xmx1G</flags> -->
+
+					<!-- (optional) name for binary executable, if not set will just -->
+					<!-- make the regular jar artifact executable -->
+					<!--<programFile>${cpsign.final.name}</programFile> -->
+
+					<!-- (optional) support other packaging formats than jar -->
+					<!-- <allowOtherTypes>true</allowOtherTypes> -->
+
+					<!-- (optional) name for a file that will define what script gets -->
+					<!-- embedded into the executable jar. This can be used to -->
+					<!-- override the default startup script which is -->
+					<!-- `#!/bin/sh -->
+					<!-- -->
+					<!-- exec java " + flags + " -jar "$0" "$@" -->
+					<!-- <scriptFile>src/packaging/someScript.extension</scriptFile> -->
+				</configuration>
+
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>really-executable-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+
+	</build>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>com.arosbio</groupId>
+			<artifactId>cpsign-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>me.tongfei</groupId>
+			<artifactId>progressbar</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>info.picocli</groupId>
+			<artifactId>picocli</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.fusesource.jansi</groupId>
+			<artifactId>jansi</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.arosbio</groupId>
+			<artifactId>test-utils</artifactId>
+			<version>${project.version}</version>
+			<classifier>tests</classifier>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.arosbio</groupId>
+			<artifactId>confai</artifactId>
+			<version>${project.version}</version>
+			<classifier>tests</classifier>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.arosbio</groupId>
+			<artifactId>cpsign-api</artifactId>
+			<version>${project.version}</version>
+			<classifier>tests</classifier>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+
+</project>

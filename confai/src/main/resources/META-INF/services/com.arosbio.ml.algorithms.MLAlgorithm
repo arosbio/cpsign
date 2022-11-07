@@ -1,0 +1,13 @@
+# CLASSIFICATION
+com.arosbio.ml.algorithms.svm.LinearSVC
+com.arosbio.ml.algorithms.svm.C_SVC
+com.arosbio.ml.algorithms.svm.NuSVC
+com.arosbio.ml.algorithms.svm.PlattScaledC_SVC
+com.arosbio.ml.algorithms.svm.PlattScaledNuSVC
+com.arosbio.ml.algorithms.linear.LogisticRegression
+
+
+# REGRESSION
+com.arosbio.ml.algorithms.svm.LinearSVR
+com.arosbio.ml.algorithms.svm.EpsilonSVR
+com.arosbio.ml.algorithms.svm.NuSVR

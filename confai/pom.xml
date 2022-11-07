@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (C) Aros Bio AB.
+
+    CPSign is an Open Source Software that is dual licensed to allow you to choose a license that best suits your requirements:
+
+    1) GPLv3 (GNU General Public License Version 3) with Additional Terms, including an attribution clause as well as a limitation to use the software for commercial purposes.
+
+    2) CPSign Proprietary License that allows you to use CPSign for commercial activities, such as in a revenue-generating operation or environment, or integrate CPSign in your proprietary software without worrying about disclosing the source code of your proprietary software, which is required if you choose to use the software under GPLv3 license. See arosbio.com/cpsign/commercial-license for details.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  	
+	<modelVersion>4.0.0</modelVersion>
+  
+	<parent>
+    	<groupId>com.arosbio</groupId>
+    	<artifactId>parent</artifactId>
+    	<version>2.0.0-beta16-SNAPSHOT</version>
+  	</parent>
+
+  	<artifactId>confai</artifactId>
+  	<name>confai</name>
+
+	<properties>
+		<parent.basedir>${project.basedir}/..</parent.basedir>
+	</properties>
+
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+			<resource>
+				<directory>${parent.basedir}/license/</directory>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
+
+		<plugins>
+			<!-- Generating a test-jar that cpsign-api can build upon -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>${jar.plugin.version}</version>
+					<executions>
+					<execution>
+						<goals>
+							<goal>test-jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- For testing -->
+			<plugin>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire.plugin.version}</version>
+				<executions>
+					<!-- UNIT TESTS -->
+					<execution>
+						<id>unit</id>
+						<goals>
+							<goal>test</goal>
+						</goals>
+						<configuration>
+							<groups>${test.pkg}.UnitTest</groups>
+							<excludedGroups>${test.pkg}.SlowTest,${test.pkg}.NonSuiteTest,${test.pkg}.PerformanceTest</excludedGroups>
+							<skip>${maven.test.skip}</skip>
+						</configuration>
+					</execution>
+
+
+				</executions>
+				<!-- General config -->
+				<configuration>
+					
+					<skip>true</skip>
+					<failIfNoTests>false</failIfNoTests>
+					<reuseForks>false</reuseForks>
+					<forkCount>1</forkCount>
+					<argLine>-Xmx2048m</argLine>
+				</configuration>
+			</plugin>
+
+		</plugins>
+
+  	</build>
+
+  	<dependencies>
+		<!-- LOGGING -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-core</artifactId>
+		</dependency>
+		
+
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-text</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-math3</artifactId>
+		</dependency>
+		<dependency>
+		<groupId>com.google.guava</groupId>
+		<artifactId>guava</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-csv</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.github.cliftonlabs</groupId>
+			<artifactId>json-simple</artifactId>
+		</dependency>
+
+		<dependency> <!-- TODO remove in future? -->
+			<groupId>com.github.sanity</groupId>
+			<artifactId>pairAdjacentViolators</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>tw.edu.ntu.csie</groupId>
+			<artifactId>libsvm</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>de.bwaldvogel</groupId>
+			<artifactId>liblinear</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.arosbio</groupId>
+			<artifactId>encrypt-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.arosbio</groupId>
+			<artifactId>test-utils</artifactId>
+			<version>${project.version}</version>
+			<classifier>tests</classifier>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+
+  	</dependencies>
+  
+
+</project>

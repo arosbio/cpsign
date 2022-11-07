@@ -1,0 +1,205 @@
+[
+	{
+		"BIO" : "0.43",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(C(F)(F)F)C=CC=C1"
+	},
+
+	{
+		"BIO" : "1.60",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(C(F)(F)F)C=C([N+]([O-])=O)C=C1"
+	},
+
+	{
+		"BIO" : "0.56",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(C(F)(F)F)C=C(N)C=C1"
+	},
+
+	{
+		"BIO" : "0.42",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(C(F)(F)F)C=C(NC(=O)OCC)C=C1"
+	},
+
+	{
+		"BIO" : "0.37",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(C(F)(F)F)C=C(NCC2=CC=CC=C2)C=C1"
+	},
+
+	{
+		"BIO" : "2.40",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=C(C(=O)NCCCCC)C=C1"
+	},
+
+	{
+		"BIO" : "1.40",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=C(C(=O)OCC)C=C1"
+	},
+
+	{
+		"BIO" : "0.41",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC([N+]([O-])=O)=C1"
+	},
+
+	{
+		"BIO" : "0.56",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(N)=C1"
+	},
+
+	{
+		"BIO" : "0.05",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NC(=O)C)=C1"
+	},
+
+	{
+		"BIO" : "0.17",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NC(=O)CC)=C1"
+	},
+
+	{
+		"BIO" : "1.00",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NCCC)=C1"
+	},
+
+	{
+		"BIO" : "0.08",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NC(=O)C2CC2)=C1"
+	},
+
+	{
+		"BIO" : "0.18",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NC(=O)C(C)C)=C1"
+	},
+
+	{
+		"BIO" : "0.11",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NC(=O)CCC)=C1"
+	},
+
+	{
+		"BIO" : "0.16",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NC(=O)CCCC)=C1"
+	},
+
+	{
+		"BIO" : "0.11",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NC(=O)CC(C)C)=C1"
+	},
+
+	{
+		"BIO" : "0.16",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NC(=O)C(C)(C)C)=C1"
+	},
+
+	{
+		"BIO" : "0.21",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NC(=O)CC(C)(C)C)=C1"
+	},
+
+	{
+		"BIO" : "0.30",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NCC2=CC=CC=C2)=C1"
+	},
+
+	{
+		"BIO" : "0.41",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NC(=O)C2=CC=CC=C2)=C1"
+	},
+
+	{
+		"BIO" : "0.12",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NC(=O)CC2=CC=CC=C2)=C1"
+	},
+
+	{
+		"BIO" : "0.25",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NC(=O)CCC2=CC=CC=C2)=C1"
+	},
+
+	{
+		"BIO" : "0.26",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NC(=O)OCCC)=C1"
+	},
+
+	{
+		"BIO" : "0.14",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(NC(=O)NCCC)=C1"
+	},
+
+	{
+		"BIO" : "0.25",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(C(=O)OC)=C1"
+	},
+
+	{
+		"BIO" : "0.14",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(C(=O)NCCCC)=C1"
+	},
+
+	{
+		"BIO" : "0.63",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(Cl)C=CC(C(=O)N(C)CCCC)=C1"
+	},
+
+	{
+		"BIO" : "24.00",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(C)C(NC(=O)CCCC)=CC=C1"
+	},
+
+	{
+		"BIO" : "31.00",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=CC=CC([N+]([O-])=O)=C1"
+	},
+
+	{
+		"BIO" : "5.80",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=CC=CC(N)=C1"
+	},
+
+	{
+		"BIO" : "0.85",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=CC=CC(NC(=O)CC)=C1"
+	},
+
+	{
+		"BIO" : "0.90",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=CC=CC(NC(=O)CCCC)=C1"
+	},
+
+	{
+		"BIO" : "0.21",
+		"cdk:Title" : "Unnamed",
+		"smiles" : "SC1=C(C(F)(F)F)C=CC(NC(=O)CC)=C1"
+	}
+]

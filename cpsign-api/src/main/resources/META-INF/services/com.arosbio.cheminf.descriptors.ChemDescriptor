@@ -1,0 +1,10 @@
+com.arosbio.cheminf.descriptors.SignaturesDescriptor
+com.arosbio.cheminf.descriptors.UserSuppliedDescriptor
+
+# FPs
+com.arosbio.cheminf.descriptors.fp.ECFP0
+com.arosbio.cheminf.descriptors.fp.ECFP2
+com.arosbio.cheminf.descriptors.fp.ECFP4
+com.arosbio.cheminf.descriptors.fp.ECFP6
+com.arosbio.cheminf.descriptors.fp.MACCS
+

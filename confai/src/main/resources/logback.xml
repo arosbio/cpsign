@@ -1,0 +1,13 @@
+<configuration debug="false">
+	<!-- Make sure that no logback status is written to stdout 
+	(e.g. if no host name set on the computer and no Internet connection) -->
+	<statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+
+	<logger name="ch.qos" level="OFF" />
+	<logger name="org.openscience.cdk" level="WARN" />
+
+
+	<root level="debug" />
+
+
+</configuration>

@@ -1,0 +1,376 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+
+    Copyright (C) Aros Bio AB.
+
+    CPSign is an Open Source Software that is dual licensed to allow you to choose a license that best suits your requirements:
+
+    1) GPLv3 (GNU General Public License Version 3) with Additional Terms, including an attribution clause as well as a limitation to use the software for commercial purposes.
+
+    2) CPSign Proprietary License that allows you to use CPSign for commercial activities, such as in a revenue-generating operation or environment, or integrate CPSign in your proprietary software without worrying about disclosing the source code of your proprietary software, which is required if you choose to use the software under GPLv3 license. See arosbio.com/cpsign/commercial-license for details.
+
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.arosbio</groupId>
+  <artifactId>parent</artifactId>
+  <version>2.0.0-beta16-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <url>http://arosbio.com</url>
+  <organization>
+    <name>Aros Bio</name>
+    <url>http://arosbio.com</url>
+  </organization>
+
+  <modules>
+    <module>depict</module>
+    <module>encrypt-api</module>
+    <module>test-utils</module>
+    <module>confai</module>
+    <module>cpsign-api</module>
+    <module>cpsign</module>
+  </modules>
+
+  <licenses>
+
+    <license>
+      <name>GPLv3 (GNU General Public License Version 3) with Additional Terms</name>
+      <comments>Non-commerical license</comments>
+      <url>http://www.gnu.org/licenses/gpl-3.0.html</url>
+      <distribution>repo</distribution>
+    </license>
+
+    <license>
+      <name>Commercial license</name>
+      <url>https://arosbio.com/cpsign/commercial-license</url>
+      <distribution>repo</distribution>
+    </license>
+
+  </licenses>
+
+
+  <!-- Common properties -->
+  <properties>
+
+    <!-- This property should point to the base of the root-directory of the cpsign repo - need to be overwritten in all child-modules -->
+    <parent.basedir>${project.basedir}</parent.basedir>
+
+    <!-- general settings -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>11</maven.compiler.source>
+    <maven.compiler.target>11</maven.compiler.target>
+    <maven.compiler.release>11</maven.compiler.release>
+    <application.vendor>Aros Bio AB</application.vendor>
+    <timestamp>${maven.build.timestamp}</timestamp>
+    <mf.impl.vendor>Aros Bio AB</mf.impl.vendor>
+    <test.pkg>com.arosbio.tests.suites</test.pkg>
+
+    <!-- plugin versions -->
+    <shade.plugin.version>3.2.4</shade.plugin.version>
+    <javadoc.plugin.version>3.4.0</javadoc.plugin.version>
+    <compiler.plugin.version>3.10.1</compiler.plugin.version>
+    <dependency.plugin.version>3.3.0</dependency.plugin.version>
+    <jar.plugin.version>3.0.2</jar.plugin.version>
+    <surefire.plugin.version>3.0.0-M5</surefire.plugin.version>
+    <proguard.plugin.version>2.3.1</proguard.plugin.version> <!-- TODO - remove for open src project - only for encrypt-imp -->
+
+    <!-- Dependency versions -->
+    <cdk.version>2.7.1</cdk.version>
+    <jna-inchi.version>1.1</jna-inchi.version>
+    <slf4j.version>1.7.36</slf4j.version>
+    <logback.version>1.2.10</logback.version>
+    <json-simple.version>4.0.1</json-simple.version>
+    <commons-csv.version>1.8</commons-csv.version>
+    <commons-math3.version>3.6.1</commons-math3.version>
+    <commons-io.version>2.11.0</commons-io.version>
+    <commons-text.version>1.9</commons-text.version>
+    <commons-lang.version>3.9</commons-lang.version>
+    <guava.version>31.0.1-jre</guava.version>
+    <kotlin-stdlib.version>1.6.20</kotlin-stdlib.version> <!-- TODO - hopefully can be removed in future -->
+    <filters.version>2.0.235-1</filters.version>
+    <libsvm.version>3.24</libsvm.version>
+    <liblinear.version>2.30</liblinear.version>
+  </properties>
+
+
+  <repositories>
+    <repository>
+      <id>central</id>
+      <name>Central Repository</name>
+      <url>https://repo.maven.apache.org/maven2</url>
+      <layout>default</layout>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
+    </repository>
+
+    <repository>
+      <id>jitpack.io</id>
+      <url>https://jitpack.io</url>
+    </repository>
+  </repositories>
+
+  <!-- DEPENDENCY MANAGEMENT - SPECIFY SAME VERSIONS AND SIMPLIFY DEPS IN CHILDS -->
+  <dependencyManagement>
+    <dependencies>
+      <!-- CDK DEP -->
+      <dependency>
+        <groupId>org.openscience.cdk</groupId>
+        <artifactId>cdk-bundle</artifactId>
+        <version>${cdk.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+          <!-- the InChI version here have bugs - we import a newer version manually -->
+          <exclusion>
+            <groupId>io.github.dan2097</groupId>
+            <artifactId>jna-inchi-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>io.github.dan2097</groupId>
+            <artifactId>jna-inchi-core</artifactId>
+          </exclusion>
+          <!-- Remove Log4j - we include the SL4j-bridge -->
+          <exclusion>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-1.2-api</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.openscience.cdk</groupId>
+            <artifactId>cdk-iordf</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.openscience.cdk</groupId>
+            <artifactId>cdk-libiocml</artifactId>
+          </exclusion>
+
+        </exclusions>
+      </dependency>
+
+      <!-- Manual import of newer version of InChI library -->
+      <dependency>
+        <groupId>io.github.dan2097</groupId>
+        <artifactId>jna-inchi-all</artifactId>
+        <version>${jna-inchi.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.github.cliftonlabs</groupId>
+        <artifactId>json-simple</artifactId>
+        <version>${json-simple.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.jhlabs</groupId>
+        <artifactId>filters</artifactId>
+        <version>${filters.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava</artifactId>
+        <version>${guava.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons-io.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${commons-lang.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-text</artifactId>
+        <version>${commons-text.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-math3</artifactId>
+        <version>${commons-math3.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-csv</artifactId>
+        <version>${commons-csv.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.beryx</groupId>
+        <artifactId>awt-color-factory</artifactId>
+        <version>1.0.2</version>
+      </dependency>
+
+      <dependency>
+        <!-- TODO remove in future? -->
+        <groupId>com.github.sanity</groupId>
+        <artifactId>pairAdjacentViolators</artifactId>
+        <version>1.4.16</version>
+      </dependency>
+
+      <dependency>
+        <groupId>tw.edu.ntu.csie</groupId>
+        <artifactId>libsvm</artifactId>
+        <version>${libsvm.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>de.bwaldvogel</groupId>
+        <artifactId>liblinear</artifactId>
+        <version>${liblinear.version}</version>
+      </dependency>
+
+      <!-- LOGGING -->
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${logback.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-core</artifactId>
+        <version>${logback.version}</version>
+      </dependency>
+
+      <!-- CLI DEPS -->
+      <dependency>
+        <groupId>me.tongfei</groupId>
+        <artifactId>progressbar</artifactId>
+        <version>0.9.4</version>
+      </dependency>
+      <dependency>
+        <groupId>info.picocli</groupId>
+        <artifactId>picocli</artifactId>
+        <version>4.6.3</version>
+      </dependency>
+  
+      <dependency>
+        <groupId>org.fusesource.jansi</groupId>
+        <artifactId>jansi</artifactId>
+        <version>2.4.0</version>
+      </dependency>
+
+    </dependencies>
+
+  </dependencyManagement>
+
+  <dependencies>
+
+    <!-- TEST DEPENDENCIES -->
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>[4.13.1,)</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hamcrest</groupId>
+      <artifactId>hamcrest</artifactId>
+      <version>2.2</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.stefanbirkner</groupId>
+      <artifactId>system-rules</artifactId>
+      <version>1.19.0</version>
+      <scope>test</scope>
+      <!-- junit:junit-dep is deprecated, and junit:junit replaces it. -->
+      <exclusions>
+        <exclusion>
+          <groupId>junit</groupId>
+          <artifactId>junit-dep</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.openjdk.jol</groupId>
+      <artifactId>jol-core</artifactId>
+      <version>0.10</version>
+      <scope>test</scope>
+    </dependency>
+
+  </dependencies>
+
+
+  <build>
+
+    <plugins>
+
+      <plugin>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>${dependency.plugin.version}</version>
+      </plugin>
+
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${compiler.plugin.version}</version>
+        <!--<configuration>
+          <source>${maven.compiler.source}</source>
+          <target>${maven.compiler.target}</target>
+        </configuration>-->
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>${javadoc.plugin.version}</version>
+        <configuration>
+          <author>false</author>
+          <bottom><![CDATA[<i>Copyright &#169; 2022, <a href="https://arosbio.com">Aros Bio AB</a>. All Rights Reserved.</i>]]></bottom>
+        </configuration>
+      </plugin>
+
+      <!-- License management: updates the header of source files only 
+      Run it using `mvn license:format` -->
+      
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+        <version>4.1</version>
+        <configuration>
+          <licenseSets>
+            <licenseSet>
+              <inlineHeader>
+Copyright (C) Aros Bio AB.
+
+CPSign is an Open Source Software that is dual licensed to allow you to choose a license that best suits your requirements:
+
+1) GPLv3 (GNU General Public License Version 3) with Additional Terms, including an attribution clause as well as a limitation to use the software for commercial purposes.
+
+2) CPSign Proprietary License that allows you to use CPSign for commercial activities, such as in a revenue-generating operation or environment, or integrate CPSign in your proprietary software without worrying about disclosing the source code of your proprietary software, which is required if you choose to use the software under GPLv3 license. See arosbio.com/cpsign/commercial-license for details.
+              </inlineHeader>
+
+              <excludes>
+                <exclude>**/README</exclude>
+                <exclude>*.md</exclude>
+                <exclude>src/test/resources/**</exclude>
+                <exclude>src/main/resources/**</exclude>
+                <exclude>**/*.txt</exclude>
+              </excludes>
+            </licenseSet>
+          </licenseSets>
+          
+        </configuration>
+      </plugin>
+      
+    
+
+    </plugins>
+  </build>
+
+</project>

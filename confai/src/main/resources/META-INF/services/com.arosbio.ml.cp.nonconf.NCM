@@ -1,0 +1,11 @@
+#Classification
+com.arosbio.ml.cp.nonconf.classification.NegativeDistanceToHyperplaneNCM
+com.arosbio.ml.cp.nonconf.classification.PositiveDistanceToHyperplaneNCM
+com.arosbio.ml.cp.nonconf.classification.InverseProbabilityNCM
+com.arosbio.ml.cp.nonconf.classification.ProbabilityMarginNCM
+
+#Regression
+com.arosbio.ml.cp.nonconf.regression.LogNormalizedNCM
+com.arosbio.ml.cp.nonconf.regression.NormalizedNCM
+com.arosbio.ml.cp.nonconf.regression.AbsDiffNCM
+com.arosbio.ml.cp.nonconf.regression.SignedNormalizedNCM

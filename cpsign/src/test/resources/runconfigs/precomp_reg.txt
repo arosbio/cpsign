@@ -1,0 +1,9 @@
+precompute
+
+--model-type
+regression
+-td csv ../test-utils/src/test/resources/chem/regression/solubility_10.csv
+#-td sdf src/test/resources/resources/datasets/regression/solubility@PKKB_2009-reg.sdf
+-pr solubility
+-mo
+testoutput/acp_reg/model_split_config.jar
