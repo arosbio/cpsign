@@ -45,7 +45,7 @@ import com.arosbio.chem.io.out.image.CustomLayout.Boarder.BoarderShape;
 import com.arosbio.chem.io.out.image.CustomLayout.Margin;
 import com.arosbio.chem.io.out.image.CustomLayout.Padding;
 import com.arosbio.chem.io.out.image.Position.Vertical;
-import com.arosbio.cheminf.ChemCPClassifier;
+import com.arosbio.cheminf.ChemVAPClassifier;
 import com.arosbio.cheminf.SignificantSignature;
 import com.arosbio.cheminf.io.ModelSerializer;
 import com.arosbio.commons.logging.LoggerUtils;
@@ -94,173 +94,23 @@ public class TestMoleculeDepiction extends UnitTestBase{
 		gradient.put(7, -0.6);
 	}
 
-//	@Test
-//	public void testSetup() throws Exception {
-//		//		try{
-//		//			MolImageDepictor.getGradientDepictor(null);
-//		//			Assert.fail("Should fail when no gradient given");
-//		//		} catch(IllegalArgumentException e){
-//		//			Assert.assertTrue(e.getMessage().contains("gradient"));
-//		//		}
-//
-//		new GradientDepictorOld(GradientFactory.getDefaultBloomGradient());
-//
-//		Logger imageLogger = (Logger) LoggerFactory.getLogger(MolImageWriter.class);
-//		imageLogger.setLevel(Level.DEBUG);
-//		LoggerUtils.addStreamAppenderToLogger(imageLogger, System.out, "%m%n");
-//
-//		new SignificantSignatureDepictorOld();
-//	}
-
-	// String imageFolder =new File(new File("").getAbsoluteFile(), "test/testoutput/generatedImages").getAbsolutePath();
-
-//	@Test
-//	public void testGenerateNormalLegend() throws IOException{
-//		GradientDepictorOld writer = new GradientDepictorOld(null); //.getGradientDepictor(GradientFactory.getDefaultBloomGradient());
-//		writer.setImageWidth(pageSize);
-//		writer.setImageHeight(pageSize);
-//		//		writer.generateLegend();
-//		LoggerUtils.setDebugMode();
-//		BufferedImage img = writer.getGradientLegend();
-//		ImageIO.write(img, "png", new File(imageFolder, "colorLegend.png"));
-//		original.println(systemOutRule.getLog());
-//	}
-//
-//	private IAtomContainer getMolecule() throws Exception {
-//		SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
-//		return sp.parseSmiles("CC1=CN=C(C(=C1OC)C)CS(=O)C2=NC3=C(N2)C=C(C=C3)OC");
-//	}
-//
-//	// ===========================================
-//	//
-//	// GRADIENT DEPICTOR
-//	//
-//	// ===========================================
-//
-////	@Test
-////	public void testGenerateGradientWithLegend() throws Exception{
-////		LoggerUtils.setDebugMode();
-////		IAtomContainer mol = getMolecule();
-////
-////		GradientDepictor writer = new GradientDepictor();
-////
-////		writer.setImageWidth(pageSize);
-////		writer.setImageHeight(pageSize);
-////		ImageIO.write(writer.depict(mol, gradient, pvals, "This is my custom text"), 
-////				"png", new File(imageFolder, "gradientWithLegendCustomText.png"));
-//////		original.println(systemOutRule.getLog());
-////	}
-//
-//	@Test
-//	public void testGradientDepictorNoLabel() throws Exception{
-//		IAtomContainer mol = getMolecule();
-//
-//		GradientDepictorOld writer = new GradientDepictorOld();
-//		writer.setUseLegend(false);
-//		writer.setUseVerboseLegend(false);
-//		writer.setImageWidth(pageSize);
-//		writer.setImageHeight(pageSize);
-//		LoggerUtils.setDebugMode();
-//		ImageIO.write(
-//				writer.depict(mol, gradient, pvals, "This is my custom <b>Leg<i>end</i></b>"),  
-//				"png", 
-//				new File(imageFolder, "gradient_NoLabel.png"));
-//	}
-//
-//	@Test
-//	public void testGradientDepictorCustomLabel() throws Exception{
-//		IAtomContainer mol = getMolecule();
-//
-//		GradientDepictorOld writer = new GradientDepictorOld();
-//		writer.setUseLegend(true);
-//		writer.setUseVerboseLegend(false);
-//		writer.setImageWidth(pageSize);
-//		writer.setImageHeight(pageSize);
-//		LoggerUtils.setDebugMode();
-//		ImageIO.write(
-//				writer.depict(mol, gradient, pvals, "This is my custom <b>Leg<i>end</i></b>"), //"This is my <b>Leg<i>end</i></b> which is custom " 
-//				"png", 
-//				new File(imageFolder, "gradient_CustomLegend.png"));
-//		//		original.println(systemOutRule.getLog());
-//	}
-//
-//	@Test
-//	public void testGradientDepictorCustomLabelWithPVals() throws Exception{
-//		IAtomContainer mol = getMolecule();
-//
-//		GradientDepictorOld writer = new GradientDepictorOld();
-//		writer.setUseLegend(true);
-//		writer.setUseVerboseLegend(true);
-//		writer.setImageWidth(pageSize);
-//		writer.setImageHeight(pageSize);
-//		LoggerUtils.setDebugMode();
-//		ImageIO.write(
-//				writer.depict(mol, gradient, pvals, "This is my custom <b>Leg<i>end</i></b>"), //"This is my <b>Leg<i>end</i></b> which is custom " 
-//				"png", 
-//				new File(imageFolder, "gradient_PvalsAndCustomLegend.png"));
-//	}
-//
-//	@Test
-//	public void testGradientDepictorStandardWithPVals() throws Exception{
-//		IAtomContainer mol = getMolecule();
-//
-//		GradientDepictorOld writer = new GradientDepictorOld();
-//		writer.setUseLegend(true);
-//		writer.setUseVerboseLegend(true);
-//		writer.setImageWidth(pageSize);
-//		writer.setImageHeight(pageSize);
-//		LoggerUtils.setDebugMode();
-//		ImageIO.write(
-//				writer.depict(mol, gradient, pvals), //"This is my <b>Leg<i>end</i></b> which is custom " 
-//				"png", 
-//				new File(imageFolder, "gradient_StandardLabelPvals.png"));
-//	}
-//
-//	// ===========================================
-//	//
-//	// SIGNIFICANT SIGNATURE
-//	//
-//	// ===========================================
-//
-//	@Test
-//	public void testSignSignNoLegend() throws IOException{
-//		SignificantSignatureDepictorOld writer = new SignificantSignatureDepictorOld();
-//		writer.setUseLegend(false);
-//		writer.centerLegend = false;
-//		writer.setImageHeight(pageSize);
-//		writer.setImageWidth(pageSize);
-//		BufferedImage img = writer.depict(getTestMol(), sigSign, pvals);
-//		ImageIO.write(img, "png", new File(imageFolder, "significant_NoLegend.png"));
-//		
-//		//		original.println(systemOutRule.getLog());
-//	}
-//	
-//	@Test
-//	public void testSignSignCustomLegend() throws IOException{
-//		SignificantSignatureDepictorOld writer = new SignificantSignatureDepictorOld();
-//		writer.setUseLegend(true);
-//		writer.centerLegend = false;
-//		writer.setImageHeight(pageSize);
-//		writer.setImageWidth(pageSize);
-//		BufferedImage img = writer.depict(getTestMol(), sigSign, pvals);
-//		ImageIO.write(img, "png", new File(imageFolder, "significant_NoLegend.png"));
-//	}
-
 	// @Test
-	public void generateImageForDepict() throws Exception {
+	public void generateExampleImageForDepict() throws Exception {
 		MoleculeGradientDepictor gradDep = new MoleculeGradientDepictor();
-		gradDep.setImageWidth(1000);
-		gradDep.setImageHeight(1000);
 		GradientFigureBuilder builder = new GradientFigureBuilder(gradDep);
-		OrnamentField grad = new ColorGradientField(((MoleculeGradientDepictor)builder.getDepictor()).getColorGradient());
-		builder.addFieldUnderImg(grad);
+		// Changed for generating a GitHub repo-image of the preferred size 
+		builder.setFigureHeight(640);
+		builder.setFigureWidth(1500);
+		// OrnamentField grad = new ColorGradientField(((MoleculeGradientDepictor)builder.getDepictor()).getColorGradient());
+		// builder.addFieldUnderImg(grad);
 
 
-		ChemCPClassifier predictor = (ChemCPClassifier) ModelSerializer.loadChemPredictor(TestChemDataLoader.PreTrainedModels.ACP_CLF_LIBLINEAR.toURI(), null);
+		ChemVAPClassifier predictor = (ChemVAPClassifier) ModelSerializer.loadChemPredictor(TestChemDataLoader.PreTrainedModels.CVAP_LIBLINEAR.toURI(), null);
+		// ChemCPClassifier predictor = (ChemCPClassifier) ModelSerializer.loadChemPredictor(TestChemDataLoader.PreTrainedModels.ACP_CLF_LIBLINEAR.toURI(), null);
 		IAtomContainer mol = sp.parseSmiles(TEST_SMILES_2); // getTestMol();
 		SignificantSignature signature =  predictor.predictSignificantSignature(mol);
 
-		builder.build(mol, signature.getAtomContributions()).saveToFile(new File(imageOutputFolder, "molGrad_test_2.png"));;
+		builder.build(mol, signature.getAtomContributions()).saveToFile(new File(imageOutputFolder, "molGrad_test_2.png"));
 
 
 	}
@@ -287,11 +137,6 @@ public class TestMoleculeDepiction extends UnitTestBase{
 		Boarder molBoarder = new Boarder(BoarderShape.RECTANGLE, new BasicStroke(3f), Color.BLUE);
 		builder.getDepictor().addLayout(new CustomLayout(new Padding(10), molBoarder, new Margin(0)));
 		builder.build(getTestMol(), gradient).saveToFile(new File(imageOutputFolder, "molGradCustomWithPvals.png"));
-	}
-	
-	@Test
-	public void testSignSignStandardWithPvals() throws IOException{
-		
 	}
 	
 	@Test
