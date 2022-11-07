@@ -362,9 +362,6 @@ public class TestValidate extends CLIBaseTest{
 			Assert.assertTrue(log.contains("Failed predicting"));
 		}
 		
-//		if (shouldFail) {
-//			System.setSecurityManager(defaultSM);
-//		}
 	}
 	
 

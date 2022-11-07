@@ -186,12 +186,10 @@ public class TestMoleculeDepiction extends UnitTestBase{
 		builder.addFieldUnderImg(region2);
 		OrnamentField grad = new ColorGradientField(((MoleculeGradientDepictor)builder.getDepictor()).getColorGradient());
 		
-//		grad.setBoarder(new Boarder());
 		builder.addFieldUnderImg(grad);
 		LoggerUtils.setDebugMode();
 		MoleculeFigure depiction = builder.build(getTestMol(), gradient);
 		depiction.saveToFile(new File(imageOutputFolder, "gradientDepiction.png"));
-//		original.println(systemOutRule.getLog());
 	}
 
 	@Test
@@ -202,7 +200,7 @@ public class TestMoleculeDepiction extends UnitTestBase{
 		
 		CustomLayout orn = new CustomLayout(new Padding(3),boarder, new Margin(1));
 		
-		final float dash1[] = {6.0f, 3.0f, 2.0f, 3.0f}; //, 13f, 1f
+		final float dash1[] = {6.0f, 3.0f, 2.0f, 3.0f}; 
 	    final BasicStroke dashed =
 	        new BasicStroke(4.0f,
 	                        BasicStroke.CAP_BUTT,
@@ -215,38 +213,20 @@ public class TestMoleculeDepiction extends UnitTestBase{
 		g2d.fillRect(0, 0, imgToEnclose.getWidth(), imgToEnclose.getHeight());
 		g2d.dispose();
 		BufferedImage withBoarder = orn.addLayout(imgToEnclose);
-//		ImageIO.write(imgToEnclose, "png", new File(imageFolder,"noBoarder.png"));
 		ImageIO.write(withBoarder, "png", new File(imageOutputFolder,"withRoundedBoarder.png"));
-//		printLogs();
 	}
 	
 	@Test
 	public void testRectangleBoarder() throws Exception {
 		CustomLayout orn = new CustomLayout(new Padding(1), new Boarder(), new Margin(1));
-//		orn.setBoarder(new Boarder()); // default boarder
-		
-//		Boarder boarder = new Boarder();
-//		boarder.setColor(Color.RED);
-//		boarder.setMargin(2);
-//		boarder.setStroke(new BasicStroke(4f));
-//		boarder.setShape(BoarderShape.ROUNDED_REACTANGLE);
-//		boarder.setMargin(-1);
-//		final float dash1[] = {6.0f, 3.0f, 2.0f, 3.0f}; //, 13f, 1f
-//	    final BasicStroke dashed =
-//	        new BasicStroke(1.0f,
-//	                        BasicStroke.CAP_BUTT,
-//	                        BasicStroke.JOIN_MITER,
-//	                        10.0f, dash1, 0.0f);
-//		boarder.setStroke(dashed);
+
 		BufferedImage imgToEnclose = new BufferedImage(7, 7, IOSettings.BUFFERED_IMAGE_TYPE);
 		Graphics2D g2d = imgToEnclose.createGraphics();
 		g2d.setColor(Color.WHITE);
 		g2d.fillRect(1, 1, imgToEnclose.getWidth()-2, imgToEnclose.getHeight()-2);
 		g2d.dispose();
 		BufferedImage withBoarder = orn.addLayout(imgToEnclose);
-//		ImageIO.write(imgToEnclose, "png", new File(imageFolder,"noBoarder.png"));
 		ImageIO.write(withBoarder, "png", new File(imageOutputFolder,"withRectangleBoarder.png"));
-//		printLogs();
 	}
 	
 	@Test
