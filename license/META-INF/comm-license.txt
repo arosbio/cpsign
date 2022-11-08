@@ -4,11 +4,11 @@ IMPORTANT: PLEASE READ THIS LICENSE CAREFULLY BEFORE DOWNLOADING ANY SOFTWARE, D
 
 TERMS & DEFINITIONS
 
-Software / CPSign Software – CPSign Software and Source Code made available from this website or GitHub Repository.
+Software / CPSign Software - CPSign Software and Source Code made available from this website or GitHub Repository.
 
 Owner / Licensor / Aros Bio / Original Authors -  shall mean Aros Bio AB, the sole owner of this site and all the products, tools, scripts, images, or any other product made available on this website.
 
-End User / Licensee / Customer / You – shall mean you or the company you represent and are authorized to bind.
+End User / Licensee / Customer / You - shall mean you or the company you represent and are authorized to bind.
 
 
 1. LICENSE
@@ -16,7 +16,7 @@ Subject to the terms of this Agreement, Licensor grants to you a limited, non-ex
 
 1.1 TYPES OF LICENSES
 
-The terms and conditions set forth in sections 1.1.1 to 1.1.2 shall apply according to the licensed purchased by you / applicable to you. The terms applied in one section doesn’t apply to any other section.
+The terms and conditions set forth in sections 1.1.1 to 1.1.2 shall apply according to the licensed purchased by you / applicable to you. The terms applied in one section doesn't apply to any other section.
 
 1.1.1 TIME-LIMITED PERSONAL LICENSE
 
@@ -95,7 +95,7 @@ This Agreement sets forth our entire agreement with respect to the Software and 
 
 7.2 AMENDMENT
 
-Licensor reserves the right, in its sole discretion, to amend this Agreement at any time. Amendments to this Agreement can be read at https://arosbio.com/license/commercial-license
+Licensor reserves the right, in its sole discretion, to amend this Agreement at any time. Amendments to this Agreement can be read at https://arosbio.com/cpsign/commercial-license
 
 7.3 ASSIGNMENT
 
