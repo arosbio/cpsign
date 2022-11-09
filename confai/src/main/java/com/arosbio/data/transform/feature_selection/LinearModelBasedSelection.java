@@ -108,17 +108,17 @@ public abstract class LinearModelBasedSelection implements FeatureSelector {
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) throws TransformationException {
+	public LinearModelBasedSelection fit(Collection<DataRecord> data) throws TransformationException {
 		LOGGER.debug("Fitting transformer {}", this);
 		if (linearParameter == null) {
-			throw new TransformationException("No parameters set for feature selecter using LinearModelBasedSelection");
+			throw new TransformationException("No parameters set for feature selector using LinearModelBasedSelection");
 		}
 
 		int maxFeatIndex = DataUtils.getMaxFeatureIndex(data);
 		if (criterion.getN() >= (maxFeatIndex+1)) {
-			LOGGER.debug("Feature selecter {} instructed to keep {} features which is more than already present. Skipping this selection.",getName(),criterion.getN());
+			LOGGER.debug("Feature selector {} instructed to keep {} features which is more than already present. Skipping this selection.",getName(),criterion.getN());
 			toRemove = new ArrayList<>();
-			return;
+			return this;
 		}
 		// Fit the linear model
 		
@@ -162,7 +162,7 @@ public abstract class LinearModelBasedSelection implements FeatureSelector {
 
 		}
 
-		LOGGER.debug("Feature-selecter found the following weights: {}", weights);
+		LOGGER.debug("Feature-selector found the following weights: {}", weights);
 
 		// Now we have a list of weights only (excluding pot. bias), in absolute numbers including the feature indices
 		toRemove = criterion.getIndicesToRemove(weights);
@@ -170,8 +170,9 @@ public abstract class LinearModelBasedSelection implements FeatureSelector {
 		// Sort the list of indices to remove
 		Collections.sort(toRemove); 
 
-		LOGGER.debug("Finished fitting Feature selecter {} filtering out indices: {}", getName(), toRemove);
+		LOGGER.debug("Finished fitting Feature selector {} filtering out indices: {}", getName(), toRemove);
 
+		return this;
 	}
 
 	private boolean isL1regularization(SolverType t) {

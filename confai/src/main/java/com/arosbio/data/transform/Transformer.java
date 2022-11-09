@@ -121,9 +121,10 @@ public interface Transformer extends Described, Named, Configurable, Cloneable {
 	 * Optionally fits parameters after the given data, such as calculating mean, min and max values
 	 * for later transformations.
 	 * @param data A list of records that the transformer should be fitted for
+	 * @return should return the same instance, for a fluent API
 	 * @throws TransformationException If an exception occurred during the fitting
 	 */
-	public void fit(Collection<DataRecord> data) throws TransformationException;
+	public Transformer fit(Collection<DataRecord> data) throws TransformationException;
 
 	/**
 	 * Checks if the <code>Transformer</code> is ready to transform data or

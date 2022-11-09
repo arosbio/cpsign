@@ -66,7 +66,9 @@ public class KeepMeanLabel implements DuplicatesResolverTransformer {
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) {}
+	public KeepMeanLabel fit(Collection<DataRecord> data) {
+		return this;
+	}
 
 	@Override
 	public SubSet fitAndTransform(SubSet data) throws TransformationException {

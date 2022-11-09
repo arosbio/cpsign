@@ -114,7 +114,7 @@ public class NumNonZeroSelector extends ColumnTransformer implements FeatureSele
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) throws TransformationException {
+	public NumNonZeroSelector fit(Collection<DataRecord> data) throws TransformationException {
 		LOGGER.debug("Fitting transformer {}", this);
 		toRemove = new ArrayList<>();
 
@@ -126,6 +126,7 @@ public class NumNonZeroSelector extends ColumnTransformer implements FeatureSele
 		Collections.sort(toRemove);
 
 		LOGGER.debug("Finished fitting {} removing columns: {}",this, toRemove);
+		return this;
 	}
 
 	private void fitForSparse(Collection<DataRecord> recs) {

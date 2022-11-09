@@ -100,7 +100,7 @@ public class DropColumnSelector implements FeatureSelector {
 
 
 	@Override
-	public void fit(Collection<DataRecord> data) throws TransformationException {
+	public DropColumnSelector fit(Collection<DataRecord> data) throws TransformationException {
 		if (toRemove == null)
 			throw new TransformationException("Cannot fit transformer " + TRANSFORMER_NAME + ": No columns specified to remove");
 		maxColIndex = DataUtils.getMaxFeatureIndex(data);
@@ -111,6 +111,7 @@ public class DropColumnSelector implements FeatureSelector {
 			toRemove = new ColumnSpec(range.intersection(Range.closed(0,maxColIndex)));
 		} 
 		LOGGER.debug("Finished fitting feature selector {}: will remove column indices {}",TRANSFORMER_NAME, toRemove);
+		return this;
 	}
 
 	@Override

@@ -169,7 +169,7 @@ public class RobustScaler extends ColumnTransformer implements FeatureScaler, Al
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) throws TransformationException {
+	public RobustScaler fit(Collection<DataRecord> data) throws TransformationException {
 		LOGGER.debug("Fitting transformer {}", this);
 
 		assertValidRange(lowerQuantile, upperQuantile);
@@ -181,6 +181,8 @@ public class RobustScaler extends ColumnTransformer implements FeatureScaler, Al
 		}
 
 		LOGGER.debug("Finished fitting transformer");
+
+		return this;
 	}
 
 	@SuppressWarnings("unchecked")

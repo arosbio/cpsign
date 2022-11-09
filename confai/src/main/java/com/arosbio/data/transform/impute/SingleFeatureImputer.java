@@ -70,9 +70,7 @@ public class SingleFeatureImputer extends ColumnTransformer implements Imputer {
 
 	private transient TransformInfo info;
 
-	public SingleFeatureImputer() {
-
-	}
+	public SingleFeatureImputer() {}
 
 	public SingleFeatureImputer(ColumnSpec spec) {
 		super(spec);
@@ -109,7 +107,7 @@ public class SingleFeatureImputer extends ColumnTransformer implements Imputer {
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) throws TransformationException {
+	public SingleFeatureImputer fit(Collection<DataRecord> data) throws TransformationException {
 		if (data == null || data.isEmpty())
 			throw new TransformationException("Cannot fit Transformer without data");
 		LOGGER.debug("Fitting transformer {}", this);
@@ -123,6 +121,8 @@ public class SingleFeatureImputer extends ColumnTransformer implements Imputer {
 		}
 
 		LOGGER.debug("Finished fitting {}", this);
+
+		return this;
 
 	}
 

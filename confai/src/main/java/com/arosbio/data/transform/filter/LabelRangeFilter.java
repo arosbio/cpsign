@@ -101,8 +101,9 @@ public class LabelRangeFilter implements Filter {
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) {
+	public LabelRangeFilter fit(Collection<DataRecord> data) {
 		// Do nothing
+		return this;
 	}
 
 

@@ -196,14 +196,14 @@ public class UserSuppliedDescriptor implements ChemDescriptor, Described, Aliase
 
 	private void assertChangesAllowedOrFail() throws IllegalStateException {
 		if (descriptorInitialized) {
-			LOGGER.debug("Tried making changes to ChemDescriptor after initalized had been called - failing");
+			LOGGER.debug("Tried making changes to ChemDescriptor after initialized had been called - failing");
 			throw new IllegalStateException("ChemDescriptor has been initialized - no changes allowed");
 		}
 	}
 
-	private void assertInitalized() throws IllegalStateException {
+	private void assertInitialized() throws IllegalStateException {
 		if (!descriptorInitialized) {
-			LOGGER.debug("ChemDescriptor not inialized yet, but called method requiring initialization");
+			LOGGER.debug("ChemDescriptor not initialized yet, but called method requiring initialization");
 			throw new IllegalStateException("ChemDescriptor not initialized");
 		}
 	}
@@ -348,14 +348,14 @@ public class UserSuppliedDescriptor implements ChemDescriptor, Described, Aliase
 
 	@Override
 	public int getLength() {
-		assertInitalized();
+		assertInitialized();
 		return propertiesUsedAsDescriptors.size();
 	}
 
 	@Override
 	public List<SparseFeature> calculateDescriptors(IAtomContainer molecule)
 			throws DescriptorCalcException, IllegalStateException {
-		assertInitalized();
+		assertInitialized();
 		Map<String,Object> molProperties = standardize(molecule.getProperties());
 		List<SparseFeature> features = new ArrayList<>();
 

@@ -68,7 +68,9 @@ public class UseVoting implements DuplicatesResolverTransformer {
 	}
 	
 	@Override
-	public void fit(Collection<DataRecord> data) {}
+	public UseVoting fit(Collection<DataRecord> data) {
+		return this;
+	}
 
 	@Override
 	public SubSet fitAndTransform(SubSet data) throws TransformationException {
@@ -81,11 +83,11 @@ public class UseVoting implements DuplicatesResolverTransformer {
 		
 		SubSet transformed = inPlace ? data : data.clone(); 
 		
-		int initalSize = transformed.size();
+		int initialSize = transformed.size();
 		
 		Set<DuplicateEntry> dups = DuplicateResolvingUtils.findDuplicates(transformed);
 		
-		for (DuplicateEntry entry: dups) {
+		for (DuplicateEntry entry : dups) {
 			Map<Double,Integer> labelFreq = CollectionUtils.countFrequencies(entry.getLabels());
 			if (labelFreq.size()==1) {
 				// Single label - keep this one!
@@ -112,7 +114,7 @@ public class UseVoting implements DuplicatesResolverTransformer {
 			}
 		}
 		
-		info = new TransformInfo(initalSize-transformed.size(), dups.size());
+		info = new TransformInfo(initialSize-transformed.size(), dups.size());
 		
 		LOGGER.debug("Finished transformer: " + info);
 		

@@ -103,7 +103,7 @@ public class Standardizer extends ColumnTransformer implements FeatureScaler, Al
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) throws TransformationException {
+	public Standardizer fit(Collection<DataRecord> data) throws TransformationException {
 		LOGGER.debug("Fitting transformer {}", this);
 		if (data.iterator().next().getFeatures() instanceof SparseVector) {
 			fitSparseData(data);
@@ -111,6 +111,8 @@ public class Standardizer extends ColumnTransformer implements FeatureScaler, Al
 			fitDenseData(data);
 		}
 		LOGGER.debug("Finished fitting transformer");
+
+		return this;
 	}
 	
 	private void fitSparseData(Collection<DataRecord> data) throws TransformationException {

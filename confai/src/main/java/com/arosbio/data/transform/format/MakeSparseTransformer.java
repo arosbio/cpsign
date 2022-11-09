@@ -53,10 +53,12 @@ public class MakeSparseTransformer implements FormatTransformer{
 	}
 	
 	/**
-	 * Doesn't do anything - pass through only
+	 * Only returns the same instance
 	 */
 	@Override
-	public void fit(Collection<DataRecord> data) throws TransformationException {}
+	public MakeSparseTransformer fit(Collection<DataRecord> data) throws TransformationException {
+		return this;
+	}
 
 	@Override
 	public boolean isFitted() {

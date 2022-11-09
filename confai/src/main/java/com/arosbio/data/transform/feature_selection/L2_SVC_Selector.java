@@ -9,6 +9,10 @@
  */
 package com.arosbio.data.transform.feature_selection;
 
+import java.util.Collection;
+
+import com.arosbio.data.DataRecord;
+
 import de.bwaldvogel.liblinear.Parameter;
 import de.bwaldvogel.liblinear.SolverType;
 
@@ -63,6 +67,11 @@ public class L2_SVC_Selector extends LinearModelBasedSelection {
 			clone = new L2_SVC_Selector();
 		super.copyStateToClone(clone);
 		return clone;
+	}
+
+	public L2_SVC_Selector fit(Collection<DataRecord> data) throws TransformationException {
+		super.fit(data);
+		return this;
 	}
 
 }

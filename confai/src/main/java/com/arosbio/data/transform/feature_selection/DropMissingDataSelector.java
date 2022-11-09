@@ -66,8 +66,8 @@ public class DropMissingDataSelector implements FeatureSelector {
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) throws TransformationException {
-		LOGGER.debug("Fitting feature-selecter {}", this);
+	public DropMissingDataSelector fit(Collection<DataRecord> data) throws TransformationException {
+		LOGGER.debug("Fitting feature-selector {}", this);
 		
 		Set<Integer> indicesToRm = new HashSet<>();
 		
@@ -82,6 +82,8 @@ public class DropMissingDataSelector implements FeatureSelector {
 		toRemove = new ArrayList<>(indicesToRm);
 		Collections.sort(toRemove);
 		LOGGER.debug("Finished fitting transformer, removing features: {}", toRemove);
+
+		return this;
 	}
 	
 	@Override

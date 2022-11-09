@@ -65,7 +65,9 @@ public class KeepMinLabel implements DuplicatesResolverTransformer {
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) {}
+	public KeepMinLabel fit(Collection<DataRecord> data) {
+		return this;
+	}
 
 	@Override
 	public SubSet fitAndTransform(SubSet data) throws TransformationException {

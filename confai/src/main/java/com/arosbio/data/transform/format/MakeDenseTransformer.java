@@ -64,8 +64,10 @@ public class MakeDenseTransformer implements FormatTransformer {
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) throws TransformationException {
+	public MakeDenseTransformer fit(Collection<DataRecord> data) throws TransformationException {
 		maxFeatureIndex = DataUtils.getMaxFeatureIndex(data);
+
+		return this;
 	}
 
 	@Override

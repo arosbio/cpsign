@@ -115,7 +115,7 @@ public class VarianceBasedSelector extends ColumnTransformer implements FeatureS
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) throws TransformationException {
+	public VarianceBasedSelector fit(Collection<DataRecord> data) throws TransformationException {
 		if (data == null || data.isEmpty())
 			throw new TransformationException("Cannot fit Transformer without data");
 		LOGGER.debug("Fitting transformer {}", this);
@@ -127,6 +127,8 @@ public class VarianceBasedSelector extends ColumnTransformer implements FeatureS
 		}
 
 		LOGGER.debug("Finished fitting {}, removing columns: {}", this, toRemove);
+
+		return this;
 	}
 
 	private void fitSparseData(Collection<DataRecord> recs) {

@@ -101,9 +101,11 @@ public class VectorNormalizer implements VectorScaler, Aliased {
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) throws TransformationException {
+	public VectorNormalizer fit(Collection<DataRecord> data) throws TransformationException {
 		LOGGER.debug("Fitting transformer {} - nothing to do", this);
 		isFitted = true;
+
+		return this;
 	}
 	
 //	private void fitSparseData(List<DataRecord> data) throws TransformationException {

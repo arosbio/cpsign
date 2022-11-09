@@ -68,7 +68,9 @@ public class KeepFirstRecord implements DuplicatesResolverTransformer {
 	}
 
 	@Override
-	public void fit(Collection<DataRecord>data) {}
+	public KeepFirstRecord fit(Collection<DataRecord>data) {
+		return this;
+	}
 
 	@Override
 	public SubSet fitAndTransform(SubSet data) throws TransformationException {

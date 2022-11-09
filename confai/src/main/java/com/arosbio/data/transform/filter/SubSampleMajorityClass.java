@@ -87,8 +87,9 @@ public class SubSampleMajorityClass implements Filter, Aliased {
     }
 
     @Override
-    public void fit(Collection<DataRecord> data) throws TransformationException {
+    public SubSampleMajorityClass fit(Collection<DataRecord> data) throws TransformationException {
         // do nothing
+        return this;
     }
 
     @Override
@@ -112,7 +113,7 @@ public class SubSampleMajorityClass implements Filter, Aliased {
             }
             int numMinority = MathUtils.min(counts.values());
             LOGGER.debug(
-                    "Found classes frequency according to (using indicies, not labels): {} with the min occurrence being: {}",
+                    "Found classes frequency according to (using indices, not labels): {} with the min occurrence being: {}",
                     counts, numMinority);
             SubSet newSet = new SubSet();
             excludedRecs = new ArrayList<>();

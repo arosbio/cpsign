@@ -138,7 +138,7 @@ public class MinMaxScaler extends ColumnTransformer implements FeatureScaler, Al
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) throws TransformationException {
+	public MinMaxScaler fit(Collection<DataRecord> data) throws TransformationException {
 		if (data == null || data.isEmpty())
 			throw new TransformationException("Cannot fit Transformer "+NAME+" without data");
 		LOGGER.debug("Fitting transformer {}", this);
@@ -150,6 +150,8 @@ public class MinMaxScaler extends ColumnTransformer implements FeatureScaler, Al
 		}
 
 		LOGGER.debug("Finished fitting transformer");
+		
+		return this;
 	}
 
 	private void fitSparseData(Collection<DataRecord> data) throws TransformationException {

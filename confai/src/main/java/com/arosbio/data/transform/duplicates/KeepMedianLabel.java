@@ -65,7 +65,8 @@ public class KeepMedianLabel implements DuplicatesResolverTransformer {
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) {
+	public KeepMedianLabel fit(Collection<DataRecord> data) {
+		return this;
 	}
 
 	@Override

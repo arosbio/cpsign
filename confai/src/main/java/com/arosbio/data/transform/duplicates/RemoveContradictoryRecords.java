@@ -83,7 +83,9 @@ public class RemoveContradictoryRecords implements DuplicatesResolverTransformer
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) {}
+	public RemoveContradictoryRecords fit(Collection<DataRecord> data) {
+		return this;
+	}
 
 	@Override
 	public SubSet fitAndTransform(SubSet data) throws TransformationException {

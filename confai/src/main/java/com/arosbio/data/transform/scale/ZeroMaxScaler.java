@@ -131,7 +131,7 @@ public class ZeroMaxScaler extends ColumnTransformer implements FeatureScaler, A
 	}
 
 	@Override
-	public void fit(Collection<DataRecord> data) throws TransformationException {
+	public ZeroMaxScaler fit(Collection<DataRecord> data) throws TransformationException {
 		LOGGER.debug("Fitting transformer {}", this);
 
 		if (data.iterator().next().getFeatures() instanceof SparseVector) {
@@ -141,6 +141,8 @@ public class ZeroMaxScaler extends ColumnTransformer implements FeatureScaler, A
 		}
 
 		LOGGER.debug("Finished fitting transformer");
+
+		return this;
 	}
 
 	private <C extends Collection<DataRecord>> void fitSparseData(C data) throws TransformationException {
