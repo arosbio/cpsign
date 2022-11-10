@@ -61,11 +61,23 @@ public class DataRecord implements Cloneable {
 	public void setLabel(double label) {
 		this.label = label;
 	}
+	public DataRecord withLabel(int label){
+		this.label = (double) label;
+		return this;
+	}
+	public DataRecord withLabel(double label){
+		this.label = label;
+		return this;
+	}
 	public FeatureVector getFeatures() {
 		return features;
 	}
 	public void setFeatures(FeatureVector features) {
 		this.features = features;
+	}
+	public DataRecord withFeatures(FeatureVector features){
+		this.features = features;
+		return this;
 	}
 
 	public int getMinFeatureIndex() {
@@ -79,9 +91,9 @@ public class DataRecord implements Cloneable {
 	/**
 	 * sets the ID of the record (either some textual name or a numerical index stored as string)
 	 * @param id an ID for the record
-	 * @return the reference of <code>this</code> object
+	 * @return the reference of {@code this} object
 	 */
-	public DataRecord setRecordID(String id) {
+	public DataRecord withRecordID(String id){
 		this.recordID = id;
 		return this;
 	}
@@ -90,7 +102,7 @@ public class DataRecord implements Cloneable {
 		return recordID;
 	}
 	
-	public DataRecord setRecordIndex(int index) {
+	public DataRecord withRecordIndex(int index) {
 		this.recordIndex = index;
 		return this;
 	}
