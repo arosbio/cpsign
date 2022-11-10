@@ -318,7 +318,7 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 
 	private double predictPvalueForClass(int label, FeatureVector example) {
 		// Add the record, with the assumed label
-		trainingData.addRecord(new DataRecord((double)label, example));
+		trainingData.add(new DataRecord((double)label, example));
 
 		// train the NCM_INFO_FILE
 		ncm.trainNCM(trainingData);

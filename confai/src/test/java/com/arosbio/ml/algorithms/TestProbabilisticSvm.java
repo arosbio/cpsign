@@ -35,7 +35,7 @@ public class TestProbabilisticSvm extends UnitTestInitializer{
 		Assert.assertEquals(20, trainingset.size());
 		
 		DataRecord first0 = trainingset.remove(0);
-		trainingset.addRecord(first0);// put it last instead
+		trainingset.add(first0);// put it last instead
 		
 		System.out.println(first0);
 		Assert.assertEquals(20, trainingset.size());

@@ -1068,9 +1068,9 @@ public final class ChemDataset extends Dataset {
 		}
 
 		if (keepMolRef) {
-			getDataset(type).addRecord(new DataRecordWithRef(label, features, preppedMol));
+			getDataset(type).add(new DataRecordWithRef(label, features, preppedMol));
 		} else {
-			getDataset(type).addRecord(new DataRecord(label, features));
+			getDataset(type).add(new DataRecord(label, features));
 		}
 	}
 

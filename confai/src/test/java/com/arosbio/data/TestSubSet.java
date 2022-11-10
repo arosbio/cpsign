@@ -313,25 +313,25 @@ public class TestSubSet extends UnitTestInitializer{
 		List<SparseFeature> feature3 = Arrays.<SparseFeature>asList(new SparseFeatureImpl(0, 1.7), new SparseFeatureImpl(1, 2.5), new SparseFeatureImpl(3, 1.5));
 		List<SparseFeature> feature4 = Arrays.<SparseFeature>asList(new SparseFeatureImpl(0, 1.501), new SparseFeatureImpl(1, 2.5), new SparseFeatureImpl(3, 1.5));
 		
-		prob.addRecord(new DataRecord(0.0, feature));
-		prob.addRecord(new DataRecord(0.0, feature2));
-		prob.addRecord(new DataRecord(0.0, feature3));
-		prob.addRecord(new DataRecord(0.0, feature4));
+		prob.add(new DataRecord(0.0, feature));
+		prob.add(new DataRecord(0.0, feature2));
+		prob.add(new DataRecord(0.0, feature3));
+		prob.add(new DataRecord(0.0, feature4));
 		
 		prob = new KeepMaxLabel().fitAndTransform(prob);
 //		prob.resolveDuplicates(DuplicatesStrategyFactory.keepMax());
 		Assert.assertEquals(4, prob.size());
 		System.err.println(prob.size());
 		
-		prob.addRecord(new DataRecord(0.0, feature));
-		prob.addRecord(new DataRecord(0.0, feature2));
-		prob.addRecord(new DataRecord(1.0, feature3));
-		prob.addRecord(new DataRecord(1.0, feature4));
+		prob.add(new DataRecord(0.0, feature));
+		prob.add(new DataRecord(0.0, feature2));
+		prob.add(new DataRecord(1.0, feature3));
+		prob.add(new DataRecord(1.0, feature4));
 		
-		prob.addRecord(new DataRecord(1.0, feature));
-		prob.addRecord(new DataRecord(1.0, feature2));
-		prob.addRecord(new DataRecord(1.0, feature3));
-		prob.addRecord(new DataRecord(1.0, feature4));
+		prob.add(new DataRecord(1.0, feature));
+		prob.add(new DataRecord(1.0, feature2));
+		prob.add(new DataRecord(1.0, feature3));
+		prob.add(new DataRecord(1.0, feature4));
 		
 		Assert.assertEquals(4*3, prob.size());
 		
@@ -432,7 +432,7 @@ public class TestSubSet extends UnitTestInitializer{
 		SubSet regressionDS = TestDataLoader.getInstance().getDataset(false, false).getDataset(); //SubSet.fromLIBSVMFormat(new FileInputStream(new File(NumericalSVMDatasets.REGRESSION_HOUSING_SCALE_FILE_PATH)));
 //		System.out.println(regressionDS.getLabelFrequencies());
 		try{
-			regressionDS.splitStratisfied(0.3);
+			regressionDS.splitStratified(0.3);
 			Assert.fail();
 		} catch(IllegalAccessException e){
 		}
@@ -453,7 +453,7 @@ public class TestSubSet extends UnitTestInitializer{
 		Map<Double, Integer> freqsOrig = ds.getLabelFrequencies();
 //		System.out.println(freqsOrig);
 		
-		SubSet[] dsSplitts = ds.splitStratisfied(splitFactor);
+		SubSet[] dsSplitts = ds.splitStratified(splitFactor);
 		SubSet d1 = dsSplitts[0];
 		SubSet d2 = dsSplitts[1];
 		Map<Double, Integer> freqs1 = d1.getLabelFrequencies();
@@ -480,12 +480,12 @@ public class TestSubSet extends UnitTestInitializer{
 		SubSet classificationDS = TestDataLoader.loadSubset(TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS);
 		long seed=124125L;
 		double frac=0.4;
-		SubSet[] dsSplit1 = classificationDS.splitStratisfied(seed, frac);
-		SubSet[] dsSplit2 = classificationDS.splitStratisfied(seed, frac);
+		SubSet[] dsSplit1 = classificationDS.splitStratified(seed, frac);
+		SubSet[] dsSplit2 = classificationDS.splitStratified(seed, frac);
 		Assert.assertEquals(dsSplit1[0], dsSplit2[0]);
 		Assert.assertEquals(dsSplit1[1], dsSplit2[1]);
 		
-		SubSet[] dsSplit3 = classificationDS.splitStratisfied(seed+1, frac); 
+		SubSet[] dsSplit3 = classificationDS.splitStratified(seed+1, frac); 
 		Assert.assertFalse(dsSplit1[0].equals(dsSplit3[0]));
 		Assert.assertFalse(dsSplit1[1].equals(dsSplit3[1]));
 		

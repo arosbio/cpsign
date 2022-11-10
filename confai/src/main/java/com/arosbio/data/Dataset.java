@@ -222,7 +222,7 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 		}
 
 		/**
-		 * Clears the current records and copies the ones from the parameter <code>records</code>.
+		 * Clears the current records and copies the ones from the parameter {@code records}.
 		 * Note that records are copied, so re-arrangement of the input list has no effect on the current
 		 * SubSet. Making alterations to individual records are reflected as the records themselves are not cloned. 
 		 * @param records the new records
@@ -230,10 +230,6 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 		public void setRecords(List<DataRecord> records) {
 			clear();
 			addAll(records);
-		}
-
-		public void addRecord(DataRecord record) {
-			super.add(record);
 		}
 
 		public int getNumRecords() {
@@ -480,7 +476,7 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 
 			for (int i=0; i<size(); i++){
 				if(! get(i).equals(other.get(i))){
-					LOGGER.debug("DataRecord not the same at index {}, records:\n{}\n{}", i, get(i), other.get(i));
+					LOGGER.debug("DataRecords not the same at index {}, records:\n{}\n{}", i, get(i), other.get(i));
 					return false;
 				}
 			}
@@ -536,8 +532,8 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 			};
 		}
 		
-		public SubSet[] splitStratisfied(double fraction) throws IllegalArgumentException, IllegalAccessException{
-			return splitStratisfied(GlobalConfig.getInstance().getRNGSeed(), fraction);
+		public SubSet[] splitStratified(double fraction) throws IllegalArgumentException, IllegalAccessException{
+			return splitStratified(GlobalConfig.getInstance().getRNGSeed(), fraction);
 		}
 
 		/**
@@ -548,7 +544,7 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 		 * @throws IllegalArgumentException If <code>fraction</code> is outside (0..1)
 		 * @throws IllegalAccessException If calling this method with regression data (i.e. more than 10 labels)
 		 */
-		public SubSet[] splitStratisfied(long seed, double fraction) throws IllegalArgumentException, IllegalAccessException {
+		public SubSet[] splitStratified(long seed, double fraction) throws IllegalArgumentException, IllegalAccessException {
 			if (fraction <= 0.0 || fraction >= 1.0)
 				throw new IllegalArgumentException("Splitting fraction must be within range (0.0..1.0)");
 			if (isEmpty()) // give back two empty subsets
@@ -721,6 +717,7 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 		case MODELING_EXCLUSIVE:
 			return modelingExclusive;
 		default:
+			// Should never happen
 			throw new IllegalArgumentException("RecordType: " + type + " not supported");
 		}
 	}
@@ -1210,10 +1207,10 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 	}
 
 	/**
-	 * Adds the records of the <code>otherProblem</code> into this object. Makes a deep copy
-	 * of the underlying data so the <code>otherProblem</code> will not be changed
+	 * Adds the records of the <code>other</code> into this object. Makes a deep copy
+	 * of the underlying data so the <code>other</code> will not be changed
 	 * @param other Another {@link Dataset} to join into the current one
-	 * @throws IllegalArgumentException If the <code>otherProblem</code> is the same {@link Dataset} as the current one or if the <code>otherProblem</code> is empty or indices are faulty
+	 * @throws IllegalArgumentException If the <code>other</code> is the same {@link Dataset} as the current one or if the <code>other</code> is empty or indices are faulty
 	 */
 	public void join(Dataset other) throws IllegalArgumentException{
 		if (this == other)
@@ -1228,8 +1225,8 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 	}
 
 	/**
-	 * Performs a shallow join of the records from the <code>otherProblem</code>. Changing things in one of the
-	 * problems will alter the other one as well. 
+	 * Performs a shallow join of the records from the <code>other</code>. Changing things in one of the
+	 * data sets will alter the other one as well. 
 	 * @param other Another {@link Dataset} to join into the current one
 	 * @throws IllegalArgumentException If any of the two {@link Dataset}s are ill-formatted. 
 	 */
