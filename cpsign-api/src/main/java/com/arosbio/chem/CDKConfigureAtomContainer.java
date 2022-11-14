@@ -54,9 +54,10 @@ public class CDKConfigureAtomContainer {
 				if (largestConnectedFragment.getAtomCount() < container.getAtomCount())
 					largestConnectedFragment = container;
 			}
+			largestConnectedFragment.setProperties(new LinkedHashMap<>(mol.getProperties()));
 		}
 		
-		largestConnectedFragment.setProperties(new LinkedHashMap<>(mol.getProperties()));
+		
 		
 		try {
 			ModelBuilder3D mb3d = ModelBuilder3D.getInstance(SilentChemObjectBuilder.getInstance());

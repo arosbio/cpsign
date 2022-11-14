@@ -97,13 +97,23 @@ public class SingleFeatureImputer extends ColumnTransformer implements Imputer {
 		return DESCRIPTION;
 	}
 
-	public SingleFeatureImputer setStrategy(ImputationStrategy strategy) {
+	public SingleFeatureImputer withStrategy(ImputationStrategy strategy) {
 		this.strategy = strategy;
 		return this;
 	}
 
 	public ImputationStrategy getStrategy() {
 		return strategy;
+	}
+
+	/**
+	 * Returns the substitutions that will be applied, or {@code null} if 
+	 * the instance has not been fitted yet. These substitutions depend on what {@link ImputationStrategy}
+	 * is used.
+	 * @return the substitutions, or {@code null}
+	 */
+	public Map<Integer,Double> getSubstitutions(){
+		return substitutions;
 	}
 
 	@Override
@@ -150,6 +160,10 @@ public class SingleFeatureImputer extends ColumnTransformer implements Imputer {
 		int maxIndex = indices.get(indices.size()-1); // This list should always be sorted! Collections.max(indices);
 
 		Map<Integer, SummaryStatistics> colStats = new HashMap<>();
+		// Init the statistics
+		for (int index : indices){
+			colStats.put(index, new SummaryStatistics());
+		}
 
 		// Go through the data
 		for (DataRecord r : data) {
@@ -160,12 +174,8 @@ public class SingleFeatureImputer extends ColumnTransformer implements Imputer {
 				if (index > maxIndex)
 					break;
 
-				if (indices.contains(index)) {
-					if (!colStats.containsKey(index))
-						colStats.put(index, new SummaryStatistics());
-
-					if (Double.isFinite(f.getValue()))
-						colStats.get(index).addValue(f.getValue());
+				if (colStats.containsKey(index) && Double.isFinite(f.getValue())) {
+					colStats.get(index).addValue(f.getValue());
 				}
 			}
 		}
@@ -201,7 +211,7 @@ public class SingleFeatureImputer extends ColumnTransformer implements Imputer {
 				substitutions.put(col, sub);
 			else {
 				LOGGER.debug("Encountered non-finite substitution value for feature index {}: {}", col, sub);
-				throw new TransformationException("Encountered feature for which a substition value could not be computed - "
+				throw new TransformationException("Encountered feature for which a substitution value could not be computed - "
 						+ "consider removing features with all missing values prior to using the " + NAME + " transformation");
 			}
 
@@ -218,6 +228,10 @@ public class SingleFeatureImputer extends ColumnTransformer implements Imputer {
 			int maxIndex = indices.get(indices.size()-1); // This list should always be sorted!Collections.max(indices);
 
 			Map<Integer, List<Double>> colLists = new HashMap<>();
+			// Init the lists
+			for (int index : indices){
+				colLists.put(index, new ArrayList<>());
+			}
 
 			for (DataRecord r : data) {
 				for (Feature f : r.getFeatures()) {
@@ -227,12 +241,8 @@ public class SingleFeatureImputer extends ColumnTransformer implements Imputer {
 					if (index > maxIndex)
 						break;
 
-					if (indices.contains(index)) {
-						if (!colLists.containsKey(index))
-							colLists.put(index, new ArrayList<>());
-
-						if (Double.isFinite(f.getValue()))
-							colLists.get(index).add(f.getValue());
+					if (colLists.containsKey(index) && Double.isFinite(f.getValue())) {
+						colLists.get(index).add(f.getValue());
 					}
 				}
 			}
@@ -356,7 +366,7 @@ public class SingleFeatureImputer extends ColumnTransformer implements Imputer {
 			for (Map.Entry<Integer, Double> sub : substitutions.entrySet()) {
 				Double currVal = vector.getFeature(sub.getKey());
 				if (currVal == null || currVal.isNaN()) {
-					vector.setFeature(sub.getKey(), sub.getValue());
+					vector.withFeature(sub.getKey(), sub.getValue());
 					altered = true;
 				}
 			}

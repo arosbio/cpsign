@@ -87,7 +87,7 @@ public class MakeDenseTransformer implements FormatTransformer {
 
 		if (inPlace) {
 			for (DataRecord r : data) {
-				r.setFeatures(r.getFeatures());
+				r.setFeatures(transform(r.getFeatures()));
 			}
 			info = new TransformInfo(0, data.size());
 			return data;

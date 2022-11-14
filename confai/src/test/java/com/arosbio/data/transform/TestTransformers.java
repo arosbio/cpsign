@@ -25,11 +25,11 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.stat.descriptive.moment.Variance;
 import org.apache.commons.math3.stat.descriptive.rank.Percentile;
@@ -40,14 +40,21 @@ import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
 import com.arosbio.commons.FuzzyServiceLoader;
+import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.MathUtils;
 import com.arosbio.commons.Stopwatch;
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.DataUtils;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.Dataset.SubSet;
+import com.arosbio.data.DenseFloatVector;
 import com.arosbio.data.DenseVector;
+import com.arosbio.data.FeatureVector;
 import com.arosbio.data.FeatureVector.Feature;
+import com.arosbio.data.MissingValueFeature;
+import com.arosbio.data.SparseFeature;
+import com.arosbio.data.SparseFeatureImpl;
+import com.arosbio.data.SparseVector;
 import com.arosbio.data.io.LIBSVMFormat;
 import com.arosbio.data.transform.Transformer.TransformInfo;
 import com.arosbio.data.transform.duplicates.DuplicatesResolverTransformer;
@@ -68,6 +75,7 @@ import com.arosbio.data.transform.feature_selection.SelectionCriterion.Criterion
 import com.arosbio.data.transform.feature_selection.VarianceBasedSelector;
 import com.arosbio.data.transform.filter.SubSampleMajorityClass;
 import com.arosbio.data.transform.format.MakeDenseTransformer;
+import com.arosbio.data.transform.format.MakeSparseTransformer;
 import com.arosbio.data.transform.impute.SingleFeatureImputer;
 import com.arosbio.data.transform.impute.SingleFeatureImputer.ImputationStrategy;
 import com.arosbio.data.transform.scale.MinMaxScaler;
@@ -350,46 +358,19 @@ public class TestTransformers extends TestEnv {
 
 		}
 
-		// @Test
-		public void testVar() {
-
-			List<Double> values = new ArrayList<>();
-			Random r = new Random();
-
-			// Variance var = new Variance();
-			for (int i = 0; i < 1000; i++)
-				values.add(r.nextDouble()); // r.increment(0d);
-
-			Variance var1 = new Variance();
-			for (double v : values) {
-				var1.increment(v);
-			}
-
-			SYS_ERR.println(var1.getResult());
-
-			/// Sort and calc again
-			Collections.sort(values);
-			Variance var2 = new Variance();
-			for (double v : values) {
-				var2.increment(v);
-			}
-
-			SYS_ERR.println(var2.getResult());
-		}
-
 		@Test
 		public void testVarianceSelector() {
-			FeatureSelector selecter = new VarianceBasedSelector();
+			FeatureSelector selector = new VarianceBasedSelector();
 			List<DataRecord> records = new ArrayList<>();
 			records.add(new DataRecord(1d, new DenseVector(new double[] { 0d, 1d, 3d })));
 
-			selecter.fit(records);
-			Assert.assertEquals(Arrays.asList(0, 1, 2), selecter.getFeatureIndicesToRemove());
+			selector.fit(records);
+			Assert.assertEquals(Arrays.asList(0, 1, 2), selector.getFeatureIndicesToRemove());
 			// Add some more records
 			records.add(new DataRecord(1d, new DenseVector(new double[] { -1d, 2d, 3d })));
 			records.add(new DataRecord(1d, new DenseVector(new double[] { 5d, 0d, 3d })));
 			records.add(new DataRecord(1d, new DenseVector(new double[] { 0d, -1d, 3d })));
-			selecter.fit(records);
+			selector.fit(records);
 			// System.err.println();
 
 			// Larger size
@@ -398,7 +379,7 @@ public class TestTransformers extends TestEnv {
 
 		@Test
 		public void testL1_SVC_select() throws Exception {
-			FeatureSelector svc = (FeatureSelector) FuzzyServiceLoader.load(Transformer.class, "L1-SVCselecter");
+			FeatureSelector svc = (FeatureSelector) FuzzyServiceLoader.load(Transformer.class, "L1-SVCselector");
 
 			Assert.assertTrue(svc instanceof L1_SVC_Selector);
 			L1_SVC_Selector fs = (L1_SVC_Selector) svc;
@@ -406,26 +387,26 @@ public class TestTransformers extends TestEnv {
 			fs.setSelectionCriterion(SelectionCriterion.keepN(10)); // KeepMaximumNumFeatures(10);
 
 			SubSet d = TestDataLoader.getInstance().getDataset(true, true).getDataset();
-			int numInitalFeats = d.getNumFeatures();
+			int numInitialFeats = d.getNumFeatures();
 			// LoggerUtils.setDebugMode(SYS_OUT);
 			new Standardizer().fitAndTransform(d);
 			svc.fitAndTransform(d);
 
 			int numFeatsAfter = d.getNumFeatures();
 
-			// System.err.println("init: " + numInitalFeats + "; after: " + numFeatsAfter);
-			Assert.assertEquals(svc.getFeatureIndicesToRemove().size(), numInitalFeats - numFeatsAfter);
+			// System.err.println("init: " + numInitialFeats + "; after: " + numFeatsAfter);
+			Assert.assertEquals(svc.getFeatureIndicesToRemove().size(), numInitialFeats - numFeatsAfter);
 
 		}
 
 		@Test
 		public void testL2_SVC_select() throws Exception {
-			FeatureSelector svc = (FeatureSelector) FuzzyServiceLoader.load(Transformer.class, "L2-SVC_selecter");
+			FeatureSelector svc = (FeatureSelector) FuzzyServiceLoader.load(Transformer.class, "L2-SVC_selector");
 
 			Assert.assertTrue(svc instanceof L2_SVC_Selector);
 
 			SubSet d = TestDataLoader.getInstance().getDataset(true, true).getDataset();
-			int numInitalFeats = d.getNumFeatures();
+			int numInitialFeats = d.getNumFeatures();
 
 			// LoggerUtils.setDebugMode(SYS_OUT);
 
@@ -434,8 +415,8 @@ public class TestTransformers extends TestEnv {
 
 			int numFeatsAfter = d.getNumFeatures();
 
-			// System.err.println("init: " + numInitalFeats + "; after: " + numFeatsAfter);
-			Assert.assertEquals(svc.getFeatureIndicesToRemove().size(), numInitalFeats - numFeatsAfter);
+			// System.err.println("init: " + numInitialFeats + "; after: " + numFeatsAfter);
+			Assert.assertEquals(svc.getFeatureIndicesToRemove().size(), numInitialFeats - numFeatsAfter);
 
 		}
 
@@ -449,30 +430,30 @@ public class TestTransformers extends TestEnv {
 
 			// LoggerUtils.setDebugMode(SYS_OUT);
 
-			int numInitalFeats = d.getNumFeatures();
+			int numInitialFeats = d.getNumFeatures();
 			new Standardizer().fitAndTransform(d);
 			svc.fitAndTransform(d);
 
 			int numFeatsAfter = d.getNumFeatures();
 
-			// System.err.println("init: " + numInitalFeats + "; after: " + numFeatsAfter);
-			Assert.assertEquals(svc.getFeatureIndicesToRemove().size(), numInitalFeats - numFeatsAfter);
+			// System.err.println("init: " + numInitialFeats + "; after: " + numFeatsAfter);
+			Assert.assertEquals(svc.getFeatureIndicesToRemove().size(), numInitialFeats - numFeatsAfter);
 
 		}
 
 		@Test
 		public void testNumNonZeroSelector() throws Exception {
 			int threshold = 3;
-			FeatureSelector selecter = new NumNonZeroSelector(threshold);
+			FeatureSelector selector = new NumNonZeroSelector(threshold);
 			FeatureSelector newVersion = new NumNonZeroSelector(threshold);
 			List<DataRecord> records = new ArrayList<>();
 			records.add(new DataRecord(1d, new DenseVector(new double[] { 0d, 1d })));
 
 			// System.err.println(records);
 			newVersion.fit(records);
-			selecter.fit(records);
-			// Assert.assertTrue(selecter.getFeatureIndicesToRemove().size() == 2);
-			Assert.assertEquals(Arrays.asList(0, 1), selecter.getFeatureIndicesToRemove());
+			selector.fit(records);
+			// Assert.assertTrue(selector.getFeatureIndicesToRemove().size() == 2);
+			Assert.assertEquals(Arrays.asList(0, 1), selector.getFeatureIndicesToRemove());
 			Assert.assertEquals(newVersion.getFeatureIndicesToRemove(), newVersion.getFeatureIndicesToRemove());
 
 			// Add some more records
@@ -483,14 +464,14 @@ public class TestTransformers extends TestEnv {
 			// System.err.println(DataUtils.extractColumn(records, 0));
 			// System.err.println(DataUtils.extractColumn(records, 1));
 
-			selecter.fit(records);
+			selector.fit(records);
 			newVersion.fit(records);
-			Assert.assertEquals(Arrays.asList(0), selecter.getFeatureIndicesToRemove());
-			Assert.assertEquals(newVersion.getFeatureIndicesToRemove(), selecter.getFeatureIndicesToRemove());
-			// System.err.println(selecter.getFeatureIndicesToRemove());
+			Assert.assertEquals(Arrays.asList(0), selector.getFeatureIndicesToRemove());
+			Assert.assertEquals(newVersion.getFeatureIndicesToRemove(), selector.getFeatureIndicesToRemove());
+			// System.err.println(selector.getFeatureIndicesToRemove());
 
 			for (DataRecord r : records) {
-				selecter.transform(r.getFeatures());
+				selector.transform(r.getFeatures());
 				Assert.assertEquals(0, r.getFeatures().getLargestFeatureIndex());
 				// System.err.println(r);
 			}
@@ -547,23 +528,23 @@ public class TestTransformers extends TestEnv {
 			// printLogs();
 		}
 
-		private void doTestRuntime(SubSet input, FeatureSelector selecter) {
+		private void doTestRuntime(SubSet input, FeatureSelector selector) {
 			SubSet d = input.clone();
 			int initSize = d.getNumFeatures();
 
 			Stopwatch sw = new Stopwatch();
 
 			sw.start();
-			selecter.fit(d);
+			selector.fit(d);
 			sw.stop();
-			int toRm = selecter.getFeatureIndicesToRemove().size();
-			// System.out.println(selecter.getName() + " (fit): " + sw + ", rm: " + toRm);
+			int toRm = selector.getFeatureIndicesToRemove().size();
+			// System.out.println(selector.getName() + " (fit): " + sw + ", rm: " + toRm);
 
 			sw.start();
-			selecter.transform(d);
+			selector.transform(d);
 			sw.stop();
 			int diff = initSize - (d.getNumFeatures() + toRm);
-			// System.out.println(selecter.getName() + " (transform): " + sw + ", diff rm: " + diff);
+			// System.out.println(selector.getName() + " (transform): " + sw + ", diff rm: " + diff);
 			Assert.assertEquals(0, diff);
 		}
 
@@ -669,12 +650,43 @@ public class TestTransformers extends TestEnv {
 
 		@Test
 		public void testMakeDense() throws Exception {
-			// TODO
+			SubSet sparse = TestDataLoader.getInstance().getDataset(true, true).getDataset();
+			SubSet dense = new MakeDenseTransformer().transformInPlace(false).fitAndTransform(sparse);
+			SubSet denseInPlace = new MakeDenseTransformer().transformInPlace(true).fitAndTransform(sparse);
+
+			Assert.assertTrue(dense.get(0).getFeatures() instanceof DenseVector);
+			Assert.assertTrue(denseInPlace.get(denseInPlace.size()-1).getFeatures() instanceof DenseVector);
+			// These should be same instance
+			Assert.assertTrue(sparse == denseInPlace);
+
+			// Same for with mem-save option - this should make the feature vectors as floats instead
+			GlobalConfig.getInstance().setMemSaveMode(true); 
+
+			sparse = TestDataLoader.getInstance().getDataset(true, true).getDataset();
+			dense = new MakeDenseTransformer().transformInPlace(false).fitAndTransform(sparse);
+			denseInPlace = new MakeDenseTransformer().transformInPlace(true).fitAndTransform(sparse);
+
+			Assert.assertTrue(dense.get(0).getFeatures() instanceof DenseFloatVector);
+			Assert.assertTrue(denseInPlace.get(denseInPlace.size()-1).getFeatures() instanceof DenseFloatVector);
+			// These should be same instance
+			Assert.assertTrue(sparse == denseInPlace);
 		}
 
 		@Test
 		public void testMakeSparse() throws Exception {
-			// TODO
+			// Start with a dense version
+			SubSet dense = new MakeDenseTransformer().fitAndTransform(TestDataLoader.getInstance().getDataset(true, true).getDataset());
+
+			SubSet denseClone = dense.clone();
+			Assert.assertFalse("should be different objects",dense == denseClone);
+
+			SubSet sparse = new MakeSparseTransformer().transform(dense);
+			SubSet sparse2 = new MakeSparseTransformer().transformInPlace(true).transform(denseClone);
+
+			Assert.assertTrue(sparse.get(0).getFeatures() instanceof SparseVector);
+			Assert.assertTrue(sparse2.get(sparse2.size()-1).getFeatures() instanceof SparseVector);
+			Assert.assertTrue("inPlace-transformation should return the same instance",denseClone == sparse2);
+
 		}
 	}
 
@@ -682,7 +694,138 @@ public class TestTransformers extends TestEnv {
 
 		@Test
 		public void testSingleFeatureImputer() throws Exception {
-			// TODO
+			SingleFeatureImputer imputer =  new SingleFeatureImputer();
+			
+			Assert.assertTrue(imputer.appliesToNewObjects());
+			Assert.assertTrue(imputer.applicableToClassificationData());
+			Assert.assertTrue(imputer.applicableToRegressionData());
+
+			imputer.transformInPlace(false);
+			SubSet data = TestDataLoader.loadSubset(TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS_100);
+			imputer.fit(data);
+			int numFeatsIn = data.getNumAttributes();
+			Assert.assertEquals(numFeatsIn, imputer.getSubstitutions().size());
+			// Create a completely empty input and all indices should have the mean (default impute strategy) value
+			Pair<SparseVector, DenseVector> testVectors = getEmptyVectors(numFeatsIn, 0, -50);
+			SparseVector sparseNanIn = testVectors.getLeft();
+			DenseVector denseNanIn = testVectors.getRight();
+
+			// Impute them
+			FeatureVector sparseOut = imputer.transform(sparseNanIn);
+			FeatureVector denseOut = imputer.transform(denseNanIn);
+			for (int i = 0; i< numFeatsIn; i++){
+				double expected = -50;
+				if (i!=0){
+					expected = imputer.getSubstitutions().get(i);
+				}
+				Assert.assertEquals(expected, sparseOut.getFeature(i), 0.0001);
+				Assert.assertEquals(expected, denseOut.getFeature(i), 0.0001);
+			}
+
+			// The same but with dense input
+			SingleFeatureImputer imputerDense =  new SingleFeatureImputer();
+			
+			Assert.assertTrue(imputerDense.appliesToNewObjects());
+			Assert.assertTrue(imputerDense.applicableToClassificationData());
+			Assert.assertTrue(imputerDense.applicableToRegressionData());
+
+			imputerDense.transformInPlace(false);
+			data = new MakeDenseTransformer().fitAndTransform(TestDataLoader.loadSubset(TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS_100));
+			imputerDense.fit(data);
+			numFeatsIn = data.getNumAttributes();
+			Assert.assertEquals(numFeatsIn, imputerDense.getSubstitutions().size());
+			// Create a completely empty input and all indices should have the mean (default impute strategy) value
+			testVectors = getEmptyVectors(numFeatsIn, 4, 10);
+			sparseNanIn = testVectors.getLeft();
+			denseNanIn = testVectors.getRight();
+
+			// Impute them
+			sparseOut = imputerDense.transform(sparseNanIn);
+			denseOut = imputerDense.transform(denseNanIn);
+			for (int i = 0; i< numFeatsIn; i++){
+				double expected = 10;
+				if (i!=4){
+					expected = imputerDense.getSubstitutions().get(i);
+				}
+				Assert.assertEquals(expected, sparseOut.getFeature(i), 0.0001);
+				Assert.assertEquals(expected, denseOut.getFeature(i), 0.0001);
+			}
+			
+		}
+
+		@Test
+		public void testSingleFeatureImputerMedian() throws Exception {
+			// The median imputation has a different implementation - and thus need a separate test
+			SingleFeatureImputer imputer =  new SingleFeatureImputer().withStrategy(ImputationStrategy.MEDIAN);
+			
+			SubSet toyData = new SubSet();
+			// -1 0 7
+			toyData.add(new DataRecord(0., Arrays.asList((SparseFeature)new SparseFeatureImpl(0, -1),(SparseFeature)new SparseFeatureImpl(2, 7))));
+			// -2 0 10
+			toyData.add(new DataRecord(0., Arrays.asList((SparseFeature)new SparseFeatureImpl(0, -2),(SparseFeature)new SparseFeatureImpl(2, 10))));
+			// 1 0 2
+			toyData.add(new DataRecord(0., Arrays.asList((SparseFeature)new SparseFeatureImpl(0, 1),(SparseFeature)new SparseFeatureImpl(2, 2))));
+
+			int numFeatsIn = toyData.getNumAttributes();
+			Assert.assertEquals(3, numFeatsIn);
+			imputer.fit(toyData);
+			// we can manually calculate the median values
+			Assert.assertEquals(Map.of(0,-1., 1, 0., 2, 7.), imputer.getSubstitutions());
+
+			// Create completely empty inputs and all indices should have the median value from imputation
+			Pair<SparseVector, DenseVector> testVectors = getEmptyVectors(numFeatsIn, 0, -50);
+			SparseVector sparseNanIn = testVectors.getLeft();
+			DenseVector denseNanIn = testVectors.getRight();
+
+			// Impute them
+			FeatureVector sparseOut = imputer.transform(sparseNanIn);
+			FeatureVector denseOut = imputer.transform(denseNanIn);
+			for (int i = 0; i< numFeatsIn; i++){
+				double expected = -50;
+				if (i!=0){
+					expected = imputer.getSubstitutions().get(i);
+				}
+				Assert.assertEquals(expected, sparseOut.getFeature(i), 0.0001);
+				Assert.assertEquals(expected, denseOut.getFeature(i), 0.0001);
+			}
+
+
+			// The same but for Dense input
+			SubSet toyDense = new MakeDenseTransformer().fitAndTransform(toyData);
+			SingleFeatureImputer imputer2 =  new SingleFeatureImputer().withStrategy(ImputationStrategy.MEDIAN);
+			imputer2.fit(toyDense);
+
+			// Get new Empty input vectors
+			testVectors = getEmptyVectors(numFeatsIn, 1, 5);
+			sparseNanIn = testVectors.getLeft();
+			denseNanIn = testVectors.getRight();
+			// Impute them
+			sparseOut = imputer2.transform(sparseNanIn);
+			denseOut = imputer2.transform(denseNanIn);
+			for (int i = 0; i< numFeatsIn; i++){
+				double expected = 5;
+				if (i!=1){
+					expected = imputer.getSubstitutions().get(i);
+				}
+				Assert.assertEquals(expected, sparseOut.getFeature(i), 0.0001);
+				Assert.assertEquals(expected, denseOut.getFeature(i), 0.0001);
+			}
+			
+		}
+
+		public Pair<SparseVector,DenseVector> getEmptyVectors(int fullLen,int fixedIndex, double fixedValue){
+			DenseVector denseNanIn = new DenseVector(fullLen).withFeature(fixedIndex, fixedValue); // Empty but with index=0 set something 
+
+			List<SparseFeature> nanFeats = new ArrayList<>();
+			for (int i = 0; i < fullLen; i++){
+				if (i == fixedIndex)
+					nanFeats.add(new SparseFeatureImpl(i, fixedValue));
+				else
+					nanFeats.add(new MissingValueFeature(i));
+			}
+
+			return Pair.of(new SparseVector(nanFeats), denseNanIn);
+
 		}
 
 	}
@@ -1245,7 +1388,7 @@ public class TestTransformers extends TestEnv {
 		List<Transformer> sparseTransformers = new ArrayList<>();
 		// sparseTransformers.add(new ZeroMaxScaler());
 		SingleFeatureImputer sfi = new SingleFeatureImputer();
-		sfi.setStrategy(ImputationStrategy.MEDIAN);
+		sfi.withStrategy(ImputationStrategy.MEDIAN);
 		sparseTransformers.add(sfi);
 
 		for (Transformer t : sparseTransformers) {

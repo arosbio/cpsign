@@ -142,7 +142,7 @@ public class TestAggregate extends CLIBaseTest{
 		// CLASSIFICATION
 		// ===========================
 		CmpdData classData_1 = TestResources.Cls.getAMES_126();
-		CSVCmpdData classData_2 = TestResources.Cls.getErronious();
+		CSVCmpdData classData_2 = TestResources.Cls.getErroneous();
 		//1
 		ChemCPClassifier sigacp = new ChemCPClassifier(new ACPClassifier(
 				new ICPClassifier(new NegativeDistanceToHyperplaneNCM(DEFAULT_LibLinear? new LinearSVC() : new C_SVC())),

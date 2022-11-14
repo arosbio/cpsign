@@ -39,9 +39,6 @@ public final class DescriptorFactory {
 	///////// INSTANTIATION AND LOADING OF PROVIDERS
 	///////////////////////////////////////////////////
 
-	//	LongestAliphaticChainDescriptor || 
-	//	impl instanceof TaeAminoAcidDescriptor)
-
 	private DescriptorFactory() throws IllegalStateException {
 		// Load all CPSign-descriptor ones
 		ServiceLoader<ChemDescriptor> loader = ServiceLoader.load(ChemDescriptor.class);
@@ -112,8 +109,8 @@ public final class DescriptorFactory {
 	}
 
 	public ChemDescriptor getDescriptor(String name) throws ProviderNotFoundException {
-		for (ChemDescriptor d: allDescriptors) {
-			for (String descName: TypeUtils.getNames(d))
+		for (ChemDescriptor d : allDescriptors) {
+			for (String descName : TypeUtils.getNames(d))
 				if (descName.toLowerCase().equals(name.toLowerCase()))
 					return d.clone();
 		}
