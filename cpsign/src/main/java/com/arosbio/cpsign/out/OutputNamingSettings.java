@@ -11,9 +11,8 @@ package com.arosbio.cpsign.out;
 
 import java.util.Collection;
 
-import org.apache.commons.math.util.MathUtils;
-
 import com.arosbio.chem.CPSignMolProperties;
+import com.arosbio.commons.MathUtils;
 
 public class OutputNamingSettings {
 
@@ -132,7 +131,7 @@ public class OutputNamingSettings {
 	public static final String SMILES_PROPERTY = "SMILES";
 	
 	private static String round(double val) {
-		return "" + MathUtils.round(val, 3);
+		return "" + MathUtils.roundToNSignificantFigures(val, 3);
 	}
 
 	// CP CLASSIFICATION

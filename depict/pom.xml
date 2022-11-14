@@ -55,14 +55,9 @@
 		</dependency>
 		<dependency>
 			<groupId>org.openscience.cdk</groupId>
-			<artifactId>cdk-bundle</artifactId>
+        	<artifactId>cdk-bundle</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>io.github.dan2097</groupId>
-			<artifactId>jna-inchi-all</artifactId>
-		</dependency>
-
-
+		
 		<!-- TEST dependencies-->
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -80,12 +75,6 @@
 			<groupId>org.openscience.cdk</groupId>
 			<artifactId>cdk-depict</artifactId>
 			<version>${cdk.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>log4j</groupId>
-					<artifactId>log4j</artifactId>
-				</exclusion>
-			</exclusions>
 			<scope>test</scope>
 		</dependency>
 		<dependency>

@@ -24,7 +24,8 @@
 	<packaging>jar</packaging>
 
 	<properties>
-		<cpsign.final.name>${project.name}-${project.version}</cpsign.final.name>
+		<!-- The name of the final 'fat jar' -->
+		<cpsign.final.name>${project.name}-${project.version}-fatjar</cpsign.final.name>
 
 		<main.class>com.arosbio.cpsign.app.CPSignApp</main.class>
 		<exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>

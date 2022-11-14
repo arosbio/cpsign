@@ -90,14 +90,10 @@
 	</build>
 
 	<dependencies>
-
+	
 		<dependency>
 			<groupId>org.openscience.cdk</groupId>
 			<artifactId>cdk-bundle</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>io.github.dan2097</groupId>
-			<artifactId>jna-inchi-all</artifactId>
 		</dependency>
 
 		<dependency>

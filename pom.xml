@@ -73,11 +73,9 @@
     <dependency.plugin.version>3.3.0</dependency.plugin.version>
     <jar.plugin.version>3.0.2</jar.plugin.version>
     <surefire.plugin.version>3.0.0-M5</surefire.plugin.version>
-    <proguard.plugin.version>2.3.1</proguard.plugin.version> <!-- TODO - remove for open src project - only for encrypt-imp -->
 
     <!-- Dependency versions -->
-    <cdk.version>2.7.1</cdk.version>
-    <jna-inchi.version>1.1</jna-inchi.version>
+    <cdk.version>2.8</cdk.version>
     <slf4j.version>1.7.36</slf4j.version>
     <logback.version>1.2.10</logback.version>
     <json-simple.version>4.0.1</json-simple.version>
@@ -114,29 +112,17 @@
   <!-- DEPENDENCY MANAGEMENT - SPECIFY SAME VERSIONS AND SIMPLIFY DEPS IN CHILDS -->
   <dependencyManagement>
     <dependencies>
+      
       <!-- CDK DEP -->
       <dependency>
         <groupId>org.openscience.cdk</groupId>
         <artifactId>cdk-bundle</artifactId>
         <version>${cdk.version}</version>
+        <!-- Trying to reduce the final JAR size and remove Log4j and unnecessary dependencies -->
         <exclusions>
           <exclusion>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-          </exclusion>
-          <!-- the InChI version here have bugs - we import a newer version manually -->
-          <exclusion>
-            <groupId>io.github.dan2097</groupId>
-            <artifactId>jna-inchi-api</artifactId>
-          </exclusion>
-          <exclusion>
-            <groupId>io.github.dan2097</groupId>
-            <artifactId>jna-inchi-core</artifactId>
-          </exclusion>
-          <!-- Remove Log4j - we include the SL4j-bridge -->
-          <exclusion>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-1.2-api</artifactId>
+            <groupId>org.openscience.cdk</groupId>
+            <artifactId>cdk-extra</artifactId>
           </exclusion>
           <exclusion>
             <groupId>org.openscience.cdk</groupId>
@@ -144,17 +130,45 @@
           </exclusion>
           <exclusion>
             <groupId>org.openscience.cdk</groupId>
+            <artifactId>cdk-jniinchi-support</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.openscience.cdk</groupId>
+            <artifactId>cdk-legacy</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.openscience.cdk</groupId>
+            <artifactId>cdk-qsarionpot</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.openscience.cdk</groupId>
+            <artifactId>cdk-ionpot</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.openscience.cdk</groupId>
+            <artifactId>cdk-qsarcml</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.openscience.cdk</groupId>
+            <artifactId>cdk-libiomd</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.openscience.cdk</groupId>
+            <artifactId>cdk-pdbcml</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.openscience.cdk</groupId>
             <artifactId>cdk-libiocml</artifactId>
           </exclusion>
-
+          <exclusion>
+            <groupId>org.freehep</groupId>
+            <artifactId>freehep-graphicsio-svg</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.freehep</groupId>
+            <artifactId>freehep-graphicsio-ps</artifactId>
+          </exclusion>
         </exclusions>
-      </dependency>
-
-      <!-- Manual import of newer version of InChI library -->
-      <dependency>
-        <groupId>io.github.dan2097</groupId>
-        <artifactId>jna-inchi-all</artifactId>
-        <version>${jna-inchi.version}</version>
       </dependency>
 
       <dependency>
