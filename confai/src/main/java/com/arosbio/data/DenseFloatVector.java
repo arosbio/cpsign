@@ -158,8 +158,15 @@ public class DenseFloatVector implements FeatureVector {
 	}
 
 	@Override
-	public void setFeature(int index, Double newValue) {
+	public DenseFloatVector withFeature(int index, Double newValue) {
 		vector[index] = (newValue !=null ? newValue.floatValue() : Float.NaN);
+		return this;
+	}
+
+	@Override
+	public DenseFloatVector withFeature(int index, int newValue) {
+		vector[index] = newValue;
+		return this;
 	}
 
 	public boolean equals(Object o) {

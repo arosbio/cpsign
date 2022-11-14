@@ -49,7 +49,7 @@ public class BenchmarkData extends TestEnv {
 		int numAttr = 100;
 		DenseVector dv = new DenseVector(new double[numAttr]);
 		for (int i=0; i<numAttr; i++) {
-			dv.setFeature(i, (double) (i % 10));
+			dv.withFeature(i, (double) (i % 10));
 		}
 		SparseVector sv = new SparseVector(dv);
 		DenseVector dv2 = new DenseVector(dv, dv.getLargestFeatureIndex());

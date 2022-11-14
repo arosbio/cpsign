@@ -371,7 +371,7 @@ public class ICPClassifier implements ICP, ClassificationPredictor {
 			Feature oldInstance = f.clone();
 
 			// Set the new updated value
-			example.setFeature(oldInstance.getIndex(), oldInstance.getValue()+stepsize);
+			example.withFeature(oldInstance.getIndex(), oldInstance.getValue()+stepsize);
 
 			//predict and extract the p-value for the class
 			Map<Integer, Double> fresult = predict(example);
@@ -383,7 +383,7 @@ public class ICPClassifier implements ICP, ClassificationPredictor {
 			LOGGER.trace("Normal={}, altered={}, diff={}",originalPvalue,pval,diff);
 
 			// Set the value in example feature back
-			example.setFeature(f.getIndex(), oldInstance.getValue());
+			example.withFeature(f.getIndex(), oldInstance.getValue());
 		}
 
 		return gradient;

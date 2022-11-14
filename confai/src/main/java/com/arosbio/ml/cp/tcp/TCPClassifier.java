@@ -399,14 +399,14 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 			double oldValue = f.getValue();
 
 			// Update it to the new
-			example.setFeature(f.getIndex(), f.getValue()+stepsize);
+			example.withFeature(f.getIndex(), f.getValue()+stepsize);
 
 			// Predict it and store in the gradient
 			double diff = (predictPvalueForClass(label, example)-normalPvalue)/stepsize;
 			gradient.add(new SparseFeatureImpl(f.getIndex(), diff));
 
 			// Change it back to what it was!
-			example.setFeature(f.getIndex(), oldValue);
+			example.withFeature(f.getIndex(), oldValue);
 		}
 
 		return gradient;

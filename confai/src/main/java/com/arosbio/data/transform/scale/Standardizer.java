@@ -300,7 +300,7 @@ public class Standardizer extends ColumnTransformer implements FeatureScaler, Al
 		
 		FeatureVector toReturn = (inPlace ? object : object.clone());
 		for (Map.Entry<Integer, double[]> column : scaleFactors.entrySet()) {
-			toReturn.setFeature(column.getKey(), 
+			toReturn.withFeature(column.getKey(), 
 					transformOneFeature(
 							object.getFeature(column.getKey()), 
 							column.getValue()[0], 

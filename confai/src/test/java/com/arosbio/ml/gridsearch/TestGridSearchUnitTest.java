@@ -660,9 +660,9 @@ public class TestGridSearchUnitTest extends UnitTestInitializer {
 					// SYS_ERR.println("NUM RECORDS: " + info.getNumSuccessfullyAdded());
 
 					SubSet data = ds.getDataset();
-					data.get(3).getFeatures().setFeature(0, null);
-					data.get(7).getFeatures().setFeature(1, Double.NaN);
-					data.get(15).getFeatures().setFeature(1, Double.NaN);
+					data.get(3).getFeatures().withFeature(0, null);
+					data.get(7).getFeatures().withFeature(1, Double.NaN);
+					data.get(15).getFeatures().withFeature(1, Double.NaN);
 
 			Assert.assertTrue(DataUtils.containsMissingFeatures(data));
 		}

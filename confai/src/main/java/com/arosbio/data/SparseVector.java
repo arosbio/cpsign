@@ -163,7 +163,7 @@ public class SparseVector implements FeatureVector {
 	}
 
 	@Override
-	public void setFeature(int index, Double newValue) 
+	public SparseVector withFeature(int index, Double newValue) 
 			throws IndexOutOfBoundsException {
 		if (index < 0) {
 			throw new IndexOutOfBoundsException("Indexes starts at 0");
@@ -186,6 +186,13 @@ public class SparseVector implements FeatureVector {
 			}
 		}
 
+		return this;
+	}
+
+	@Override
+	public SparseVector withFeature(int index, int newValue) 
+			throws IndexOutOfBoundsException {
+		return withFeature(index, (double) newValue);
 	}
 
 	@Override

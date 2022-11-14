@@ -299,7 +299,7 @@ public class ZeroMaxScaler extends ColumnTransformer implements FeatureScaler, A
 		for (Feature f : object) {
 			Double scaleFac = scaleFactors.get(f.getIndex());
 			if (scaleFac != null) {
-				transformed.setFeature(f.getIndex(),scaleFac * f.getValue());
+				transformed.withFeature(f.getIndex(),scaleFac * f.getValue());
 			}
 		}
 		return transformed;

@@ -294,7 +294,7 @@ public class VectorNormalizer implements VectorScaler, Aliased {
 		FeatureVector toReturn = (inPlace ? object : object.clone());
 		
 		for (Feature f : toReturn) {
-			toReturn.setFeature(f.getIndex(), f.getValue()/norm);
+			toReturn.withFeature(f.getIndex(), f.getValue()/norm);
 		}
 		return toReturn;
 	}

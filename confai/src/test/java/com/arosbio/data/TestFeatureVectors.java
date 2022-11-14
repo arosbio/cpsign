@@ -41,7 +41,7 @@ public class TestFeatureVectors {
 		Assert.assertEquals(-1, v.getLargestFeatureIndex());
 
 		// 1 length
-		sp.setFeature(1, 1d);
+		sp.withFeature(1, 1d);
 		Assert.assertEquals(1, sp.getLargestFeatureIndex());
 		v = new DenseVector(sp, 1);
 		Assert.assertEquals(1, v.getLargestFeatureIndex());
@@ -49,7 +49,7 @@ public class TestFeatureVectors {
 		Assert.assertEquals(1, v.getFeature(1),0.000001);
 
 		// 2 length
-		sp.setFeature(5, 2.5);
+		sp.withFeature(5, 2.5);
 		Assert.assertEquals(5, sp.getLargestFeatureIndex());
 		Assert.assertEquals(2, sp.getNumExplicitFeatures());
 		v = new DenseVector(sp,-1);
@@ -156,11 +156,11 @@ public class TestFeatureVectors {
 
 	@Test
 	public void testSparseVector() {
-		FeatureVector v = new SparseVector();
-		v.setFeature(2, 4d);
-		v.setFeature(5, 3d);
-		v.setFeature(6, -4d);
-		v.setFeature(0, 40d);
+		FeatureVector v = new SparseVector()
+			.withFeature(2, 4d)
+			.withFeature(5, 3d)
+			.withFeature(6, -4d)
+			.withFeature(0, 40d);
 		//		System.err.println(v);
 
 		Assert.assertEquals(3d, v.getFeature(5), 0.00001);

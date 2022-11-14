@@ -40,7 +40,7 @@ public class DenseVector implements FeatureVector {
 	
 	/**
 	 * Create a vector with {@code maxFeatureIndex} as the largest feature index (i.e. {@code maxFeatureIndex+1} attributes of features).
-	 * The values will be initialized with {code Double.NaN} to signify that no values has been added yet.
+	 * The values will be initialized with {@code Double.NaN} to signify that no values has been added yet.
 	 * @param maxFeatureIndex The largest feature index
 	 */
 	public DenseVector(int maxFeatureIndex) {
@@ -163,8 +163,15 @@ public class DenseVector implements FeatureVector {
 	}
 
 	@Override
-	public void setFeature(int index, Double newValue) {
+	public DenseVector withFeature(int index, Double newValue) {
 		vector[index] = newValue;
+		return this;
+	}
+
+	@Override
+	public DenseVector withFeature(int index, int newValue) {
+		vector[index] = newValue;
+		return this;
 	}
 
 	public boolean equals(Object o) {

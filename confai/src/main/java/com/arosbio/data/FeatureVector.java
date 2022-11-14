@@ -109,9 +109,19 @@ public interface FeatureVector extends Iterable<FeatureVector.Feature> {
 	 * Update the value at a specific index
 	 * @param index The index
 	 * @param newValue The new value that should be set
+	 * @return the calling instance, for fluid API
 	 * @throws IndexOutOfBoundsException Trying to set a feature that is not within the range of this vector
 	 */
-	public void setFeature(int index, Double newValue) throws IndexOutOfBoundsException;
+	public FeatureVector withFeature(int index, Double newValue) throws IndexOutOfBoundsException;
+
+	/**
+	 * Update the value at a specific index
+	 * @param index The index
+	 * @param newValue The new value of that index
+	 * @return the calling instance, for fluid API
+	 * @throws IndexOutOfBoundsException Trying to set a feature that is not within the range of this vector
+	 */
+	public FeatureVector withFeature(int index, int newValue) throws IndexOutOfBoundsException;
 	
 	/**
 	 * Generate a deep copy of the instance

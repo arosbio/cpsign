@@ -297,7 +297,7 @@ public final class IVAPClassifier implements IVAP, ClassificationPredictor {
 			Feature oldInstance = f.clone();
 
 			// Set the new updated value
-			example.setFeature(f.getIndex(), f.getValue()+stepsize);
+			example.withFeature(f.getIndex(), f.getValue()+stepsize);
 
 			//predict and extract the p-value for the class
 			Map<Integer, Pair<Double,Double>> fresult = predict(example);
@@ -310,7 +310,7 @@ public final class IVAPClassifier implements IVAP, ClassificationPredictor {
 					originalPred,alteredPred,diff);
 
 			// Set the value in example feature back
-			example.setFeature(f.getIndex(), oldInstance.getValue());
+			example.withFeature(f.getIndex(), oldInstance.getValue());
 		}
 
 		return gradient;
