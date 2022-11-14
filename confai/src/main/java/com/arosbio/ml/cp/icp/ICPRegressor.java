@@ -397,7 +397,7 @@ public class ICPRegressor implements ICP, RegressionPredictor {
 			Feature oldInstance = f.clone();
 
 			// Set the new updated value
-			instance.setFeature(f.getIndex(), f.getValue()+stepsize);
+			instance.withFeature(f.getIndex(), f.getValue()+stepsize);
 
 			//Predict modified feature vector
 			double mpHat = predictMidpoint(instance);
@@ -408,7 +408,7 @@ public class ICPRegressor implements ICP, RegressionPredictor {
 			gradient.add(new SparseFeatureImpl(oldInstance.getIndex(), derivate));
 
 			//Set the value in example feature back
-			instance.setFeature(f.getIndex(), oldInstance.getValue());
+			instance.withFeature(f.getIndex(), oldInstance.getValue());
 
 		}
 		if (LOGGER.isTraceEnabled())

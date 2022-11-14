@@ -30,7 +30,7 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 	@Test
 	public void Test_CSV_Classification() throws Exception{
 		// 19 lines of records, 1 not OK at all, 1 line with missing value
-		CSVCmpdData data = TestResources.Cls.getErronious();
+		CSVCmpdData data = TestResources.Cls.getErroneous();
 		try(MolAndActivityConverter molAct = MolAndActivityConverter.classificationConverter(new CSVFile(data.uri()).getIterator(), 
 			data.property(), 
 			new NamedLabels(data.labelsStr()));){
@@ -94,7 +94,7 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 	@Test
 	public void Test_CSV_Regression() throws Exception {
 		// 10 lines total, 2 bad smiles, 1 missing target value, 1 invalid target
-		CSVCmpdData data = TestResources.Reg.getErronious();
+		CSVCmpdData data = TestResources.Reg.getErroneous();
 
 		
 		try (

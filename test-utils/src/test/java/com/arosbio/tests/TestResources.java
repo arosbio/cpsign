@@ -245,7 +245,7 @@ public class TestResources {
 			return new CmpdData(getURL(CmpdData.CLF_FOLDER+"testmol.mol"), Format.SDF, PROPERTY, AMES_LABELS);
 		}
 
-		public static CSVCmpdData getErronious(){
+		public static CSVCmpdData getErroneous(){
 			return new CSVCmpdData(getURL(CmpdData.CLF_FOLDER+"missing_activities.csv"), "solubility(fake!)", '\t', Arrays.asList("POS","NEG"));
 		}
 
@@ -300,7 +300,7 @@ public class TestResources {
 		 * Two invalid smilies, one missing activity and one invalid activity (4 invalid records). 6 valid records.
 		 * Saved using Excel and has a BOM in the beginning, which might screw up reading from CSV
 		 */
-		public static CSVCmpdData getErronious(){
+		public static CSVCmpdData getErroneous(){
 			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"invalid_smiles.csv"), SOLUBILITY_PROPERTY,';');
 		}
 		public static CSVCmpdData getSolubility_10_multicol(){

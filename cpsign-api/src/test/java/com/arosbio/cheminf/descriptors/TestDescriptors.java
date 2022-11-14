@@ -58,22 +58,6 @@ import ch.qos.logback.classic.Logger;
 public class TestDescriptors extends UnitTestBase {
 
 	boolean print = false;
-	// final private String csv_many_cols = "/resources/smiles_files/smiles_synthetic_many_cols.csv";
-
-	// @Test
-	// public void testMolWeight() throws IllegalStateException, CDKException {
-	// doCheckDescriptor(new MolWeightDescriptor());
-	// }
-	//
-	// @Test
-	// public void testVABCVolume() throws IllegalStateException, CDKException {
-	// doCheckDescriptor(new VABCVolumeDescriptor());
-	// }
-	//
-	// @Test
-	// public void testXlogP() throws IllegalStateException, CDKException {
-	// doCheckDescriptor(new XLogPDescriptor());
-	// }
 
 	@Test
 	public void testUserSuppliedDescriptor()
@@ -201,7 +185,6 @@ public class TestDescriptors extends UnitTestBase {
 		IAtomContainer test = getTestMol();
 		SYS_OUT.println(desc.getConfigParameters());
 		SYS_OUT.println(desc.calculateDescriptors(test));
-		printLogs();
 	}
 
 	@Test
@@ -209,12 +192,6 @@ public class TestDescriptors extends UnitTestBase {
 		List<ChemDescriptor> desc = DescriptorFactory.getInstance().getDescriptorsList();
 		for (ChemDescriptor d : desc) {
 			if (!(d instanceof SignaturesDescriptor) && ! (d instanceof MockFailingDescriptor)) {
-
-				// if (d instanceof CDKPhysChemWrapper) {
-				// IMolecularDescriptor imd = ((CDKPhysChemWrapper) d).getCDKDescriptor();
-				// if (imd instanceof LongestAliphaticChainDescriptor)
-				// continue; // SKIP IT FOR NOW
-				// }
 				doCheckDescriptor(d);
 			}
 		}
@@ -229,11 +206,6 @@ public class TestDescriptors extends UnitTestBase {
 			test = CDKConfigureAtomContainer.calculate3DCoordinates(test, false);
 		}
 		List<SparseFeature> l = desc.calculateDescriptors(test);
-		// Assert.assertEquals(desc.getNumAttributes(), l.size());
-		// for (int i=0; i<l.size(); i++) {
-		// SparseFeature f = l.get(i);
-		// Assert.assertEquals(i, f.getIndex());
-		// }
 		Assert.assertNotNull(l);
 		Assert.assertTrue(maxNumFeats >= l.size());
 

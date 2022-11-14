@@ -31,7 +31,7 @@ public class TestCSVChemReader extends UnitTestBase {
 
 	@Test
 	public void testTABDelim() throws IOException{
-		CSVCmpdData tabFile = TestResources.Cls.getErronious();
+		CSVCmpdData tabFile = TestResources.Cls.getErroneous();
 		try(
 				CSVChemFileReader smilesReader = new CSVChemFileReader(CSVFormat.TDF.withHeader(), new InputStreamReader(tabFile.url().openStream()));){
 			IAtomContainer mol;
@@ -67,7 +67,7 @@ public class TestCSVChemReader extends UnitTestBase {
 	@Test
 	public void testInvalidSmilesRecordIndex() throws Exception {
 
-		CSVCmpdData containsInvalidSMILES = TestResources.Reg.getErronious();
+		CSVCmpdData containsInvalidSMILES = TestResources.Reg.getErroneous();
 
 		CSVFile csvFile = new CSVFile(containsInvalidSMILES.uri()).setDelimiter(containsInvalidSMILES.delim());
 

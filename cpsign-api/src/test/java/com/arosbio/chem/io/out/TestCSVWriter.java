@@ -102,7 +102,7 @@ public class TestCSVWriter extends UnitTestBase {
 		writeMols(TestResources.Reg.getSolubility_10_multicol().url().openStream(), 
 				CSVFormat.DEFAULT.withDelimiter('\t').withHeader());
 		System.out.println("\n\n");
-		writeMols(TestResources.Reg.getErronious().url().openStream(), 
+		writeMols(TestResources.Reg.getErroneous().url().openStream(), 
 				CSVFormat.DEFAULT.withDelimiter('\t').withHeader());
 
 	}
