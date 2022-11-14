@@ -70,6 +70,7 @@ import com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth;
 import com.arosbio.ml.metrics.cp.regression.MedianPredictionIntervalWidth;
 import com.arosbio.ml.metrics.regression.MAE;
 import com.arosbio.ml.sampling.RandomSampling;
+import com.arosbio.ml.sampling.RandomStratifiedSampling;
 import com.arosbio.ml.testing.KFoldCV;
 import com.arosbio.ml.testing.RandomSplit;
 import com.arosbio.ml.testing.TestRunner;
@@ -129,7 +130,7 @@ public class TestGridSearchUnitTest extends UnitTestInitializer {
 	@Test
 	public void testGridSearchACPClassLinearKernel() throws Exception {
 		ACPClassifier acp = new ACPClassifier(new NegativeDistanceToHyperplaneNCM(new LinearSVC()),
-				new RandomSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
+				new RandomStratifiedSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
 
 		doTestGridSearchNCMEstimator(acp, new ProportionSingleLabelPredictions(CV_CONF));
 
@@ -315,7 +316,7 @@ public class TestGridSearchUnitTest extends UnitTestInitializer {
 	public void testGridSearchACPClassRBF()
 			throws IllegalArgumentException, IOException, Exception {
 		ACPClassifier acp = new ACPClassifier(new NegativeDistanceToHyperplaneNCM(new C_SVC()),
-				new RandomSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
+				new RandomStratifiedSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
 		doTestGridSearch(acp,
 				new MedianPredictionIntervalWidth(CV_CONF),
 				new ProportionSingleLabelPredictions(CV_CONF),
@@ -362,7 +363,7 @@ public class TestGridSearchUnitTest extends UnitTestInitializer {
 		// failing for: rng seed: 1640267630074
 		// CPSignSettings.getInstance().setRNGSeed(1640267630074l);
 		AVAPClassifier acp = new AVAPClassifier(new LinearSVC(),
-				new RandomSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
+				new RandomStratifiedSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
 		// failing for: rng seed: 1640267630074
 		// CPSignSettings.getInstance().setRNGSeed(1640267630074l);
 		// SYS_ERR.println("rng seed: " + CPSignSettings.getInstance().getRNGSeed());
@@ -380,7 +381,7 @@ public class TestGridSearchUnitTest extends UnitTestInitializer {
 	@Test
 	public void testGridSearchVAPClassRBF() throws Exception {
 		AVAPClassifier acp = new AVAPClassifier(new C_SVC(),
-				new RandomSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
+				new RandomStratifiedSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
 
 		doTestGridSearch(acp,
 				new MedianPredictionIntervalWidth(CV_CONF),
