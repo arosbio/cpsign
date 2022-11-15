@@ -132,20 +132,18 @@ public class VarianceBasedSelector extends ColumnTransformer implements FeatureS
 	}
 
 	private void fitSparseData(Collection<DataRecord> recs) {
-		if (! getColumns().useAll()) {
-			LOGGER.debug("Fitting transformer using a subset of features");
-			fitSparseDataSubset(recs);
-			return;
-		}
+
 		int maxFeatIndex = DataUtils.getMaxFeatureIndex(recs);
-		// Loop through all of them and make the counts
-		Variance[] counts = new Variance[maxFeatIndex+1];
+		// Instantiate all variance-instances
+		Map<Integer, Variance> counts = new HashMap<>();
+		for (int column : getColumns().getColumns(maxFeatIndex)){
+			counts.put(column, new Variance());
+		}
+		// Go through all data and update the variance instances
 		for (DataRecord r : recs) {
 			for (Feature f : r.getFeatures()){
-				if (Double.isFinite(f.getValue())) {
-					if (counts[f.getIndex()]==null)
-						counts[f.getIndex()]=new Variance();
-					counts[f.getIndex()].increment(f.getValue());
+				if (counts.containsKey(f.getIndex()) && Double.isFinite(f.getValue())) {
+					counts.get(f.getIndex()).increment(f.getValue());
 				}
 			}
 		}
@@ -154,82 +152,28 @@ public class VarianceBasedSelector extends ColumnTransformer implements FeatureS
 
 
 		List<IndexedValue> vals = new ArrayList<>();
-		for (int col : getColumns().getColumns(maxFeatIndex) ) {
-			Variance colVar = counts[col];
-			if (colVar == null) {
+		for (Map.Entry<Integer,Variance> kv : counts.entrySet()){
+			Variance colVar = kv.getValue();
+			if (colVar.getN() == 0){
 				// this was never encountered - 0 variance!
-				vals.add(new IndexedValue(col, 0d));
+				vals.add(new IndexedValue(kv.getKey(), 0d));
 				continue;
 			}
-
 			int zerosToAdd = nRecs - (int) colVar.getN();
 			for (int i=0; i<zerosToAdd; i++) {
 				colVar.increment(0d);
 			}
-			vals.add(new IndexedValue(col, colVar.getResult()));
-		}
+			vals.add(new IndexedValue(kv.getKey(), colVar.getResult()));
 
-		toRemove = criterion.getIndicesToRemove(vals);
-
-	}
-
-	private void fitSparseDataSubset(Collection<DataRecord> recs) {
-		int maxFeatIndex = DataUtils.getMaxFeatureIndex(recs);
-
-		// The indices to compute for
-		List<Integer> indices = getColumns().getColumns(maxFeatIndex);
-		int maxIndex = indices.get(indices.size()-1); // This list should always be sorted! Collections.max(indices);
-
-		Map<Integer, Variance> featureVariances = new HashMap<>();
-
-		// Loop through all of them and make the counts
-		for (DataRecord r : recs) {
-			for (Feature f : r.getFeatures()){
-				int index = f.getIndex();
-				if (index > maxIndex)
-					break;
-
-				if (indices.contains(index)) {
-					// Init if not seen before
-					if (!featureVariances.containsKey(index))
-						featureVariances.put(index, new Variance());
-
-					if (Double.isFinite(f.getValue())) {
-						featureVariances.get(index).increment(f.getValue());
-					}
-
-				}
-			}
-		}
-
-		int nRecs = recs.size();
-
-		List<IndexedValue> vals = new ArrayList<>();
-
-		for (int col : indices) { 
-			Variance colVar = featureVariances.get(col); 
-			if (colVar.getN() == 0) {
-				// this was never encountered - 0 variance!
-				vals.add(new IndexedValue(col, 0d));
-				continue;
-			}
-
-			int zerosToAdd = nRecs - (int) colVar.getN();
-			for (int i=0; i<zerosToAdd; i++) {
-				colVar.increment(0d);
-			}
-			vals.add(new IndexedValue(col, colVar.getResult()));
-			colVar.clear();
 		}
 
 		toRemove = criterion.getIndicesToRemove(vals);
 		Collections.sort(toRemove);
-
 	}
 
 	private void fitDenseData(Collection<DataRecord> data) {
 		List<IndexedValue> variances = new ArrayList<>();
-		for (int col: getColumns().getColumns(DataUtils.getMaxFeatureIndex(data))) {
+		for (int col : getColumns().getColumns(DataUtils.getMaxFeatureIndex(data))) {
 			variances.add(new IndexedValue(col, getVariance(data, col)));
 		}
 		toRemove = criterion.getIndicesToRemove(variances);

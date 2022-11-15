@@ -330,7 +330,7 @@ public class TestTransformers extends TestEnv {
 			sparse = vbs.fitAndTransform(sparse);
 			dense = vbs.clone().fitAndTransform(dense);
 
-			Assert.assertTrue(DataUtils.equals(sparse, dense));
+			Assert.assertTrue(DataUtils.equals(sparse, dense, 10e-20));
 
 			// Subset of columns
 
