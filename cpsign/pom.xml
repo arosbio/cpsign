@@ -80,7 +80,28 @@
 				</configuration>
 			</plugin>
 
-			<!-- FAT JAR - with all deps -->
+			<!-- THIN JAR - for maven central -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>${jar.plugin.version}</version>
+				<configuration>
+				  <archive>
+					<manifest>
+					  <mainClass>${main.class}</mainClass>
+					</manifest>
+					<manifestEntries>
+						<Implementation-Title>Aros Bio ${project.artifactId}</Implementation-Title>
+						<Implementation-Version>${project.version}</Implementation-Version>
+						<Implementation-Vendor-Id>${mf.impl.vendor}</Implementation-Vendor-Id>
+						<X-Compile-Source-JDK>${maven.compiler.source}</X-Compile-Source-JDK>
+                    	<X-Compile-Target-JDK>${maven.compiler.target}</X-Compile-Target-JDK>
+					</manifestEntries>
+				  </archive>
+				</configuration>
+			  </plugin>
+
+			<!-- FAT JAR - with all deps for GitHub releases -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>

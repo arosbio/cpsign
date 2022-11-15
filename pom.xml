@@ -71,7 +71,7 @@
     <javadoc.plugin.version>3.4.0</javadoc.plugin.version>
     <compiler.plugin.version>3.10.1</compiler.plugin.version>
     <dependency.plugin.version>3.3.0</dependency.plugin.version>
-    <jar.plugin.version>3.0.2</jar.plugin.version>
+    <jar.plugin.version>3.3.0</jar.plugin.version>
     <surefire.plugin.version>3.0.0-M5</surefire.plugin.version>
 
     <!-- Dependency versions -->

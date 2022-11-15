@@ -106,7 +106,7 @@ public class GridSearchResult {
 		StringBuilder sb = new StringBuilder("GridSearchResult for ");
 		sb.append(optimizationMetric.getName());
 		sb.append(" {best value: "); sb.append(bestParameters.get(0).getResult());
-		sb.append(", optimalParamters: "); 
+		sb.append(", optimalParameters: "); 
 		sb.append(bestParameters.get(0).getParams());
 		
 		if (optionalWarning != null) {
