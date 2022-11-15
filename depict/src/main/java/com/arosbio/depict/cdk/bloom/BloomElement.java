@@ -9,17 +9,26 @@
  */
 package com.arosbio.depict.cdk.bloom;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.openscience.cdk.renderer.elements.IRenderingElement;
 import org.openscience.cdk.renderer.elements.IRenderingVisitor;
+import org.openscience.cdk.renderer.elements.OvalElement;
 
-public class BloomElement implements IRenderingElement {
+/**
+ * The {@code BloomElement} extends the {@link OvalElement} of CDK in order to not cause any warnings from CDK depiction code when calculating
+ * the Bounds of the depiction. However, the default Bounds and padding added from the {@code BasicSceneGenerator} etc work well with our "bloom" 
+ * depictions so we only create an oval element with 0 radius at the coordinates of the first atom encountered (i.e. we do not add any 'volume' 
+ * to the bounds calculation).
+ */
+public class BloomElement extends OvalElement {
 
     private List<BloomingPoint> bloomPoints;
     
-    public BloomElement() {
+    public BloomElement(double x, double y) {
+        super(x,y, 0, new Color(0,0,0,0));
         this.bloomPoints = new ArrayList<>();
     }
 

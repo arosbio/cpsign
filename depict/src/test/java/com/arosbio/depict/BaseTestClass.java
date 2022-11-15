@@ -14,14 +14,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 
 import org.junit.Assert;
-import org.openscience.cdk.tools.LoggingToolFactory;
 
 public class BaseTestClass {
 
     public final static File TEST_OUTPUT_DIR = new File(new File("").getAbsoluteFile(),"testoutput");
 
     static {
-        LoggingToolFactory.setLoggingToolClass(DevNullLoggingTool.class);
         // create test output directory if not exists
         try{
             Files.createDirectories(TEST_OUTPUT_DIR.toPath());

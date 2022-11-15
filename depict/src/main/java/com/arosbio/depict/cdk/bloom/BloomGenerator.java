@@ -33,11 +33,15 @@ public class BloomGenerator implements IGenerator<IAtomContainer> {
 
        @Override
        public BloomElement generate(IAtomContainer object, RendererModel model) {
-              BloomElement element = new BloomElement();
+              BloomElement element = null;
 
               Map<?,?> colorMap = object.getProperty(DS_DATA,Map.class);
 
               for (IAtom atom : object.atoms()){
+                     // Create the element once we know the coordinates of the first atom
+                     if (element == null){
+                            element = new BloomElement(atom.getPoint2d().x, atom.getPoint2d().y);
+                     }
 
                      Double value = null;
                      if (colorMap!=null){
