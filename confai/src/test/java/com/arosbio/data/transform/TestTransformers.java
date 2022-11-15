@@ -25,7 +25,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
@@ -319,18 +318,21 @@ public class TestTransformers extends TestEnv {
 	public static class TestFeatureSelectors {
 
 		@Test
-		public void testVarianceSelect() throws Exception {
+		public void testVarianceSelector() throws Exception {
 			SubSet sparse = TestDataLoader.getInstance().getDataset(true, true).getDataset();
 			SubSet dense = new MakeDenseTransformer().transformInPlace(false).fitAndTransform(sparse);
 
 			// First try using all columns
 			VarianceBasedSelector vbs = new VarianceBasedSelector();
 			vbs.setSelectionCriterion(new SelectionCriterion(Criterion.KEEP_LARGER_THAN_MEDIAN));
-
+			VarianceBasedSelector vbsDense = vbs.clone();
 			sparse = vbs.fitAndTransform(sparse);
-			dense = vbs.clone().fitAndTransform(dense);
+			dense = vbsDense.fitAndTransform(dense);
 
-			Assert.assertTrue(DataUtils.equals(sparse, dense, 10e-20));
+			Assert.assertEquals(vbs.getFeatureIndicesToRemove(), vbsDense.getFeatureIndicesToRemove());
+
+			// LoggerUtils.setDebugMode(SYS_ERR);
+			// Assert.assertTrue(DataUtils.equals(sparse, dense, 10e-6));
 
 			// Subset of columns
 
@@ -348,18 +350,20 @@ public class TestTransformers extends TestEnv {
 			sparse = vbsSub.fitAndTransform(sparse);
 			dense = vbsSubClone.fitAndTransform(dense);
 
-			// The variance calculation differs slightly due to order of included values, so
-			// result might differ slightly
-			Set<Integer> differing = new HashSet<>(vbsSub.getIndicesToRemove());
-			differing.removeAll(vbsSubClone.getIndicesToRemove());
+			Assert.assertEquals(vbs.getFeatureIndicesToRemove(), vbsDense.getFeatureIndicesToRemove());
+
+			// // The variance calculation differs slightly due to order of included values, so
+			// // result might differ slightly
+			// Set<Integer> differing = new HashSet<>(vbsSub.getIndicesToRemove());
+			// differing.removeAll(vbsSubClone.getIndicesToRemove());
 			// SYS_ERR.println("different: " + differing);
 
-			Assert.assertTrue("Should differ less than 1%: " + differing.size(), differing.size() < 300 * .01);
+			// Assert.assertTrue("Should differ less than 1%: " + differing.size(), differing.size() < 300 * .01);
 
 		}
 
 		@Test
-		public void testVarianceSelector() {
+		public void testVarianceSelectorSmall() {
 			FeatureSelector selector = new VarianceBasedSelector();
 			List<DataRecord> records = new ArrayList<>();
 			records.add(new DataRecord(1d, new DenseVector(new double[] { 0d, 1d, 3d })));
@@ -652,24 +656,33 @@ public class TestTransformers extends TestEnv {
 		public void testMakeDense() throws Exception {
 			SubSet sparse = TestDataLoader.getInstance().getDataset(true, true).getDataset();
 			SubSet dense = new MakeDenseTransformer().transformInPlace(false).fitAndTransform(sparse);
-			SubSet denseInPlace = new MakeDenseTransformer().transformInPlace(true).fitAndTransform(sparse);
-
 			Assert.assertTrue(dense.get(0).getFeatures() instanceof DenseVector);
+			Assert.assertTrue(DataUtils.equals(sparse,dense));
+
+			// Check in-place
+			SubSet sparseClone = sparse.clone();
+			SubSet denseInPlace = new MakeDenseTransformer().transformInPlace(true).fitAndTransform(sparse);
 			Assert.assertTrue(denseInPlace.get(denseInPlace.size()-1).getFeatures() instanceof DenseVector);
 			// These should be same instance
 			Assert.assertTrue(sparse == denseInPlace);
+			Assert.assertTrue(DataUtils.equals(sparseClone,denseInPlace));
 
 			// Same for with mem-save option - this should make the feature vectors as floats instead
 			GlobalConfig.getInstance().setMemSaveMode(true); 
 
-			sparse = TestDataLoader.getInstance().getDataset(true, true).getDataset();
+			sparse = sparseClone.clone(); 
+			MakeDenseTransformer makeDense = new MakeDenseTransformer().transformInPlace(false);
+			Assert.assertFalse("Mem-save mode should be single-precision output",makeDense.useDoublePrecision());
 			dense = new MakeDenseTransformer().transformInPlace(false).fitAndTransform(sparse);
-			denseInPlace = new MakeDenseTransformer().transformInPlace(true).fitAndTransform(sparse);
+			Assert.assertTrue(DataUtils.equals(sparseClone,dense,1e-4));
 
+			// Check in-pace 
+			denseInPlace = new MakeDenseTransformer().transformInPlace(true).fitAndTransform(sparse);
 			Assert.assertTrue(dense.get(0).getFeatures() instanceof DenseFloatVector);
 			Assert.assertTrue(denseInPlace.get(denseInPlace.size()-1).getFeatures() instanceof DenseFloatVector);
 			// These should be same instance
 			Assert.assertTrue(sparse == denseInPlace);
+			Assert.assertTrue(DataUtils.equals(sparseClone,denseInPlace,1e-4));
 		}
 
 		@Test

@@ -102,8 +102,13 @@ public class VarianceBasedSelector extends ColumnTransformer implements FeatureS
 		return NAME;
 	}
 
-	public void setSelectionCriterion(SelectionCriterion crit) {
-		this.criterion = crit;
+	public void setSelectionCriterion(SelectionCriterion criterion) {
+		this.criterion = criterion;
+	}
+
+	public VarianceBasedSelector withSelectionCriterion(SelectionCriterion criterion){
+		this.criterion = criterion;
+		return this;
 	}
 
 	public SelectionCriterion getSelectionCriterion() {

@@ -21,18 +21,6 @@ import picocli.CommandLine.Option;
 
 public class OutputChemMixin {
 
-	// @Option(names = {"-of","--output-format"}, 
-	// 		description = "Output format of predictions, options:%n"+
-	// 		ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(1) json%n"+
-	// 		ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(2) TSV  (tab-delimited CSV)%n"+
-	// 		ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(3) sdf"+ParameterUtils.MULTIPLE_ARGUMENT_NAME_SPLITTER+"sdf-v2000%n"+
-	// 		ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(4) sdf-v3000%n"+
-	// 		ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(5) CSV  (comma-delimited CSV)%n"+
-	// 		ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(6) splitted-json   (writes a new JSON object for each record, separated with a new line)%n"+
-	// 		"Default: ${DEFAULT-VALUE}",
-	// 		paramLabel = ArgumentType.ID_OR_TEXT,
-	// 		converter = ChemOutputTypeConverter.class
-	// )
 	@Option(names = {"-of","--output-format"}, 
 			description = {"Output format of predictions, options:",
 			ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(1) json",

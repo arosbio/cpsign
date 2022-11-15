@@ -51,6 +51,7 @@ import com.arosbio.tests.TestResources.CSVCmpdData;
 import com.arosbio.tests.TestResources.CmpdData;
 import com.arosbio.tests.suites.CLITest;
 import com.arosbio.tests.utils.TestUtils;
+import com.arosbio.testutils.ChemTestUtils;
 import com.arosbio.testutils.TestChemDataLoader.PreTrainedModels;
 import com.github.cliftonlabs.json_simple.JsonArray;
 import com.github.cliftonlabs.json_simple.JsonObject;
@@ -95,23 +96,6 @@ public class TestOutputFormats extends CLIBaseTest {
 	private String getPredictionOutputFromFullLogStr(String log){
 		String rmStart = log.split("predictions")[1].split("\n",2)[1];
 		return rmStart.split("\nSuccessfully")[0];
-		//		log.split("\n",)
-		//		
-		//		List<String> plainPredictionLines = new ArrayList<>();
-		//		boolean inPredictionPart=false;
-		//		String[] lines = log.split("\n");
-		//		for(String line: lines){
-		//			if(inPredictionPart){
-		//				if(line.contains("Successfully")){
-		//					break; // we've reached the end of prediction-lines
-		//				}
-		//				plainPredictionLines.add(line);
-		//			} else if (line.contains("predictions")){
-		//				// Next line will be the header
-		//				inPredictionPart=true;
-		//			}
-		//		}
-		//		return plainPredictionLines;
 	}
 
 	@Test
@@ -133,9 +117,6 @@ public class TestOutputFormats extends CLIBaseTest {
 		String outputJSON = systemOutRule.getLog();
 		JsonArray jsonArr = getJSONArrayFromLog(outputJSON);
 
-		//		outputJSON = outputJSON.substring(outputJSON.indexOf("{"), outputJSON.lastIndexOf("}")+1);
-		//		//		original.println("json output:\n" + outputJSON);
-		//		String[] jsonLines = outputJSON.split("\n");
 		for (Object rec : jsonArr){
 			CLIBaseTest.assertJSONPred((JsonObject)rec, false, true, GENERATE_INCHI, confs, null);
 		}
@@ -154,17 +135,13 @@ public class TestOutputFormats extends CLIBaseTest {
 		});
 
 		String outputPLAIN = systemOutRule.getLog();
-		//		original.println("plain output:\n" + outputPLAIN);
 
 		// Get the prediction-output
-		//		JsonArray jsonArr = getJSONPredictionPartFromLog(outputPLAIN);
 		List<String> plainPredictionLines = getPredictionOutputFromFullLog(outputPLAIN);
 
-		//		original.println("header:\n" + plainPredictionLines.get(0));
 		String[] headers = plainPredictionLines.get(0).split("\t");
 
 		int numCols = headers.length;
-		//		original.println("numCols: " +numCols);
 
 		for(int i=0;i<plainPredictionLines.size();i++){
 			Assert.assertEquals("All lines should have the same number of columns", numCols, plainPredictionLines.get(i).split("\t").length);
@@ -173,7 +150,6 @@ public class TestOutputFormats extends CLIBaseTest {
 
 		// Predict (SDF) to SDF-file
 		File outFileSDF = TestUtils.createTempFile("output", ".sdf");
-		//				File outFileSDF = new File("/Users/staffan/Desktop/output.sdf");
 
 		systemOutRule.clearLog();
 
@@ -192,8 +168,6 @@ public class TestOutputFormats extends CLIBaseTest {
 		String outputSDF2File = systemOutRule.getLog();
 		Assert.assertTrue("Should not include any mol-blocks", !outputSDF2File.contains("$$"));
 		Assert.assertTrue("Should not include any 'signature'", !outputSDF2File.contains("Signature"));
-
-		//		original.println("Output form printing to file:\n"+systemOutRule.getLog());
 
 		try(
 				FileInputStream fis = new FileInputStream(outFileSDF);
@@ -241,22 +215,6 @@ public class TestOutputFormats extends CLIBaseTest {
 		});
 	}
 
-	//	@Test
-	//	public void writeSDFprops() throws Exception{
-	//
-	//		ResultsOutputter pro = ResultsOutputter.getInstance(null, false, ChemOutputType.SDF_V3000, null); //getSDFOutputter(null, false);
-	//		Map<String, Double> pvals = new HashMap<>();
-	//		pvals.put("label1", 0.5);
-	//		pvals.put("label2", 0.75);
-	//		IAtomContainer testMol = getTestMol();
-	//		//		testMol.setProperty(CPSignParameters.P_VALS_PROPERTY, pvals);
-	//		//		testMol.setProperty("Some other text", "random output");
-	//		//		testMol.setProperty("text-with-dashes", "random output 2");
-	//		pro.writeMol(testMol, null);
-	//		pro.close();
-	//		//		original.println(systemOutRule.getLog());
-	//	}
-
 	@Test
 	public void TestACPRegression_JSON() throws Exception {
 		List<Double> confs = Arrays.asList(0.1, 0.4, 0.9);
@@ -273,7 +231,6 @@ public class TestOutputFormats extends CLIBaseTest {
 		});
 		String jsonOutput = systemOutRule.getLog();
 
-		//		SYS_OUT.println("OUTPUT\n"+jsonOutput);
 		JsonArray jsonArr = getJSONArrayFromLog(jsonOutput);
 		Assert.assertTrue(! jsonArr.isEmpty());
 
@@ -283,19 +240,9 @@ public class TestOutputFormats extends CLIBaseTest {
 			CLIBaseTest.assertJSONPred(oneRec, false, false, GENERATE_INCHI, confs, null);
 		}
 
-		//		
-		//		String[] jsonLines = getJSONPredictionPartFromLog(jsonOutput); //jsonOutput.substring(jsonOutput.indexOf("{"), jsonOutput.lastIndexOf("}")+1);
-		//		//		original.println(jsonOutput);
-		//		for(int i=0;i<jsonLines.length;i++){
-		//			BaseTest.assertJSONPred(jsonLines[i], false, false, GENERATE_INCHI, confs, null);
-		//			if(i>0) //First line is the molecule to --smiles flag - does not have the Sample_ID property
-		//				Assert.assertTrue(jsonLines[i].contains("\"Sample_ID\""));
-		//		}
-
 
 		// Then predict (JSON) TO FILE
 		File outFileJSON = TestUtils.createTempFile("output", ".json");
-		//		File outFileJSON = new File("/Users/staffan/Desktop/pred.out.json.gz");
 		systemOutRule.clearLog();
 		mockMain(new String[] {
 				Predict.CMD_NAME,
@@ -314,22 +261,11 @@ public class TestOutputFormats extends CLIBaseTest {
 
 		Assert.assertEquals(jsonArr, fromFile);
 
-		//		for (String line : jsonLines) {
-		//		SYS_ERR.println(line);
-		//		}
-
 		String json2FileLog = systemOutRule.getLog();
 		Assert.assertTrue("Should be no json outputted to std-out",! json2FileLog.contains("{"));
 
 		System.out.println(jsonLinesFromFile);
-		//		original.println("------ JSON FILE -------");
-		//		for(String line: jsonLinesFromFile)
-		//			original.println(line);
-
-		// CHECK THEY PRODUCE THE SAME OUTPUT
-		//		for(int i=0;i<jsonLinesFromFile.size();i++)
-		//			Assert.assertEquals(jsonLines[i], jsonLinesFromFile.get(i));
-		//		//		printLogs();
+		
 	}
 
 	@Test
@@ -346,11 +282,6 @@ public class TestOutputFormats extends CLIBaseTest {
 				"--output-format", ChemOutputType.TSV.name()
 		});
 		String plainOutput = systemOutRule.getLog();
-		//		SYS_ERR.println(plainOutput);
-		//		original.println("--- Full plain");
-		//						original.println(plainOutput);
-		//		plainOutput = plainOutput.substring(plainOutput.indexOf("SMILES"),plainOutput.lastIndexOf("Success")); // will make one empty line in the start
-
 
 		List<String> plainLines = getPredictionOutputFromFullLog(plainOutput);
 		List<String> smilesPredictFileLines = null;
@@ -360,15 +291,13 @@ public class TestOutputFormats extends CLIBaseTest {
 			
 
 		for(int i=1; i<smilesPredictFileLines.size(); i++){
-			//			original.println(plainLines.get(i));
-			//			original.println(smilesPredictFileLines.get(i));
 			Assert.assertTrue("Should preserve the input from SMILES-file and just add columns after",plainLines.get(i).contains(smilesPredictFileLines.get(i)));
 			Assert.assertEquals(plainLines.get(i).split("\t").length , smilesPredictFileLines.get(i).split("\t").length + 1 + 3*4 ); // adds y-hat + 3 confidences, with 4 columns each (normal and capped intervals, lower/upper bounds)
 		}
 
 
 
-		// Then predict TSV/SMILES - TO FILE
+		// Then predict TSV/CSV - TO FILE
 		File outFileSMILES = TestUtils.createTempFile("output", ".smiles");
 		mockMain(new String[] {
 				Predict.CMD_NAME,
@@ -384,7 +313,6 @@ public class TestOutputFormats extends CLIBaseTest {
 		for(int i=0; i<outputLinesSMILES.size();i++){
 			Assert.assertEquals(plainLines.get(i).trim(), outputLinesSMILES.get(i).trim());
 		}
-		//		printLogs();
 	}
 
 	@Test
@@ -402,7 +330,7 @@ public class TestOutputFormats extends CLIBaseTest {
 				"--confidences", "0.1,0.4,0.9",
 				"--output-format", ChemOutputType.SDF_V3000.toString()
 		});
-		String sdfOutput = systemOutRule.getLog(); //baos.toString("UTF-8");  //
+		String sdfOutput = systemOutRule.getLog();
 
 		// Get the SDF output
 		List<String> sdfLines = getPredictionOutputFromFullLog(sdfOutput);
@@ -427,18 +355,10 @@ public class TestOutputFormats extends CLIBaseTest {
 		Assert.assertTrue("no mol-blocks",! sdf2FileLog.contains("$$$"));
 
 		List<String> outputLinesSDF = IOUtils.readLines(new FileInputStream(outFileSDF), STANDARD_CHARSET);
-		//		original_err.println("TO FILE: ");
 
-		//		original_err.println(outputLinesSDF.size());
-		//		original_err.println(sdfLines.size());
-
-		//		original.println("===============");
 		// Check that everything is matching!
-		for (int i=0; i<outputLinesSDF.size();i++){
-			//			original.println(outputLinesSDF_toSysOut[i]);
-			//			original.println(outputLinesSDF.get(i));
-			Assert.assertEquals("Files should be the same on line: " + i,sdfLines.get(i), outputLinesSDF.get(i));
-		}
+		ChemTestUtils.assertSameSDFOutput(sdfLines, outputLinesSDF);
+
 
 		// Check that the properties are set
 		IteratingSDFReader mols= new IteratingSDFReader(new FileInputStream(outFileSDF), SilentChemObjectBuilder.getInstance());
@@ -467,12 +387,6 @@ public class TestOutputFormats extends CLIBaseTest {
 				Assert.assertNotNull(mol.getProperty(convertToSDFPropertyKey(OutputNamingSettings.getCappedPredictionIntervalLowerBoundProperty(conf))));
 				Assert.assertNotNull(mol.getProperty(convertToSDFPropertyKey(OutputNamingSettings.getCappedPredictionIntervalUpperBoundProperty(conf))));
 			}
-			//			Assert.assertNotNull(mol.getProperty(convertToSDFPropertyKey(OutputNamingSettings.getConfIntervalProperty(0.1))));
-			//			Assert.assertNotNull(mol.getProperty(convertToSDFPropertyKey(OutputNamingSettings.getCappedConfIntervalProperty(0.1))));
-			//			Assert.assertNotNull(mol.getProperty(convertToSDFPropertyKey(OutputNamingSettings.getConfIntervalProperty(0.4))));
-			//			Assert.assertNotNull(mol.getProperty(convertToSDFPropertyKey(OutputNamingSettings.getCappedConfIntervalProperty(0.4))));
-			//			Assert.assertNotNull(mol.getProperty(convertToSDFPropertyKey(OutputNamingSettings.getConfIntervalProperty(0.9))));
-			//			Assert.assertNotNull(mol.getProperty(convertToSDFPropertyKey(OutputNamingSettings.getCappedConfIntervalProperty(0.9))));
 		}
 
 		try {
@@ -480,7 +394,6 @@ public class TestOutputFormats extends CLIBaseTest {
 		} catch (Exception e) {}
 
 		Assert.assertEquals(10, numMols);
-
 	}
 
 	@Test
@@ -505,7 +418,6 @@ public class TestOutputFormats extends CLIBaseTest {
 		String line;
 		for(int i=0; i<smilesLines.length;i++){
 			line = smilesLines[i];
-			//			original.println(line);
 			if(i==0){
 				// header line
 				Assert.assertTrue(line.contains(OutputNamingSettings.getConfGivenWidthProperty(1.5)));
@@ -514,10 +426,6 @@ public class TestOutputFormats extends CLIBaseTest {
 			}
 			Assert.assertTrue(line.split("\t").length>=3); // smiles column, confidence and predicted value
 		}
-
-		//		System.out.println(plainOutput);
-
-
 
 		/// SDF
 		File outFileSDF = TestUtils.createTempFile("output", ".sdf");
@@ -538,7 +446,6 @@ public class TestOutputFormats extends CLIBaseTest {
 			int numMols =0;
 			while(mols.hasNext()){
 				mol = mols.next();
-				//			original.println(mol.getProperties());
 				Assert.assertNotNull(mol.getProperty(convertToSDFPropertyKey(OutputNamingSettings.getConfGivenWidthProperty(1.5))));
 				Assert.assertNotNull(mol.getProperty(convertToSDFPropertyKey(OutputNamingSettings.getConfGivenWidthProperty(2.5))));
 				Assert.assertNotNull(mol.getProperty(convertToSDFPropertyKey(PredictionOutput.REGRESSION_Y_HAT_PREDICTION_PROPERTY)));
@@ -547,7 +454,6 @@ public class TestOutputFormats extends CLIBaseTest {
 			Assert.assertEquals(10, numMols);
 		}
 
-		//		printLogs();
 	}
 
 	@Test
@@ -565,9 +471,7 @@ public class TestOutputFormats extends CLIBaseTest {
 		});
 
 		JsonArray jsonArr = getJSONArrayFromLog(systemOutRule.getLog());
-		//		List<String> jsonOutput_gradient = getPredictionOutputFromFullLog(systemOutRule.getLog());
 		Assert.assertEquals(1, jsonArr.size());
-		//		original.println(systemOutRule.getLog());
 		for (Object line: jsonArr){
 			CLIBaseTest.assertJSONPred((JsonObject)line, true, true, GENERATE_INCHI, confs, null);
 		}
@@ -585,7 +489,6 @@ public class TestOutputFormats extends CLIBaseTest {
 		});
 
 		JsonArray jsonArr2 = (JsonArray) Jsoner.deserialize(IOUtils.toString(new FileInputStream(outputFile),STANDARD_CHARSET));
-		//		List<String> jsonLinesFromFile = IOUtils.readLines(new FileInputStream(outputFile),STANDARD_CHARSET);
 
 		Assert.assertEquals(jsonArr.size(), jsonArr2.size());
 		Assert.assertEquals(jsonArr, jsonArr2);
@@ -654,25 +557,23 @@ public class TestOutputFormats extends CLIBaseTest {
 	@Test
 	public void testManyConfsRoundedValsInOutputHeader()throws Exception{
 	
-	mockMain(new String[] {
-			Predict.CMD_NAME,
-			"-m", modelFileACP_class,
-			"--smiles",TEST_SMILES,
-			"--output-format", ChemOutputType.TSV.name(),
-			"-co", ".01:0.99:0.01",
-			(GENERATE_INCHI?"--output-inchi":""),
-			"--silent",
-	});
-	String plainOutput = systemOutRule.getLog();
-	String headerLine = plainOutput.split(System.lineSeparator(), 2)[0];
-	
-	for (String h : headerLine.split("\t")) {
-		String[] splits = h.split("\\d+\\.\\d+");
-		String noDigits = String.join("", splits);
-		Assert.assertTrue(h.length() - noDigits.length() <= 4); // the numbers are 0.01,..0.99 (i.e. all 4 digits)
-//		SYS_ERR.println(Arrays.toString(splits));
-	}
-//	SYS_ERR.println(headerLine);
+		mockMain(new String[] {
+				Predict.CMD_NAME,
+				"-m", modelFileACP_class,
+				"--smiles",TEST_SMILES,
+				"--output-format", ChemOutputType.TSV.name(),
+				"-co", ".01:0.99:0.01",
+				(GENERATE_INCHI?"--output-inchi":""),
+				"--silent",
+		});
+		String plainOutput = systemOutRule.getLog();
+		String headerLine = plainOutput.split(System.lineSeparator(), 2)[0];
+		
+		for (String h : headerLine.split("\t")) {
+			String[] splits = h.split("\\d+\\.\\d+");
+			String noDigits = String.join("", splits);
+			Assert.assertTrue(h.length() - noDigits.length() <= 4); // the numbers are 0.01,..0.99 (i.e. all 4 digits)
+		}
 	
 	}
 
@@ -707,7 +608,7 @@ public class TestOutputFormats extends CLIBaseTest {
 
 		List<String> linesFromFile = IOUtils.readLines(new FileInputStream(outFile),STANDARD_CHARSET);
 
-		Assert.assertEquals(sdfLines, linesFromFile);
+		ChemTestUtils.assertSameSDFOutput(sdfLines, linesFromFile);
 
 		try(IteratingSDFReader mols = new IteratingSDFReader(new FileInputStream(outFile), SilentChemObjectBuilder.getInstance());){
 
@@ -741,10 +642,9 @@ public class TestOutputFormats extends CLIBaseTest {
 		mockMain(Precompute.CMD_NAME,
 				"-mt", PRECOMPUTE_CLASSIFICATION,
 				"-mo", dataFile.getAbsolutePath(),
-				"-td", ames126.format(), ames126.uri().toString(), // CSVFile.FORMAT_NAME, getFile("/resources/smiles_files/smiles_classification.smi").getAbsolutePath(),
+				"-td", ames126.format(), ames126.uri().toString(), 
 				"-l", getLabelsArg(ames126.labels(),','),
-				"-pr", ames126.property() //"solubility(fake!)"
-//				static final String trainfileTCPSMILES = getFile("/resources/smiles_files/smiles_classification.smi").getAbsolutePath()
+				"-pr", ames126.property() 
 				);
 
 		// DEFAULT = JSON
@@ -756,12 +656,10 @@ public class TestOutputFormats extends CLIBaseTest {
 				"-p", ames10.format(), ames10.uri().toString(),
 				"-co", TestUtils.toString(confs, ' '),
 				(GENERATE_INCHI? "--output-inchi":""),
-				//					"--output-format", "json"
 		});
 
 		String jsonPrediction = systemOutRule.getLog();
 		JsonArray jsonPreds = getJSONArrayFromLog(jsonPrediction);
-		//		List<String> jsonLines = getPredictionOutputFromFullLog(jsonPrediction);
 		for (Object line: jsonPreds){
 			assertJSONPred((JsonObject)line, true, false, GENERATE_INCHI, confs, null);
 		}
@@ -794,10 +692,6 @@ public class TestOutputFormats extends CLIBaseTest {
 		mockMain(new String[] {
 				PredictOnline.CMD_NAME,
 				"-ds", Classification.getAmes123().getAbsolutePath(),
-//				"-td", SDFile.FORMAT_NAME, trainfileTCP,
-//				"--endpoint", AmesBinaryClass.PROPERTY,
-//				"-l",AmesBinaryClass.LABELS_STRING,
-//				"--descriptors", "signatures:1:3",
 				"--smiles", TEST_SMILES,
 				"-p", ames10.format(), ames10.uri().toString(),
 				"--output-format", ChemOutputType.TSV.name(),
@@ -829,23 +723,16 @@ public class TestOutputFormats extends CLIBaseTest {
 			while(mols.hasNext()){
 
 				mol = mols.next();
-				//						original.println(mol.getProperties());
 				currSmilesLine = smilesLinesFromFile.get(i+2); // +1 because of header +1 because of --smiles molecule
-				//						original.println(currSmilesLine);
 				Assert.assertTrue(currSmilesLine.contains((String)mol.getProperty(ames10.property())));
 				Assert.assertTrue(currSmilesLine.contains((String)mol.getProperty(CDKConstants.TITLE)));
 				Assert.assertTrue(currSmilesLine.contains((String)mol.getProperty("Molecular Signature")));
 
 				json = (JsonObject)jsonPreds.get(i+1); // +1 because of --smiles molecule
 				JsonObject molProps = (JsonObject) json.get(JSON.MOLECULE_SECTION_KEY);
-				//			JsonObject predSection = (JsonObject) json.get(OutputNamingSettings.PREDICTING_SECTION_KEY);
 				Assert.assertTrue(molProps.containsKey(ames10.property()));
 				Assert.assertTrue(molProps.containsKey(CDKConstants.TITLE));
 				Assert.assertTrue(molProps.containsKey("Molecular Signature"));
-				//			jsonLine = jsonLines.get(i+1); 
-				//			Assert.assertTrue(jsonLine.contains((String)mol.getProperty(PROPERTY)));
-				//			Assert.assertTrue(jsonLine.contains((String)mol.getProperty(CDKConstants.TITLE)));
-				//			Assert.assertTrue(jsonLine.contains((String)mol.getProperty("Molecular Signature")));
 
 				i++;
 			}
@@ -857,36 +744,29 @@ public class TestOutputFormats extends CLIBaseTest {
 	public void TestTCPClassification_SDF() throws Exception{
 
 		// SDF with file
-		// File sdfOut = new File("/Users/staffan/Desktop/TCP_out.sdf");
-		File sdfOut = TestUtils.createTempFile("output", ".sdf");
+		File sdfOut_V2000 = TestUtils.createTempFile("output", ".sdf");
 		mockMain(new String[] {
 				PredictOnline.CMD_NAME,
 				"-ds", Classification.getAmes123().getAbsolutePath(),
-//				"-td", SDFile.FORMAT_NAME, trainfileTCP,
-//				"--endpoint", AmesBinaryClass.PROPERTY,
-//				"-l",AmesBinaryClass.LABELS_STRING,
-//				"--descriptors", "signatures:1:3",
 				"--smiles", TEST_SMILES,
-				"-p", ames10.format(), ames10.uri().toString(),
+				"-p",predictfile_smiles.format(), predictfile_smiles.uri().toString(),
+				// "-p", ames10.format(), ames10.uri().toString(),
 				"--output-format", "sdf",
-				"-o", sdfOut.getAbsolutePath(),
+				"-o", sdfOut_V2000.getAbsolutePath(),
 				"-co", "0.6,0.7,0.8"
 		});
 		Assert.assertTrue(! systemOutRule.getLog().contains("$$$"));
+		// List<String> sdfLines = getPredictionOutputFromFullLog(systemOutRule.getLog());
 
 		// SDF V3000 with file
-		// File sdfOut_V3000 = new File("/Users/staffan/Desktop/TCP_out_v3000.sdf");
 		File sdfOut_V3000 = TestUtils.createTempFile("output", ".sdf");
 		systemOutRule.clearLog();
 		mockMain(new String[] {
 				PredictOnline.CMD_NAME,
 				"-ds", Classification.getAmes123().getAbsolutePath(),
-//				"-td", SDFile.FORMAT_NAME, trainfileTCP,
-//				"--endpoint", AmesBinaryClass.PROPERTY,
-//				"-l",AmesBinaryClass.LABELS_STRING,
-//				"--descriptors", "signatures:1:3",
 				"--smiles", TEST_SMILES,
-				"-p", ames10.format(), ames10.uri().toString(),
+				"-p",predictfile_smiles.format(), predictfile_smiles.uri().toString(),
+				// "-p", ames10.format(), ames10.uri().toString(),
 				"--output-format", "sdf-v3000",
 				"-o", sdfOut_V3000.getAbsolutePath(),
 				"-co", "0.6 0.7 0.8"
@@ -894,14 +774,17 @@ public class TestOutputFormats extends CLIBaseTest {
 		});
 		Assert.assertTrue(! systemOutRule.getLog().contains("$$$"));
 		Assert.assertTrue(systemErrRule.getLog().isEmpty());
+
+		ChemTestUtils.assertSDFHasSameContentDifferentVersions(
+			FileUtils.readFileToString(sdfOut_V3000, STANDARD_CHARSET), 
+			FileUtils.readFileToString(sdfOut_V2000, STANDARD_CHARSET));
+		
 	}
 
 
 	@SuppressWarnings("unchecked")
 	@Test
 	public void TestSignatureGeneration() throws Exception {
-
-		
 
 		// default = json
 		mockMain(new String[] {
@@ -913,9 +796,7 @@ public class TestOutputFormats extends CLIBaseTest {
 
 		String jsonOutput = systemOutRule.getLog();
 		LoggerUtils.reloadLoggingConfig();
-		//		original.println(jsonOutput);
 		// Make sure it can be parsed
-		//		JSONParser parser = new JSONParser();
 		Map<String,Object> sigsRes = (JsonObject)((JsonArray) Jsoner.deserialize(jsonOutput)).get(0);
 		Assert.assertTrue(sigsRes.containsKey(JSON.GENERATED_SIGNATURES_SECTION_KEY));
 		Assert.assertTrue(sigsRes.containsKey(JSON.MOLECULE_SECTION_KEY));
@@ -962,7 +843,6 @@ public class TestOutputFormats extends CLIBaseTest {
 			}
 
 		String mapAsString = lines[1].split("\t")[signaturesIndex].trim();
-		//				System.err.println("the map: " + mapAsString);
 		// make sure it's a map
 		Assert.assertTrue(mapAsString.startsWith("{"));
 		Assert.assertTrue(mapAsString.endsWith("}"));
@@ -1019,7 +899,6 @@ public class TestOutputFormats extends CLIBaseTest {
 
 		// SDF
 		betweenMethods();
-		//		File outputFile = new File("/Users/staffan/Desktop/test/signoutput.sdf");
 		File outputFile = TestUtils.createTempFile("generatedSigns", ".sdf");
 		mockMain(new String[] {
 				GenerateSignatures.CMD_NAME,
@@ -1131,8 +1010,12 @@ public class TestOutputFormats extends CLIBaseTest {
 		// Verify that the prediction output is the same in both
 		List<String> fromNormal = getPredictionOutputFromFullLog(normalLog);
 		String[] fromSilent = silentLog.split("\n");
-		for(int i=0; i<fromNormal.size();i++){
-			Assert.assertEquals(fromNormal.get(i), fromSilent[i]);
+		if (outputFormat.equalsIgnoreCase("sdf")){
+			ChemTestUtils.assertSameSDFOutput(fromNormal, Arrays.asList(fromSilent));
+		} else {
+			for(int i=0; i<fromNormal.size();i++){
+				Assert.assertEquals(fromNormal.get(i), fromSilent[i]);
+			}
 		}
 		Assert.assertTrue(fromSilent.length >= minNumRows);
 
@@ -1185,9 +1068,6 @@ public class TestOutputFormats extends CLIBaseTest {
 		if (printOutputs) {
 			SYS_OUT.println("--- NORMAL: ---");
 			SYS_OUT.println(normalLog);
-			//			original_err.println("--- COMPRESSED: ---");
-			//			String gz_output = bos_gz.toString();
-			//			original.println(gz_output);
 			SYS_OUT.println("--- UNZIPPED: ---");
 			SYS_OUT.println(unzippedOutput);
 		}
@@ -1237,7 +1117,6 @@ public class TestOutputFormats extends CLIBaseTest {
 			SYS_OUT.println(fileLog);
 		}
 		String unzippedFile =IOUtils.toString(StreamUtils.unZIP(new FileInputStream(tmpFile)),STANDARD_CHARSET);
-		//		String unzippedFile = unzip(IOUtils.toByteArray(new FileInputStream(tmpFile))).trim();
 
 		if(printOutputs){
 			SYS_OUT.println("--- non-comp to std-out: ---");
@@ -1363,12 +1242,12 @@ public class TestOutputFormats extends CLIBaseTest {
 		CSVCmpdData solu10 = TestResources.Reg.getSolubility_10();
 		for (ChemOutputType of : CLIParameters.ChemOutputType.values()) {
 			System.err.println("running with output type : " + of);
-			doTestAllOutputIdentical(PreTrainedModels.ACP_REG_LIBSVM.toString(), solu10.format(), solu10.uri().toString(), of.name());
+			doTestAllOutputIdentical(PreTrainedModels.ACP_REG_LIBSVM.toString(), solu10.format(), solu10.uri().toString(), of);
 			LoggerUtils.reloadLoggingConfig();
 		}
 	}
 
-	private void doTestAllOutputIdentical(String modelPath, String predictFormat, String predictPath, String of) throws Exception {
+	private void doTestAllOutputIdentical(String modelPath, String predictFormat, String predictPath, ChemOutputType of) throws Exception {
 
 		List<String> commonArgs = new ArrayList<>(Arrays.asList(Predict.CMD_NAME,
 				"-m", modelPath,
@@ -1383,7 +1262,7 @@ public class TestOutputFormats extends CLIBaseTest {
 		File plainFile = TestUtils.createTempFile("plain", "."+of);
 		mockMain(
 				getParams(commonArgs,
-						"-of", of,
+						"-of", of.name(),
 						"--output", plainFile.getAbsolutePath())
 				);
 		String plainStr = FileUtils.readFileToString(plainFile, STANDARD_CHARSET).trim();
@@ -1392,7 +1271,7 @@ public class TestOutputFormats extends CLIBaseTest {
 		File gzipFile = TestUtils.createTempFile("gzip", "."+of);
 		mockMain(
 				getParams(commonArgs, 
-						"-of", of,
+						"-of", of.name(),
 						"--compress",
 						"--output", gzipFile.getAbsolutePath())
 				);
@@ -1412,12 +1291,11 @@ public class TestOutputFormats extends CLIBaseTest {
 			System.setOut(baosPS);
 			mockMain(
 					getParams(commonArgs,
-							"-of", of
+							"-of", of.name()
 							)
 					);
 
 			stdOutStr = IOUtils.toString(new ByteArrayInputStream(baos.toByteArray()),STANDARD_CHARSET);
-			//			SYS_ERR.println("Plain, no method:\n" + stdOutStr);
 			stdOutStr = getPredictionOutputFromFullLogStr(stdOutStr).trim();
 		}
 
@@ -1429,7 +1307,7 @@ public class TestOutputFormats extends CLIBaseTest {
 			System.setOut(baosPS);
 			mockMain(
 					getParams(commonArgs, 
-							"-of", of,
+							"-of", of.name(),
 							"--compress",
 							"--silent"
 							)
@@ -1440,9 +1318,15 @@ public class TestOutputFormats extends CLIBaseTest {
 		System.setOut(originalSO);
 
 		// Assert all output are the same
-		Assert.assertEquals(stdOutStr, plainStr);
-		Assert.assertEquals(plainStr, unzippedStr);
-		Assert.assertEquals(plainStr, unzippedOutStr);
+		if (of == ChemOutputType.SDF_V2000 || of == ChemOutputType.SDF_V3000){
+			ChemTestUtils.assertSameSDFOutput(stdOutStr, plainStr);
+			ChemTestUtils.assertSameSDFOutput(plainStr, unzippedStr);
+			ChemTestUtils.assertSameSDFOutput(plainStr, unzippedOutStr);
+		} else {
+			Assert.assertEquals(stdOutStr, plainStr);
+			Assert.assertEquals(plainStr, unzippedStr);
+			Assert.assertEquals(plainStr, unzippedOutStr);
+		}
 	}
 
 	private static String[] getParams(List<String> common, String... args){

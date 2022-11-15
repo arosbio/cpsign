@@ -63,6 +63,10 @@ public class MakeDenseTransformer implements FormatTransformer {
 		return this;
 	}
 
+	public boolean useDoublePrecision(){
+		return useDoublePrecision;
+	}
+
 	@Override
 	public MakeDenseTransformer fit(Collection<DataRecord> data) throws TransformationException {
 		maxFeatureIndex = DataUtils.getMaxFeatureIndex(data);

@@ -51,6 +51,10 @@ public class DataUtils {
 	}
 
 	public static boolean equals(final SubSet d1, final SubSet d2, final double tol) {
+		if (d1 == d2){
+			LOGGER.debug("checking equality on same reference - always the same!");
+			return true;
+		}
 		// make sure the allowed diff is positive
 		double allowedDiff = Math.max(0, tol);
 
