@@ -24,14 +24,162 @@
 	<packaging>jar</packaging>
 
 	<properties>
-		<!-- The name of the final 'fat jar' -->
-		<cpsign.final.name>${project.name}-${project.version}-fatjar</cpsign.final.name>
+		<!-- Here setting the names during the package phase - as we're both building a thin and fat jar -->
+		<thin.final.name>${project.name}-${project.version}.jar</thin.final.name>
+
+		<!-- The name of the final 'fat jar' (it adds '.jar' automatically) -->
+		<fat.final.name>${project.name}-${project.version}-uber.jar</fat.final.name>
 
 		<main.class>com.arosbio.cpsign.app.CPSignApp</main.class>
-		<exec-maven-plugin.version>3.0.0</exec-maven-plugin.version>
 		<parent.basedir>${project.basedir}/..</parent.basedir>
 		
 	</properties>
+
+	<profiles>
+		<!-- Building the thin jar (maven central repo) -->
+		<profile>
+			<id>thinjar</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-jar-plugin</artifactId>
+						<version>${jar.plugin.version}</version>
+						<configuration>
+							<archive>
+								<manifest>
+									<mainClass>${main.class}</mainClass>
+								</manifest>
+								<manifestEntries>
+									<Implementation-Title>Aros Bio ${project.artifactId}</Implementation-Title>
+									<Implementation-Version>${project.version}</Implementation-Version>
+									<Implementation-Vendor-Id>${mf.impl.vendor}</Implementation-Vendor-Id>
+									<X-Compile-Source-JDK>${maven.compiler.source}</X-Compile-Source-JDK>
+									<X-Compile-Target-JDK>${maven.compiler.target}</X-Compile-Target-JDK>
+								</manifestEntries>
+							</archive>
+						</configuration>
+					</plugin>
+				</plugins>
+
+			</build>
+		</profile>
+
+
+		<!-- Building the fat jar (GitHub release) -->
+		<profile>
+			<id>fatjar</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+
+			<build>
+
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-shade-plugin</artifactId>
+						<version>${shade.plugin.version}</version>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>shade</goal>
+								</goals>
+								<configuration>
+									
+									<!-- Do not give the final name - the really-executable-jar-maven-plugin expect the default JAR name as input -->
+									<!--<finalName>${fat.final.name}</finalName>-->
+									<createDependencyReducedPom>false</createDependencyReducedPom>
+
+									<!-- FILTERS -->
+									<filters>
+										<filter>
+											<artifact>*:*</artifact>
+											<excludes>
+												<exclude>header.txt</exclude>
+												<exclude>jena-*</exclude>
+												<exclude>log4j.properties</exclude>
+											</excludes>
+										</filter>
+									</filters>
+
+									<transformers>
+										<!-- Handles the external third party licenses -->
+										<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer" />
+										<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+											<manifestEntries>
+												<Main-Class>${main.class}</Main-Class>
+
+												<Implementation-Title>Aros Bio ${project.artifactId}</Implementation-Title>
+												<Implementation-Version>${project.version}</Implementation-Version>
+												<Implementation-Vendor-Id>${mf.impl.vendor}</Implementation-Vendor-Id>
+												<X-Compile-Source-JDK>${maven.compiler.source}</X-Compile-Source-JDK>
+												<X-Compile-Target-JDK>${maven.compiler.target}</X-Compile-Target-JDK>
+											</manifestEntries>
+										</transformer>
+										<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
+										<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer" />
+										<!-- Manually add the CPSign license file -->
+										<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
+											<resource>META-INF/LICENSE.txt</resource>
+											<file>${parent.basedir}/license/META-INF/LICENSE.txt</file>
+										</transformer>
+
+									</transformers>
+
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+
+					<!-- now make the jar chmod +x style executable -->
+					<plugin>
+						<groupId>org.skife.maven</groupId>
+						<artifactId>really-executable-jar-maven-plugin</artifactId>
+						<version>1.5.0</version>
+						<configuration>
+							<!-- Rename the file into the final fat jar name -->
+							<programFile>${fat.final.name}</programFile>
+							<!-- value of flags will be interpolated into the java invocation -->
+							<!-- as "java $flags -jar ..." -->
+							<!-- <flags>-Xmx1G</flags> -->
+
+							<!-- (optional) support other packaging formats than jar -->
+							<!-- <allowOtherTypes>true</allowOtherTypes> -->
+
+							<!-- (optional) name for a file that will define what script gets -->
+							<!-- embedded into the executable jar. This can be used to -->
+							<!-- override the default startup script which is -->
+							<!-- `#!/bin/sh -->
+							<!-- -->
+							<!-- exec java " + flags + " -jar "$0" "$@" -->
+							<!-- <scriptFile>src/packaging/someScript.extension</scriptFile> -->
+						</configuration>
+
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>really-executable-jar</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+
+				</plugins>
+			</build>
+
+	
+		</profile>
+
+
+		
+	</profiles>
 
 	<build>
 		<resources>
@@ -67,7 +215,6 @@
 						</configuration>
 					</execution>
 
-
 				</executions>
 				<!-- General config -->
 				<configuration>
@@ -78,120 +225,6 @@
 					<forkCount>1</forkCount>
 					<argLine>-Xmx2048m</argLine>
 				</configuration>
-			</plugin>
-
-			<!-- THIN JAR - for maven central -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>${jar.plugin.version}</version>
-				<configuration>
-				  <archive>
-					<manifest>
-					  <mainClass>${main.class}</mainClass>
-					</manifest>
-					<manifestEntries>
-						<Implementation-Title>Aros Bio ${project.artifactId}</Implementation-Title>
-						<Implementation-Version>${project.version}</Implementation-Version>
-						<Implementation-Vendor-Id>${mf.impl.vendor}</Implementation-Vendor-Id>
-						<X-Compile-Source-JDK>${maven.compiler.source}</X-Compile-Source-JDK>
-                    	<X-Compile-Target-JDK>${maven.compiler.target}</X-Compile-Target-JDK>
-					</manifestEntries>
-				  </archive>
-				</configuration>
-			  </plugin>
-
-			<!-- FAT JAR - with all deps for GitHub releases -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>${shade.plugin.version}</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<!-- Note: this finalName appends ".jar" -->
-							<finalName>${cpsign.final.name}</finalName>
-							<createDependencyReducedPom>false</createDependencyReducedPom>
-
-							<!-- FILTERS -->
-							<filters>
-								<filter>
-									<artifact>*:*</artifact>
-									<excludes>
-										<exclude>header.txt</exclude>
-										<exclude>jena-*</exclude>
-										<exclude>log4j.properties</exclude>
-									</excludes>
-								</filter>
-							</filters>
-
-							<transformers>
-								<!-- Handles the external third party licenses -->
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheLicenseResourceTransformer" />
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<manifestEntries>
-										<Main-Class>${main.class}</Main-Class>
-
-										<Implementation-Title>Aros Bio ${project.artifactId}</Implementation-Title>
-										<Implementation-Version>${project.version}</Implementation-Version>
-										<Implementation-Vendor-Id>${mf.impl.vendor}</Implementation-Vendor-Id>
-										<X-Compile-Source-JDK>${maven.compiler.source}</X-Compile-Source-JDK>
-                    					<X-Compile-Target-JDK>${maven.compiler.target}</X-Compile-Target-JDK>
-									</manifestEntries>
-								</transformer>
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-								<transformer implementation="org.apache.maven.plugins.shade.resource.ApacheNoticeResourceTransformer" />
-								<!-- Manually add the CPSign license file -->
-								<transformer implementation="org.apache.maven.plugins.shade.resource.IncludeResourceTransformer">
-									<resource>META-INF/LICENSE.txt</resource>
-									<file>${parent.basedir}/license/META-INF/LICENSE.txt</file>
-								</transformer>
-
-							</transformers>
-
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-			<!-- now make the jar chmod +x style executable -->
-			<plugin>
-				<groupId>org.skife.maven</groupId>
-				<artifactId>really-executable-jar-maven-plugin</artifactId>
-				<version>1.5.0</version>
-				<configuration>
-					<!-- value of flags will be interpolated into the java invocation -->
-					<!-- as "java $flags -jar ..." -->
-					<!-- <flags>-Xmx1G</flags> -->
-
-					<!-- (optional) name for binary executable, if not set will just -->
-					<!-- make the regular jar artifact executable -->
-					<!--<programFile>${cpsign.final.name}</programFile> -->
-
-					<!-- (optional) support other packaging formats than jar -->
-					<!-- <allowOtherTypes>true</allowOtherTypes> -->
-
-					<!-- (optional) name for a file that will define what script gets -->
-					<!-- embedded into the executable jar. This can be used to -->
-					<!-- override the default startup script which is -->
-					<!-- `#!/bin/sh -->
-					<!-- -->
-					<!-- exec java " + flags + " -jar "$0" "$@" -->
-					<!-- <scriptFile>src/packaging/someScript.extension</scriptFile> -->
-				</configuration>
-
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>really-executable-jar</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 
 		</plugins>
