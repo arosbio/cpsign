@@ -36,7 +36,12 @@ Publish to Maven central. Some links;
 * https://maven.apache.org/repository/index.html
 
 ## Building
-The project is built and managed using [Maven](https://maven.apache.org/) and building the jars is as straightforward as running (assuming that you have maven installed) from the base directory:
+The project is built and managed using [Maven](https://maven.apache.org/). The build has two separate profiles;
+1. default (id = `thinjar`) builds and package only the application code of each sub-project
+2. id = `fatjar` which builds an über/fat jar with all third-party dependencies bundled in a single JAR file. (only applicable for the [cpsign](cpsign/README.md) project)
+
+### Building thin jars
+This is the default build which used for only assembling the application codes and the pom's of each sub project. This works well in case you wish to use cpsign programmatically and using maven for resolving dependencies. This build is triggered by running;
 ```
 mvn package 
 ``` 
@@ -44,6 +49,14 @@ or, alternatively (if you do not wish to run all tests):
 ```
 mvn package -DskipTests=true
 ```
+from either the parent (root) project, or from one of the sub projects. 
+
+### Building a fat/über jar
+This build is triggered by adding the profile `fatjar` by running;
+```
+mvn package -P fatjar
+```
+from either the parent or the [cpsign](cpsign/README.md) project. Note that this only applies to the cpsign project - this profile has no effect in any of the other projects. This build also makes the jar an "really executable jar" - i.e. on linux systems you can run the application using `./cpsign-{version}-uber.jar` typ calling.
 
 __Note:__ As there is a dependence between the projects you may need to use `mvn install` instead of the `package` goal, for the "earlier" projects to be available to latter ones in the hierarchy. 
 
