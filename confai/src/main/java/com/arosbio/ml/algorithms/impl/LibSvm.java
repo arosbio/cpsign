@@ -85,7 +85,7 @@ public class LibSvm {
 	
 	public static final ConfigParameter NU_CONFIG = new NumericConfig.Builder(NU_PARAM_NAMES,DEFAULT_NU)
 		.range(Range.openClosed(0d, 1d))
-		.description("The nu parameter in nu-SVC and nu-SVR, allowed values are (0..1].")
+		.description("The nu parameter in nu-SVC and nu-SVR, allowed values are (0..1]")
 		.build();
 
 	public static final ConfigParameter GAMMA_CONFIG = new NumericConfig.Builder(GAMMA_PARAM_NAMES,DEFAULT_GAMMA)

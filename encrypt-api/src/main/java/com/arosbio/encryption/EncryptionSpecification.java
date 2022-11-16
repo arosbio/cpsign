@@ -37,7 +37,7 @@ import java.security.InvalidKeyException;
 public interface EncryptionSpecification extends Cloneable {
 
 	/**
-	 * Name of the implementation - in case several specs are available, i.e. this name
+	 * Name of the implementation. Useful in case several specs are available, i.e. this name
 	 * should be unique for this class but not for individual instances of the class.
 	 * @return the name of the implementation
 	 */
@@ -45,7 +45,7 @@ public interface EncryptionSpecification extends Cloneable {
 
 	/**
 	 * Give some details about the implementation. This may include details about settings that
-	 * can be tweaked, such as setting different length of keys and the prefered key-length etc. 
+	 * can be tweaked, such as setting different length of keys and the preferred key-length etc. 
 	 * <b>Note:</b> this is mainly intended for CLI users as API users can use the {@link java.util.ServiceLoader ServiceLoader}
 	 * and read java doc for further details and possibly have access to more parameters than possible from the CLI
 	 * @return a text with details.
@@ -71,8 +71,8 @@ public interface EncryptionSpecification extends Cloneable {
 	public byte[] generateRandomKey(int length) throws IllegalArgumentException;
 
 	/**
-	 * Initializes the instance with a proper key, the {@code key} should be
-	 * of a length that the class allowes, e.g. retreived using the method {@link #getAllowedKeyLengths()}.
+	 * Initializes the instance with an encryption key. The {@code key} should be
+	 * of a length that the class allows, e.g. retrieved using the method {@link #getAllowedKeyLengths()}.
 	 * @param key a {@code byte[]} with the actual key
 	 * @throws InvalidKeyException If the given encryption key is faulty in some way, or could not instantiate the instance for some reason
 	 */

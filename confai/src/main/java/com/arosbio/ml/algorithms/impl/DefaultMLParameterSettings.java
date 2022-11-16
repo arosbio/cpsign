@@ -45,4 +45,9 @@ public class DefaultMLParameterSettings {
 	public static final ConfigParameter EPSILON_CONFIG = new NumericConfig.Builder(EPSILON_PARAM_NAMES,DEFAULT_EPSILON)
 		.range(Range.atLeast(0d))
 		.description("Tolerance of termination criterion").build();
+
+		public static void main(String[] args) {
+			System.err.println(CollectionUtils.listRange(-4, 12, 2,2));
+			System.err.println(CollectionUtils.listRange(-4, 12, 2,2));
+		}
 }

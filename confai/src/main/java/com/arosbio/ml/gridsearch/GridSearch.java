@@ -803,8 +803,13 @@ public class GridSearch {
 				}
 			}
 		}
-		if (parameterGrid == null)
+		if (optimizationMetric == null){
+			throw new IllegalArgumentException("No metric given to optimize hyperparameters for");
+		}
+		if (parameterGrid == null){
 			throw new IllegalArgumentException("Parameter grid was empty!");
+		}
+			
 		verifyGridParameters(parameterGrid, alg);
 
 		LOGGER.debug("Running grid search with predictor of type: {} with optimization metric: {} and grid: {}",

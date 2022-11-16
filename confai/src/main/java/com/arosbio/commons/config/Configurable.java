@@ -17,7 +17,7 @@ public interface Configurable {
 
 	/**
 	 * Sorting preference for a {@link ConfigParameter} for deciding 
-	 * the prefered parameter in e.g. a grid-search for hyper-parameters.
+	 * the preferred parameter in e.g. a grid-search for hyper-parameters.
 	 * This can be done in order to e.g. pick values that are less prone to 
 	 * overfitting.
 	 */
@@ -107,8 +107,8 @@ public interface Configurable {
 		 */
 		public String getType();
 		/**
-		 * In case there is any prefered sorting based on this config. e.g. smaller/larger
-		 * values could reduce chance of overfit and thus should be prefered 
+		 * In case there is any preferred sorting based on this config. e.g. smaller/larger
+		 * values could reduce chance of overfit and thus should be preferred 
 		 * @return {@link Sorter} for how to pick best value
 		 */
 		public Sorter getSorting();

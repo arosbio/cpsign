@@ -111,6 +111,9 @@ public class MoleculeDepictor {
 		}
 	}
 
+	/**
+	 * Builder class for the {@link MoleculeDepictor} class
+	 */
 	public static class Builder {
 		private int w = 400;
 		private int h = 400;

@@ -10,7 +10,7 @@
 package com.arosbio.ml.io.impl;
 
 /**
- * The property file is divided into three sub-sections:
+ * Holds the information of how the ConfAI and CPSign property files are structured. The property file is divided into three sub-sections:
  * <ul> 
  * <li>{@link TestSection}: contains info about the specifics of the model/data generation - 
  * 	e.g. build time, cpsign version, and a lot of legacy information written to a test.xml file which is no longer used (intended for Bioclipse)
@@ -60,12 +60,18 @@ public class PropertyFileStructure {
 		public final static String TEST_BUILD_TIME_KEY = "cpsignBuildTimestamp";
 		public final static String TEST_PROPERTYCALCULATOR_KEY="propertycalculator";
 		public final static String TEST_HELP_PAGE_KEY = "helppage";
-		public final static String TEST_VALUE_TCP_CLASSIFICATION_RUNNER = "com.arosbio.modeling.ds.TCPClassification";
-		public final static String TEST_VALUE_ACP_CLASSIFICATION_RUNNER = "com.arosbio.modeling.ds.ACPClassification";
-		public final static String TEST_VALUE_ACP_REGRESSION_RUNNER = "com.arosbio.modeling.ds.ACPRegression";
-		public final static String TEST_VALUE_CVAP_CLASSIFICATION_RUNNER = "com.arosbio.modeling.ds.CVAPClassification";
-		public final static String TEST_VALUE_CVAP_REGRESSION_RUNNER = "com.arosbio.modeling.ds.CVAPRegression";
-		public final static String TEST_VALUE_SPARSE_RUNNER = "";
+		/** Not used any more */
+		@Deprecated public final static String TEST_VALUE_TCP_CLASSIFICATION_RUNNER = "com.arosbio.modeling.ds.TCPClassification";
+		/** Not used any more */
+		@Deprecated public final static String TEST_VALUE_ACP_CLASSIFICATION_RUNNER = "com.arosbio.modeling.ds.ACPClassification";
+		/** Not used any more */
+		@Deprecated public final static String TEST_VALUE_ACP_REGRESSION_RUNNER = "com.arosbio.modeling.ds.ACPRegression";
+		/** Not used any more */
+		@Deprecated public final static String TEST_VALUE_CVAP_CLASSIFICATION_RUNNER = "com.arosbio.modeling.ds.CVAPClassification";
+		/** Not used any more */
+		@Deprecated public final static String TEST_VALUE_CVAP_REGRESSION_RUNNER = "com.arosbio.modeling.ds.CVAPRegression";
+		/** Not used any more */
+		@Deprecated public final static String TEST_VALUE_SPARSE_RUNNER = "";
 	}
 
 	public static class ParameterSection {
@@ -88,7 +94,7 @@ public class PropertyFileStructure {
 		 */
 		public final static String DATA_DIR = "dataDir";
 		/**
-		 * The legacy property-key for where destriptors were saved
+		 * The legacy property-key for where descriptors were saved
 		 */
 		public final static String LEGACY_DATA_LOC = "signaturesBaseDir";
 		/**

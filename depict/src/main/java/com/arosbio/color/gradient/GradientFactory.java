@@ -16,7 +16,7 @@ import com.arosbio.color.gradient.impl.GradientPoint;
 import com.arosbio.color.gradient.impl.MultipointGradient;
 
 /**
- * A factory class for getting a {@link ColorGradient}. An {@link ColorGradient} is defined
+ * A factory class for getting a {@link ColorGradient}. A {@link ColorGradient} is defined
  * for values in the range [-1..1]. 
  * <p>
  * Gradients generated in this factory can be any of these:
