@@ -48,5 +48,16 @@ mvn package -DskipTests=true
 __Note:__ As there is a dependence between the projects you may need to use `mvn install` instead of the `package` goal, for the "earlier" projects to be available to latter ones in the hierarchy. 
 
 
+### Generating Javadoc
+Depending on your use case you can either build all docs as separate jar files, e.g. by running;
+```
+mvn javadoc:jar
+```
+This can be run either from the parent (root project) in order to assemble javadoc for all sub-projects, or from the directory of the project you wish to generate javadoc for. In case you wish to have all documentation in a single jar, e.g. if you put the fat jar on your classpath instead of using maven, you can achieve this by running e.g.;
+```
+mvn javadoc:aggregate
+```
+you can also alter the doc title by adding the argument `-Ddoctitle='cpsign bundle javadoc'` (or change the name to your liking) to not get the default "Parent {version} API" title. Note that this command must be executed from the parent "aggregator project".
+
 ## Future work
 - [ ] Implement isotonic regression in a Java project, to replace the [pairAdjacentViolators](https://github.com/sanity/pairAdjacentViolators) dependency which also require bundling in Kotlin standard lib - leading to an increased memory footprint of the jars.
