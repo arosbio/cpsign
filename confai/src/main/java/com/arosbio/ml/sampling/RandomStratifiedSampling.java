@@ -35,6 +35,11 @@ public class RandomStratifiedSampling extends RandomSampling {
 	public String getName(){
 		return NAME;
 	}
+
+	public RandomStratifiedSampling withNumSamples(int num){
+		super.withNumSamples(num);
+		return this;
+	}
 	
 	public RandomStratifiedSampling clone(){
 		return new RandomStratifiedSampling(getNumSamples(), getCalibrationRatio());
@@ -65,9 +70,6 @@ public class RandomStratifiedSampling extends RandomSampling {
 	public Map<String, Object> getProperties() {
 		Map<String,Object> props = super.getProperties();
 		props.put(PropertyNameSettings.SAMPLING_STRATEGY_KEY, ID);
-//		props.put(CONFIG_NUM_SAMPLES_PARAM_NAMES[0], getNumSamples());
-//		props.put(PropertyFileSettings.SAMPLING_STRATEGY_NR_MODELS_KEY, getNumSamples());
-//		props.put(PropertyFileSettings.SAMPLING_STRATEGY_CALIB_RATIO_KEY, getCalibrationRatio());
 		return props;
 	}
 	

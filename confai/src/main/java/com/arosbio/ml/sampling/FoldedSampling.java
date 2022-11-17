@@ -36,7 +36,7 @@ public class FoldedSampling implements MultiSampling {
 	
 	public FoldedSampling(int numFolds) {
 		super();
-		setNumSamples(numFolds);
+		withNumSamples(numFolds);
 	}
 	
 	public int getID() {
@@ -51,10 +51,11 @@ public class FoldedSampling implements MultiSampling {
 		return new FoldedSampling(numFolds);
 	}
 	
-	public void setNumSamples(int folds) {
+	public FoldedSampling withNumSamples(int folds) {
 		if (folds <= 1)
 			throw new IllegalArgumentException("Number of samplings must be over 1 when using folded sampling");
 		this.numFolds = folds;
+		return this;
 	}
 
 	@Override

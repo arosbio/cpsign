@@ -19,6 +19,7 @@ import com.arosbio.commons.TypeUtils;
 import com.arosbio.commons.config.IntegerConfig;
 import com.arosbio.commons.config.NumericConfig;
 import com.arosbio.data.Dataset;
+import com.arosbio.ml.TrainingsetValidator;
 import com.arosbio.ml.io.impl.PropertyNameSettings;
 import com.google.common.collect.Range;
 
@@ -28,13 +29,15 @@ public class RandomSampling implements MultiSampling {
 	public static final double DEFAULT_CALIBRATION_RATIO = 0.2;
 	public static final String[] CONFIG_NUM_SAMPLES_PARAM_NAMES = new String[] {"numSamples"};
 	public static final String[] CONFIG_CALIBRATION_RATIO_PARAM_NAMES = new String[] {"calibRatio", "calibrationRatio"};
+	public static final String[] CONFIG_NUM_CALIBRATION_INSTANCES_PARAM_NAMES = new String[] {"nCalib", "numCalib"};
 
 	public static final int ID = 1;
 	public static final String NAME = "Random";
 
 
-	private int numModels;
-	private double calibrationRatio;
+	private int numberOfSamples;
+	private Double calibrationRatio;
+	private Integer numCalibrationInstances;
 
 	/**
 	 * Using default number of samples (1) and default calibration ratio (0.2)
@@ -43,10 +46,16 @@ public class RandomSampling implements MultiSampling {
 		this(DEFAULT_NUM_SAMPLES, DEFAULT_CALIBRATION_RATIO);
 	}
 
-	public RandomSampling(int numModels, double calibrationRatio) {
+	public RandomSampling(int numSamples, double calibrationRatio) {
 		super();
-		setNumSamples(numModels);
-		setCalibrationRatio(calibrationRatio);
+		withNumSamples(numSamples);
+		withCalibrationRatio(calibrationRatio);
+	}
+
+	public RandomSampling(int numSamples, int numCalibrationInstances){
+		super();
+		withNumSamples(numSamples);
+
 	}
 
 	public int getID() {
@@ -58,52 +67,65 @@ public class RandomSampling implements MultiSampling {
 	}
 
 	public RandomSampling clone(){
-		return new RandomSampling(numModels, calibrationRatio);
+		return new RandomSampling(numberOfSamples, calibrationRatio);
 	}
 
-	public void setNumSamples(int num){
+	@Override
+	public RandomSampling withNumSamples(int num){
 		if (num < 1)
 			throw new IllegalArgumentException("Number of samplings must be at least 1");
-		this.numModels = num;
+		this.numberOfSamples = num;
+		return this;
 	}
 
 	@Override
 	public int getNumSamples() {
-		return numModels;
+		return numberOfSamples;
 	}
 
-	public void setCalibrationRatio(double ratio) {
+	public RandomSampling withCalibrationRatio(double ratio) throws IllegalArgumentException {
 		if (ratio <= 0 || ratio >= 1)
 			throw new IllegalArgumentException("Calibration ratio must be in the range (0..1)");
 		calibrationRatio = ratio;
+		return this;
 	}
 
-	public double getCalibrationRatio(){
+	public Double getCalibrationRatio(){
 		return calibrationRatio;
 	}
 
+	public RandomSampling withNumCalibrationInstances(int num) throws IllegalArgumentException {
+		if (num < TrainingsetValidator.getInstance().MIN_NUM_CALIBRATION_INSTANCES){
+			throw new IllegalArgumentException("To few calibration instances specified: "+num +" vs required minimum: " + TrainingsetValidator.getInstance().MIN_NUM_CALIBRATION_INSTANCES);
+		}
+		this.numCalibrationInstances = num;
+		this.calibrationRatio = null;
+		return this;
+	}
+
 	public String toString() {
-		return "Random sampling with "+numModels + " models and " + calibrationRatio + " calibration ratio";
+		return "Random sampling with "+numberOfSamples + " models and " + calibrationRatio + " calibration ratio";
 	}
 
 	@Override
 	public TrainSplitIterator getIterator(Dataset dataset)
 			throws IllegalArgumentException {
-		return new RandomCalibSetIterator(dataset, calibrationRatio, numModels);
+		return new RandomCalibSetIterator(dataset, calibrationRatio, numberOfSamples);
 	}
 
 	@Override
 	public TrainSplitIterator getIterator(Dataset dataset, long seed)
 			throws IllegalArgumentException {
-		return new RandomCalibSetIterator(dataset, calibrationRatio, numModels, seed);
+		return new RandomCalibSetIterator(dataset, calibrationRatio, numberOfSamples, seed);
 	}
 
 	@Override
 	public Map<String, Object> getProperties() {
 		Map<String,Object> props = new HashMap<>();
 		props.put(PropertyNameSettings.SAMPLING_STRATEGY_KEY, ID);
-		props.put(CONFIG_NUM_SAMPLES_PARAM_NAMES[0], getNumSamples());
-		props.put(CONFIG_CALIBRATION_RATIO_PARAM_NAMES[0], getCalibrationRatio());
+		props.put(CONFIG_NUM_SAMPLES_PARAM_NAMES[0], numberOfSamples);
+		props.put(CONFIG_CALIBRATION_RATIO_PARAM_NAMES[0], calibrationRatio);
+		props.put(CONFIG_NUM_CALIBRATION_INSTANCES_PARAM_NAMES[0], numCalibrationInstances);
 		return props;
 	}
 
@@ -148,7 +170,7 @@ public class RandomSampling implements MultiSampling {
 				int nSamples = TypeUtils.asInt(kv.getValue());
 				if (nSamples < 1)
 					throw new IllegalArgumentException("Parameter " + CONFIG_NUM_SAMPLES_PARAM_NAMES[0] + " must be >=1");
-				numModels = nSamples;
+				numberOfSamples = nSamples;
 			} else if (CollectionUtils.containsIgnoreCase(CONFIG_CALIBRATION_RATIO_PARAM_NAMES, kv.getKey())) {
 				if (! TypeUtils.isDouble(kv.getValue())) {
 					throw new IllegalArgumentException("Parameter " + CONFIG_CALIBRATION_RATIO_PARAM_NAMES[0] + " must be floating point number, got '" + kv.getValue()+'\'');

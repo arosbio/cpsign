@@ -23,15 +23,20 @@ public class TrainingsetValidator {
 	// Thresholds for minimum number of examples used in training
 	private static final int MAX_THRESHOLD_TO_CHECK = 50; // pretty expensive looking through all data in case 
 	private static final int MIN_NUMBER_FOR_TRAINING_SVM = 5;
+	/** The minimum number of instances needed for calibration. For classification tasks this applies to each <b>class</b> */
 	private static final int MIN_NUMBER_FOR_CALIBRATING_PREDICTOR = 3;
 	// Testing environment
 	private static final int MAX_THRESHOLD_TESTING = 50;
 	private static final int MIN_NUM_TRAINING_SVM_TESTING = 1;
 	private static final int MIN_NUM_CALIB_TESTING = 1;
 
-	private final int maxNumberToCheck;
-	private final int minNumberForSVMTraining;
-	private final int minNumberForCalibration;
+
+	/** Sets a threshold for how many training records to go through */
+	public final int MAX_NUM_INSTANCES_TO_CHECK;
+	/** The minium number of training records needed for fitting an underlying scorer */
+	public final int MIN_NUM_MODEL_TRAINING_INSTANCES;
+	/** The minimum number of instances needed for calibration. For classification tasks this applies to each <b>class</b> */
+	public final int MIN_NUM_CALIBRATION_INSTANCES;
 
 	/* ==========================================================================================
 	 * 
@@ -53,9 +58,9 @@ public class TrainingsetValidator {
 			throw new IllegalArgumentException("Minimum number of examples for SVM training is 1");
 		if (maxNumberToValidate < 20)
 			throw new IllegalArgumentException("Maximum to validate must be at least 20");
-		this.minNumberForCalibration = minNumberForCalibration;
-		this.minNumberForSVMTraining = minNumberForSVMTraining;
-		this.maxNumberToCheck = maxNumberToValidate;
+		this.MIN_NUM_CALIBRATION_INSTANCES = minNumberForCalibration;
+		this.MIN_NUM_MODEL_TRAINING_INSTANCES = minNumberForSVMTraining;
+		this.MAX_NUM_INSTANCES_TO_CHECK = maxNumberToValidate;
 	}
 
 	private static TrainingsetValidator systemDefault() {
@@ -64,7 +69,7 @@ public class TrainingsetValidator {
 	
 	/* ==========================================================================================
 	 * 
-	 * 			TOGGLE BETWEEN TESTING AND REAL CODE
+	 * 			TOGGLE BETWEEN TESTING AND PRODUCTION CODE
 	 * 
 	 * ==========================================================================================
 	 */
@@ -90,28 +95,28 @@ public class TrainingsetValidator {
 	 * @throws IllegalArgumentException If the <code>trainingset</code> is not fulfilling the requirements
 	 */
 	public void validateClassification(TrainSplit trainingset) throws IllegalArgumentException {
-		if (trainingset.getProperTrainingSet().size() < minNumberForSVMTraining)
-			throw new IllegalArgumentException("Too few examples used for training the predictor; requires at least " + minNumberForSVMTraining + " examples for training underlying algorithm");
-		if (trainingset.getCalibrationSet().size() < minNumberForCalibration)
-			throw new IllegalArgumentException("Too few examples used for calibrating the predictor; requires at least " + minNumberForCalibration + " examples");
+		if (trainingset.getProperTrainingSet().size() < MIN_NUM_MODEL_TRAINING_INSTANCES)
+			throw new IllegalArgumentException("Too few examples used for training the predictor; requires at least " + MIN_NUM_MODEL_TRAINING_INSTANCES + " examples for training underlying algorithm");
+		if (trainingset.getCalibrationSet().size() < MIN_NUM_CALIBRATION_INSTANCES)
+			throw new IllegalArgumentException("Too few examples used for calibrating the predictor; requires at least " + MIN_NUM_CALIBRATION_INSTANCES + " examples");
 
 		// return instead of having to check through all data
-		if (	trainingset.getCalibrationSet().size() > maxNumberToCheck &&
-				trainingset.getProperTrainingSet().size() > maxNumberToCheck)
+		if (	trainingset.getCalibrationSet().size() > MAX_NUM_INSTANCES_TO_CHECK &&
+				trainingset.getProperTrainingSet().size() > MAX_NUM_INSTANCES_TO_CHECK)
 			return;
 
 		// Calibration set
 		Map<Double,Integer> labelFreqs = DataUtils.countLabels(trainingset.getCalibrationSet());
 		for (Map.Entry<Double, Integer> lab: labelFreqs.entrySet()) {
-			if (lab.getValue() < minNumberForCalibration)
-				throw new IllegalArgumentException("Too few examples for calibrating the prediction; requires at least " + minNumberForCalibration + " for each label");
+			if (lab.getValue() < MIN_NUM_CALIBRATION_INSTANCES)
+				throw new IllegalArgumentException("Too few examples for calibrating the prediction; requires at least " + MIN_NUM_CALIBRATION_INSTANCES + " for each label");
 		}
 
 		// Proper training set
 		Map<Double, Integer> propLabels = DataUtils.countLabels(trainingset.getProperTrainingSet());
 		for (Map.Entry<Double, Integer> lab: propLabels.entrySet()) {
-			if (lab.getValue() < minNumberForSVMTraining)
-				throw new IllegalArgumentException("Too few examples for training underlying algorithm; requires at least " + minNumberForSVMTraining + " for each label");
+			if (lab.getValue() < MIN_NUM_MODEL_TRAINING_INSTANCES)
+				throw new IllegalArgumentException("Too few examples for training underlying algorithm; requires at least " + MIN_NUM_MODEL_TRAINING_INSTANCES + " for each label");
 		}
 
 	}
@@ -122,16 +127,16 @@ public class TrainingsetValidator {
 	 * @throws IllegalArgumentException If the <code>trainingset</code> is not fulfilling the requirements
 	 */
 	public void validateClassification(List<DataRecord> trainingset) throws IllegalArgumentException {
-		if (trainingset.size() > maxNumberToCheck)
+		if (trainingset.size() > MAX_NUM_INSTANCES_TO_CHECK)
 			return;
 
-		if (trainingset.size() < minNumberForSVMTraining) 
-			throw new IllegalArgumentException("Too few examples for training predictor; requires at least " + minNumberForSVMTraining + " examples");
+		if (trainingset.size() < MIN_NUM_MODEL_TRAINING_INSTANCES) 
+			throw new IllegalArgumentException("Too few examples for training predictor; requires at least " + MIN_NUM_MODEL_TRAINING_INSTANCES + " examples");
 
 		Map<Double,Integer> labelFrequncies = DataUtils.countLabels(trainingset);
 		for (Map.Entry<Double, Integer> lab: labelFrequncies.entrySet()) {
-			if (lab.getValue() < minNumberForSVMTraining)
-				throw new IllegalArgumentException("Too few examples for training underlying algorithm; requires at least " + minNumberForSVMTraining + " for each label");
+			if (lab.getValue() < MIN_NUM_MODEL_TRAINING_INSTANCES)
+				throw new IllegalArgumentException("Too few examples for training underlying algorithm; requires at least " + MIN_NUM_MODEL_TRAINING_INSTANCES + " for each label");
 		}
 	}
 
@@ -141,10 +146,10 @@ public class TrainingsetValidator {
 	 * @throws IllegalArgumentException If the <code>trainingset</code> is not fulfilling the requirements
 	 */
 	public void validateRegression(TrainSplit trainingset) throws IllegalArgumentException {
-		if (trainingset.getProperTrainingSet().size() < minNumberForSVMTraining)
-			throw new IllegalArgumentException("Too few examples used for training the predictor; requires at least " + minNumberForSVMTraining + " examples for training underlying algorithm");
-		if (trainingset.getCalibrationSet().size() < minNumberForCalibration)
-			throw new IllegalArgumentException("Too few examples used for calibrating the predictor; requires at least " + minNumberForCalibration + " examples");
+		if (trainingset.getProperTrainingSet().size() < MIN_NUM_MODEL_TRAINING_INSTANCES)
+			throw new IllegalArgumentException("Too few examples used for training the predictor; requires at least " + MIN_NUM_MODEL_TRAINING_INSTANCES + " examples for training underlying algorithm");
+		if (trainingset.getCalibrationSet().size() < MIN_NUM_CALIBRATION_INSTANCES)
+			throw new IllegalArgumentException("Too few examples used for calibrating the predictor; requires at least " + MIN_NUM_CALIBRATION_INSTANCES + " examples");
 	}
 
 

@@ -36,6 +36,10 @@ public class FoldedStratifiedSampling extends FoldedSampling {
 		return NAME;
 	}
 	
+	public FoldedStratifiedSampling withNumSamples(int folds){
+		super.withNumSamples(folds);
+		return this;
+	}
 
 	public FoldedStratifiedSampling clone(){
 		return new FoldedStratifiedSampling(getNumSamples());

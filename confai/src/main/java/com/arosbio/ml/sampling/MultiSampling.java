@@ -13,5 +13,11 @@ public interface MultiSampling extends SamplingStrategy {
 
 	public int getNumSamples();
 	
-	public void setNumSamples(int num);
+	/**
+	 * Set the number of samples this strategy should use
+	 * @param num number of samples, must be &gt;=1
+	 * @return the same instance, for a fluid API type call
+	 * @throws IllegalArgumentException If the {@code num} parameter is invalid
+	 */
+	public MultiSampling withNumSamples(int num) throws IllegalArgumentException;
 }
