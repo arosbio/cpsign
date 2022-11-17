@@ -83,7 +83,7 @@
     <commons-csv.version>1.8</commons-csv.version>
     <commons-math3.version>3.6.1</commons-math3.version>
     <commons-io.version>2.11.0</commons-io.version>
-    <commons-text.version>1.9</commons-text.version>
+    <commons-text.version>1.10.0</commons-text.version>
     <commons-lang.version>3.9</commons-lang.version>
     <guava.version>31.0.1-jre</guava.version>
     <kotlin-stdlib.version>1.6.20</kotlin-stdlib.version> <!-- TODO - hopefully can be removed in future -->
