@@ -53,7 +53,7 @@ import com.arosbio.ml.metrics.classification.LogLoss;
 import com.arosbio.ml.sampling.SamplingStrategy;
 import com.arosbio.ml.sampling.SamplingStrategyUtils;
 import com.arosbio.ml.sampling.TrainSplit;
-import com.arosbio.ml.sampling.TrainSplitIterator;
+import com.arosbio.ml.sampling.TrainSplitGenerator;
 import com.arosbio.ml.vap.ivap.IVAPClassifier;
 
 public final class AVAPClassifier extends PredictorBase implements AVAP, ClassificationPredictor {
@@ -68,7 +68,6 @@ public final class AVAPClassifier extends PredictorBase implements AVAP, Classif
 	private Map<Integer,IVAPClassifier> predictors = new HashMap<>();
 	private ScoringClassifier scoringAlgorithm;
 	private SamplingStrategy strategy;
-	private TrainSplitIterator splitsIterator;
 
 	/* 
 	 * =================================================
@@ -274,17 +273,13 @@ public final class AVAPClassifier extends PredictorBase implements AVAP, Classif
 
 		if (predictors == null)
 			predictors = new HashMap<>();
-
-		if (splitsIterator==null || splitsIterator.getProblem() != problem) {
-			// Set up the splits 
-			splitsIterator = strategy.getIterator(problem, seed);
-			LOGGER.debug("Set up new splits-iterator for training");
-		}
+		SamplingStrategyUtils.validateTrainSplitIndex(strategy, index);
+		TrainSplitGenerator generator = strategy.getIterator(problem, seed);
 
 		IVAPClassifier ivap = new IVAPClassifier(scoringAlgorithm.clone());
 		TrainSplit split=null;
 		try {
-			split = splitsIterator.get(index);
+			split = generator.get(index);
 		} catch(NoSuchElementException e) {
 			LOGGER.debug("Tried to get a non-existing index split",e);
 			throw new IllegalArgumentException("Cannot train index " + index + ", only allowed indexes are [0,"+(strategy.getNumSamples()-1)+"]");

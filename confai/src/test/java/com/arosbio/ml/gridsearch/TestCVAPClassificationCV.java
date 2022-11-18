@@ -65,7 +65,7 @@ public class TestCVAPClassificationCV extends UnitTestInitializer{
 			SubSet ds = tmp.getDataset();
 			ds.shuffle();
 			SubSet recs = ds.splitStatic(NR_RECORDS_USED)[0];
-			theProblem.setDataset(recs);
+			theProblem.withDataset(recs);
 		} catch (IOException e) {
 			throw new RuntimeException("Failed loading dataset");
 		}

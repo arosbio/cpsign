@@ -101,7 +101,7 @@ public class Test_TestRunner extends TestEnv {
 		GlobalConfig.getInstance().setRNGSeed(34567897654l);
 		SubSet data = TestDataLoader.getInstance().getDataset(true, false).getDataset().splitStatic(200)[0];
 		Dataset ds = new Dataset();
-		ds.setDataset(data);
+		ds.withDataset(data);
 		runTest(ds,
 				getAVAPClassification(true, false));
 	}

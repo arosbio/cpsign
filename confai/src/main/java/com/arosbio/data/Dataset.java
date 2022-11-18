@@ -733,43 +733,44 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 	/**
 	 * Setter for the normal dataset
 	 * @param dataset set the normal {@link SubSet}
+	 * @return the same instance
 	 */
-	public void setDataset(SubSet dataset) {
+	public Dataset withDataset(SubSet dataset) {
 		if (dataset == null)
 			this.dataset = new SubSet();
 		else {
 			this.dataset = dataset;
 			this.dataset.withRecordType(RecordType.NORMAL);
 		}
-			
+		return this;
 	}
 
 	public SubSet getModelingExclusiveDataset() {
 		return modelingExclusive;
 	}
 
-	public void setModelingExclusiveDataset(SubSet modelingExclusive) {
+	public Dataset withModelingExclusiveDataset(SubSet modelingExclusive) {
 		if (modelingExclusive == null)
 			this.modelingExclusive = new SubSet(RecordType.MODELING_EXCLUSIVE);
 		else {
 			this.modelingExclusive = modelingExclusive;
 			this.modelingExclusive.withRecordType(RecordType.MODELING_EXCLUSIVE);
 		}
-			
+		return this;
 	}
 
 	public SubSet getCalibrationExclusiveDataset() {
 		return calibrationExclusive;
 	}
 
-	public void setCalibrationExclusiveDataset(SubSet calibrationExclusive) {
+	public Dataset withCalibrationExclusiveDataset(SubSet calibrationExclusive) {
 		if (calibrationExclusive == null)
 			this.calibrationExclusive = new SubSet(RecordType.CALIBRATION_EXCLUSIVE);
 		else {
 			this.calibrationExclusive = calibrationExclusive;
 			this.calibrationExclusive.withRecordType(RecordType.CALIBRATION_EXCLUSIVE);
 		}
-			
+		return this;	
 	}
 
 	/**
@@ -815,6 +816,25 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 		if (calibrationExclusive!=null)
 			labels.addAll(calibrationExclusive.getLabels());
 		return labels;
+	}
+
+
+	public List<DataRecord> all(){
+		List<DataRecord> all = new ArrayList<>();
+		all.addAll(dataset);
+		all.addAll(modelingExclusive);
+		all.addAll(calibrationExclusive);
+		return all;
+	}
+	/**
+	 * Get all records, in a shuffled order
+	 * @param seed RNG seed to use for shuffling
+	 * @return all shuffled records 
+	 */
+	public List<DataRecord> all(long seed){
+		List<DataRecord> all = all();
+		Collections.shuffle(all, new Random(seed));
+		return all;
 	}
 
 	public String toString() {

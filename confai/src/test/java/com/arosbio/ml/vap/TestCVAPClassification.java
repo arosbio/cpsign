@@ -58,7 +58,7 @@ public class TestCVAPClassification extends UnitTestInitializer{
 		SubSet trainingset = SubSet.fromLIBSVMFormat(TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS_NEG_POS.openStream());
 		SubSet[] splits = trainingset.splitRandom(0.1);
 		Dataset prob = new Dataset();
-		prob.setDataset(splits[1]);
+		prob.withDataset(splits[1]);
 		LoggerUtils.setDebugMode();
 
 		cvap.train(prob);
@@ -91,7 +91,7 @@ public class TestCVAPClassification extends UnitTestInitializer{
 		}
 		
 		Dataset problem = new Dataset();
-		problem.setDataset(new SubSet(zeroCls));
+		problem.withDataset(new SubSet(zeroCls));
 		problem.getDataset().add(oneCls);
 		cvap.train(problem);
 		
@@ -188,7 +188,7 @@ public class TestCVAPClassification extends UnitTestInitializer{
 		SubSet[] splits = allData.getDataset().splitRandom(.3);
 		SubSet testSet = splits[0];
 		Dataset training = new Dataset();
-		training.setDataset(splits[1]);
+		training.withDataset(splits[1]);
 
 		pred.train(training);
 
@@ -218,7 +218,7 @@ public class TestCVAPClassification extends UnitTestInitializer{
 		SubSet trainingset = TestDataLoader.getInstance().getDataset(true, false).getDataset().shuffle().splitStatic(400)[0];
 		SubSet[] splits = trainingset.splitRandom(0.1);
 		Dataset prob = new Dataset();
-		prob.setDataset(splits[1]);
+		prob.withDataset(splits[1]);
 
 		cvap.train(prob);
 		
@@ -253,7 +253,7 @@ public class TestCVAPClassification extends UnitTestInitializer{
 		
 		SubSet[] splits = data.getDataset().splitRandom(0.1);
 		Dataset problem = new Dataset();
-		problem.setDataset(splits[1]);
+		problem.withDataset(splits[1]);
 
 		cvap.train(problem);
 		

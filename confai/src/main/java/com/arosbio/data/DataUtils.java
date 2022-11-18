@@ -27,6 +27,7 @@ import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.MathUtils;
 import com.arosbio.data.Dataset.SubSet;
 import com.arosbio.data.FeatureVector.Feature;
+import com.google.common.collect.Range;
 
 public class DataUtils {
 
@@ -169,6 +170,41 @@ public class DataUtils {
 		}
 	}
 
+	public static Range<Double> findLabelRange(Dataset data){
+		Range<Double> r = null;
+		if (!data.getDataset().isEmpty()){
+			r = findLabelRange(data.getDataset());
+		}
+		if (! data.getCalibrationExclusiveDataset().isEmpty()){
+			if (r == null)
+				r = findLabelRange(data.getCalibrationExclusiveDataset());
+			else
+				r = r.span(findLabelRange(data.getCalibrationExclusiveDataset()));
+		}
+		if (! data.getModelingExclusiveDataset().isEmpty()){
+			if (r == null)
+				r = findLabelRange(data.getModelingExclusiveDataset());
+			else
+				r = r.span(findLabelRange(data.getModelingExclusiveDataset()));
+		}
+		return r;
+	}
+
+	public static Range<Double> findLabelRange(Collection<DataRecord> data){
+		if (data.isEmpty())
+			throw new IllegalArgumentException("No records given");
+		double current = Double.NaN;
+		double minObservation=Double.MAX_VALUE;
+		double maxObservation=-Double.MAX_VALUE;
+		for (DataRecord rec : data) {
+			current = rec.getLabel();
+			if (current<minObservation)
+				minObservation=current;
+			if (current>maxObservation)
+				maxObservation=current;
+		}
+		return Range.closed(minObservation, maxObservation);
+	}
 	/**
 	 * Find all labels in a classification data set, will stop if encountering more labels than
 	 * {@link GlobalConfig#getMaxNumClasses()} and throw an exception
@@ -352,6 +388,7 @@ public class DataUtils {
         return medianGradient;
 	}
 
+	
 
 
 }

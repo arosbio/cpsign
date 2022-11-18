@@ -19,9 +19,11 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 
 import com.google.common.collect.Range;
@@ -154,6 +156,18 @@ public class CollectionUtils {
 
 		}
 
+	}
+
+	public static <T> Pair<List<T>,List<T>> splitRandomly(List<T> input, int numInSecond, long seed){
+		List<T> first = new ArrayList<>(input), // Shallow copy all to the first
+			second = new ArrayList<>(numInSecond);
+		
+		Random rng = new Random(seed);
+		for (int i=0; i<numInSecond; i++) {
+			int pickIX = rng.nextInt(first.size());
+			second.add(first.remove(pickIX));
+		}
+		return Pair.of(first,second);
 	}
 	
 	public static boolean containsNullOrNaN(Collection<Double> input) {

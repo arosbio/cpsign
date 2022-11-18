@@ -33,11 +33,11 @@ import com.arosbio.ml.cp.acp.ACPClassifier;
 import com.arosbio.ml.cp.icp.ICPClassifier;
 import com.arosbio.ml.cp.nonconf.classification.NegativeDistanceToHyperplaneNCM;
 import com.arosbio.ml.sampling.FoldedCalibSetIterator;
-import com.arosbio.ml.sampling.RandomCalibSetIterator;
 import com.arosbio.ml.sampling.RandomSampling;
 import com.arosbio.ml.sampling.StratifiedFoldedCalibSetIterator;
 import com.arosbio.ml.sampling.StratifiedRandomCalibSetIterator;
 import com.arosbio.ml.sampling.TrainSplit;
+import com.arosbio.ml.sampling.impl.RandomSplitIterator;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.testutils.TestDataLoader;
@@ -110,8 +110,8 @@ public class TestCalibrationSetup extends UnitTestInitializer{
 		Dataset clonedProblem = problem.clone();
 		long seed = 1242L;
 
-		Iterator<TrainSplit> datasets1 = new RandomCalibSetIterator(problem, CALIB_PART, NR_FOLDS, seed);
-		Iterator<TrainSplit> datasets2 = new RandomCalibSetIterator(clonedProblem, CALIB_PART, NR_FOLDS, seed);
+		Iterator<TrainSplit> datasets1 = new RandomSplitIterator(problem, CALIB_PART, NR_FOLDS, seed);
+		Iterator<TrainSplit> datasets2 = new RandomSplitIterator(clonedProblem, CALIB_PART, NR_FOLDS, seed);
 
 		for(int i=0; i<NR_FOLDS; i++){
 			TrainSplit ds1 = datasets1.next();
@@ -128,11 +128,11 @@ public class TestCalibrationSetup extends UnitTestInitializer{
 		double splitFac = 0.2;
 		SubSet[] ds_split1 = problem.getDataset().splitStatic(splitFac);
 		SubSet[] ds_split2 = ds_split1[1].splitRandom(splitFac);
-		problem.setDataset(ds_split2[1]); // this should be 64% of the data
-		problem.setCalibrationExclusiveDataset(ds_split1[0]); // this should be 20% of the data
-		problem.setModelingExclusiveDataset(ds_split2[0]); // this should be 16% of the data
+		problem.withDataset(ds_split2[1]); // this should be 64% of the data
+		problem.withCalibrationExclusiveDataset(ds_split1[0]); // this should be 20% of the data
+		problem.withModelingExclusiveDataset(ds_split2[0]); // this should be 16% of the data
 
-		Iterator<TrainSplit> datasets1 = new RandomCalibSetIterator(problem, CALIB_PART, NR_FOLDS);
+		Iterator<TrainSplit> datasets1 = new RandomSplitIterator(problem, CALIB_PART, NR_FOLDS);
 		int nrDs = 0;
 		while(datasets1.hasNext()){
 			nrDs++;
@@ -155,9 +155,9 @@ public class TestCalibrationSetup extends UnitTestInitializer{
 		double splitFac = 0.2;
 		SubSet[] ds_split1 = problem.getDataset().splitStatic(splitFac);
 		SubSet[] ds_split2 = ds_split1[1].splitRandom(splitFac);
-		problem.setDataset(ds_split2[1]); // this should be 64% of the data
-		problem.setCalibrationExclusiveDataset(ds_split1[0]); // this should be 20% of the data
-		problem.setModelingExclusiveDataset(ds_split2[0]); // this should be 16% of the data
+		problem.withDataset(ds_split2[1]); // this should be 64% of the data
+		problem.withCalibrationExclusiveDataset(ds_split1[0]); // this should be 20% of the data
+		problem.withModelingExclusiveDataset(ds_split2[0]); // this should be 16% of the data
 
 		Iterator<TrainSplit> datasets1 = new FoldedCalibSetIterator(problem, NR_FOLDS);
 		int nrDs = 0;
@@ -338,9 +338,9 @@ public class TestCalibrationSetup extends UnitTestInitializer{
 		
 		SubSet[] split_ds1 = problem.getDataset().splitRandom(.124);
 		SubSet[] split_ds2 = split_ds1[1].splitRandom(0.353);
-		problem.setCalibrationExclusiveDataset(split_ds1[0]);
-		problem.setModelingExclusiveDataset(split_ds2[0]);
-		problem.setDataset(split_ds2[1]);
+		problem.withCalibrationExclusiveDataset(split_ds1[0])
+			.withModelingExclusiveDataset(split_ds2[0])
+			.withDataset(split_ds2[1]);
 		
 		int initSize = problem.getDataset().size();
 		int calibExclusiveSize = problem.getCalibrationExclusiveDataset().size();
@@ -452,9 +452,9 @@ public class TestCalibrationSetup extends UnitTestInitializer{
 		
 		SubSet[] split_ds1 = dataset.getDataset().splitRandom(.530);
 		SubSet[] split_ds2 = split_ds1[1].splitRandom(0.854);
-		dataset.setCalibrationExclusiveDataset(split_ds1[0]);
-		dataset.setModelingExclusiveDataset(split_ds2[0]);
-		dataset.setDataset(split_ds2[1]);
+		dataset.withCalibrationExclusiveDataset(split_ds1[0])
+			.withModelingExclusiveDataset(split_ds2[0])
+			.withDataset(split_ds2[1]);
 		
 		int initSize = dataset.getDataset().size();
 		int calibExclusiveSize = dataset.getCalibrationExclusiveDataset().size();

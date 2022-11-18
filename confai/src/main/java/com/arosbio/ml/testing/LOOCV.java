@@ -117,8 +117,8 @@ public class LOOCV implements TestingStrategy, Aliased {
 			LOGGER.debug("Generating split {}/{}", (index+1), shuffledRecords.size());
 			
 			Dataset trainingData = new Dataset();
-			trainingData.setCalibrationExclusiveDataset(calib.clone());
-			trainingData.setModelingExclusiveDataset(proper.clone());
+			trainingData.withCalibrationExclusiveDataset(calib.clone());
+			trainingData.withModelingExclusiveDataset(proper.clone());
 
 			// Generate the training and test-set
 			List<DataRecord> trainingSet = new ArrayList<>(shuffledRecords);
@@ -127,7 +127,7 @@ public class LOOCV implements TestingStrategy, Aliased {
 			testSet.add(shuffledRecords.get(index));
 			index++;
 			
-			trainingData.setDataset(new SubSet(trainingSet));
+			trainingData.withDataset(new SubSet(trainingSet));
 			
 			LOGGER.debug("Using {} examples for training and {} examples for testing (not counting model-exclusive or calibration-exclusive data)",
 				trainingSet.size(),testSet.size());

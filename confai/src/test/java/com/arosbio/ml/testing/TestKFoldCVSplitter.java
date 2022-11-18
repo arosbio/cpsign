@@ -46,7 +46,7 @@ public class TestKFoldCVSplitter {
 		Assert.assertEquals(10, d10.size());
 
 		Dataset p = new Dataset();
-		p.setDataset(d10);
+		p.withDataset(d10);
 		KFoldCV splitter = new KFoldCV(11);
 
 		try {
@@ -66,7 +66,7 @@ public class TestKFoldCVSplitter {
 		SubSet original_cpy = d.clone();
 
 		Dataset p = new Dataset();
-		p.setDataset(d);
+		p.withDataset(d);
 
 		TestingStrategy strat = new KFoldCV(k);
 		Assert.assertEquals(k, strat.getNumberOfSplitsAndValidate(p));
@@ -120,7 +120,7 @@ public class TestKFoldCVSplitter {
 		SubSet original_cpy = d.clone();
 
 		Dataset p = new Dataset();
-		p.setDataset(d);
+		p.withDataset(d);
 
 		TestingStrategy strat = new KFoldCV(k);
 		Assert.assertEquals(k, strat.getNumberOfSplitsAndValidate(p));

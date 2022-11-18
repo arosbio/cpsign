@@ -24,8 +24,8 @@ import com.arosbio.commons.logging.LoggerUtils;
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.Dataset.SubSet;
-import com.arosbio.ml.sampling.RandomCalibSetIterator;
 import com.arosbio.ml.sampling.TrainSplit;
+import com.arosbio.ml.sampling.impl.RandomSplitIterator;
 import com.arosbio.data.SparseFeature;
 import com.arosbio.data.SparseFeatureImpl;
 import com.arosbio.tests.suites.PerformanceTest;
@@ -52,7 +52,7 @@ public class TestICPRegressionGradient extends UnitTestInitializer{
 	public static void setupProblem(){
 		problem = new Dataset();
 		List<DataRecord> trainingset = new ArrayList<>();
-		problem.setDataset(new SubSet(trainingset));
+		problem.withDataset(new SubSet(trainingset));
 
 		testset = new ArrayList<>();
 		testDerivs = new ArrayList<>();
@@ -94,7 +94,7 @@ public class TestICPRegressionGradient extends UnitTestInitializer{
 		
 		ICPRegressor icpreg = getACPRegressionNormalized(true, true).getICPImplementation();
 		
-		TrainSplit icpdataset = new RandomCalibSetIterator(problem, CALIBRATION_PART, 1).next();
+		TrainSplit icpdataset = new RandomSplitIterator(problem, CALIBRATION_PART, 1).next();
 
 		icpreg.train(icpdataset);
 		
@@ -129,7 +129,7 @@ public class TestICPRegressionGradient extends UnitTestInitializer{
 //		LibSvmICPRegression icpreg = new LibSvmICPRegression(1,1);
 
 		LoggerUtils.setDebugMode();
-		TrainSplit icpdataset = new RandomCalibSetIterator(problem, CALIBRATION_PART, 1).next(); 
+		TrainSplit icpdataset = new RandomSplitIterator(problem, CALIBRATION_PART, 1).next(); 
 //				CalibrationSetUtils.randomCalibrationSet(problem.getRecords(), CALIBRATION_PART, false, SeedGenerator.getRandomSeedsGenerator());
 		System.out.println(icpdataset.toString());
 		

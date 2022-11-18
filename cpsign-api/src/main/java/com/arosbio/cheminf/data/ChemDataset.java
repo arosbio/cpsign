@@ -563,9 +563,9 @@ public final class ChemDataset extends Dataset {
 	public void setData(Dataset data) throws IllegalArgumentException {
 		if (data == null)
 			throw new IllegalArgumentException("The new problem cannot be null");
-		setDataset(data.getDataset());
-		setModelingExclusiveDataset(data.getModelingExclusiveDataset());
-		setCalibrationExclusiveDataset(data.getCalibrationExclusiveDataset());
+		withDataset(data.getDataset());
+		withModelingExclusiveDataset(data.getModelingExclusiveDataset());
+		withCalibrationExclusiveDataset(data.getCalibrationExclusiveDataset());
 		if (!data.getTransformers().isEmpty())
 			setTransformers(data.getTransformers());
 	}

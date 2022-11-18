@@ -91,7 +91,7 @@ public class TestACPClassification extends UnitTestInitializer{
 		Dataset problem = TestDataLoader.getInstance().getDataset(true, false);
 		SubSet[] testTrainRecs = problem.getDataset().splitRandom(.5);
 		SubSet test = testTrainRecs[0];
-		problem.setDataset(testTrainRecs[1]);
+		problem.withDataset(testTrainRecs[1]);
 
 		ACPClassifier acp = new ACPClassifier(new NegativeDistanceToHyperplaneNCM(new LinearSVC()), new RandomSampling(1, .3));
 		acp.train(problem);
@@ -152,7 +152,7 @@ public class TestACPClassification extends UnitTestInitializer{
 
 		//Read in problem from file
 		Dataset problem = TestDataLoader.getInstance().getDataset(true, false).clone();
-		problem.setDataset(problem.getDataset().splitStatic(numRecordsToUse)[0]);
+		problem.withDataset(problem.getDataset().splitStatic(numRecordsToUse)[0]);
 
 
 		ACPClassifier acp = new ACPClassifier(
@@ -196,7 +196,7 @@ public class TestACPClassification extends UnitTestInitializer{
 
 		SubSet[] ds_splits = problem.getDataset().splitStatic(numToTest);
 		List<DataRecord> testExamples = ds_splits[0];
-		problem.setDataset(ds_splits[1]); // Set training examples
+		problem.withDataset(ds_splits[1]); // Set training examples
 
 		//Train model
 		lacp.train(problem);

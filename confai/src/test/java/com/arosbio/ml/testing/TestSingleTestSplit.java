@@ -43,7 +43,7 @@ public class TestSingleTestSplit {
 		SubSet original_cpy = d.clone();
 
 		Dataset p = new Dataset();
-		p.setDataset(d);
+		p.withDataset(d);
 
 		TestingStrategy strat = new RandomSplit(numTest);
 		Assert.assertEquals(1, strat.getNumberOfSplitsAndValidate(p));
@@ -127,7 +127,7 @@ public class TestSingleTestSplit {
 		SubSet original_cpy = d.clone();
 
 		Dataset p = new Dataset();
-		p.setDataset(d);
+		p.withDataset(d);
 
 		TestingStrategy strat = new RandomSplit(fractionTest);
 		Assert.assertEquals(1, strat.getNumberOfSplitsAndValidate(p));

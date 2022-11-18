@@ -332,7 +332,7 @@ public class TestACPRegression extends UnitTestInitializer{
 		ACPRegressor lacp = getACPRegressionAbsDiff(false, true);
 
 		Dataset trainProblem = new Dataset();
-		trainProblem.setDataset(problem);
+		trainProblem.withDataset(problem);
 		lacp.train(trainProblem); 
 
 		//Save model

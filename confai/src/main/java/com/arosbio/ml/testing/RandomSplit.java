@@ -224,8 +224,8 @@ public class RandomSplit implements TestingStrategy, Aliased {
 			LOGGER.debug("Generating split 1/1, rep={}",rep);
 
 			Dataset trainingData = new Dataset();
-			trainingData.setCalibrationExclusiveDataset(problemClone.getCalibrationExclusiveDataset().clone());
-			trainingData.setModelingExclusiveDataset(problemClone.getModelingExclusiveDataset().clone());
+			trainingData.withCalibrationExclusiveDataset(problemClone.getCalibrationExclusiveDataset().clone());
+			trainingData.withModelingExclusiveDataset(problemClone.getModelingExclusiveDataset().clone());
 			List<DataRecord> testSet = null;
 
 			// STRATIFIED
@@ -254,7 +254,7 @@ public class RandomSplit implements TestingStrategy, Aliased {
 				Collections.shuffle(trainingSet, new Random(seed+rep));
 				Collections.shuffle(testSet, new Random(seed+rep));
 				
-				trainingData.setDataset(new SubSet(trainingSet));
+				trainingData.withDataset(new SubSet(trainingSet));
 			}
 
 			// NON-STRATIFIED
@@ -272,7 +272,7 @@ public class RandomSplit implements TestingStrategy, Aliased {
 				testSet = new ArrayList<>(recs.subList(0, splitIndex));
 				List<DataRecord> trainingSet = new ArrayList<>(recs.subList(splitIndex, recs.size()));
 
-				trainingData.setDataset(new SubSet(trainingSet));
+				trainingData.withDataset(new SubSet(trainingSet));
 			}
 
 

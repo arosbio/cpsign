@@ -23,11 +23,11 @@ import com.arosbio.data.DataRecord;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.Dataset.SubSet;
 import com.arosbio.ml.sampling.FoldedCalibSetIterator;
-import com.arosbio.ml.sampling.RandomCalibSetIterator;
 import com.arosbio.ml.sampling.StratifiedFoldedCalibSetIterator;
 import com.arosbio.ml.sampling.StratifiedRandomCalibSetIterator;
 import com.arosbio.ml.sampling.TrainSplit;
-import com.arosbio.ml.sampling.TrainSplitIterator;
+import com.arosbio.ml.sampling.TrainSplitGenerator;
+import com.arosbio.ml.sampling.impl.RandomSplitIterator;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.testutils.TestDataLoader;
@@ -63,13 +63,13 @@ public class TestStratifiedSplitting extends TestEnv{
 
 		long seed = System.currentTimeMillis();
 		Dataset secondProblem = prob.clone();
-		TrainSplitIterator splitter = new FoldedCalibSetIterator(prob, numFolds, seed);
-		TrainSplitIterator splitter2 = new FoldedCalibSetIterator(secondProblem, numFolds, seed);
+		TrainSplitGenerator splitter = new FoldedCalibSetIterator(prob, numFolds, seed);
+		TrainSplitGenerator splitter2 = new FoldedCalibSetIterator(secondProblem, numFolds, seed);
 
 		doCheckFoldedSplits(prob, splitter, splitter2, false);
 	}
 
-	private void doCheckFoldedSplits(Dataset prob, TrainSplitIterator splitter, TrainSplitIterator splitter2, boolean isStratified) {
+	private void doCheckFoldedSplits(Dataset prob, TrainSplitGenerator splitter, TrainSplitGenerator splitter2, boolean isStratified) {
 		List<DataRecord> allCalibRecs = new ArrayList<>();
 		Map<Double, Integer> freqs = prob.getDataset().getLabelFrequencies();
 		
@@ -134,8 +134,8 @@ public class TestStratifiedSplitting extends TestEnv{
 
 		long seed = System.currentTimeMillis();
 		Dataset secondProblem = prob.clone();
-		TrainSplitIterator splitter = new RandomCalibSetIterator(prob, calibrationPart,numModels,seed);
-		TrainSplitIterator splitter2 = new RandomCalibSetIterator(secondProblem, calibrationPart,numModels, seed);
+		TrainSplitGenerator splitter = new RandomSplitIterator(prob, calibrationPart,numModels,seed);
+		TrainSplitGenerator splitter2 = new RandomSplitIterator(secondProblem, calibrationPart,numModels, seed);
 
 		doCheckRandomSplits(prob, splitter, splitter2, false);
 	}
@@ -211,7 +211,7 @@ public class TestStratifiedSplitting extends TestEnv{
 		//		}
 	}
 
-	private void doCheckRandomSplits(Dataset prob, TrainSplitIterator splitter, TrainSplitIterator splitter2, boolean isStratified) {
+	private void doCheckRandomSplits(Dataset prob, TrainSplitGenerator splitter, TrainSplitGenerator splitter2, boolean isStratified) {
 
 		Map<Double, Integer> freqs = prob.getDataset().getLabelFrequencies();
 		int index = 0;

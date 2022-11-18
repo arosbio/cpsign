@@ -16,8 +16,8 @@ import com.arosbio.data.Dataset;
 
 public class TestTrainSplit {
 
-	private Dataset trainSet;
-	private List<DataRecord> testSet;
+	private final Dataset trainSet;
+	private final List<DataRecord> testSet;
 	
 	public TestTrainSplit(Dataset trainingSet, List<DataRecord> testSet) {
 		this.trainSet = trainingSet;

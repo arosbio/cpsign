@@ -209,7 +209,7 @@ public class TestGridSearchUnitTest extends UnitTestInitializer {
 			if (pred instanceof ClassificationPredictor){
 				// make it larger so that VAP doesn't fail occationally 
 				prob = TestDataLoader.getInstance().getDataset(true, false);
-				prob.setDataset(prob.getDataset().splitStatic(200)[0]); 
+				prob.withDataset(prob.getDataset().splitStatic(200)[0]); 
 			} else {
 				prob = TestDataLoader.getInstance().getDataset(false, true);
 			}

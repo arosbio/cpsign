@@ -134,11 +134,11 @@ public class EvaluationUtils {
 						prediction.getInterval(((CPRegressionMetric) m).getConfidence()).getInterval());
 			} else if (m instanceof CPRegressionMultiMetric) {
 				List<Double> currConfs = ((CPRegressionMultiMetric) m).getEvaluationPoints();
-				Map<Double,Range<Double>> predIntevals = new HashMap<>();
+				Map<Double,Range<Double>> predIntervals = new HashMap<>();
 				for (double c : currConfs) {
-					predIntevals.put(c, prediction.getInterval(c).getInterval());
+					predIntervals.put(c, prediction.getInterval(c).getInterval());
 				}
-				((CPRegressionMultiMetric) m).addPrediction(example.getLabel(), predIntevals);
+				((CPRegressionMultiMetric) m).addPrediction(example.getLabel(), predIntervals);
 			} else if (m instanceof CIWidthBasedMetric) {
 				PredictedInterval interval = widthPrediction.getWidthToConfidenceBasedIntervals().get(((CIWidthBasedMetric) m).getCIWidth());
 				((CIWidthBasedMetric) m).addPrediction(example.getLabel(), interval.getInterval(), interval.getConfidence());

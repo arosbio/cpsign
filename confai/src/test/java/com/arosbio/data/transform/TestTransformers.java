@@ -615,7 +615,7 @@ public class TestTransformers extends TestEnv {
 			
 			int initSize = multiCls.getNumRecords();
 			Dataset d = new Dataset();
-			d.setDataset(multiCls);
+			d.withDataset(multiCls);
 
 			// Need to use this one to loop through normal and model-exclusive dataset
 			// LoggerUtils.setDebugMode(SYS_ERR);

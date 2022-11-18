@@ -33,7 +33,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 
 /**
- * TestRunner - k-Fold cross-validation 
+ * k-fold cross-validation 
  * 
  * @author staffan
  * @author Aros bio
@@ -266,8 +266,8 @@ public class KFoldCV implements TestingStrategy {
 			LOGGER.debug("Generating fold {}/{}",(fold+1),folds.size());
 
 			Dataset trainingData = new Dataset();
-			trainingData.setCalibrationExclusiveDataset(problemClone.getCalibrationExclusiveDataset().clone());
-			trainingData.setModelingExclusiveDataset(problemClone.getModelingExclusiveDataset().clone());
+			trainingData.withCalibrationExclusiveDataset(problemClone.getCalibrationExclusiveDataset().clone());
+			trainingData.withModelingExclusiveDataset(problemClone.getModelingExclusiveDataset().clone());
 
 			List<DataRecord> trainingSet = new ArrayList<>(numberOfDataRecords);
 			List<DataRecord> testSet = null;
@@ -279,7 +279,7 @@ public class KFoldCV implements TestingStrategy {
 				}
 			}
 
-			trainingData.setDataset(new SubSet(trainingSet));
+			trainingData.withDataset(new SubSet(trainingSet));
 
 			LOGGER.debug("Using {} examples for training and {} examples for testing (not counting model-exclusive or calibration-exclusive data)",
 				trainingSet.size(),testSet.size());

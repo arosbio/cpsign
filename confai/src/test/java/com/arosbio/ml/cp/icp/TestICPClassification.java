@@ -40,9 +40,9 @@ import com.arosbio.ml.algorithms.svm.LinearSVC;
 import com.arosbio.ml.cp.acp.ACPClassifier;
 import com.arosbio.ml.cp.nonconf.classification.NCMMondrianClassification;
 import com.arosbio.ml.cp.nonconf.classification.NegativeDistanceToHyperplaneNCM;
-import com.arosbio.ml.sampling.RandomCalibSetIterator;
 import com.arosbio.ml.sampling.SingleSample;
 import com.arosbio.ml.sampling.TrainSplit;
+import com.arosbio.ml.sampling.impl.RandomSplitIterator;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.GzipEncryption;
@@ -76,8 +76,8 @@ public class TestICPClassification extends UnitTestInitializer{
 		
 		SubSet[] splits = d.splitRandom(.3);
 		Dataset p = new Dataset();
-		p.setCalibrationExclusiveDataset(splits[0]);
-		p.setModelingExclusiveDataset(splits[1]);
+		p.withCalibrationExclusiveDataset(splits[0]);
+		p.withModelingExclusiveDataset(splits[1]);
 		
 		ACPClassifier acp = new ACPClassifier(new ICPClassifier(new NegativeDistanceToHyperplaneNCM(new LinearSVC())), new SingleSample());
 		acp.train(p);
@@ -106,7 +106,7 @@ public class TestICPClassification extends UnitTestInitializer{
 		ICPClassifier licp = new ICPClassifier(new NegativeDistanceToHyperplaneNCM(new LinearSVC()));
 
 		//Train model
-		TrainSplit icpdataset = new RandomCalibSetIterator(problem, CALIBRATION_PART, 1).next();
+		TrainSplit icpdataset = new RandomSplitIterator(problem, CALIBRATION_PART, 1).next();
 //				randomCalibrationSet(problem.getModelAndCalibrateDataset() , CALIBRATION_PART, true, SeedGenerator.getRandomSeedsGenerator());
 		
 		licp.train(icpdataset);
@@ -131,7 +131,7 @@ public class TestICPClassification extends UnitTestInitializer{
 //		Assert.assertTrue(prob.getY().size() == prob .size());
 
 		// train
-		TrainSplit icpdataset = new RandomCalibSetIterator(prob, CALIBRATION_PART, 1).next();
+		TrainSplit icpdataset = new RandomSplitIterator(prob, CALIBRATION_PART, 1).next();
 //				CalibrationSetUtils.randomCalibrationSet(prob , CALIBRATION_PART, true, SeedGenerator.getRandomSeedsGenerator());
 		libsvmclass.train(icpdataset);
 		
@@ -190,7 +190,7 @@ public class TestICPClassification extends UnitTestInitializer{
 		Assert.assertTrue(prob.getDataset() .size() > 5);
 
 		// train
-		TrainSplit icpdataset = new RandomCalibSetIterator(prob, CALIBRATION_PART, 1).next(); 
+		TrainSplit icpdataset = new RandomSplitIterator(prob, CALIBRATION_PART, 1).next(); 
 		System.out.println(icpdataset.getTotalNumTrainingRecords() + " ; " + icpdataset.getCalibrationSet().size() + " ; " + icpdataset.getProperTrainingSet().size());
 		
 		liblinclass.train(icpdataset);

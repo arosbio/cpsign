@@ -39,7 +39,7 @@ public class TestIVAPClassification extends UnitTestInitializer {
 		//  getFromAbsPath(NumericalSVMLIGHTFiles.CLASSIFICATION_2CLASS_PATH));
 		SubSet[] splits = trainingset.splitRandom(0.1);
 		Dataset prb = new Dataset();
-		prb.setDataset(splits[1]);
+		prb.withDataset(splits[1]);
 		Iterator<TrainSplit> trainingSplits = new FoldedCalibSetIterator(prb, 10);
 		ivap.train(trainingSplits.next());
 		

@@ -24,6 +24,14 @@ public class IntervalUtils {
 		return capInterval(getInterval(y_hat, distanceToMP), minObs, maxObs);
 	}
 
+	public static Range<Double> capInterval(Range<Double> interval, 
+			Range<Double> observedRange) {
+		if (Double.isNaN(interval.lowerEndpoint())|| Double.isNaN(interval.upperEndpoint())) {
+			LOGGER.debug("Lower and/or upper endpoints were NaN, capping to min and max-obs");
+			return observedRange;
+		}
+		return interval.intersection(observedRange);
+	}
 	/**
 	 * Calculate the interval for a given prediction, using the min and max ranges
 	 * @param interval the non-capped interval

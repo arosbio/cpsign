@@ -54,7 +54,7 @@ public class TestShuffleData extends UnitTestInitializer{
 	ds.add(new DataRecord(3.0, f3));
 	
 
-	p.setDataset(new SubSet(ds));
+	p.withDataset(new SubSet(ds));
 	
 	System.out.println(p.toString());
 	p.shuffle();

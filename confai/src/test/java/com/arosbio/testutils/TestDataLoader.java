@@ -41,7 +41,7 @@ public class TestDataLoader {
 					SMALL_CLASS = new Dataset();
 					Dataset p = getDataset(true, false);
 					SubSet d = p.getDataset().splitStatic(100)[0].clone();
-					SMALL_CLASS.setDataset(d);
+					SMALL_CLASS.withDataset(d);
 				}
 				return SMALL_CLASS.clone();
 			} else {

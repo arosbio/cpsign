@@ -421,10 +421,10 @@ public class TestSaveLoadModel extends UnitTestInitializer {
 
 		Dataset data = new Dataset();
 		// Prop train
-		data.setModelingExclusiveDataset(splits[1]);
+		data.withModelingExclusiveDataset(splits[1]);
 		
 		// Calib
-		data.setCalibrationExclusiveDataset(splits[0]);
+		data.withCalibrationExclusiveDataset(splits[0]);
 		
 		Assert.assertTrue(data.getDataset().isEmpty());
 		

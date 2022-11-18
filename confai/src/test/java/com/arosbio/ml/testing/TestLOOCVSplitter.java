@@ -42,7 +42,7 @@ public class TestLOOCVSplitter {
 		SubSet original_cpy = d.clone();
 
 		Dataset p = new Dataset();
-		p.setDataset(d);
+		p.withDataset(d);
 
 		TestingStrategy strat = new LOOCV();
 		Assert.assertEquals(nRecs, strat.getNumberOfSplitsAndValidate(p));

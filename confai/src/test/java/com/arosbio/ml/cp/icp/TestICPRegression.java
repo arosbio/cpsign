@@ -36,8 +36,8 @@ import com.arosbio.ml.algorithms.svm.EpsilonSVR;
 import com.arosbio.ml.algorithms.svm.LinearSVR;
 import com.arosbio.ml.cp.CPRegressionPrediction;
 import com.arosbio.ml.cp.nonconf.regression.NormalizedNCM;
-import com.arosbio.ml.sampling.RandomCalibSetIterator;
 import com.arosbio.ml.sampling.TrainSplit;
+import com.arosbio.ml.sampling.impl.RandomSplitIterator;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.GzipEncryption;
@@ -87,12 +87,12 @@ public class TestICPRegression extends UnitTestInitializer{
 		SubSet trainingProblem = splitted[1];
 		SubSet testingProblem = splitted[0];
 		Dataset prob = new Dataset();
-		prob.setDataset(trainingProblem);
+		prob.withDataset(trainingProblem);
 
 		ICPRegressor lacp = new ICPRegressor(new NormalizedNCM(new LinearSVR(), null));
 
 		//Train model
-		TrainSplit icpdataset = new RandomCalibSetIterator(prob, CALIBRATION_PART, 1).next();
+		TrainSplit icpdataset = new RandomSplitIterator(prob, CALIBRATION_PART, 1).next();
 		//				CalibrationSetUtils.randomCalibrationSet(trainingProblem , CALIBRATION_PART, false, SeedGenerator.getRandomSeedsGenerator());
 
 		lacp.train(icpdataset);
@@ -147,12 +147,12 @@ public class TestICPRegression extends UnitTestInitializer{
 		SubSet trainingProblem = splitted[1];
 		SubSet testingProblem = splitted[0];
 		Dataset prob = new Dataset();
-		prob.setDataset(trainingProblem);
+		prob.withDataset(trainingProblem);
 
 		ICPRegressor licp = new ICPRegressor(new NormalizedNCM(new EpsilonSVR()));
 
 		//Train model
-		TrainSplit icpdataset = new RandomCalibSetIterator(prob, CALIBRATION_PART, 1).next();
+		TrainSplit icpdataset = new RandomSplitIterator(prob, CALIBRATION_PART, 1).next();
 		//				CalibrationSetUtils.randomCalibrationSet(trainingProblem , CALIBRATION_PART, false, SeedGenerator.getRandomSeedsGenerator());
 
 		licp.train(icpdataset);
@@ -178,11 +178,11 @@ public class TestICPRegression extends UnitTestInitializer{
 		Assert.assertTrue(data .size() > 5);
 
 		Dataset prob = new Dataset();
-		prob.setDataset(data);
+		prob.withDataset(data);
 		//		Assert.assertTrue(prob.getY().size() == prob .size());
 		// train
 
-		TrainSplit icpdataset = new RandomCalibSetIterator(prob, CALIBRATION_PART, 1).next();
+		TrainSplit icpdataset = new RandomSplitIterator(prob, CALIBRATION_PART, 1).next();
 		//				CalibrationSetUtils.randomCalibrationSet(prob , CALIBRATION_PART, false, SeedGenerator.getRandomSeedsGenerator());
 
 		LoggerUtils.setDebugMode();
@@ -249,10 +249,10 @@ public class TestICPRegression extends UnitTestInitializer{
 		SubSet data = SubSet.fromLIBSVMFormat(TestResources.SVMLIGHTFiles.REGRESSION_HOUSING_25.openStream());
 		Assert.assertTrue(data .size() > 5);
 		Dataset prob = new Dataset();
-		prob.setDataset(data);
+		prob.withDataset(data);
 
 		// train
-		TrainSplit icpdataset = new RandomCalibSetIterator(prob, CALIBRATION_PART, 1).next();
+		TrainSplit icpdataset = new RandomSplitIterator(prob, CALIBRATION_PART, 1).next();
 		//				CalibrationSetUtils.randomCalibrationSet(prob , CALIBRATION_PART, false, SeedGenerator.getRandomSeedsGenerator());
 
 		liblinReg.train(icpdataset);

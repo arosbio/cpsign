@@ -472,11 +472,11 @@ public class TestSaveLoadModel extends UnitTestBase {
 		Assert.assertEquals(initialSize, ds_split1[0].size() + ds_split1[1].size());
 
 		SubSet[] ds_split2 = ds_split1[1].splitRandom(splitFac); // 6* 50% = 3
-		prob.setCalibrationExclusiveDataset(ds_split1[0]); // 3 recs
+		prob.withCalibrationExclusiveDataset(ds_split1[0]); // 3 recs
 		Assert.assertEquals(prob.getCalibrationExclusiveDataset().size(), splitStatic);
-		prob.setDataset(ds_split2[0]);
+		prob.withDataset(ds_split2[0]);
 		Assert.assertEquals((int) Math.round(splitFac*(initialSize-splitStatic)), prob.getDataset().size());
-		prob.setModelingExclusiveDataset(ds_split2[1]);
+		prob.withModelingExclusiveDataset(ds_split2[1]);
 		Assert.assertEquals(prob.getModelingExclusiveDataset().size(), (int) (splitFac*(initialSize-splitStatic)));
 
 
@@ -516,11 +516,11 @@ public class TestSaveLoadModel extends UnitTestBase {
 		Assert.assertTrue(Math.abs(ds_split1[0].size()-initialSize*splitFac) <= 1);
 
 		SubSet[] ds_split2 = ds_split1[1].splitRandom(splitFac);
-		prob.setCalibrationExclusiveDataset(ds_split1[0]); // 0.2 of original size = 2
+		prob.withCalibrationExclusiveDataset(ds_split1[0]); // 0.2 of original size = 2
 		Assert.assertEquals(prob.getCalibrationExclusiveDataset().size(), 2);
-		prob.setDataset(ds_split2[0]); // 0.2 of 8 = 2
+		prob.withDataset(ds_split2[0]); // 0.2 of 8 = 2
 		Assert.assertEquals(prob.getDataset().size(), 2);
-		prob.setModelingExclusiveDataset(ds_split2[1]); // rest = 6
+		prob.withModelingExclusiveDataset(ds_split2[1]); // rest = 6
 		Assert.assertEquals(prob.getModelingExclusiveDataset().size(), 6);
 
 

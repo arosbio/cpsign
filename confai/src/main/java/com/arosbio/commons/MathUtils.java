@@ -116,6 +116,14 @@ public class MathUtils {
 		return median;
 	}
 
+	public static <T extends Comparable<T>> int findMaxIndex(List<T> values){
+		int maxInd = 0;
+		for (int i=1; i<values.size(); i++){
+			maxInd = values.get(maxInd).compareTo(values.get(i)) > 0 ?  maxInd : i;
+		}
+		return maxInd;
+	}
+
 	public static <T> List<T> filterNull(List<T> list) {
 		List<T> filtered = new ArrayList<>();
 		for(T elem: list){

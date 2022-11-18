@@ -76,7 +76,7 @@ public class TestACPClassificationValidity extends TestEnv {
 			SubSet d = p.getDataset();
 			SubSet[] ds = d.splitRandom(3456789, 0.1); // Use only 6.7k examples
 			multiclassP = new Dataset();
-			multiclassP.setDataset(ds[0]);
+			multiclassP.withDataset(ds[0]);
 		} catch (Exception e) {
 			Assert.fail("Failed loading the multiclass problem: " + e.getMessage());
 		}
@@ -337,7 +337,7 @@ public class TestACPClassificationValidity extends TestEnv {
 		Dataset p = TestDataLoader.loadDataset(TestResources.SVMLIGHTFiles.CLASSIFICATION_3CLASS_CON4);
 		p.shuffle();
 		SubSet d = p.getDataset().splitStatic(1000)[0];
-		p.setDataset(d);
+		p.withDataset(d);
 		doCVMulticlass(p);
 		
 	}
