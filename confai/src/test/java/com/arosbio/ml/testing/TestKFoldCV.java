@@ -29,7 +29,7 @@ import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.testutils.TestDataLoader;
 
 @Category(UnitTest.class)
-public class TestKFoldCVSplitter {
+public class TestKFoldCV {
 
 	@Test
 	public void testKlessThan2() {
@@ -41,7 +41,7 @@ public class TestKFoldCVSplitter {
 
 	@Test
 	public void testKgreaterThanN() throws Exception {
-		SubSet d = TestDataLoader.getInstance().getDataset(true, true).getDataset().clone();
+		SubSet d = TestDataLoader.getInstance().getDataset(true, true).getDataset();
 		SubSet d10 = d.splitStatic(10)[0];
 		Assert.assertEquals(10, d10.size());
 
@@ -58,7 +58,7 @@ public class TestKFoldCVSplitter {
 	@Test
 	public void testEvenSplits() throws Exception {
 		int k = 11, numPerSplit=2;
-		SubSet d = TestDataLoader.getInstance().getDataset(true, true).getDataset().clone();
+		SubSet d = TestDataLoader.getInstance().getDataset(true, true).getDataset();
 		d.shuffle();
 		// Only use enough to make even partion 
 		d = d.splitStatic(k*numPerSplit)[0];
@@ -176,11 +176,11 @@ public class TestKFoldCVSplitter {
 		int k = 5;
 		int n = 2;
 		KFoldCV tester = new KFoldCV(k);
-		tester.setNumRepeat(n);
+		tester.withNumRepeat(n);
 
 		Assert.assertFalse("default is NOT to stratify",tester.isStratified());
 
-		tester.setStratified(true);
+		tester.withStratified(true);
 		Assert.assertTrue("test setter",tester.isStratified());
 
 		Dataset original = TestDataLoader.getInstance().getDataset(true, true);
@@ -256,16 +256,16 @@ public class TestKFoldCVSplitter {
 		int k = 5;
 		KFoldCV tester = new KFoldCV(k);
 		Assert.assertTrue(tester.usesShuffle());
-		tester.setShuffle(false);
+		tester.withShuffle(false);
 		Assert.assertFalse(tester.usesShuffle());
 		
-		tester.setNumRepeat(10);
+		tester.withNumRepeat(10);
 		try {
 			tester.getSplits(original);
 			Assert.fail();
 		} catch (IllegalArgumentException e) {}
 
-		tester.setNumRepeat(1);
+		tester.withNumRepeat(1);
 
 		Iterator<TestTrainSplit> splitsIter = tester.getSplits(original);
 		int count = 0;

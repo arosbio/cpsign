@@ -15,10 +15,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.arosbio.commons.CollectionUtils;
+import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.TypeUtils;
 import com.arosbio.commons.config.IntegerConfig;
 import com.arosbio.data.Dataset;
+import com.arosbio.data.splitting.FoldedSplitter;
 import com.arosbio.ml.io.impl.PropertyNameSettings;
+import com.arosbio.ml.sampling.impl.TrainSplitWrapper;
 import com.google.common.collect.Range;
 
 public class FoldedSampling implements MultiSampling {
@@ -26,7 +29,6 @@ public class FoldedSampling implements MultiSampling {
 	public static final String NAME = "Folded";
 	public static final int DEFAULT_NUM_SAMPLES = 10;
 	public static final String[] CONFIG_NUM_SAMPLES_PARAM_NAMES = new String[] {"folds", "numSamples"};
-	
 	
 	private int numFolds;
 	
@@ -64,23 +66,28 @@ public class FoldedSampling implements MultiSampling {
 	}
 	
 	@Override
-	public TrainSplitIterator getIterator(Dataset dataset)
+	public TrainSplitGenerator getIterator(Dataset dataset)
 			throws IllegalArgumentException {
-		return new FoldedCalibSetIterator(dataset, numFolds);
+		return getIterator(dataset, GlobalConfig.getInstance().getRNGSeed()); 
 	}
 
 	@Override
-	public TrainSplitIterator getIterator(Dataset dataset, long seed)
+	public TrainSplitGenerator getIterator(Dataset dataset, long seed)
 			throws IllegalArgumentException {
-		return new FoldedCalibSetIterator(dataset, numFolds, seed);
+		return new TrainSplitWrapper(new FoldedSplitter.Builder()
+			.numFolds(numFolds)
+			.seed(seed)
+			.shuffle(true)
+			.stratify(false)
+			.findLabelRange(true)
+			.build(dataset)); 
 	}
 
 	@Override
 	public Map<String, Object> getProperties() {
 		Map<String,Object> props = new HashMap<>();
 		props.put(PropertyNameSettings.SAMPLING_STRATEGY_KEY, ID);
-		props.put(CONFIG_NUM_SAMPLES_PARAM_NAMES[0], getNumSamples());
-//		props.put(PropertyFileSettings.SAMPLING_STRATEGY_NR_MODELS_KEY, numFolds);
+		props.put(CONFIG_NUM_SAMPLES_PARAM_NAMES[0], numFolds);
 		return props;
 	}
 
@@ -99,11 +106,7 @@ public class FoldedSampling implements MultiSampling {
 		if (! (obj instanceof FoldedSampling))
 			return false;
 		FoldedSampling other = (FoldedSampling) obj;
-		if (this.numFolds != other.numFolds)
-			return false;
-		if (this.isStratified() != other.isStratified())
-			return false;
-		return true;
+		return this.numFolds == other.numFolds;
 	}
 	
 	public String toString() {
@@ -119,7 +122,8 @@ public class FoldedSampling implements MultiSampling {
 
 	@Override
 	public void setConfigParameters(Map<String, Object> params) throws IllegalStateException, IllegalArgumentException {
-		for (Map.Entry<String, Object> kv: params.entrySet()) {
+		params = CollectionUtils.dropNullValues(params);
+		for (Map.Entry<String, Object> kv : params.entrySet()) {
 			if (CollectionUtils.containsIgnoreCase(Arrays.asList(CONFIG_NUM_SAMPLES_PARAM_NAMES), kv.getKey())) {
 				if (!TypeUtils.isInt(kv.getValue())) {
 					throw new IllegalArgumentException("Parameter " + CONFIG_NUM_SAMPLES_PARAM_NAMES[0] + " must be integer number, got: " + kv.getValue());

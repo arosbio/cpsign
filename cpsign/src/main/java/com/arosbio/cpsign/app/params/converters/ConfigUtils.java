@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.FuzzyMatcher;
 import com.arosbio.commons.FuzzyServiceLoader;
 import com.arosbio.commons.TypeUtils;
@@ -90,9 +91,11 @@ public class ConfigUtils {
 					throw new TypeConversionException("Argument " + originalText + " did not have the correct syntax");
 				}
 			}
-			LOGGER.debug("Configuring {} with the following config args: {}",object, config);
+			LOGGER.debug("Initial config map: {}", config);
+			Map<String,Object> filteredMap = CollectionUtils.dropNullValues(config);
+			LOGGER.debug("Configuring {} with the following config args: {}",object, filteredMap);
 			try {
-				object.setConfigParameters(config);
+				object.setConfigParameters(filteredMap);
 			} catch (Exception e) {
 				LOGGER.debug("Failed configuration",e);
 				throw new TypeConversionException("Invalid sub-parameter for " + getName(object) + ": " + e.getMessage());

@@ -20,6 +20,7 @@ import org.apache.commons.math3.stat.descriptive.moment.Variance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.arosbio.commons.CollectionUtils;
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.DataUtils;
 import com.arosbio.data.Dataset.SubSet;
@@ -27,7 +28,6 @@ import com.arosbio.data.FeatureVector;
 import com.arosbio.data.FeatureVector.Feature;
 import com.arosbio.data.SparseVector;
 import com.arosbio.data.transform.ColumnTransformer;
-import com.arosbio.data.transform.feature_selection.FeatureSelectUtils.IndexedValue;
 import com.arosbio.data.transform.feature_selection.SelectionCriterion.Criterion;
 
 public class VarianceBasedSelector extends ColumnTransformer implements FeatureSelector {
@@ -156,19 +156,19 @@ public class VarianceBasedSelector extends ColumnTransformer implements FeatureS
 		int nRecs = recs.size();
 
 
-		List<IndexedValue> vals = new ArrayList<>();
+		List<CollectionUtils.IndexedValue> vals = new ArrayList<>();
 		for (Map.Entry<Integer,Variance> kv : counts.entrySet()){
 			Variance colVar = kv.getValue();
 			if (colVar.getN() == 0){
 				// this was never encountered - 0 variance!
-				vals.add(new IndexedValue(kv.getKey(), 0d));
+				vals.add(new CollectionUtils.IndexedValue(kv.getKey(), 0d));
 				continue;
 			}
 			int zerosToAdd = nRecs - (int) colVar.getN();
 			for (int i=0; i<zerosToAdd; i++) {
 				colVar.increment(0d);
 			}
-			vals.add(new IndexedValue(kv.getKey(), colVar.getResult()));
+			vals.add(new CollectionUtils.IndexedValue(kv.getKey(), colVar.getResult()));
 
 		}
 
@@ -177,9 +177,9 @@ public class VarianceBasedSelector extends ColumnTransformer implements FeatureS
 	}
 
 	private void fitDenseData(Collection<DataRecord> data) {
-		List<IndexedValue> variances = new ArrayList<>();
+		List<CollectionUtils.IndexedValue> variances = new ArrayList<>();
 		for (int col : getColumns().getColumns(DataUtils.getMaxFeatureIndex(data))) {
-			variances.add(new IndexedValue(col, getVariance(data, col)));
+			variances.add(new CollectionUtils.IndexedValue(col, getVariance(data, col)));
 		}
 		toRemove = criterion.getIndicesToRemove(variances);
 		Collections.sort(toRemove);

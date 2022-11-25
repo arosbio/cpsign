@@ -18,13 +18,13 @@ import java.util.Map;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 
+import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.FuzzyMatcher;
 import com.arosbio.commons.TypeUtils;
 import com.arosbio.commons.config.Configurable;
 import com.arosbio.commons.config.EnumConfig;
 import com.arosbio.commons.config.IntegerConfig;
 import com.arosbio.commons.config.NumericConfig;
-import com.arosbio.data.transform.feature_selection.FeatureSelectUtils.IndexedValue;
 
 public class SelectionCriterion implements Configurable {
 
@@ -125,7 +125,7 @@ public class SelectionCriterion implements Configurable {
 		return sc;
 	}
 
-	public List<Integer> getIndicesToRemove(List<IndexedValue> vals){
+	public List<Integer> getIndicesToRemove(List<CollectionUtils.IndexedValue> vals){
 		validateState();
 
 		switch (crit) {

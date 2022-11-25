@@ -36,8 +36,8 @@ import com.arosbio.ml.algorithms.svm.EpsilonSVR;
 import com.arosbio.ml.algorithms.svm.LinearSVR;
 import com.arosbio.ml.cp.CPRegressionPrediction;
 import com.arosbio.ml.cp.nonconf.regression.NormalizedNCM;
+import com.arosbio.ml.sampling.RandomSampling;
 import com.arosbio.ml.sampling.TrainSplit;
-import com.arosbio.ml.sampling.impl.RandomSplitIterator;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.GzipEncryption;
@@ -92,21 +92,13 @@ public class TestICPRegression extends UnitTestInitializer{
 		ICPRegressor lacp = new ICPRegressor(new NormalizedNCM(new LinearSVR(), null));
 
 		//Train model
-		TrainSplit icpdataset = new RandomSplitIterator(prob, CALIBRATION_PART, 1).next();
-		//				CalibrationSetUtils.randomCalibrationSet(trainingProblem , CALIBRATION_PART, false, SeedGenerator.getRandomSeedsGenerator());
+		TrainSplit icpdataset = new RandomSampling(1,CALIBRATION_PART).getIterator(prob).next();
 
 		lacp.train(icpdataset);
 
 		LoggerUtils.setDebugMode();
 		// Predict all testExamples
 		assertConfidencesAreTrue(testingProblem , confidences, lacp);
-
-		//Predict the second example
-		//		ISparseFeature[] example = problem.getDataset().get(1);
-		//		List<ICPRegressionResult> results = lacp.predict(example,confidences);
-		//
-		//		System.out.println("LibLinear");
-		//		assertWithinInterval(problem, results, problem.getY().get(1));
 
 	}
 
@@ -152,38 +144,26 @@ public class TestICPRegression extends UnitTestInitializer{
 		ICPRegressor licp = new ICPRegressor(new NormalizedNCM(new EpsilonSVR()));
 
 		//Train model
-		TrainSplit icpdataset = new RandomSplitIterator(prob, CALIBRATION_PART, 1).next();
-		//				CalibrationSetUtils.randomCalibrationSet(trainingProblem , CALIBRATION_PART, false, SeedGenerator.getRandomSeedsGenerator());
+		TrainSplit icpdataset = new RandomSampling(1, CALIBRATION_PART).getIterator(prob).next();
 
 		licp.train(icpdataset);
 
 		assertConfidencesAreTrue(testingProblem , confidences, licp);
-
-		//Predict the second example
-		//		ISparseFeature[] example = problem.getDataset().get(1);
-		//		List<ICPRegressionResult> results = licp.predict(example,confidences);
-		//
-		//		System.out.println("LibSVM");
-		//		assertWithinInterval(problem, results, problem.getY().get(1));
 
 	}
 
 
 	@Test
 	public void TestWriteLoadLibSvm() throws IOException, IllegalAccessException, NoSuchAlgorithmException, InvalidKeySpecException, ClassNotFoundException, InvalidKeyException{
-		//		Logger libsvmLogger = (Logger) LoggerFactory.getLogger(LibSvmICPRegression.class);
-		//		libsvmLogger.setLevel(Level.ALL);
 		ICPRegressor libsvmReg = new ICPRegressor(new NormalizedNCM(new EpsilonSVR()));
 		SubSet data = TestDataLoader.loadSubset(TestResources.SVMLIGHTFiles.REGRESSION_HOUSING_25);
 		Assert.assertTrue(data .size() > 5);
 
 		Dataset prob = new Dataset();
 		prob.withDataset(data);
-		//		Assert.assertTrue(prob.getY().size() == prob .size());
 		// train
 
-		TrainSplit icpdataset = new RandomSplitIterator(prob, CALIBRATION_PART, 1).next();
-		//				CalibrationSetUtils.randomCalibrationSet(prob , CALIBRATION_PART, false, SeedGenerator.getRandomSeedsGenerator());
+		TrainSplit icpdataset = new RandomSampling(1, CALIBRATION_PART).getIterator(prob).next();
 
 		LoggerUtils.setDebugMode();
 		libsvmReg.train(icpdataset);
@@ -202,8 +182,6 @@ public class TestICPRegression extends UnitTestInitializer{
 		ModelComparisonUtils.assertEqualMLModels(
 				((NormalizedNCM) libsvmReg.getNCM()).getErrorModel(),
 				((NormalizedNCM) loaded.getNCM()).getErrorModel());
-		//						libsvmReg.getErrorModelAlgorithm(), 
-		//						loaded.getErrorModelAlgorithm()));
 
 		ModelComparisonUtils.assertEqualMLModels(
 				libsvmReg.getScoringAlgorithm(), 
@@ -244,7 +222,6 @@ public class TestICPRegression extends UnitTestInitializer{
 
 	@Test
 	public void TestWriteLoadLibLinear() throws IOException, IllegalAccessException, NoSuchAlgorithmException, InvalidKeySpecException, ClassNotFoundException, InvalidKeyException{
-		//		Logger.getLogger(LibSvmICPRegression.class).setLevel(Level.ALL);
 		ICPRegressor liblinReg = new ICPRegressor(new NormalizedNCM(new LinearSVR()));
 		SubSet data = SubSet.fromLIBSVMFormat(TestResources.SVMLIGHTFiles.REGRESSION_HOUSING_25.openStream());
 		Assert.assertTrue(data .size() > 5);
@@ -252,8 +229,7 @@ public class TestICPRegression extends UnitTestInitializer{
 		prob.withDataset(data);
 
 		// train
-		TrainSplit icpdataset = new RandomSplitIterator(prob, CALIBRATION_PART, 1).next();
-		//				CalibrationSetUtils.randomCalibrationSet(prob , CALIBRATION_PART, false, SeedGenerator.getRandomSeedsGenerator());
+		TrainSplit icpdataset = new RandomSampling(1, CALIBRATION_PART).getIterator(prob).next();
 
 		liblinReg.train(icpdataset);
 

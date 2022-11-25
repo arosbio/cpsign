@@ -11,8 +11,11 @@ package com.arosbio.ml.sampling;
 
 import java.util.Map;
 
+import com.arosbio.commons.GlobalConfig;
 import com.arosbio.data.Dataset;
+import com.arosbio.data.splitting.FoldedSplitter;
 import com.arosbio.ml.io.impl.PropertyNameSettings;
+import com.arosbio.ml.sampling.impl.TrainSplitWrapper;
 
 public class FoldedStratifiedSampling extends FoldedSampling {
 	
@@ -51,15 +54,21 @@ public class FoldedStratifiedSampling extends FoldedSampling {
 	}
 	
 	@Override
-	public TrainSplitIterator getIterator(Dataset dataset)
+	public TrainSplitGenerator getIterator(Dataset dataset)
 			throws IllegalArgumentException {
-		return new StratifiedFoldedCalibSetIterator(dataset, getNumSamples());
+		return getIterator(dataset, GlobalConfig.getInstance().getRNGSeed());
 	}
 	
 	@Override
-	public TrainSplitIterator getIterator(Dataset dataset, long seed)
+	public TrainSplitGenerator getIterator(Dataset dataset, long seed)
 			throws IllegalArgumentException {
-		return new StratifiedFoldedCalibSetIterator(dataset, getNumSamples(), seed);
+		return new TrainSplitWrapper(new FoldedSplitter.Builder()
+			.numFolds(getNumSamples())
+			.seed(seed)
+			.shuffle(true)
+			.stratify(true)
+			.findLabelRange(true)
+			.build(dataset));
 	}
 
 	@Override
@@ -74,11 +83,7 @@ public class FoldedStratifiedSampling extends FoldedSampling {
 		if (! (obj instanceof FoldedStratifiedSampling))
 			return false;
 		FoldedStratifiedSampling other = (FoldedStratifiedSampling) obj;
-		if (this.getNumSamples() != other.getNumSamples())
-			return false;
-		if (this.isStratified() != other.isStratified())
-			return false;
-		return true;
+		return this.getNumSamples() == other.getNumSamples();
 	}
 	
 	public String toString() {

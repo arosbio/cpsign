@@ -9,9 +9,10 @@
  */
 package com.arosbio.commons;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -24,8 +25,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.arosbio.tests.suites.UnitTest;
-import com.google.common.collect.BoundType;
-import com.google.common.collect.Range;
+import com.google.common.collect.Comparators;
+import com.google.common.collect.Sets;
 
 @Category(UnitTest.class)
 public class TestCollectionUtils {
@@ -224,7 +225,7 @@ public class TestCollectionUtils {
 	}
 
 	public <T> void doTestDisjointSets(List<T> originalList, int numSets) {
-		List<List<T>> sets = CollectionUtils.getDisjunctSets(originalList, numSets);
+		List<List<T>> sets = CollectionUtils.getDisjunctSets(originalList, numSets, false);
 
 		Assert.assertEquals(numSets, sets.size());
 
@@ -243,6 +244,87 @@ public class TestCollectionUtils {
 		Assert.assertEquals(originalList, allRecords);
 	}
 
+	@Test
+	public void testGetSortIndices() {
+		List<Collection<?>> input = new ArrayList<>();
+		input.add(new HashSet<>());
+		input.add(Arrays.asList(1,2));
+		input.add(Sets.newHashSet(4.2,9.2,6.));
+		Assert.assertEquals(Arrays.asList(2,1,0), CollectionUtils.getSortedIndicesBySize(input, false));
+		Assert.assertEquals(Arrays.asList(0,1,2), CollectionUtils.getSortedIndicesBySize(input, true));
+
+		// add a null instance - should be of "0" length
+		input.add(null);
+		// sizes are now; 0,2,3,0: we know what the largest ones are - the other ones should be sorted in the order they appear
+		Assert.assertEquals(Arrays.asList(0,3,1, 2), CollectionUtils.getSortedIndicesBySize(input, true));
+		Assert.assertEquals(Arrays.asList(2,1,3,0), CollectionUtils.getSortedIndicesBySize(input, false));
+
+		List<List<?>> inputLst = new ArrayList<>();
+		inputLst.add(Arrays.asList(1,2,3));
+		inputLst.add(null);
+		inputLst.add(Arrays.asList(1));
+		Assert.assertEquals(Arrays.asList(1,2,0), CollectionUtils.getSortedIndicesBySize(inputLst, true));
+		Assert.assertEquals(Arrays.asList(0,2,1), CollectionUtils.getSortedIndicesBySize(inputLst, false));
+
+		inputLst.clear();
+
+		inputLst.add(Arrays.asList(1,2,2));
+		inputLst.add(Arrays.asList(1,2));
+		inputLst.add(Arrays.asList(1,2));
+		inputLst.add(Arrays.asList(1,2));
+		inputLst.add(Arrays.asList(1,2));
+
+		Assert.assertEquals(Arrays.asList(1,2,3,4,0), CollectionUtils.getSortedIndicesBySize(inputLst, true));
+	}
+
+	@Test
+	public void testSortBy(){
+		List<Collection<Integer>> input = new ArrayList<>();
+		input.add(new HashSet<>());
+		input.add(Arrays.asList(1,2));
+		input.add(Sets.newHashSet(4,9,6));
+		List<Integer> indices = CollectionUtils.getSortedIndicesBySize(input, false);
+		List<Collection<Integer>> sorted = CollectionUtils.sortBy(input, indices);
+		Assert.assertTrue(Comparators.isInOrder(sorted, new SizeComparator(false)));
+	}
+
+	private static class SizeComparator implements Comparator<Collection<?>> {
+
+		private final boolean ascending;
+		public SizeComparator(boolean ascending){
+			this.ascending = ascending;
+		}
+
+		@Override
+		public int compare(Collection<?> o1, Collection<?> o2) {
+			int cmp = o1.size() - o2.size();
+			return ascending ? cmp : - cmp;
+		}
+
+	}
+
+	@Test
+	public void testGetIndices(){
+		List<Object> values = Arrays.asList(1, 4, 8.3, 5);
+		Assert.assertEquals(Arrays.asList(5,8.3),CollectionUtils.getIndices(values, Arrays.asList(3,2)));
+		try{
+			CollectionUtils.getIndices(values, Arrays.asList(-1,2));
+			Assert.fail("cannot take index -1");
+		} catch (IndexOutOfBoundsException e){
+			// -1 is out of bounds
+		}
+
+		try{
+			CollectionUtils.getIndices(values, Arrays.asList(1,values.size()));
+			Assert.fail("cannot take index outsize range");
+		} catch (IndexOutOfBoundsException e){
+			// values.size() is out of bounds
+		}
+
+		Assert.assertTrue("empty indices should return an empty list",CollectionUtils.getIndices(values, new ArrayList<>()).isEmpty());
+	}
+
+/*
 	@Test
 	public void testCloneRange() {
 
@@ -282,4 +364,5 @@ public class TestCollectionUtils {
 		Assert.assertEquals(closed, cpyClosed);
 
 	}
+	*/
 }

@@ -19,13 +19,13 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.TypeUtils;
 import com.arosbio.commons.config.NumericConfig;
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.DataUtils;
 import com.arosbio.data.Dataset.SubSet;
 import com.arosbio.data.FeatureVector;
-import com.arosbio.data.transform.feature_selection.FeatureSelectUtils.IndexedValue;
 import com.arosbio.data.transform.feature_selection.SelectionCriterion.Criterion;
 import com.arosbio.ml.algorithms.impl.LibLinear;
 import com.google.common.collect.Range;
@@ -52,7 +52,7 @@ public abstract class LinearModelBasedSelection implements FeatureSelector {
 	private List<Integer> toRemove;
 	private boolean inPlace = true;
 
-	private transient List<IndexedValue> weights;
+	private transient List<CollectionUtils.IndexedValue> weights;
 	private transient TransformInfo info;
 	private transient Parameter linearParameter;
 
@@ -103,7 +103,7 @@ public abstract class LinearModelBasedSelection implements FeatureSelector {
 		return criterion;
 	}
 
-	public List<IndexedValue> getWeights(){
+	public List<CollectionUtils.IndexedValue> getWeights(){
 		return weights;
 	}
 
@@ -150,13 +150,14 @@ public abstract class LinearModelBasedSelection implements FeatureSelector {
 			// Special case first iteration, class 0
 			double[] modelWts = m.getFeatureWeights();
 			for (int j=0; j<m.getNrFeature(); j++) {
-				weights.add(new IndexedValue(j, Math.abs(modelWts[j])));
+				weights.add(new CollectionUtils.IndexedValue(j, Math.abs(modelWts[j])));
 			}
 			int biasOffset = (m.getBias()>= 0? 1 : 0);
 			for (int i=1; i<m.getNrClass(); i++) {
 				for (int j=0; j<m.getNrFeature(); j++) {
-					IndexedValue iv = weights.get(j);
-					iv.value += Math.abs(modelWts[j + i*(m.getNrFeature()+biasOffset)]) ;
+					CollectionUtils.IndexedValue iv = weights.get(j);
+					CollectionUtils.IndexedValue iv2 = iv.withValue(iv.value +  Math.abs(modelWts[j + i*(m.getNrFeature()+biasOffset)]));
+					weights.set(j, iv2);
 				}
 			}
 
@@ -179,11 +180,11 @@ public abstract class LinearModelBasedSelection implements FeatureSelector {
 		return t == SolverType.L1R_L2LOSS_SVC || t == SolverType.L1R_LR;
 	}
 
-	private List<IndexedValue> getWeights(double[] inp, boolean rmLast){
-		List<IndexedValue> wts = new ArrayList<>();
+	private List<CollectionUtils.IndexedValue> getWeights(double[] inp, boolean rmLast){
+		List<CollectionUtils.IndexedValue> wts = new ArrayList<>();
 		int index = 0;
 		for (double d : inp) {
-			wts.add(new IndexedValue(index, Math.abs(d)));
+			wts.add(new CollectionUtils.IndexedValue(index, Math.abs(d)));
 			index++;
 		}
 		if (rmLast)

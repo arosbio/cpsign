@@ -38,6 +38,7 @@ import org.junit.experimental.categories.Category;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
+import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.FuzzyServiceLoader;
 import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.MathUtils;
@@ -63,7 +64,6 @@ import com.arosbio.data.transform.duplicates.KeepLastRecord;
 import com.arosbio.data.transform.duplicates.KeepMeanLabel;
 import com.arosbio.data.transform.duplicates.RemoveContradictoryRecords;
 import com.arosbio.data.transform.feature_selection.FeatureSelectUtils;
-import com.arosbio.data.transform.feature_selection.FeatureSelectUtils.IndexedValue;
 import com.arosbio.data.transform.feature_selection.FeatureSelector;
 import com.arosbio.data.transform.feature_selection.L1_SVC_Selector;
 import com.arosbio.data.transform.feature_selection.L2_SVC_Selector;
@@ -131,11 +131,11 @@ public class TestTransformers extends TestEnv {
 	public void testIndexedValuesSort() {
 		// 1, 4, 2, 0
 		List<Integer> indicesSorted = Arrays.asList(0, 2, 4, 1);
-		List<IndexedValue> vals = new ArrayList<>();
-		vals.add(new IndexedValue(0, 5d));
-		vals.add(new IndexedValue(1, -5d));
-		vals.add(new IndexedValue(2, 3d));
-		vals.add(new IndexedValue(4, 0.1d));
+		List<CollectionUtils.IndexedValue> vals = new ArrayList<>();
+		vals.add(new CollectionUtils.IndexedValue(0, 5d));
+		vals.add(new CollectionUtils.IndexedValue(1, -5d));
+		vals.add(new CollectionUtils.IndexedValue(2, 3d));
+		vals.add(new CollectionUtils.IndexedValue(4, 0.1d));
 
 		Collections.sort(vals);
 		for (int i = 0; i < indicesSorted.size(); i++) {
@@ -144,10 +144,10 @@ public class TestTransformers extends TestEnv {
 		// System.err.println(vals);
 
 		vals = new ArrayList<>();
-		vals.add(new IndexedValue(0, 5d));
-		vals.add(new IndexedValue(1, -5d));
-		vals.add(new IndexedValue(2, 3d));
-		vals.add(new IndexedValue(4, 0.1d));
+		vals.add(new CollectionUtils.IndexedValue(0, 5d));
+		vals.add(new CollectionUtils.IndexedValue(1, -5d));
+		vals.add(new CollectionUtils.IndexedValue(2, 3d));
+		vals.add(new CollectionUtils.IndexedValue(4, 0.1d));
 
 		for (int i = 0; i < vals.size(); i++) {
 			List<Integer> max3 = FeatureSelectUtils.getSmallestKeepingN(vals, i);
@@ -166,16 +166,16 @@ public class TestTransformers extends TestEnv {
 		// printLogs();
 
 		// Sort with multiple ones having the same value
-		List<IndexedValue> original = new ArrayList<>();
-		original.add(new IndexedValue(0, 1d));
-		original.add(new IndexedValue(1, 1d));
-		original.add(new IndexedValue(2, 1d));
-		original.add(new IndexedValue(3, 1d));
+		List<CollectionUtils.IndexedValue> original = new ArrayList<>();
+		original.add(new CollectionUtils.IndexedValue(0, 1d));
+		original.add(new CollectionUtils.IndexedValue(1, 1d));
+		original.add(new CollectionUtils.IndexedValue(2, 1d));
+		original.add(new CollectionUtils.IndexedValue(3, 1d));
 
-		original.add(new IndexedValue(0, 2d));
-		original.add(new IndexedValue(1, 2d));
-		original.add(new IndexedValue(2, 2d));
-		original.add(new IndexedValue(3, 2d));
+		original.add(new CollectionUtils.IndexedValue(0, 2d));
+		original.add(new CollectionUtils.IndexedValue(1, 2d));
+		original.add(new CollectionUtils.IndexedValue(2, 2d));
+		original.add(new CollectionUtils.IndexedValue(3, 2d));
 
 		Collections.sort(original);
 		// SYS_ERR.println(original);
@@ -375,7 +375,8 @@ public class TestTransformers extends TestEnv {
 			records.add(new DataRecord(1d, new DenseVector(new double[] { 5d, 0d, 3d })));
 			records.add(new DataRecord(1d, new DenseVector(new double[] { 0d, -1d, 3d })));
 			selector.fit(records);
-			// System.err.println();
+			// By default it will remove the features with 0 variance - i.e. index 2
+			Assert.assertEquals(Arrays.asList(2), selector.getFeatureIndicesToRemove());
 
 			// Larger size
 

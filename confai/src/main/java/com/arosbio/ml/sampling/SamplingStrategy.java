@@ -9,24 +9,21 @@
  */
 package com.arosbio.ml.sampling;
 
-import java.util.Map;
-
 import com.arosbio.commons.config.Configurable;
 import com.arosbio.commons.mixins.HasID;
+import com.arosbio.commons.mixins.HasProperties;
 import com.arosbio.commons.mixins.Named;
 import com.arosbio.data.Dataset;
 
-public interface SamplingStrategy extends Cloneable, Configurable, Named, HasID {
+public interface SamplingStrategy extends Cloneable, Configurable, Named, HasID, HasProperties {
 	
 	public int getNumSamples();
 
-	public TrainSplitIterator getIterator(Dataset dataset)
+	public TrainSplitGenerator getIterator(Dataset dataset)
 			throws IllegalArgumentException;
 	
-	public TrainSplitIterator getIterator(Dataset dataset, long seed)
+	public TrainSplitGenerator getIterator(Dataset dataset, long seed)
 			throws IllegalArgumentException;
-
-	public Map<String, Object> getProperties();
 
 	public boolean equals(Object obj);
 	

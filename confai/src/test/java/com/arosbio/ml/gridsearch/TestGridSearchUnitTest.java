@@ -183,7 +183,7 @@ public class TestGridSearchUnitTest extends UnitTestInitializer {
 		System.err.println("Running with seed: " + GlobalConfig.getInstance().getRNGSeed());
 		RandomSplit strat = new RandomSplit();
 		if (pred instanceof ClassificationPredictor)
-			strat.setStratified(true);
+			strat.withStratify(true);
 		// TestingStrategy strat = new KFoldCV(NUM_CV_FOLDS);
 
 		Map<String, List<?>> paramGrid = new HashMap<>();

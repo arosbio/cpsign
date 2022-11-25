@@ -40,9 +40,9 @@ import com.arosbio.ml.algorithms.svm.LinearSVC;
 import com.arosbio.ml.cp.acp.ACPClassifier;
 import com.arosbio.ml.cp.nonconf.classification.NCMMondrianClassification;
 import com.arosbio.ml.cp.nonconf.classification.NegativeDistanceToHyperplaneNCM;
+import com.arosbio.ml.sampling.RandomSampling;
 import com.arosbio.ml.sampling.SingleSample;
 import com.arosbio.ml.sampling.TrainSplit;
-import com.arosbio.ml.sampling.impl.RandomSplitIterator;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.GzipEncryption;
@@ -83,7 +83,6 @@ public class TestICPClassification extends UnitTestInitializer{
 		acp.train(p);
 		
 		Assert.assertEquals(1,acp.getPredictors().size());
-//		SYS_ERR.println(acp.getProperties());
 		
 	}
 
@@ -106,9 +105,7 @@ public class TestICPClassification extends UnitTestInitializer{
 		ICPClassifier licp = new ICPClassifier(new NegativeDistanceToHyperplaneNCM(new LinearSVC()));
 
 		//Train model
-		TrainSplit icpdataset = new RandomSplitIterator(problem, CALIBRATION_PART, 1).next();
-//				randomCalibrationSet(problem.getModelAndCalibrateDataset() , CALIBRATION_PART, true, SeedGenerator.getRandomSeedsGenerator());
-		
+		TrainSplit icpdataset = new RandomSampling(1, CALIBRATION_PART).getIterator(problem).next();
 		licp.train(icpdataset);
 
 		//Predict the first example
@@ -128,11 +125,10 @@ public class TestICPClassification extends UnitTestInitializer{
 		ICPClassifier libsvmclass = new ICPClassifier(new NegativeDistanceToHyperplaneNCM(new C_SVC()));
 		Dataset prob = Dataset.fromLIBSVMFormat(TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS.openStream());
 		Assert.assertTrue(prob.getDataset() .size() > 5);
-//		Assert.assertTrue(prob.getY().size() == prob .size());
 
 		// train
-		TrainSplit icpdataset = new RandomSplitIterator(prob, CALIBRATION_PART, 1).next();
-//				CalibrationSetUtils.randomCalibrationSet(prob , CALIBRATION_PART, true, SeedGenerator.getRandomSeedsGenerator());
+		TrainSplit icpdataset = new RandomSampling(1, CALIBRATION_PART).getIterator(prob).next();
+	
 		libsvmclass.train(icpdataset);
 		
 		
@@ -146,21 +142,6 @@ public class TestICPClassification extends UnitTestInitializer{
 				((NCMMondrianClassification)libsvmclass.getNCM()).getModel(), 
 				((NCMMondrianClassification)loadedPlain.getNCM()).getModel());
 		Assert.assertEquals(libsvmclass.getNCS(), loadedPlain.getNCS());
-//		Assert.assertEquals(libsvmclass.getNonconf1(), loadedPlain.getNonconf1());
-//		Assert.assertEquals(libsvmclass.nonconf0, loadedPlain.nonconf0);
-//		Assert.assertEquals(libsvmclass.nonconf1, loadedPlain.nonconf1);
-
-		// COMPRESS
-//		File tmpfileComp = File.createTempFile("/tmp/modelsToFile", ".gz");
-//		tmpfileComp.deleteOnExit();
-//		libsvmclass.saveCompressed(tmpfileComp.getAbsolutePath());
-//		LibSvmICPClassification loadedComp = new LibSvmICPClassification();
-//		loadedComp.fromFiles(tmpfileComp.getAbsolutePath(), null);
-//
-//		Assert.assertEquals(true, ModelComparisonUtils.compareLibSVM_model(libsvmclass.getModel(), loadedComp.getModel()));
-//		Assert.assertEquals(libsvmclass.nonconfLists, loadedComp.nonconfLists);
-//		Assert.assertEquals(libsvmclass.nonconf0, loadedComp.nonconf0);
-//		Assert.assertEquals(libsvmclass.nonconf1, loadedComp.nonconf1);
 
 		// save to file encrypted
 		File tmpFileEnc = Files.createTempDirectory("save-dir").toFile(); //Files.createTempDir(); //createTempFile("/tmp/modelsToFileEnc", "");
@@ -177,10 +158,7 @@ public class TestICPClassification extends UnitTestInitializer{
 				((NCMMondrianClassification)loadedEnc.getNCM()).getModel());
 				
 		Assert.assertEquals(libsvmclass.getNCS(), loadedEnc.getNCS());
-//		Assert.assertEquals(libsvmclass.getNonconf1(), loadedEnc.getNonconf1());
 
-//		Assert.assertEquals(libsvmclass.nonconf0, loadedEnc.nonconf0);
-//		Assert.assertEquals(libsvmclass.nonconf1, loadedEnc.nonconf1);
 	}
 
 	@Test
@@ -190,7 +168,7 @@ public class TestICPClassification extends UnitTestInitializer{
 		Assert.assertTrue(prob.getDataset() .size() > 5);
 
 		// train
-		TrainSplit icpdataset = new RandomSplitIterator(prob, CALIBRATION_PART, 1).next(); 
+		TrainSplit icpdataset = new RandomSampling(1, CALIBRATION_PART).getIterator(prob).next();
 		System.out.println(icpdataset.getTotalNumTrainingRecords() + " ; " + icpdataset.getCalibrationSet().size() + " ; " + icpdataset.getProperTrainingSet().size());
 		
 		liblinclass.train(icpdataset);
@@ -198,7 +176,6 @@ public class TestICPClassification extends UnitTestInitializer{
 		
 		// Plain
 		File tmpfile = TestUtils.createTempFile("/tmp/modelsToFile", "");
-//		File tmpfile = new File("/Users/staffan/Desktop/output/liblin.class.jar");
 		try(JarDataSink sink = getJarDataSink(tmpfile)){
 			liblinclass.saveToDataSink(sink, "icps", null); //(tmpfile.getAbsolutePath());
 		}
@@ -211,11 +188,9 @@ public class TestICPClassification extends UnitTestInitializer{
 				((NCMMondrianClassification)loadedPlain.getNCM()).getModel());
 				
 		Assert.assertEquals(liblinclass.getNCS(), loadedPlain.getNCS());
-//		Assert.assertEquals(liblinclass.getNonconf1(), loadedPlain.getNonconf1());
 		
 		// save to file encrypted
 		File tmpFileEnc = TestUtils.createTempFile("/tmp/modelsToFileEnc", "");
-//		File tmpFileEnc = new File("/Users/staffan/Desktop/output/enc/encrypted.jar");
 		EncryptionSpecification spec = EncryptionSpecFactory.getInstance("");
 		EncryptionSpecFactory.configure(spec, spec.generateRandomKey(16));
 		
@@ -233,7 +208,6 @@ public class TestICPClassification extends UnitTestInitializer{
 				((NegativeDistanceToHyperplaneNCM)liblinclass.getNCM()).getModel(), 
 				((NegativeDistanceToHyperplaneNCM)loadedEnc.getNCM()).getModel());
 		Assert.assertEquals(liblinclass.getNCS(), loadedEnc.getNCS());
-//		Assert.assertEquals(liblinclass.getNonconf1(), loadedEnc.getNonconf1());
 		
 		try{
 			ICPClassifier otherSpec = new ICPClassifier();

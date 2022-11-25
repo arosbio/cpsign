@@ -9,14 +9,10 @@
  */
 package com.arosbio.ml.testing;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Random;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,10 +20,11 @@ import org.slf4j.LoggerFactory;
 import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.TypeUtils;
+import com.arosbio.commons.config.Configurable;
 import com.arosbio.commons.mixins.Aliased;
-import com.arosbio.data.DataRecord;
 import com.arosbio.data.Dataset;
-import com.arosbio.data.Dataset.SubSet;
+import com.arosbio.data.splitting.LOOSplitter;
+import com.arosbio.ml.testing.utils.TestTrainWrapper;
 
 public class LOOCV implements TestingStrategy, Aliased {
 	
@@ -80,62 +77,17 @@ public class LOOCV implements TestingStrategy, Aliased {
 
 	@Override
 	public Iterator<TestTrainSplit> getSplits(Dataset data) {
-		return new SplitIterator(data, shuffle, rngSeed);
+		return new TestTrainWrapper(new LOOSplitter.Builder()
+			.findLabelRange(false)
+			.shuffle(shuffle)
+			.seed(rngSeed)
+			.build(data));
 	}
 	
 	public String toString() {
 		return "Leave-one-out cross-validation";
 	}
 
-	private static class SplitIterator implements Iterator<TestTrainSplit>{
-		
-		private SubSet calib, proper;
-		private List<DataRecord> shuffledRecords;
-		
-		int index=0;
-		
-		public SplitIterator(Dataset data, boolean shuffle, long seed) {
-			calib = data.getCalibrationExclusiveDataset().clone();
-			proper = data.getModelingExclusiveDataset().clone();
-			
-			shuffledRecords = new ArrayList<>(data.getDataset());
-			if (shuffle) {
-				Collections.shuffle(shuffledRecords, new Random(seed));
-			}
-		}
-
-		@Override
-		public boolean hasNext() {
-			return index < shuffledRecords.size();
-		}
-
-		@Override
-		public TestTrainSplit next() {
-			if (! hasNext())
-				throw new NoSuchElementException("No more test-train splits");
-			
-			LOGGER.debug("Generating split {}/{}", (index+1), shuffledRecords.size());
-			
-			Dataset trainingData = new Dataset();
-			trainingData.withCalibrationExclusiveDataset(calib.clone());
-			trainingData.withModelingExclusiveDataset(proper.clone());
-
-			// Generate the training and test-set
-			List<DataRecord> trainingSet = new ArrayList<>(shuffledRecords);
-			trainingSet.remove(index);
-			List<DataRecord> testSet = new ArrayList<>();
-			testSet.add(shuffledRecords.get(index));
-			index++;
-			
-			trainingData.withDataset(new SubSet(trainingSet));
-			
-			LOGGER.debug("Using {} examples for training and {} examples for testing (not counting model-exclusive or calibration-exclusive data)",
-				trainingSet.size(),testSet.size());
-			
-			return new TestTrainSplit(trainingData,testSet);
-		}
-		
-	}
 
 	@Override
 	public List<ConfigParameter> getConfigParameters() {
@@ -150,7 +102,7 @@ public class LOOCV implements TestingStrategy, Aliased {
 					shuffle = TypeUtils.asBoolean(p.getValue());
 				} catch (Exception e) {
 					LOGGER.debug("Got parameter shuffle with invalid value: {}", e.getMessage());
-					throw new IllegalArgumentException("Invalid input for parameter " + p.getKey() + ": " + p.getValue());
+					throw Configurable.getInvalidArgsExcept(p.getKey(), p.getValue());
 				}
 			}
 		}

@@ -24,7 +24,7 @@ public interface TestingStrategy extends Configurable, Described, Named, Require
 	 * be a fixed number. Also performs validation so that the testing-strategy is possible for this data.
 	 * @param data The data to check
 	 * @return The number of test-train splits that will be made
-	 * @throws IllegalArgumentException If the <code>TestingStrategy</code> cannot be used with the given {@link com.arosbio.data.Dataset}
+	 * @throws IllegalArgumentException If the {@code TestingStrategy} cannot be used with the given {@link com.arosbio.data.Dataset}
 	 */
 	public int getNumberOfSplitsAndValidate(Dataset data) 
 			throws IllegalArgumentException;
@@ -34,7 +34,7 @@ public interface TestingStrategy extends Configurable, Described, Named, Require
 	/**
 	 * Return a clone with identical settings but no internal state of splits etc.
 	 * This is due to implementations can be mutable, thus may be changed mid run and 
-	 * give unexpected behaviour
+	 * give unexpected behavior
 	 * @return A clone with identical settings
 	 */
 	public TestingStrategy clone();

@@ -19,7 +19,7 @@ import com.arosbio.data.DataRecord;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.Dataset.SubSet;
 import com.arosbio.ml.algorithms.svm.C_SVC;
-import com.arosbio.ml.sampling.FoldedCalibSetIterator;
+import com.arosbio.ml.sampling.FoldedSampling;
 import com.arosbio.ml.sampling.TrainSplit;
 import com.arosbio.ml.vap.ivap.IVAPClassifier;
 import com.arosbio.tests.TestResources;
@@ -33,41 +33,27 @@ public class TestIVAPClassification extends UnitTestInitializer {
 
 	@Test
 	public void testIVAPClass() throws Exception {
-//		LoggerUtils.setDebugMode();
-		IVAPClassifier ivap = new IVAPClassifier(new C_SVC());//new LibSvm(LibSvmParameters.defaultClassification())); // LibLinearClassification());
+		IVAPClassifier ivap = new IVAPClassifier(new C_SVC());
 		SubSet trainingset = SubSet.fromLIBSVMFormat(TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS.openStream());
-		//  getFromAbsPath(NumericalSVMLIGHTFiles.CLASSIFICATION_2CLASS_PATH));
 		SubSet[] splits = trainingset.splitRandom(0.1);
 		Dataset prb = new Dataset();
 		prb.withDataset(splits[1]);
-		Iterator<TrainSplit> trainingSplits = new FoldedCalibSetIterator(prb, 10);
+		Iterator<TrainSplit> trainingSplits = new FoldedSampling(10).getIterator(prb);
 		ivap.train(trainingSplits.next());
 		
 		Assert.assertTrue(ivap.isTrained());
 		
-//		File outputFile = createTempFile("ivap", ".osgi");
-		
-//		ivap.save("/Users/staffan/Desktop/ivap/model");
-		
 		System.out.println("Saved model!");
-		
-//		DataRecord testRec = trainingset.getRecords().get(0);
-		
-		
-//		for (DataRecord testRec: splits[0].getRecords()){
-//			Pair<Double, Double> pred = ivap.predict(testRec.getFeatures());
-//			System.out.println("class="+testRec.getLabel()+", PREDICTION="+pred);
-//		}
-		
+
 		
 		System.out.println(systemOutRule.getLog());
 	}
 	
 	@Test
 	public void testCalcGradient() throws Exception {
-		IVAPClassifier ivap = new IVAPClassifier(new C_SVC()); //new LibSvm(LibSvmParameters.defaultClassification())); // LibLinearClassification());
+		IVAPClassifier ivap = new IVAPClassifier(new C_SVC()); 
 		Dataset prb = TestDataLoader.getInstance().getDataset(true, true);
-		Iterator<TrainSplit> trainingSplits = new FoldedCalibSetIterator(prb, 10);
+		Iterator<TrainSplit> trainingSplits = new FoldedSampling(10).getIterator(prb);
 		ivap.train(trainingSplits.next());
 		
 		Assert.assertTrue(ivap.isTrained());

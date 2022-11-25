@@ -11,8 +11,12 @@ package com.arosbio.ml.sampling;
 
 import java.util.Map;
 
+import com.arosbio.commons.GlobalConfig;
+import com.arosbio.commons.MathUtils;
 import com.arosbio.data.Dataset;
+import com.arosbio.data.splitting.RandomSplitter;
 import com.arosbio.ml.io.impl.PropertyNameSettings;
+import com.arosbio.ml.sampling.impl.TrainSplitWrapper;
 
 public class RandomStratifiedSampling extends RandomSampling {
 	
@@ -23,8 +27,12 @@ public class RandomStratifiedSampling extends RandomSampling {
 		super();
 	}
 	
-	public RandomStratifiedSampling(int numModels, double calibrationRatio) {
-		super(numModels, calibrationRatio);
+	public RandomStratifiedSampling(int numSamples, double calibrationRatio) {
+		super(numSamples, calibrationRatio);
+	}
+
+	public RandomStratifiedSampling(int numSamples, int numCalibrationInstances){
+		super(numSamples, numCalibrationInstances);
 	}
 	
 	public int getID() {
@@ -42,19 +50,32 @@ public class RandomStratifiedSampling extends RandomSampling {
 	}
 	
 	public RandomStratifiedSampling clone(){
-		return new RandomStratifiedSampling(getNumSamples(), getCalibrationRatio());
+		if (getCalibrationRatio() != null) {
+			return new RandomStratifiedSampling(getNumSamples(), getCalibrationRatio());
+		} else {
+			return new RandomStratifiedSampling(getNumSamples(), getNumCalibrationInstances());
+		}
 	}
 	
 	@Override
-	public TrainSplitIterator getIterator(Dataset dataset)
+	public TrainSplitGenerator getIterator(Dataset dataset)
 			throws IllegalArgumentException {
-		return new StratifiedRandomCalibSetIterator(dataset, getCalibrationRatio(), getNumSamples());
+		return getIterator(dataset, GlobalConfig.getInstance().getRNGSeed());
 	}
 	
 	@Override
-	public TrainSplitIterator getIterator(Dataset dataset, long seed)
+	public TrainSplitGenerator getIterator(Dataset dataset, long seed)
 			throws IllegalArgumentException {
-		return new StratifiedRandomCalibSetIterator(dataset, getCalibrationRatio(), getNumSamples(), seed);
+		return new TrainSplitWrapper(new RandomSplitter.Builder()
+			.numSplits(getNumSamples())
+			.splitRatio(getCalibrationRatio())
+			.splitNumInstances(getNumCalibrationInstances())
+			.shuffle(true)
+			.seed(seed)
+			.stratify(true)
+			.findLabelRange(true)
+			.name(NAME)
+			.build(dataset));
 	}
 
 	@Override
@@ -75,14 +96,12 @@ public class RandomStratifiedSampling extends RandomSampling {
 	
 	@Override
 	public boolean equals(Object obj){
-		if (! (obj instanceof RandomStratifiedSampling))
+		if (! (obj.getClass().equals(RandomStratifiedSampling.class)))
 			return false;
 		RandomStratifiedSampling other = (RandomStratifiedSampling) obj;
-		if (this.getNumSamples() != other.getNumSamples())
-			return false;
-		if (this.getCalibrationRatio() != other.getCalibrationRatio())
-			return false;
-		return true;
+		return (this.getNumSamples() == other.getNumSamples()) &&
+			MathUtils.equals(this.getCalibrationRatio(), other.getCalibrationRatio()) &&
+			(this.getNumCalibrationInstances() == other.getNumCalibrationInstances());
 	}
 
 }

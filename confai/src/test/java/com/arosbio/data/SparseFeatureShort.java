@@ -104,7 +104,7 @@ public class SparseFeatureShort implements SparseFeature {
 		SparseFeature o_sf = (SparseFeature) o;
 		if (o_sf.getIndex() != index)
 			return false;
-		if (!MathUtils.equals(o_sf.getValue(), value))
+		if (!MathUtils.equals(o_sf.getValue(), value, MathUtils.DEFAULT_EPS))
 			return false;
 
 		return true;

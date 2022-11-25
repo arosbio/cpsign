@@ -9,26 +9,18 @@
  */
 package com.arosbio.ml.testing;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Random;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.TypeUtils;
 import com.arosbio.commons.config.IntegerConfig;
-import com.arosbio.data.DataRecord;
-import com.arosbio.data.DataUtils;
 import com.arosbio.data.Dataset;
-import com.arosbio.data.Dataset.SubSet;
+import com.arosbio.data.splitting.FoldedSplitter;
+import com.arosbio.ml.testing.utils.TestTrainWrapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 
@@ -41,7 +33,7 @@ import com.google.common.collect.Range;
 public class KFoldCV implements TestingStrategy {
 
 	public static final String STRATEGY_NAME = "KFoldCV";
-	private static final Logger LOGGER = LoggerFactory.getLogger(KFoldCV.class);
+	// private static final Logger LOGGER = LoggerFactory.getLogger(KFoldCV.class);
 	public static final int DEFAULT_K = 10;
 
 	private boolean stratified = false;
@@ -93,27 +85,30 @@ public class KFoldCV implements TestingStrategy {
 		return stratified;
 	}
 
-	public void setStratified(boolean stratify) {
+	public KFoldCV withStratified(boolean stratify) {
 		this.stratified = stratify;
+		return this;
 	}
 
 	public boolean usesShuffle() {
 		return shuffle;
 	}
 
-	public void setShuffle(boolean shuffle) {
+	public KFoldCV withShuffle(boolean shuffle) {
 		this.shuffle = shuffle;
+		return this;
 	}
 
 	public int getNumRepeat() {
 		return numRepeat;
 	}
 
-	public void setNumRepeat(int numRepeat) {
+	public KFoldCV withNumRepeat(int numRepeat) {
 		if (numRepeat > 0)
 			this.numRepeat = numRepeat;
 		else
 			this.numRepeat = 1;
+		return this;
 	}
 
 	public int getNumFolds() {
@@ -124,10 +119,11 @@ public class KFoldCV implements TestingStrategy {
 	 * Set the number of folds, must be &ge;2
 	 * @param numFolds num folds, if a value &le;2 is given, it will be set to the default (10)
 	 */
-	public void setNumFolds(int numFolds) {
+	public KFoldCV withNumFolds(int numFolds) {
 		if (numFolds < 2)
 			throw new IllegalArgumentException("Num folds in "+STRATEGY_NAME + " must be >=2, got '"+numFolds+'\'');
 		this.numFolds = numFolds;
+		return this;
 	}
 
 	@Override
@@ -152,143 +148,21 @@ public class KFoldCV implements TestingStrategy {
 
 	@Override
 	public Iterator<TestTrainSplit> getSplits(Dataset data) {
-		return new CVFoldsIterator(data, numFolds, shuffle, rngSeed, stratified, numRepeat);
+		return new TestTrainWrapper(new FoldedSplitter.Builder()
+			.seed(rngSeed)
+			.name(STRATEGY_NAME)
+			.numFolds(numFolds)
+			.shuffle(shuffle)
+			.stratify(stratified)
+			.numRepeat(numRepeat)
+			.findLabelRange(false)
+			.build(data));
 	}
 
 	public String toString() {
 		return String.format("%s-fold %scross-validation%s", numFolds,
 				(stratified? "stratified ":""),
 				(numRepeat>1? " repeated " + numRepeat + " times" : ""));
-	}
-
-	private static class CVFoldsIterator implements Iterator<TestTrainSplit>{
-
-		private final Dataset problemClone;
-
-		private final int numberOfDataRecords;
-		private final boolean stratify, shuffle;
-		private final int numRepeats, numFolds;
-		private final long seed;
-
-		// Iteration state
-		private List<List<DataRecord>> folds;
-		private int fold = 0;
-		private int rep = 0;
-
-		public CVFoldsIterator(final Dataset data, 
-				final int numFolds, 
-				final boolean shuffle, 
-				final long seed, 
-				final boolean stratify, 
-				final int numRepeats) {
-
-			if (data.getDataset().size() < numFolds) {
-				throw new IllegalArgumentException("Cannot run k-Fold CV with more folds than records!");
-			}
-			if (numFolds < 2)
-				throw new IllegalArgumentException("Number of folds must be >= 2");
-			if (!shuffle && numRepeats>1)
-				throw new IllegalArgumentException("Shuffling cannot be false if number of repeated k-fold runs is more than 1");
-			this.numFolds = numFolds;
-			this.stratify = stratify;
-			this.shuffle = shuffle;
-			this.numRepeats = numRepeats;
-			this.seed = seed;
-			this.problemClone = data.cloneDataOnly(); 
-			this.numberOfDataRecords = data.getDataset().size();
-
-			setupFolds();
-		}
-
-		private void setupFolds() {
-
-			if (stratify) {
-				List<List<DataRecord>> strataRecs = DataUtils.stratify(problemClone.getDataset());
-
-				// Init the folds
-				folds = new ArrayList<>();
-				for (int i=0; i<numFolds; i++)
-					folds.add(new ArrayList<>());
-
-				// Shuffle
-				if (shuffle) {
-					// Shuffle each strata list 
-					for (List<DataRecord> recs : strataRecs) {
-						Collections.shuffle(recs, new Random(seed+rep));
-					}
-				}
-
-				// split the stratified datasets into the folds
-				for (List<DataRecord> recs : strataRecs) {
-					List<List<DataRecord>> foldStrata = CollectionUtils.getDisjunctSets(recs, numFolds); 
-					for(int i=0; i<numFolds; i++) {
-						folds.get(i).addAll(foldStrata.get(i));
-					}
-				}
-
-				// Shuffle the folds (so not arranged in order of their labels)
-				for (List<DataRecord> f : folds) {
-					Collections.shuffle(f, new Random(seed+rep));
-				}
-
-			} else {
-				List<DataRecord> recs = new ArrayList<>(problemClone.getDataset());
-
-				if (shuffle)
-					Collections.shuffle(recs, new Random(seed+rep));
-				folds = CollectionUtils.getDisjunctSets(recs, numFolds);
-			}
-
-			fold = 0; // reset the fold-index
-		}
-
-		@Override
-		public boolean hasNext() {
-			// If more folds for the current repetition
-			if (fold < folds.size())
-				return true;
-			// finished the current rep - start new
-			rep ++;
-			// Check if there are more reps
-			if (rep < numRepeats) {
-				setupFolds();
-				return true;
-			}
-			// No more reps 
-			return false;
-		}
-
-		@Override
-		public TestTrainSplit next() throws NoSuchElementException {
-			if (! hasNext())
-				throw new NoSuchElementException("No more folds!");
-
-			LOGGER.debug("Generating fold {}/{}",(fold+1),folds.size());
-
-			Dataset trainingData = new Dataset();
-			trainingData.withCalibrationExclusiveDataset(problemClone.getCalibrationExclusiveDataset().clone());
-			trainingData.withModelingExclusiveDataset(problemClone.getModelingExclusiveDataset().clone());
-
-			List<DataRecord> trainingSet = new ArrayList<>(numberOfDataRecords);
-			List<DataRecord> testSet = null;
-			for (int i=0; i<folds.size(); i++) {
-				if (i == fold) {
-					testSet = folds.get(i);
-				} else {
-					trainingSet.addAll(folds.get(i));
-				}
-			}
-
-			trainingData.withDataset(new SubSet(trainingSet));
-
-			LOGGER.debug("Using {} examples for training and {} examples for testing (not counting model-exclusive or calibration-exclusive data)",
-				trainingSet.size(),testSet.size());
-			// Update the fold for next calls to next()
-			fold++;
-
-			return new TestTrainSplit(trainingData,testSet);
-		}
-
 	}
 
 	public static final String[] K_PARAM_NAMES = new String[] {"numSplits","folds", "k"};
@@ -305,25 +179,26 @@ public class KFoldCV implements TestingStrategy {
 
 	@Override
 	public void setConfigParameters(Map<String, Object> params) throws IllegalArgumentException {
-		for (Map.Entry<String, Object> kv : params.entrySet()) {
+		Map<String, Object> noNullParams = CollectionUtils.dropNullValues(params);
+		for (Map.Entry<String, Object> kv : noNullParams.entrySet()) {
 			try {
 				// Folds
 				if (CollectionUtils.containsIgnoreCase(K_PARAM_NAMES, kv.getKey())) {
-					setNumFolds(TypeUtils.asInt(kv.getValue()));
+					withNumFolds(TypeUtils.asInt(kv.getValue()));
 				} 
 				// shuffle
 				else if (CollectionUtils.containsIgnoreCase(TestStrategiesUtils.shuffleParamNames, kv.getKey())) {
-					setShuffle(TypeUtils.asBoolean(kv.getValue()));
+					withShuffle(TypeUtils.asBoolean(kv.getValue()));
 				} 
 
 				// num reps
 				else if (CollectionUtils.containsIgnoreCase(TestStrategiesUtils.numRepParamNames, kv.getKey())) {
-					setNumRepeat(TypeUtils.asInt(kv.getValue()));
+					withNumRepeat(TypeUtils.asInt(kv.getValue()));
 				} 
 
 				// stratified
 				else if (CollectionUtils.containsIgnoreCase(TestStrategiesUtils.stratifiedParamNames, kv.getKey())) {
-					setStratified(TypeUtils.asBoolean(kv.getValue()));
+					withStratified(TypeUtils.asBoolean(kv.getValue()));
 				} 
 
 			} catch (IllegalArgumentException e) {

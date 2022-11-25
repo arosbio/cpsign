@@ -209,7 +209,7 @@ public class ColumnSpec implements Serializable {
 		if (columns != null)
 			clone.columns = new ArrayList<>(columns);
 		if (columnsRange != null)
-			clone.columnsRange = CollectionUtils.clone(columnsRange);
+			clone.columnsRange = columnsRange;
 		return clone;
 	}
 	

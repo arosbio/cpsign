@@ -30,9 +30,9 @@ import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.StringUtils;
 import com.arosbio.commons.TypeUtils;
 import com.arosbio.data.DataRecord;
+import com.arosbio.data.DataUtils;
 import com.arosbio.data.FeatureVector;
 import com.arosbio.data.MissingDataException;
-import com.arosbio.ml.sampling.CalibrationSetUtils;
 
 import de.bwaldvogel.liblinear.Feature;
 import de.bwaldvogel.liblinear.FeatureNode;
@@ -190,7 +190,7 @@ public class LibLinear {
 		LOGGER.debug("trainingset.size={}", trainingset.size());
 		Problem trainProblem = new Problem();
 		trainProblem.l = trainingset.size();
-		trainProblem.n = CalibrationSetUtils.findMaxAttributeIndex(trainingset) + 1; // Need to add 1 for the bias term
+		trainProblem.n = DataUtils.getMaxFeatureIndex(trainingset) + 1; // Need to add 1 for the bias term
 		trainProblem.x = new Feature[trainProblem.l][];
 		trainProblem.y = new double[trainProblem.l];
 
@@ -322,12 +322,12 @@ public class LibLinear {
 		}
 	}
 
-	public static Map<Integer,Double> predictProbabilties(Model model, FeatureVector example){
+	public static Map<Integer,Double> predictProbabilities(Model model, FeatureVector example){
 		assertFittedModel(model);
-		return predictProbabilties(model,createFeatureArray(example));
+		return predictProbabilities(model,createFeatureArray(example));
 	}
 
-	public static Map<Integer,Double> predictProbabilties(Model model, Feature[] example){
+	public static Map<Integer,Double> predictProbabilities(Model model, Feature[] example){
 		assertFittedModel(model);
 		if (!model.isProbabilityModel()) {
 			throw new IllegalStateException("The model was not trained for predicting probabilities");

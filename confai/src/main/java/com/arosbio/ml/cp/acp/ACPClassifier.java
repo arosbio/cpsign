@@ -53,7 +53,7 @@ import com.arosbio.ml.sampling.RandomSampling;
 import com.arosbio.ml.sampling.SamplingStrategy;
 import com.arosbio.ml.sampling.SamplingStrategyUtils;
 import com.arosbio.ml.sampling.TrainSplit;
-import com.arosbio.ml.sampling.TrainSplitIterator;
+import com.arosbio.ml.sampling.TrainSplitGenerator;
 
 public final class ACPClassifier extends PredictorBase implements ACP, ConformalClassifier {
 
@@ -67,7 +67,6 @@ public final class ACPClassifier extends PredictorBase implements ACP, Conformal
 	private Map<Integer,ICPClassifier> predictors = new HashMap<>();
 	private SamplingStrategy strategy;
 	private ICPClassifier icpImplementation;
-	private TrainSplitIterator splitsIterator;
 	private AggregationType aggregation = AggregationType.MEDIAN;
 
 	/* 
@@ -220,7 +219,12 @@ public final class ACPClassifier extends PredictorBase implements ACP, Conformal
 		}
 		LOGGER.debug("ACP already 'full' - updating sampling strategy to add more icp-models");
 		// if we're get here - update the strategy and add the model to next index
-		((RandomSampling) strategy).setNumSamples(strategy.getNumSamples());
+		if (strategy instanceof RandomSampling)
+			((RandomSampling) strategy).withNumSamples(strategy.getNumSamples());
+		else {
+			LOGGER.debug("Attempted to add an ICP to a non RandomSampling aggregation - not supported");
+			throw new IllegalAccessException("Invalid access - cannot add an ICP when not using RandomSampling");
+		}
 		predictors.put(strategy.getNumSamples(), icp);
 		LOGGER.debug("Added ICP in index={}",strategy.getNumSamples());
 	}
@@ -337,23 +341,19 @@ public final class ACPClassifier extends PredictorBase implements ACP, Conformal
 
 	}
 
-	public void train(Dataset problem, int index) throws IllegalArgumentException {
+	public void train(Dataset data, int index) throws IllegalArgumentException {
 
 		if (icpImplementation == null)
 			throw new IllegalStateException("No ICP implementation given to train");
 		if (predictors == null)
 			predictors = new HashMap<>();
-
-		if (splitsIterator==null || splitsIterator.getProblem() != problem) {
-			// Set up the splits 
-			splitsIterator = strategy.getIterator(problem, seed);
-			LOGGER.debug("Set up new splits-iterator for training");
-		}
+		SamplingStrategyUtils.validateTrainSplitIndex(strategy, index);
+		TrainSplitGenerator generator = strategy.getIterator(data, index);
 
 		ICPClassifier icp = icpImplementation.clone();
-		TrainSplit split=null;
+		TrainSplit split = null;
 		try {
-			split = splitsIterator.get(index);
+			split = generator.get(index);
 		} catch (NoSuchElementException e) {
 			LOGGER.debug("Tried to get a non-existing index split",e);
 			throw new IllegalArgumentException("Cannot train index " + index + ", only allowed indexes are [0,"+(strategy.getNumSamples()-1)+"]");

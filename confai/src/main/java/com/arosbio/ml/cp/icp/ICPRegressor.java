@@ -285,8 +285,8 @@ public class ICPRegressor implements ICP, RegressionPredictor {
 		LOGGER.debug("Calculated all ncs scores for calibration points ({} records)", ncs.size());
 
 		// Get the capping-values
-		minObservation=icpdataset.getMinRegressionActivity();
-		maxObservation=icpdataset.getMaxRegressionActivity();
+		minObservation=icpdataset.getObservedLabelSpace().lowerEndpoint();
+		maxObservation=icpdataset.getObservedLabelSpace().upperEndpoint();
 
 		LOGGER.trace("MinObservation: {} ; MaxObservation: {}",minObservation, maxObservation);
 		numTrainingObservations = icpdataset.getTotalNumTrainingRecords();

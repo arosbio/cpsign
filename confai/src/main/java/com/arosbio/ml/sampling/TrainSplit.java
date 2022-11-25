@@ -12,6 +12,7 @@ package com.arosbio.ml.sampling;
 import java.util.List;
 
 import com.arosbio.data.DataRecord;
+import com.google.common.collect.Range;
 
 /**
  * Holds a split (either created in a folded or a random manner) used in 
@@ -22,23 +23,31 @@ import com.arosbio.data.DataRecord;
  */
 public class TrainSplit {
 	
-	private List<DataRecord> properTrainingSet;
+	private final List<DataRecord> properTrainingSet;
 
-	private List<DataRecord> calibrationSet;
+	private final List<DataRecord> calibrationSet;
 
-	private int totalNumTrainingRecords;
+	private final int totalNumTrainingRecords;
 
-	private Double minActivity=null;
-
-	private Double maxActivity=null;
+	private final Range<Double> observedLabelSpace;
 
 	public TrainSplit(List<DataRecord> properTrainingSet,
 			List<DataRecord> calibrationSet
 			) {
-		
 		this.properTrainingSet=properTrainingSet;
 		this.calibrationSet=calibrationSet;
 		this.totalNumTrainingRecords = properTrainingSet.size() + calibrationSet.size();
+		this.observedLabelSpace = null;
+	}
+
+	public TrainSplit(List<DataRecord> properTrainingSet,
+			List<DataRecord> calibrationSet, 
+			Range<Double> minMaxLabelSpace
+			) {
+		this.properTrainingSet=properTrainingSet;
+		this.calibrationSet=calibrationSet;
+		this.totalNumTrainingRecords = properTrainingSet.size() + calibrationSet.size();
+		this.observedLabelSpace = minMaxLabelSpace;
 	}
 	
 	/**
@@ -53,54 +62,16 @@ public class TrainSplit {
 		return properTrainingSet;
 	}
 
-	public void setProperTrainingSet(List<DataRecord> properTrainingSet) {
-		this.properTrainingSet = properTrainingSet;
-	}
-
 	public List<DataRecord> getCalibrationSet() {
 		return calibrationSet;
-	}
-
-	public void setCalibrationSet(List<DataRecord> calibrationSet) {
-		this.calibrationSet = calibrationSet;
 	}
 	
 	public int getTotalNumTrainingRecords(){
 		return totalNumTrainingRecords;
 	}
 	
-	public double getMinRegressionActivity(){
-		if (minActivity == null)
-			findMinMaxActivity();
-		return minActivity;
-	}
-	
-	public double getMaxRegressionActivity(){
-		if (maxActivity == null)
-			findMinMaxActivity();
-		return maxActivity;
-	}
-	
-	private void findMinMaxActivity(){
-		double label=0;
-		double minObservation=Double.MAX_VALUE;
-		double maxObservation=-Double.MAX_VALUE;
-		for (DataRecord rec : properTrainingSet) {
-			label = rec.getLabel();
-			if (label<minObservation)
-				minObservation=label;
-			if (label>maxObservation)
-				maxObservation=label;
-		}
-		for (DataRecord rec : calibrationSet) {
-			label = rec.getLabel();
-			if (label<minObservation)
-				minObservation=label;
-			if (label>maxObservation)
-				maxObservation=label;
-		}
-		minActivity = minObservation;
-		maxActivity = maxObservation;
+	public Range<Double> getObservedLabelSpace(){
+		return observedLabelSpace;
 	}
 	
 	public String toString(){
@@ -108,10 +79,8 @@ public class TrainSplit {
 		sb.append("propTrainSize="+properTrainingSet.size());
 		sb.append("\ncalibSize="+calibrationSet.size());
 		sb.append("\ntotalNumRecs="+totalNumTrainingRecords);
-		if (minActivity!=null)
-			sb.append("\nminActivity="+minActivity);
-		if (maxActivity!=null)
-			sb.append("\nmaxActivity="+maxActivity);
+		if (observedLabelSpace != null)
+			sb.append("\nobservedLabelSpace=").append(observedLabelSpace);
 		return sb.toString();
 	}
 

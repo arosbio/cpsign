@@ -60,7 +60,7 @@ public class TestACPRegressionPredWidthToConf extends UnitTestInitializer{
 	@Test
 	public void testACPRegressionIntervalsLibLinear() throws Exception {
 		System.out.println("LibLinear");
-		SVR alg = new LinearSVR(); //new LibLinear(LIB_LIN_REG_PARAMS);
+		SVR alg = new LinearSVR(); 
 		System.out.println("LogNorm:");
 		doTestACPRegressionIntervals(new LogNormalizedNCM(alg, 0.01));
 		System.out.println("LogNorm - beta=0:");
@@ -72,7 +72,7 @@ public class TestACPRegressionPredWidthToConf extends UnitTestInitializer{
 	@Test
 	public void testACPRegressionIntervalsLibSVM() throws Exception {
 		System.out.println("LibSVM");
-		SVR alg = new EpsilonSVR(); // LibSvm(LIB_SVM_REG_PARAMS);
+		SVR alg = new EpsilonSVR(); 
 		System.out.println("LogNorm:");
 		doTestACPRegressionIntervals(new LogNormalizedNCM(alg, 0.01));
 		System.out.println("Norm:");

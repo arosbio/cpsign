@@ -20,13 +20,15 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.arosbio.data.DataRecord;
+import com.arosbio.data.DataUtils;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.Dataset.SubSet;
+import com.arosbio.data.splitting.TestDataSplitting;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.testutils.TestDataLoader;
 
 @Category(UnitTest.class)
-public class TestSingleTestSplit {
+public class TestRandomSplit {
 
 
 	@Test
@@ -176,27 +178,25 @@ public class TestSingleTestSplit {
 	public void testStratified() throws Exception {
 		int n = 2;
 		RandomSplit tester = new RandomSplit();
-		tester.setNumRepeat(n);
+		tester.withNumRepeat(n);
 
 		Assert.assertFalse("default is NOT to stratify",tester.isStratified());
 
-		tester.setStratified(true);
+		tester.withStratify(true);
 		Assert.assertTrue("test setter",tester.isStratified());
 
 		Dataset original = TestDataLoader.getInstance().getDataset(true, true);
-		TestKFoldCVSplitter.makeImbalanced(original);
+		TestKFoldCV.makeImbalanced(original);
 		SubSet original_cpy = original.getDataset().clone();
 		int numRecs = original.getNumRecords();
 
 		Map<Double,Integer> originalFreq = original_cpy.getLabelFrequencies();
-		//		System.err.println(originalFreq);
-		//		System.err.println(original_cpy.size());
 
 		Iterator<TestTrainSplit> splitsIter = tester.getSplits(original);
 		int count = 0;
+
 		while (splitsIter.hasNext()) {
-			TestTrainSplit split = splitsIter
-					.next();
+			TestTrainSplit split = splitsIter.next();
 			count++;
 
 			List<DataRecord> test = split.getTestSet();
@@ -205,72 +205,24 @@ public class TestSingleTestSplit {
 			// System.err.println("train: " + train.getDataset().getLabelFrequencies());
 
 			Assert.assertEquals(numRecs, test.size() + train.getNumRecords());
-			for (DataRecord trec: test) {
+			for (DataRecord trec : test) {
 				Assert.assertFalse("no test records should be in training data",
-						train.getDataset() .contains(trec));
+						train.getDataset().contains(trec));
 			}
 
 			Assert.assertEquals("Make sure no records are duplicated in training set either",
 					train.getNumRecords(), new HashSet<>(train.getDataset() ).size());
 
 			// Frequencies should be consistent
-			TestKFoldCVSplitter.assertKeepsOriginalStratas(originalFreq, new SubSet(test));
-			TestKFoldCVSplitter.assertKeepsOriginalStratas(originalFreq, train.getDataset());
+			TestDataSplitting.assertSameFreq(originalFreq, DataUtils.countLabels(test), false);
+			TestDataSplitting.assertSameFreq(originalFreq, train.getLabelFrequencies(), false);
+			TestKFoldCV.assertKeepsOriginalStratas(originalFreq, new SubSet(test));
+			TestKFoldCV.assertKeepsOriginalStratas(originalFreq, train.getDataset());
 
 		}
 		Assert.assertEquals(n, count);
 
 		Assert.assertEquals("Splitter should make no changes to original ds",original_cpy, original.getDataset()); 
-	}
-	
-	@Test
-	public void testNoShuffle() throws Exception {
-		
-		Dataset original = TestDataLoader.getInstance().getDataset(true, true);
-		SubSet original_cpy = original.getDataset().clone();
-		int numRecs = original.getNumRecords();
-		
-		RandomSplit tester = new RandomSplit();
-		Assert.assertTrue(tester.usesShuffle());
-		tester.setShuffle(false);
-		Assert.assertFalse(tester.usesShuffle());
-		
-		tester.setNumRepeat(10);
-		try {
-			tester.getSplits(original);
-			Assert.fail();
-		} catch (IllegalArgumentException e) {}
-
-		tester.setNumRepeat(1);
-
-		Iterator<TestTrainSplit> splitsIter = tester.getSplits(original);
-		int count = 0;
-		while (splitsIter.hasNext()) {
-			TestTrainSplit split = splitsIter
-					.next();
-			count++;
-
-			List<DataRecord> test = split.getTestSet();
-			Dataset train = split.getTrainingSet();
-			
-			Assert.assertEquals(original_cpy .subList(0, test.size()), test);
-			Assert.assertEquals(original_cpy .subList(test.size(), original_cpy .size()), train.getDataset() );
-
-			Assert.assertEquals(numRecs, test.size() + train.getNumRecords());
-			for (DataRecord trec: test) {
-				Assert.assertFalse("no test records should be in training data",
-						train.getDataset() .contains(trec));
-			}
-
-			Assert.assertEquals("Make sure no records are duplicated in training set either",
-					train.getNumRecords(), new HashSet<>(train.getDataset() ).size());
-
-		}
-		Assert.assertEquals(1, count);
-
-
-
-		Assert.assertEquals("Splitter should make no changes to original ds",original_cpy, original.getDataset());
 	}
 
 }

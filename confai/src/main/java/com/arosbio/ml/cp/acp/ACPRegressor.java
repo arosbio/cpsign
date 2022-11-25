@@ -55,7 +55,7 @@ import com.arosbio.ml.sampling.RandomSampling;
 import com.arosbio.ml.sampling.SamplingStrategy;
 import com.arosbio.ml.sampling.SamplingStrategyUtils;
 import com.arosbio.ml.sampling.TrainSplit;
-import com.arosbio.ml.sampling.TrainSplitIterator;
+import com.arosbio.ml.sampling.TrainSplitGenerator;
 
 public final class ACPRegressor extends PredictorBase implements ACP, ConformalRegressor {
 
@@ -69,7 +69,6 @@ public final class ACPRegressor extends PredictorBase implements ACP, ConformalR
 	private Map<Integer,ICPRegressor> predictors = new HashMap<>();
 	private ICPRegressor icpImplementation;
 	private SamplingStrategy strategy;
-	private TrainSplitIterator splitsIterator;
 	private AggregationType aggregation = AggregationType.MEDIAN;
 
 	/* 
@@ -205,7 +204,12 @@ public final class ACPRegressor extends PredictorBase implements ACP, ConformalR
 		}
 		LOGGER.debug("ACP already 'full' - updating sampling strategy to add more icp-predictors");
 		// if we're get here - update the strategy and add the predictor to next index
-		((RandomSampling) strategy).setNumSamples(strategy.getNumSamples());
+		if (strategy instanceof RandomSampling)
+			((RandomSampling) strategy).withNumSamples(strategy.getNumSamples());
+		else {
+			LOGGER.debug("Attempted to add an ICP to a non RandomSampling aggregation - not supported");
+			throw new IllegalAccessException("Invalid access - cannot add an ICP when not using RandomSampling");
+		}
 		predictors.put(strategy.getNumSamples(), icp);
 		LOGGER.debug("Added ICP in index={}",strategy.getNumSamples());
 	}
@@ -305,9 +309,9 @@ public final class ACPRegressor extends PredictorBase implements ACP, ConformalR
 	 * =================================================
 	 */
 	@Override
-	public void train(Dataset problem) 
+	public void train(Dataset data) 
 			throws IllegalArgumentException {
-		Iterator<TrainSplit> splits = strategy.getIterator(problem, seed);
+		Iterator<TrainSplit> splits = strategy.getIterator(data, seed);
 
 		predictors=new HashMap<>();
 
@@ -329,27 +333,26 @@ public final class ACPRegressor extends PredictorBase implements ACP, ConformalR
 
 	/**
 	 * Train only a specific ICP model (at a given index)
-	 * @param problem The {@link com.arosbio.data.Dataset Dataset} that should be trained
+	 * @param data The {@link com.arosbio.data.Dataset Dataset} that should be trained
 	 * @param index the index, counting starts at 0!! [0,nrFolds-1]
 	 * @throws IllegalArgumentException Invalid index argument
 	 */
-	public void train(Dataset problem, int index) 
+	public void train(Dataset data, int index) 
 			throws IllegalArgumentException {
 
-		if (predictors == null)
+		if (predictors == null){
 			predictors = new HashMap<>();
-
-		if (splitsIterator==null || splitsIterator.getProblem() != problem) {
-			// Set up the splits 
-			splitsIterator = strategy.getIterator(problem, seed);
-			LOGGER.debug("Set up new splits-iterator for training");
 		}
+		SamplingStrategyUtils.validateTrainSplitIndex(strategy, index);
+
+		TrainSplitGenerator generator = strategy.getIterator(data,seed);
+		LOGGER.debug("Set up new splits-iterator for training");
 
 		ICPRegressor icp = icpImplementation.clone();
 		TrainSplit split=null;
 		try {
-			split = splitsIterator.get(index);
-		} catch(NoSuchElementException e) {
+			split = generator.get(index);
+		} catch (NoSuchElementException e) {
 			LOGGER.debug("Tried to get a non-existing index split",e);
 			throw new IllegalArgumentException("Cannot train index " + index + ", only allowed indexes are [0,"+(strategy.getNumSamples()-1)+"]");
 		}

@@ -17,7 +17,6 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.TypeUtils;
 import com.arosbio.commons.config.BooleanConfig;
 import com.arosbio.commons.config.NumericConfig;
@@ -82,7 +81,7 @@ public class LabelRangeFilter implements Filter {
 	public LabelRangeFilter clone() {
 		LabelRangeFilter clone = new LabelRangeFilter();
 		if (range != null)
-			clone.range = CollectionUtils.clone(range);
+			clone.range = range;
 		return clone;
 	}
 

@@ -194,12 +194,12 @@ public class LogisticRegression implements MultiLabelClassifier, PseudoProbabili
 
 	@Override
 	public Map<Integer, Double> predictScores(FeatureVector example) throws IllegalStateException {
-		return LibLinear.predictProbabilties(svm,example);
+		return LibLinear.predictProbabilities(svm,example);
 	}
 
 	@Override
 	public Map<Integer, Double> predictProbabilities(FeatureVector example) throws IllegalStateException {
-		return LibLinear.predictProbabilties(svm,example);
+		return LibLinear.predictProbabilities(svm,example);
 	}
 	
 	/* 

@@ -17,8 +17,11 @@ import java.util.NoSuchElementException;
 
 import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.mixins.Described;
+import com.arosbio.data.DataRecord;
+import com.arosbio.data.DataUtils;
 import com.arosbio.data.Dataset;
 import com.arosbio.ml.io.impl.PropertyNameSettings;
+import com.google.common.collect.Range;
 
 /**
  * A static sample for a single model (Uses only the model or calibration exclusive datasets)
@@ -55,12 +58,12 @@ public class SingleSample implements SamplingStrategy, Described {
 	}
 
 	@Override
-	public TrainSplitIterator getIterator(Dataset dataset) throws IllegalArgumentException {
+	public TrainSplitGenerator getIterator(Dataset dataset) throws IllegalArgumentException {
 		return getIterator(dataset, GlobalConfig.getInstance().getRNGSeed());
 	}
 
 	@Override
-	public TrainSplitIterator getIterator(Dataset dataset, long seed) throws IllegalArgumentException {
+	public TrainSplitGenerator getIterator(Dataset dataset, long seed) throws IllegalArgumentException {
 		return new SingleSampleIterator(dataset, seed);
 	}
 
@@ -91,17 +94,25 @@ public class SingleSample implements SamplingStrategy, Described {
 		return o instanceof SingleSample;
 	}
 	
-	public static class SingleSampleIterator implements TrainSplitIterator {
+	public static class SingleSampleIterator implements TrainSplitGenerator {
 		
-		private Dataset problem;
+		private final List<DataRecord> properTrainSet, calibrationSet;
+		private final Range<Double> foundRange;
+
 		private boolean hasNext = true;
 		
 		public SingleSampleIterator(Dataset p, long seed) {
-			this.problem = new Dataset();
-			problem.setCalibrationExclusiveDataset(p.getCalibrationExclusiveDataset().clone());
-			problem.setModelingExclusiveDataset(p.getModelingExclusiveDataset().clone());
-			
-			problem.shuffle(seed);
+			this.properTrainSet = p.getModelingExclusiveDataset().clone().shuffle(seed);
+			this.calibrationSet = p.getCalibrationExclusiveDataset().clone().shuffle(seed);
+
+			// Find the regression label space once in case we should
+			try {
+				foundRange = DataUtils.findLabelRange(p);
+				LOGGER.debug("found label-range: {}", foundRange);
+			} catch (Exception e){
+				LOGGER.debug("failed to find the observed label-range", e);
+				throw new IllegalArgumentException("could not find the min and max observed values: " + e.getMessage());
+			}
 		}
 
 		@Override
@@ -119,22 +130,17 @@ public class SingleSample implements SamplingStrategy, Described {
 		@Override
 		public TrainSplit get(int index) throws NoSuchElementException {
 			if (index != 0)
-				throw new NoSuchElementException("index " + index + " not alowed");
-			return new TrainSplit(problem.getModelingExclusiveDataset(), problem.getCalibrationExclusiveDataset());
+				throw new NoSuchElementException("index " + index + " not allowed");
+			return new TrainSplit(properTrainSet, calibrationSet, foundRange);
 		}
 
 		@Override
-		public Dataset getProblem() {
-			return problem;
-		}
-
-		@Override
-		public int getMaximumSplitIndex() {
+		public int getMaxSplitIndex() {
 			return 0;
 		}
 
 		@Override
-		public int getMinimumSplitIndex() {
+		public int getMinSplitIndex() {
 			return 0;
 		}
 		

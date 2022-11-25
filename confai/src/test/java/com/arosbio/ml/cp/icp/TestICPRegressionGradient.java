@@ -24,10 +24,10 @@ import com.arosbio.commons.logging.LoggerUtils;
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.Dataset.SubSet;
-import com.arosbio.ml.sampling.TrainSplit;
-import com.arosbio.ml.sampling.impl.RandomSplitIterator;
 import com.arosbio.data.SparseFeature;
 import com.arosbio.data.SparseFeatureImpl;
+import com.arosbio.ml.sampling.RandomSampling;
+import com.arosbio.ml.sampling.TrainSplit;
 import com.arosbio.tests.suites.PerformanceTest;
 import com.arosbio.testutils.UnitTestInitializer;
 
@@ -94,7 +94,7 @@ public class TestICPRegressionGradient extends UnitTestInitializer{
 		
 		ICPRegressor icpreg = getACPRegressionNormalized(true, true).getICPImplementation();
 		
-		TrainSplit icpdataset = new RandomSplitIterator(problem, CALIBRATION_PART, 1).next();
+		TrainSplit icpdataset = new RandomSampling(1, CALIBRATION_PART).getIterator(problem).next();
 
 		icpreg.train(icpdataset);
 		
@@ -119,18 +119,13 @@ public class TestICPRegressionGradient extends UnitTestInitializer{
 	
 	@Test
 	public void TestICPRegressionGradientLibSVM() throws IllegalAccessException{
-		
-//		System.out.println("training set size:" + trainingset.size());
-//		System.out.println("test set size:" + testset.size());
 
 		System.out.println("training...");
 		
 		ICPRegressor icpreg = getACPRegressionNormalized(false, true).getICPImplementation();
-//		LibSvmICPRegression icpreg = new LibSvmICPRegression(1,1);
 
 		LoggerUtils.setDebugMode();
-		TrainSplit icpdataset = new RandomSplitIterator(problem, CALIBRATION_PART, 1).next(); 
-//				CalibrationSetUtils.randomCalibrationSet(problem.getRecords(), CALIBRATION_PART, false, SeedGenerator.getRandomSeedsGenerator());
+		TrainSplit icpdataset = new RandomSampling(1, CALIBRATION_PART).getIterator(problem).next();
 		System.out.println(icpdataset.toString());
 		
 		icpreg.train(icpdataset);

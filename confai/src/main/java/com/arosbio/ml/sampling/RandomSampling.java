@@ -15,12 +15,17 @@ import java.util.List;
 import java.util.Map;
 
 import com.arosbio.commons.CollectionUtils;
+import com.arosbio.commons.GlobalConfig;
+import com.arosbio.commons.MathUtils;
 import com.arosbio.commons.TypeUtils;
+import com.arosbio.commons.config.Configurable;
 import com.arosbio.commons.config.IntegerConfig;
 import com.arosbio.commons.config.NumericConfig;
 import com.arosbio.data.Dataset;
+import com.arosbio.data.splitting.RandomSplitter;
 import com.arosbio.ml.TrainingsetValidator;
 import com.arosbio.ml.io.impl.PropertyNameSettings;
+import com.arosbio.ml.sampling.impl.TrainSplitWrapper;
 import com.google.common.collect.Range;
 
 public class RandomSampling implements MultiSampling {
@@ -33,7 +38,6 @@ public class RandomSampling implements MultiSampling {
 
 	public static final int ID = 1;
 	public static final String NAME = "Random";
-
 
 	private int numberOfSamples;
 	private Double calibrationRatio;
@@ -55,7 +59,7 @@ public class RandomSampling implements MultiSampling {
 	public RandomSampling(int numSamples, int numCalibrationInstances){
 		super();
 		withNumSamples(numSamples);
-
+		withNumCalibrationInstances(numCalibrationInstances);
 	}
 
 	public int getID() {
@@ -67,7 +71,11 @@ public class RandomSampling implements MultiSampling {
 	}
 
 	public RandomSampling clone(){
-		return new RandomSampling(numberOfSamples, calibrationRatio);
+		RandomSampling c = new RandomSampling();
+		c.numCalibrationInstances = numCalibrationInstances;
+		c.calibrationRatio = calibrationRatio;
+		c.numberOfSamples = numberOfSamples;
+		return c;
 	}
 
 	@Override
@@ -87,6 +95,7 @@ public class RandomSampling implements MultiSampling {
 		if (ratio <= 0 || ratio >= 1)
 			throw new IllegalArgumentException("Calibration ratio must be in the range (0..1)");
 		calibrationRatio = ratio;
+		numCalibrationInstances = null; // Set to null to make sure to use this ratio, not the explicit number
 		return this;
 	}
 
@@ -99,8 +108,12 @@ public class RandomSampling implements MultiSampling {
 			throw new IllegalArgumentException("To few calibration instances specified: "+num +" vs required minimum: " + TrainingsetValidator.getInstance().MIN_NUM_CALIBRATION_INSTANCES);
 		}
 		this.numCalibrationInstances = num;
-		this.calibrationRatio = null;
+		this.calibrationRatio = null; // Set to null to make sure to use the explicit number instead
 		return this;
+	}
+
+	public Integer getNumCalibrationInstances(){
+		return numCalibrationInstances;
 	}
 
 	public String toString() {
@@ -108,15 +121,24 @@ public class RandomSampling implements MultiSampling {
 	}
 
 	@Override
-	public TrainSplitIterator getIterator(Dataset dataset)
+	public TrainSplitGenerator getIterator(Dataset dataset)
 			throws IllegalArgumentException {
-		return new RandomCalibSetIterator(dataset, calibrationRatio, numberOfSamples);
+		return getIterator(dataset, GlobalConfig.getInstance().getRNGSeed());
 	}
 
 	@Override
-	public TrainSplitIterator getIterator(Dataset dataset, long seed)
+	public TrainSplitGenerator getIterator(Dataset dataset, long seed)
 			throws IllegalArgumentException {
-		return new RandomCalibSetIterator(dataset, calibrationRatio, numberOfSamples, seed);
+		return new TrainSplitWrapper(new RandomSplitter.Builder()
+			.numSplits(numberOfSamples)
+			.splitRatio(calibrationRatio)
+			.splitNumInstances(numCalibrationInstances)
+			.shuffle(true)
+			.seed(seed)
+			.stratify(false)
+			.findLabelRange(true)
+			.name(NAME)
+			.build(dataset));
 	}
 
 	@Override
@@ -141,27 +163,38 @@ public class RandomSampling implements MultiSampling {
 
 	@Override
 	public boolean equals(Object obj){
-		if (! (obj instanceof RandomSampling))
+		if (! (obj.getClass().equals(RandomSampling.class))){
 			return false;
+		}
 		RandomSampling other = (RandomSampling) obj;
-		if (this.getNumSamples() != other.getNumSamples())
-			return false;
-		if (this.getCalibrationRatio() != other.getCalibrationRatio())
-			return false;
-		if (this.isStratified() != other.isStratified())
-			return false;
-		return true;
+
+		return (this.numberOfSamples == other.numberOfSamples) &&
+			MathUtils.equals(this.calibrationRatio, other.calibrationRatio) &&
+			(this.numCalibrationInstances == other.numCalibrationInstances);
 	}
 
 	@Override
 	public List<ConfigParameter> getConfigParameters() {
 		return Arrays.asList(
-			new IntegerConfig.Builder(Arrays.asList(CONFIG_NUM_SAMPLES_PARAM_NAMES), DEFAULT_NUM_SAMPLES).range(Range.atLeast(1)).build(),
-			new NumericConfig.Builder(Arrays.asList(CONFIG_CALIBRATION_RATIO_PARAM_NAMES), DEFAULT_CALIBRATION_RATIO).range(Range.open(0d, 1d)).build());
+			new IntegerConfig.Builder(Arrays.asList(CONFIG_NUM_SAMPLES_PARAM_NAMES), DEFAULT_NUM_SAMPLES)
+				.range(Range.atLeast(1)).build(),
+			new NumericConfig.Builder(Arrays.asList(CONFIG_CALIBRATION_RATIO_PARAM_NAMES), DEFAULT_CALIBRATION_RATIO)
+				.range(Range.open(0d, 1d))
+				.description("Use a ratio of how many training examples should be used for calibration. Note: cannot be given at the same time as the @|bold " + CONFIG_NUM_CALIBRATION_INSTANCES_PARAM_NAMES[0] + "|@ parameter.")
+				.build(),
+			new IntegerConfig.Builder(Arrays.asList(CONFIG_NUM_CALIBRATION_INSTANCES_PARAM_NAMES),null)
+				.range(Range.atLeast(TrainingsetValidator.getInstance().MIN_NUM_CALIBRATION_INSTANCES))
+				.description("Use an explicit number of training examples for calibration. Note: cannot be given at the same time as the @|bold " + CONFIG_CALIBRATION_RATIO_PARAM_NAMES[0] + "|@ parameter.")
+				.build()
+			);
 	}
 
 	@Override
 	public void setConfigParameters(Map<String, Object> params) throws IllegalStateException, IllegalArgumentException {
+		
+		params = CollectionUtils.dropNullValues(params);
+
+		Configurable.checkForNonCombinableConfigsGiven(params, CONFIG_CALIBRATION_RATIO_PARAM_NAMES,CONFIG_NUM_CALIBRATION_INSTANCES_PARAM_NAMES);
 		for (Map.Entry<String, Object> kv: params.entrySet()) {
 			if (CollectionUtils.containsIgnoreCase(CONFIG_NUM_SAMPLES_PARAM_NAMES, kv.getKey())) {
 				if (!TypeUtils.isInt(kv.getValue())) {
@@ -178,7 +211,15 @@ public class RandomSampling implements MultiSampling {
 				double calib = TypeUtils.asDouble(kv.getValue());
 				if (calib <= 0 || calib>= 1)
 					throw new IllegalArgumentException("Parameter " + CONFIG_CALIBRATION_RATIO_PARAM_NAMES[0] + " must be a number in the range (0..1), got '" + kv.getValue()+'\'');
-				calibrationRatio = calib;
+				withCalibrationRatio(calib);
+			} else if (CollectionUtils.containsIgnoreCase(CONFIG_NUM_CALIBRATION_INSTANCES_PARAM_NAMES, kv.getKey())){
+				if (!TypeUtils.isInt(kv.getValue())) {
+					throw new IllegalArgumentException("Parameter " + CONFIG_NUM_SAMPLES_PARAM_NAMES[0] + " must be integer number, got '" + kv.getValue()+'\'');
+				}
+				int nCalib = TypeUtils.asInt(kv.getValue());
+				if (nCalib < TrainingsetValidator.getInstance().MIN_NUM_CALIBRATION_INSTANCES)
+					throw new IllegalArgumentException("Parameter " + CONFIG_NUM_SAMPLES_PARAM_NAMES[0] + " must be >=" + TrainingsetValidator.getInstance().MIN_NUM_CALIBRATION_INSTANCES);
+				withNumCalibrationInstances(nCalib);
 			}
 		}
 	}

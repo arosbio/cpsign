@@ -11,10 +11,13 @@ package com.arosbio.data.transform.feature_selection;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.rank.Median;
+
+import com.arosbio.commons.CollectionUtils;
 
 public class FeatureSelectUtils {
 	
@@ -23,9 +26,9 @@ public class FeatureSelectUtils {
 	 * The returned indices are thus the once that should be removed by the {@link FeatureSelector}
 	 * @param values the values for all features
 	 * @param n the number to return
-	 * @return the {@code n} indicies with the smallest values
+	 * @return the {@code n} indices with the smallest values
 	 */
-	public static List<Integer> getSmallestKeepingN(List<IndexedValue> values, int n){
+	public static List<Integer> getSmallestKeepingN(List<CollectionUtils.IndexedValue> values, int n){
 		if (n >= values.size()) {
 			// Return empty list - we cannot remove any more if we should keep n
 			return new ArrayList<>();
@@ -35,7 +38,7 @@ public class FeatureSelectUtils {
 		}
 		
 		// Sort descending 
-		Collections.sort(values);
+		Collections.sort(values, Comparator.reverseOrder());
 		
 		// take from n->last index (the smallest values)
 		List<Integer> smallest = extractIndicesAndSort(values.subList(n, values.size()));
@@ -50,9 +53,9 @@ public class FeatureSelectUtils {
 		return smallest;
 	}
 	
-	public static List<Integer> getSmallerThanThreshold(List<IndexedValue> values, double threshold) {
+	public static List<Integer> getSmallerThanThreshold(List<CollectionUtils.IndexedValue> values, double threshold) {
 		List<Integer> filteredIndices = new ArrayList<>();
-		for (IndexedValue iv : values) {
+		for (CollectionUtils.IndexedValue iv : values) {
 			if (iv.value <= threshold) {
 				filteredIndices.add(iv.index);
 			}
@@ -62,16 +65,16 @@ public class FeatureSelectUtils {
 		return filteredIndices;
 	}
 	
-	public static List<Integer> getSmallerThanMean(List<IndexedValue> values){
+	public static List<Integer> getSmallerThanMean(List<CollectionUtils.IndexedValue> values){
 		Mean mean = new Mean();
 		
-		for (IndexedValue iv : values) {
+		for (CollectionUtils.IndexedValue iv : values) {
 			mean.increment(iv.value);
 		}
 		return getSmallerThanThreshold(values, mean.getResult());
 	}
 	
-	public static List<Integer> getSmallerThanMedian(List<IndexedValue> values){
+	public static List<Integer> getSmallerThanMedian(List<CollectionUtils.IndexedValue> values){
 		Median median = new Median();
 		
 		double[] valArray = new double[values.size()];
@@ -81,44 +84,13 @@ public class FeatureSelectUtils {
 		return getSmallerThanThreshold(values, median.evaluate(valArray));
 	}
 	
-	public static List<Integer> extractIndicesAndSort(List<IndexedValue> vals){
+	public static List<Integer> extractIndicesAndSort(List<CollectionUtils.IndexedValue> values){
 		List<Integer> res = new ArrayList<>();
-		for (IndexedValue v : vals) {
+		for (CollectionUtils.IndexedValue v : values) {
 			res.add(v.index);
 		}
 		Collections.sort(res);
 		return res;
-	}
-	
-	/**
-	 * IndexedValues are sorted descending depending on their value. 
-	 * Used for keeping the indices with most variance/importance 
-	 * @author staffan
-	 *
-	 */
-	public static class IndexedValue implements Cloneable, Comparable<IndexedValue> {
-		public int index;
-		public double value;
-
-		public IndexedValue(int index, double value) {
-			this.index = index;
-			this.value = value;
-		}
-
-		@Override
-		public int compareTo(IndexedValue o) {
-			int cmp = Double.compare(o.value, this.value);
-			return cmp != 0 ? cmp :  this.index - o.index ;
-		}
-
-		public String toString() {
-			return String.format("%d:%s",index,value);
-		}
-		
-		public IndexedValue clone() {
-			return new IndexedValue(index, value);
-		}
-
 	}
 
 }

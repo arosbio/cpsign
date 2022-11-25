@@ -86,11 +86,7 @@ import com.github.cliftonlabs.json_simple.Jsoner;
 @Category(UnitTest.class)
 public class TestSaveLoadModel extends UnitTestInitializer {
 
-	// final URI trainfileClassification = new File(AmesBinaryClass.SMALL_FILE_PATH+GZIP_SUFFIX).toURI();
-	// final URI trainfileRegression = new File(RegressionSolubility.SOLUBILITY_10_FILE_PATH).toURI();
 
-	// final File sparseClassificationProblem = getFile("/resources/numerical/classification/train.svm");
-	// final File sparseRegressionProblem = new File(NumericalSVMLIGHTFiles.REGRESSION_HOUSING_SCALE_FILE_PATH);
 
 	final boolean storeAsTmp=true, linearKernelSVM=true, CCP = false, encrypt=true, useStereoSignatures=false;
 	final int ccpFolds = 6;

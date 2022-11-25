@@ -15,6 +15,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.FuzzyServiceLoader;
 import com.arosbio.commons.TypeUtils;
 import com.arosbio.commons.config.Configurable.ConfigParameter;
@@ -34,13 +35,19 @@ public abstract class SamplingStrategyUtils {
 			return strategy;
 
 		try {
-			strategy.setConfigParameters(props);
+			strategy.setConfigParameters(CollectionUtils.dropNullValues(props));
 			return strategy;
 		} catch (Exception e) {
 			LOGGER.debug("Failed setting the strategy parameters using config-api. Attempting to use the old way",e);
 			throw new IllegalArgumentException("Could not load the sampling strategy properly");
 		}
 
+	}
+
+	public static void validateTrainSplitIndex(SamplingStrategy strategy, int index){
+		if (index <0 || index >= strategy.getNumSamples()){
+			throw new IllegalArgumentException("Invalid training split index: " +index + ", only allowed indices are in the range [0,"+(strategy.getNumSamples()-1)+"]");
+		}
 	}
 
 

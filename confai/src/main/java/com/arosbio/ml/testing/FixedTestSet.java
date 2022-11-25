@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.Dataset;
@@ -32,11 +33,11 @@ public class FixedTestSet implements TestingStrategy {
     private static final class IteratorImplementation implements Iterator<TestTrainSplit> {
 
         private boolean beenCalled = false;
-        private Dataset train;
-        private List<DataRecord> test;
-        private long seed;
+        private final Dataset train;
+        private final List<DataRecord> test;
+        private final long seed;
 
-        private IteratorImplementation(final Dataset train, List<DataRecord> test, long seed){
+        private IteratorImplementation(final Dataset train, final List<DataRecord> test, final long seed){
             this.train = train;
             this.test = test;
             this.seed = seed;
@@ -48,7 +49,10 @@ public class FixedTestSet implements TestingStrategy {
         }
 
         @Override
-        public TestTrainSplit next() {
+        public TestTrainSplit next() throws NoSuchElementException {
+            if (beenCalled){
+                throw new NoSuchElementException("No more test-train splits");
+            }
             beenCalled = true;
             Dataset d = train.cloneDataOnly();
             d.shuffle(seed);
@@ -56,7 +60,7 @@ public class FixedTestSet implements TestingStrategy {
         }
     }
 
-    private List<DataRecord> testSet;
+    private final List<DataRecord> testSet;
     private long seed;
 
     public FixedTestSet(List<DataRecord> testSet){

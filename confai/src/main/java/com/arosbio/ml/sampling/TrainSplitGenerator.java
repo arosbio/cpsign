@@ -12,25 +12,17 @@ package com.arosbio.ml.sampling;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-import com.arosbio.data.Dataset;
-
-public interface TrainSplitIterator extends Iterator<TrainSplit>{
+public interface TrainSplitGenerator extends Iterator<TrainSplit>{
 
 	/**
 	 * Get a specific {@link com.arosbio.ml.sampling.TrainSplit TrainSplit} for a given index, should <b>not</b> interfere with the {@link #hasNext()} or {@link #next()} methods 
 	 * @param index The index <code>[0,max num indexes)</code>
-	 * @return The {@link com.arosbio.ml.sampling.TrainSplit TrainSplit} for the given <code>index</code>, i.e. starts with index 0
+	 * @return The {@link com.arosbio.ml.sampling.TrainSplit TrainSplit} for the given {@code index}, i.e. starts with index 0
 	 * @throws NoSuchElementException If index was out of accepted limits
 	 */
 	public TrainSplit get(int index) throws NoSuchElementException;
 	
-	/**
-	 * Get the {@link com.arosbio.data.Dataset Dataset} used for generating the {@link com.arosbio.ml.sampling.TrainSplit TrainSplit}
-	 * @return {@link com.arosbio.data.Dataset Dataset} used for deriving the splits
-	 */
-	public Dataset getProblem();
+	public int getMaxSplitIndex();
 	
-	public int getMaximumSplitIndex();
-	
-	public int getMinimumSplitIndex();
+	public int getMinSplitIndex();
 }
