@@ -30,13 +30,26 @@ import com.google.common.collect.Range;
 
 public class MathUtils {
 
-	public static boolean equals(double v1, double v2) {
+	public static double DEFAULT_EPS = 0.00001;
+	
+	public static boolean equals(double v1, double v2, double eps) {
 		if (Double.isNaN(v1) && Double.isNaN(v2))
 			return true;
 		if (Double.isInfinite(v1) && Double.isInfinite(v2)) {
 			return (v1>0 && v2>0) ||(v1<0 && v2<0); 
 		}
 		return Math.abs(v1-v2) < 0.00001;
+	}
+
+	@SuppressWarnings("null")
+	public static boolean equals(Double d1, Double d2){
+		if (d1 == null && d2 == null)
+			return true;
+		if (d1 == null && d2 != null)
+			return false;
+		if (d1 != null && d2 == null)
+			return false;
+		return equals((double)d1, (double) d2, DEFAULT_EPS);
 	}
 
 	/**

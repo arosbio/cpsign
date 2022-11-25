@@ -773,6 +773,10 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 		return this;	
 	}
 
+	public int size(){
+		return getNumRecords();
+	}
+
 	/**
 	 * Getter for the number of records in the current problem (sum of all datasets number of records)
 	 * @return number of records
@@ -801,6 +805,14 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 	 */
 	public int getNumFeatures(){
 		return getNumAttributes();
+	}
+
+	/**
+	 * Get the frequency of all labels. <b>only applicable to classification data</b>
+	 * @return Map "numeric value" -&gt; "num occurrences"
+	 */
+	public Map<Double, Integer> getLabelFrequencies(){
+		return DataUtils.countLabels(this);
 	}
 
 	/**

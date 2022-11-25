@@ -33,6 +33,18 @@ public class DataUtils {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DataUtils.class);
 
+	private static final double DEFAULT_TOL = 1e-10;
+
+	public static boolean equals(Dataset d1, Dataset d2){
+		return equals(d1, d2, DEFAULT_TOL);
+	}
+
+	public static boolean equals(Dataset d1, Dataset d2, double tolerance){
+		return equals(d1.getDataset(), d2.getDataset(),tolerance) &&
+			equals(d1.getCalibrationExclusiveDataset(), d2.getCalibrationExclusiveDataset(),tolerance) &&
+			equals(d1.getModelingExclusiveDataset(), d2.getModelingExclusiveDataset(),tolerance);
+	}
+
 	public static boolean equals(List<SparseFeature> x1, List<SparseFeature> x2){
 		if (x1.size() != x2.size())
 			return false;
@@ -48,7 +60,7 @@ public class DataUtils {
 	 * @return {@code true} if they are equal, {@code false} otherwise
 	 */
 	public static boolean equals(SubSet d1, SubSet d2) {
-		return equals(d1,d2,1e-10);
+		return equals(d1,d2,DEFAULT_TOL);
 	}
 
 	public static boolean equals(final SubSet d1, final SubSet d2, final double tol) {
@@ -386,6 +398,19 @@ public class DataUtils {
 			medianGradient.add(new SparseFeatureImpl(template.get(i).getIndex(), MathUtils.median(values)));
 		}
         return medianGradient;
+	}
+
+	/**
+	 * Creates a shallow copy of the {@code records} input, and shuffles it
+	 * @param records input records
+	 * @param seed the RNG seed to use
+	 * @return a new list with shuffled records
+	 */
+	public static List<DataRecord> copyAndShuffle(List<DataRecord> records, long seed){
+		// Copy all to a new list
+		List<DataRecord> shuffledList = new ArrayList<>(records.size()); 
+		Collections.shuffle(shuffledList, new Random(seed));
+		return shuffledList;
 	}
 
 	

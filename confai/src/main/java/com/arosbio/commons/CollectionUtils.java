@@ -13,12 +13,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,6 +32,41 @@ import com.google.common.collect.Range;
 
 public class CollectionUtils {
 	
+	/**
+	 * IndexedValues are sorted descending depending on their value. 
+	 * Used e.g. by the FeatureSelectors for keeping the indices with most variance/importance 
+	 * @author staffan
+	 *
+	 */
+	public static class IndexedValue implements Cloneable, Comparable<IndexedValue> {
+		public final int index;
+		public final double value;
+	
+		public IndexedValue(int index, double value) {
+			this.index = index;
+			this.value = value;
+		}
+	
+		public IndexedValue withValue(double newValue){
+			return new IndexedValue(index, newValue);
+		}
+	
+		@Override
+		public int compareTo(IndexedValue o) {
+			int cmp = Double.compare(this.value, o.value);
+			return cmp != 0 ? cmp :  this.index - o.index ;
+		}
+	
+		public String toString() {
+			return String.format("%d:%s",index,value);
+		}
+		
+		public IndexedValue clone() {
+			return new IndexedValue(index, value);
+		}
+	
+	}
+
 	public static int countTrueValues(Collection<Boolean> values) {
 		int sum = 0;
 		for (boolean b : values) {
@@ -237,7 +274,6 @@ public class CollectionUtils {
 	public static <T extends Comparable<T>> List<T> getUnique(Collection<T> input){
 		Set<T> asSet = new LinkedHashSet<>(input); // Keep ordering using linked hash set
 		List<T> asList = new ArrayList<>(asSet);
-//		Collections.sort(asList);
 		return asList;
 	}
 
@@ -390,10 +426,12 @@ public class CollectionUtils {
 		return indexSplits;
 	}
 
-	public static <T> List<List<T>> getDisjunctSets(List<T> list, int splits){
+	
+
+	public static <T> List<List<T>> getDisjunctSets(List<T> list, int splits, boolean allowEmptySets){
 		if (splits < 2)
 			throw new IllegalArgumentException("Number of folds must be >=2");
-		if (splits > list.size())
+		if (! allowEmptySets && splits > list.size())
 			throw new IllegalArgumentException("Cannot create " + splits + " out of " + list.size() + " records");
 
 		int defaultFoldSize = (int) Math.floor(((double)list.size())/splits);
@@ -417,6 +455,52 @@ public class CollectionUtils {
 		return sets;
 
 	}
+
+	public static <C extends Collection<?>> List<Integer> getSortedIndicesBySize(List<C> lst, boolean ascending){
+		List<IndexedValue> indices = new ArrayList<>(lst.size());
+
+		for (int i=0; i<lst.size(); i++){
+			indices.add(new IndexedValue(i, lst.get(i) != null ? lst.get(i).size() : 0));
+		}
+
+		if (ascending){
+			Collections.sort(indices);
+		} else {
+			Collections.sort(indices, Comparator.reverseOrder());
+		}
+
+		return indices.stream().map(i -> i.index).collect(Collectors.toList());
+	}
+
+
+	public static <T> List<T> sortBy(List<T> input, List<Integer> indices) 
+		throws IllegalArgumentException, NullPointerException, IndexOutOfBoundsException {
+		Objects.requireNonNull(input);
+		Objects.requireNonNull(indices);
+		if (input.size() != indices.size())
+			throw new IllegalArgumentException("List to sort and indices must have same length");
+		List<T> sorted = new ArrayList<>();
+		
+		for (int index : indices){
+			sorted.add(input.get(index));
+		}
+
+		return sorted;
+	}
+
+	public static <T> List<T> getIndices(List<T> input, List<Integer> indices) 
+		throws IllegalArgumentException, NullPointerException, IndexOutOfBoundsException {
+		Objects.requireNonNull(input);
+		Objects.requireNonNull(indices);
+
+		List<T> sorted = new ArrayList<>();		
+		for (int index : indices){
+			sorted.add(input.get(index));
+		}
+
+		return sorted;
+	}
+
 
 	public static Map<String,Object> toStringKeys(Map<Object,Object> map){
 		Map<String,Object> asStr = new HashMap<>();
@@ -518,18 +602,33 @@ public class CollectionUtils {
 		}
 		return len;
 	}
-	
-	public static <T extends Comparable<T>> Range<T> clone(Range<T> range){
-		if (range.hasUpperBound() && range.hasLowerBound()) {
-			return Range.range(range.lowerEndpoint(), range.lowerBoundType(), range.upperEndpoint(), range.upperBoundType());
-		} else if (range.hasUpperBound()) {
-			return Range.upTo(range.upperEndpoint(), range.upperBoundType());
-		} else if (range.hasLowerBound()) {
-			return Range.downTo(range.lowerEndpoint(), range.lowerBoundType());
-		} else {
-			return Range.all();
+
+	public static <K,V> Map<K,V> dropNullValues(Map<K,V> map){
+		if (map == null || map.isEmpty())
+			return map;
+		
+		Map<K,V> noNull = new HashMap<>(map.size());
+
+		for (Map.Entry<K,V> kv : map.entrySet()){
+			if (kv.getValue() != null && ! "null".equalsIgnoreCase(kv.getValue().toString())) {
+				noNull.put(kv.getKey(), kv.getValue());
+			}
 		}
+
+		return noNull;
 	}
+	
+	// public static <T extends Comparable<T>> Range<T> clone(Range<T> range){
+	// 	if (range.hasUpperBound() && range.hasLowerBound()) {
+	// 		return Range.range(range.lowerEndpoint(), range.lowerBoundType(), range.upperEndpoint(), range.upperBoundType());
+	// 	} else if (range.hasUpperBound()) {
+	// 		return Range.upTo(range.upperEndpoint(), range.upperBoundType());
+	// 	} else if (range.hasLowerBound()) {
+	// 		return Range.downTo(range.lowerEndpoint(), range.lowerBoundType());
+	// 	} else {
+	// 		return Range.all();
+	// 	}
+	// }
 	
 	public static<T extends Number> SummaryStatistics getStatistics(Collection<T> col) {
 		SummaryStatistics ss = new SummaryStatistics();

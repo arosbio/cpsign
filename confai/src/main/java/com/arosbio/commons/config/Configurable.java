@@ -9,11 +9,21 @@
  */
 package com.arosbio.commons.config;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.arosbio.commons.CollectionUtils;
+import com.arosbio.commons.StringUtils;
+
 public interface Configurable {
+
+	static final Logger LOGGER = LoggerFactory.getLogger(Configurable.class);
 
 	/**
 	 * Sorting preference for a {@link ConfigParameter} for deciding 
@@ -148,4 +158,37 @@ public interface Configurable {
 	public static IllegalArgumentException getInvalidArgsExcept(String param, Object value) {
 		return new IllegalArgumentException(String.format("Invalid argument for parameter %s: %s", param,value));
 	}
+
+
+	public static <T> void checkForNonCombinableConfigsGiven(Map<String,T> givenArgs, String[]... nonCombNames) 
+		throws IllegalArgumentException {
+		
+		// If less than 2 arguments given, no way of having two that cannot be combined
+		if (givenArgs == null ||givenArgs.size() < 2)
+			return;
+		if (nonCombNames.length < 2)
+			return;
+		
+		Map<String,T> cpyNonNull = new HashMap<>();
+		for (Map.Entry<String,T> kv : givenArgs.entrySet()){
+			if (kv.getValue() != null){
+				cpyNonNull.put(kv.getKey(), kv.getValue());
+			}
+		}
+		
+		List<String> foundMatches = new ArrayList<>();
+		for (String param : cpyNonNull.keySet()){
+			for (String[] names : nonCombNames){
+				if (CollectionUtils.containsIgnoreCase(names, param)){
+					foundMatches.add(param);
+				}
+			}
+		}
+
+		if (foundMatches.size()>1){
+			LOGGER.debug("Found non-compatible parameter arguments given: {}", foundMatches);
+			throw new IllegalArgumentException("The following arguments cannot be given at the same time: "+StringUtils.join(", ", foundMatches));
+		}
+	}
+
 }
