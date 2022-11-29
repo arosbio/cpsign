@@ -137,7 +137,7 @@ public class TestTune extends CLIBaseTest {
 							"--tolerance", ""+tolerance,
 							"-op", "logloss",
 							"-rf", "csv",
-							"--generate-@-file", atFile.getAbsolutePath(), 
+							"--generate@file", atFile.getAbsolutePath(), 
 							"--confidence", ""+conf,
 							"--verbose",
 					}
@@ -188,7 +188,7 @@ public class TestTune extends CLIBaseTest {
 							"-rf", "json",
 							"--progress-bar",
 							"--calc-all",
-							"--generate-@-file", atFile.getAbsolutePath(), 
+							"--generate@file", atFile.getAbsolutePath(), 
 							"--confidence", ""+conf,
 					}
 					);
@@ -234,7 +234,7 @@ public class TestTune extends CLIBaseTest {
 							//							"--debug",
 							"-rf","csv",
 							"--progress-bar",
-							"--generate-@-file", atFile.getAbsolutePath(), 
+							"--generate@file", atFile.getAbsolutePath(), 
 							"--confidence", ""+conf,
 							"-v",
 //							"--calc-all"
@@ -292,7 +292,7 @@ public class TestTune extends CLIBaseTest {
 					"--num-results", "-1",
 					"--progress-bar",
 					"--time",
-					"--generate-@-file", atFile.getAbsolutePath(), 
+					"--generate@file", atFile.getAbsolutePath(), 
 			}
 					);
 		} catch (Exception e) {e.printStackTrace();Assert.fail();}
@@ -406,7 +406,7 @@ public class TestTune extends CLIBaseTest {
 					"--tolerance", ""+tolerance,
 					"--confidence", ""+conf,
 					"--echo",
-					"--generate-@-file", atFile.getAbsolutePath(), 
+					"--generate@file", atFile.getAbsolutePath(), 
 					"--verbose"
 			}	
 					);
@@ -447,7 +447,7 @@ public class TestTune extends CLIBaseTest {
 					"-gpvalues=2,3,4",
 					"--tolerance", ""+tolerance,
 					"--confidence", ""+conf,
-					"--generate-@-file", atFile.getAbsolutePath(),
+					"--generate@file", atFile.getAbsolutePath(),
 					"--opt-metric", "RMSE",
 			}	
 					);
@@ -574,7 +574,7 @@ public class TestTune extends CLIBaseTest {
 							//							"--debug",
 							"-rf","csv",
 							"--progress-bar",
-							"--generate-@-file", atFile.getAbsolutePath(), 
+							"--generate@file", atFile.getAbsolutePath(), 
 							"--confidence", ""+conf,
 							"-v",
 //							"--calc-all"

@@ -238,7 +238,7 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 	private boolean calculateSecondaryMetrics = false;
 
 	@Option(
-			names= {"--generate-@-file"},
+			names= {"--generate@file"},
 			description = "Generate a file that can be specified with the @file-syntax with the parameters that resulted in the best score of this run. "+
 					"This way it is easier to automate a workflow where tuning is performed prior to model training / evaluation on a withheld dataset.",
 					converter = EmptyFileConverter.class,

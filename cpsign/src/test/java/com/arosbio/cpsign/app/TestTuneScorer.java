@@ -157,7 +157,7 @@ public class TestTuneScorer extends CLIBaseTest {
 							"-gGAMMA=0.5, 1.0, 2.0",
 							"--grid=COST=-1:1:1:b=10",
 							"-rf", "csv",
-							"--generate-@-file", atFile.getAbsolutePath(),
+							"--generate@file", atFile.getAbsolutePath(),
 							"--verbose",
 							"--calc-all-metrics",
 							"--result-output", resFile1.getAbsolutePath(),
@@ -250,7 +250,7 @@ public class TestTuneScorer extends CLIBaseTest {
 							"-gCOST=\"b2:-1:1:1\"",
 							"-rf", "json",
 							"--progress-bar",
-							"--generate-@-file", atFile.getAbsolutePath(),
+							"--generate@file", atFile.getAbsolutePath(),
 					});
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -318,7 +318,7 @@ public class TestTuneScorer extends CLIBaseTest {
 					"--num-results", "-1",
 					"--progress-bar",
 					"--time",
-					"--generate-@-file", atFile.getAbsolutePath(),
+					"--generate@file", atFile.getAbsolutePath(),
 			});
 		} catch (Exception e) {
 			e.printStackTrace();
