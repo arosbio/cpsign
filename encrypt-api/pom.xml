@@ -22,6 +22,7 @@
   <artifactId>encrypt-api</artifactId>
   <name>encrypt-api</name>
   <packaging>jar</packaging>
+  <description>The API used for encrypting resources part of the CPSign project</description>
   
   <properties>
 		<parent.basedir>${project.basedir}/..</parent.basedir>

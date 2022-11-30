@@ -22,6 +22,8 @@
 
   	<artifactId>confai</artifactId>
   	<name>confai</name>
+	<packaging>jar</packaging>
+	<description>Conformal AI package, including all data IO, transformations, machine learning models and predictor classes. Without inclusion of chemistry-dependent code.</description>
 
 	<properties>
 		<parent.basedir>${project.basedir}/..</parent.basedir>

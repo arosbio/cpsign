@@ -21,6 +21,7 @@
 
 	<artifactId>cpsign-api</artifactId>
 	<name>cpsign-api</name>
+	<description>The API version of CPSign, adding chemistry functionallity but without the inclusion of CLI depedent code.</description>
 	<packaging>jar</packaging>
 
 	<properties>

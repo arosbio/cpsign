@@ -21,6 +21,7 @@
 
 	<artifactId>cpsign</artifactId>
 	<name>cpsign</name>
+	<description>CPSign main project, including chemistry and the CLI application</description>
 	<packaging>jar</packaging>
 
 	<properties>

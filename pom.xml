@@ -18,7 +18,9 @@
   <version>2.0.0-beta16-SNAPSHOT</version>
   <packaging>pom</packaging>
   <name>CPSign Parent</name>
+  <description>The aggregation project for all cpsign child modules</description> 
   <url>http://arosbio.com</url>
+
   <organization>
     <name>Aros Bio</name>
     <url>http://arosbio.com</url>
@@ -49,6 +51,22 @@
     </license>
 
   </licenses>
+
+  <scm>
+    <connection>scm:git:git://github.com/arosbio/cpsign.git</connection>
+    <developerConnection>scm:git:ssh://github.com:arosbio/cpsign.git</developerConnection>
+    <url>http://github.com/arosbio/cpsign/tree/master</url>
+  </scm>
+
+  <developers>
+    <developer>
+      <name>Staffan Arvidsson McShane</name>
+      <email>staffan.arvidsson@gmail.com</email>
+      <organization>Pharmb.io</organization>
+      <organizationUrl>https://pharmb.io/</organizationUrl>
+    </developer>
+
+  </developers>
 
 
   <!-- Common properties -->

@@ -22,15 +22,9 @@
   <artifactId>test-utils</artifactId>
   <name>test-utils</name>
   <packaging>jar</packaging>
+  <description>Test utility package, indented for simplication of writing tests in other modules and including test-resources in a single location</description>
 
 	<build>
-        <!--
-        <testResources>
-            <testResource>
-                <directory>${parent.basedir}/license/</directory>
-                <filtering>false</filtering>
-            </testResource>
-        </testResources>-->
 
         <plugins>
 
