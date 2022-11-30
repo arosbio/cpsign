@@ -79,12 +79,12 @@ import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.testutils.MockFailingLinearSVC;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 import com.google.common.collect.ImmutableMap;
 
 @SuppressWarnings("deprecation")
 @Category(UnitTest.class)
-public class TestGridSearchUnitTest extends UnitTestInitializer {
+public class TestGridSearchUnitTest extends TestEnv {
 
 	private static final int NUM_CV_FOLDS = 10;
 	private final static double CV_CONF = .8;

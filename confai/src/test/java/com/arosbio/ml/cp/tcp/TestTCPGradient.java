@@ -26,7 +26,7 @@ import com.arosbio.ml.cp.nonconf.classification.NegativeDistanceToHyperplaneNCM;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.PerformanceTest;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 
 /**
@@ -38,7 +38,7 @@ import com.arosbio.testutils.UnitTestInitializer;
  *
  */
 @Category(PerformanceTest.class)
-public class TestTCPGradient extends UnitTestInitializer{
+public class TestTCPGradient extends TestEnv{
 
 	
 	static boolean doOnly30First = false;

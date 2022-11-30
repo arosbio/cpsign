@@ -25,11 +25,11 @@ import com.arosbio.ml.vap.ivap.IVAPClassifier;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 
 @Category(UnitTest.class)
-public class TestIVAPClassification extends UnitTestInitializer {
+public class TestIVAPClassification extends TestEnv {
 
 	@Test
 	public void testIVAPClass() throws Exception {

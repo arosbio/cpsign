@@ -47,7 +47,7 @@ import com.arosbio.ml.testing.TestRunner;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.PerformanceTest;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 /**
  * 
@@ -55,7 +55,7 @@ import com.arosbio.testutils.UnitTestInitializer;
  *
  */
 @Category(PerformanceTest.class)
-public class TestACPRegressionCV extends UnitTestInitializer{
+public class TestACPRegressionCV extends TestEnv {
 
 	private final int NR_MODELS = 10;
 	private final boolean PRINT_DEBUG = false;

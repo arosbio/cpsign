@@ -15,7 +15,7 @@ import org.junit.experimental.categories.Category;
 
 import com.arosbio.ml.IntervalUtils;
 import com.arosbio.tests.suites.UnitTest;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 import com.google.common.collect.Range;
 
 /**
@@ -24,7 +24,7 @@ import com.google.common.collect.Range;
  *
  */
 @Category(UnitTest.class)
-public class TestIntervalCapping extends UnitTestInitializer{
+public class TestIntervalCapping extends TestEnv{
 
 	double minObs = 1, maxObs = 5;
 	

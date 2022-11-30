@@ -34,7 +34,7 @@ import com.arosbio.ml.sampling.RandomSampling;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.TestUtils;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 /**
  * 
@@ -42,7 +42,7 @@ import com.arosbio.testutils.UnitTestInitializer;
  *
  */
 @Category(UnitTest.class)
-public class TestACPRegressionPredWidthToConf extends UnitTestInitializer{
+public class TestACPRegressionPredWidthToConf extends TestEnv{
 
 	static Dataset problem;
 	static List<DataRecord> examples = new ArrayList<>();

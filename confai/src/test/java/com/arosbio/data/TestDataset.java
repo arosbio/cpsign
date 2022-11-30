@@ -23,10 +23,10 @@ import com.arosbio.io.DataSink;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.TestUtils;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 @Category(UnitTest.class)
-public class TestDataset extends UnitTestInitializer{
+public class TestDataset extends TestEnv {
 
 	@Test
 	public void testSaveLoad()throws Exception {

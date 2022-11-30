@@ -29,7 +29,7 @@ import com.arosbio.data.SparseFeatureImpl;
 import com.arosbio.ml.sampling.RandomSampling;
 import com.arosbio.ml.sampling.TrainSplit;
 import com.arosbio.tests.suites.PerformanceTest;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 /**
  * 
@@ -37,7 +37,7 @@ import com.arosbio.testutils.UnitTestInitializer;
  *
  */
 @Category(PerformanceTest.class)
-public class TestICPRegressionGradient extends UnitTestInitializer{
+public class TestICPRegressionGradient extends TestEnv {
 
 	private static final double CALIBRATION_PART = 0.2;
 	private static final int NUMBER_OBSERVATIONS = 10000;

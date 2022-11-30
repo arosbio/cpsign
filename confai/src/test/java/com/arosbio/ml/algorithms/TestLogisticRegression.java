@@ -29,10 +29,10 @@ import com.arosbio.ml.testing.KFoldCV;
 import com.arosbio.ml.testing.TestRunner;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 @Category(UnitTest.class)
-public class TestLogisticRegression extends UnitTestInitializer {
+public class TestLogisticRegression extends TestEnv {
 	
 	@Test
 	public void testNumericalDataset() throws Exception {

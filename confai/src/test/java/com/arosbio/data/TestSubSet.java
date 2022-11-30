@@ -40,12 +40,12 @@ import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.GzipEncryption;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 import com.google.common.collect.Range;
 
 
 @Category(UnitTest.class)
-public class TestSubSet extends UnitTestInitializer{
+public class TestSubSet extends TestEnv {
 
 	@Test
 	public void testNumAttributesWhenEmpty(){

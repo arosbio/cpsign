@@ -36,14 +36,14 @@ import com.arosbio.ml.vap.avap.AVAPClassifier;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.PerformanceTest;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 /**
  * 
  * @author ola
  *
  */
 @Category(PerformanceTest.class)
-public class TestCVAPClassificationCV extends UnitTestInitializer{
+public class TestCVAPClassificationCV extends TestEnv {
 
 	private static final int NR_FOLDS = 5, NR_MODELS=3, NR_RECORDS_USED = 300;
 	private static final double CALIBRATION_RATIO = 0.2;

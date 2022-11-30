@@ -22,7 +22,7 @@ import org.junit.experimental.categories.Category;
 import com.arosbio.data.Dataset.SubSet;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 /**
  * 
@@ -30,7 +30,7 @@ import com.arosbio.testutils.UnitTestInitializer;
  *
  */
 @Category(UnitTest.class)
-public class TestShuffleData extends UnitTestInitializer{
+public class TestShuffleData extends TestEnv {
 
 	@Test
 	public void testGenerateSignaturesSDF() throws Exception{

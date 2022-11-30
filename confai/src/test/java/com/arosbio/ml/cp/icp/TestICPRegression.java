@@ -44,7 +44,7 @@ import com.arosbio.tests.utils.GzipEncryption;
 import com.arosbio.tests.utils.TestUtils;
 import com.arosbio.testutils.ModelComparisonUtils;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 /**
  * 
@@ -52,7 +52,7 @@ import com.arosbio.testutils.UnitTestInitializer;
  *
  */
 @Category(UnitTest.class)
-public class TestICPRegression extends UnitTestInitializer{
+public class TestICPRegression extends TestEnv{
 
 	private static final double CALIBRATION_PART = 0.2;
 

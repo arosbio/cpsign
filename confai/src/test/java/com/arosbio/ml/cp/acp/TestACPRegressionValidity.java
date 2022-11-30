@@ -50,7 +50,7 @@ import com.arosbio.ml.testing.TestRunner;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.PerformanceTest;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 /**
  * 
@@ -58,7 +58,7 @@ import com.arosbio.testutils.UnitTestInitializer;
  *
  */
 @Category(PerformanceTest.class)
-public class TestACPRegressionValidity extends UnitTestInitializer{
+public class TestACPRegressionValidity extends TestEnv{
 
 	private static final int EVALUATE_LAST_NO = 40;  //How many of the last observations to run
 	private static final double STEP_SIZE = 0.1;

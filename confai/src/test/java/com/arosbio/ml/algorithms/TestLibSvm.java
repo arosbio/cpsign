@@ -28,11 +28,11 @@ import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.NonSuiteTest;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 import com.google.common.collect.ImmutableMap;
 
 @Category(UnitTest.class)
-public class TestLibSvm extends UnitTestInitializer{
+public class TestLibSvm extends TestEnv {
 
 	/*
 	 svm data: 1000: {2.0=585, 1.0=226, 5.0=189}

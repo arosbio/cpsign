@@ -26,7 +26,7 @@ import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.GzipEncryption;
 
 @Category(UnitTest.class)
-public class TestGzipEncryption extends UnitTestInitializer {
+public class TestGzipEncryption extends TestEnv {
 
     @Test
     public void testEncrAndDecrypt() throws Exception {

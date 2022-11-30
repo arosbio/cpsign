@@ -24,10 +24,10 @@ import org.junit.experimental.categories.Category;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.TestUtils;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 @Category(UnitTest.class)
-public class TestURIUtils extends UnitTestInitializer{
+public class TestURIUtils extends TestEnv {
 
 	@Test
 	public void testGlob() throws Exception {

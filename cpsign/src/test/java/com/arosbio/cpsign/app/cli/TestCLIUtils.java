@@ -23,66 +23,16 @@ import com.arosbio.cpsign.app.Precompute;
 import com.arosbio.cpsign.app.params.mixins.ClassificationLabelsMixin;
 import com.arosbio.cpsign.app.utils.CLIProgramUtils;
 import com.arosbio.tests.suites.CLITest;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 import picocli.CommandLine;
 
 
 @Category(CLITest.class)
-public class TestCLIUtils extends UnitTestInitializer{
+public class TestCLIUtils extends TestEnv {
 	
 	final static boolean PRINT_RES = false;
-//	
-//	private static class TestClass extends CLIGeneralParamsBaseSection {
-//		
-//		@ParametersDelegate
-//		private RNGSeedArg args = new RNGSeedArg();
-//		
-//		@ParametersDelegate
-//		private LicenseArg lic = new LicenseArg();
-//	}
-//	
-//	@Test
-//	public void testGetArgument() throws IllegalArgumentException, IllegalAccessException {
-//		TestClass base = new TestClass();
-//		
-//		Assert.assertNotNull(CLIProgramUtils.getArgument(base, RNGSeedArg.class));
-//		
-//		Assert.assertNull(CLIProgramUtils.getArgument(base, ConsoleVerbosityArgs.class));
-//		
-//		CLIParamsSection sec = base;
-//		
-//		CLIParams params = new CLIParams() {
-//			
-//			@Override
-//			public boolean showHiddenParams() {
-//				return false;
-//			}
-//			
-//			@Override
-//			public boolean isShortUsage() {
-//				return false;
-//			}
-//			
-//			@Override
-//			public boolean hasFullUsageBeenTriggered() {
-//				return false;
-//			}
-//			
-//			@Override
-//			public List<CLIParamsSection> getSections() {
-//				return Arrays.asList(sec);
-//			}
-//		};
-//		
-//		Assert.assertNotNull(CLIProgramUtils.getArgument(params, RNGSeedArg.class));
-//		
-//		Assert.assertNull(CLIProgramUtils.getArgument(params, ConsoleVerbosityArgs.class));
-//		
-//		Assert.assertNotNull(CLIProgramUtils.getArgument(params, CLIGeneralParamsBaseSection.class));
-//		
-//	}
-//	
+
 	@Test
 	public void testStripFunction() {
 		doTestStrip("Something that should not change", "Something that should not change");

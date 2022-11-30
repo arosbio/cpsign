@@ -43,14 +43,14 @@ import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.PerformanceTest;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 import com.github.sanity.pav.PairAdjacentViolators;
 import com.github.sanity.pav.Point;
 
 import kotlin.jvm.functions.Function1;
 
 @Category(UnitTest.class)
-public class TestCVAPClassification extends UnitTestInitializer{
+public class TestCVAPClassification extends TestEnv {
 
 	@Test
 	public void testCVAP() throws Exception {

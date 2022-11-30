@@ -32,7 +32,7 @@ import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.PerformanceTest;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 /**
  * 
@@ -40,7 +40,7 @@ import com.arosbio.testutils.UnitTestInitializer;
  *
  */
 @Category(UnitTest.class)
-public class TestACPClassificationGradient extends UnitTestInitializer{
+public class TestACPClassificationGradient extends TestEnv{
 
 	private static final double CALIBRATION_PART = 0.1;
 	private static final int nrFolds = 10;

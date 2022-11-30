@@ -77,14 +77,14 @@ import com.arosbio.tests.utils.GzipEncryption;
 import com.arosbio.tests.utils.TestUtils;
 import com.arosbio.testutils.ModelComparisonUtils;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 import com.github.cliftonlabs.json_simple.JsonException;
 import com.github.cliftonlabs.json_simple.JsonObject;
 import com.github.cliftonlabs.json_simple.Jsoner;
 
 
 @Category(UnitTest.class)
-public class TestSaveLoadModel extends UnitTestInitializer {
+public class TestSaveLoadModel extends TestEnv {
 
 
 

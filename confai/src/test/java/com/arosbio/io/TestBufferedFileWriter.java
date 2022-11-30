@@ -21,10 +21,10 @@ import org.junit.experimental.categories.Category;
 
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.TestUtils;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 @Category(UnitTest.class)
-public class TestBufferedFileWriter extends UnitTestInitializer {
+public class TestBufferedFileWriter extends TestEnv {
 
 	static String txt = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris iaculis velit nec \nest sagittis fermentum. "
 			+ "Sed blandit mollis volutpat. Vivamus venenatis velit ac \nmauris porta aliquet. Nam libero tortor, "

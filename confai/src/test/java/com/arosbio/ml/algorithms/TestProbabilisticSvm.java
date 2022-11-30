@@ -22,10 +22,10 @@ import com.arosbio.ml.algorithms.svm.PlattScaledC_SVC;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 @Category(UnitTest.class)
-public class TestProbabilisticSvm extends UnitTestInitializer{
+public class TestProbabilisticSvm extends TestEnv {
 	
 	@Test
 	public void testTranAndPredict() throws Exception {

@@ -48,7 +48,6 @@ import com.github.cliftonlabs.json_simple.Jsoner;
 import ch.qos.logback.core.joran.spi.JoranException;
 import picocli.CommandLine.Help;
 
-// @Category(CLITest.class)
 public abstract class CLIBaseTest extends TestEnv {
 
 	static {
@@ -114,8 +113,8 @@ public abstract class CLIBaseTest extends TestEnv {
 	@AfterClass
 	public static void teardown()throws JoranException{
 		LoggerUtils.reloadLoggingConfig();
-		System.setOut(SYS_OUT);
-		System.setErr(SYS_ERR);
+		// System.setOut(SYS_OUT);
+		// System.setErr(SYS_ERR);
 		TrainingsetValidator.setProductionEnv();
 	}
 

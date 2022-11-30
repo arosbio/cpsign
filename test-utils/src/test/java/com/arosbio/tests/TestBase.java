@@ -33,11 +33,6 @@ public abstract class TestBase {
 	public static final int DEFUALT_NUM_CV_FOLDS = 10;
 	public static final int DEFAULT_NUM_MODELS = 5;
 
-	public static void resetOutputs(){
-		System.setErr(SYS_ERR);
-		System.setOut(SYS_OUT);
-	}
-
 	@Before
 	public void betweenMethods() {
 		systemErrRule.clearLog();

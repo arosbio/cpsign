@@ -48,7 +48,7 @@ import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.GzipEncryption;
 import com.arosbio.tests.utils.TestUtils;
 import com.arosbio.testutils.ModelComparisonUtils;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 /**
  * 
@@ -56,7 +56,7 @@ import com.arosbio.testutils.UnitTestInitializer;
  *
  */
 @Category(UnitTest.class)
-public class TestICPClassification extends UnitTestInitializer{
+public class TestICPClassification extends TestEnv {
 
 	private static final double CALIBRATION_PART = 0.2;
 
@@ -133,25 +133,24 @@ public class TestICPClassification extends UnitTestInitializer{
 		
 		
 		// Plain
-		File tmpDir = Files.createTempDirectory("enc-save-dir").toFile();//createTempFile("/tmp/modelsToFile", "");
+		File tmpDir = Files.createTempDirectory("enc-save-dir").toFile();
 		tmpDir.deleteOnExit();
-		libsvmclass.saveToDataSink(new FileSink(tmpDir), null, spec); //(tmpfile.getAbsolutePath());
+		libsvmclass.saveToDataSink(new FileSink(tmpDir), null, spec);
 		ICPClassifier loadedPlain = new ICPClassifier();
-		loadedPlain.loadFromDataSource(new FileSource(tmpDir), null, spec); //fromFiles(tmpDir.getAbsolutePath(), null);
+		loadedPlain.loadFromDataSource(new FileSource(tmpDir), null, spec);
 		ModelComparisonUtils.assertEqualMLModels(
 				((NCMMondrianClassification)libsvmclass.getNCM()).getModel(), 
 				((NCMMondrianClassification)loadedPlain.getNCM()).getModel());
 		Assert.assertEquals(libsvmclass.getNCS(), loadedPlain.getNCS());
 
 		// save to file encrypted
-		File tmpFileEnc = Files.createTempDirectory("save-dir").toFile(); //Files.createTempDir(); //createTempFile("/tmp/modelsToFileEnc", "");
+		File tmpFileEnc = Files.createTempDirectory("save-dir").toFile(); 
 		tmpFileEnc.deleteOnExit();
-//		EncryptionSpecImpl spec = new EncryptionSpecImpl("password", "salt");
-		libsvmclass.saveToDataSink(new FileSink(tmpFileEnc), null, spec); //saveEncrypted(tmpFileEnc.getAbsolutePath(), spec);
+		libsvmclass.saveToDataSink(new FileSink(tmpFileEnc), null, spec);
 
 		// load it back
 		ICPClassifier loadedEnc = new ICPClassifier();
-		loadedEnc.loadFromDataSource(new FileSource(tmpFileEnc), null, spec); //fromFiles(tmpFileEnc.getAbsolutePath(), spec);
+		loadedEnc.loadFromDataSource(new FileSource(tmpFileEnc), null, spec); 
 
 		ModelComparisonUtils.assertEqualMLModels(
 				((NCMMondrianClassification)libsvmclass.getNCM()).getModel(), 
@@ -177,7 +176,7 @@ public class TestICPClassification extends UnitTestInitializer{
 		// Plain
 		File tmpfile = TestUtils.createTempFile("/tmp/modelsToFile", "");
 		try(JarDataSink sink = getJarDataSink(tmpfile)){
-			liblinclass.saveToDataSink(sink, "icps", null); //(tmpfile.getAbsolutePath());
+			liblinclass.saveToDataSink(sink, "icps", null); 
 		}
 		
 		ICPClassifier loadedPlain = new ICPClassifier();

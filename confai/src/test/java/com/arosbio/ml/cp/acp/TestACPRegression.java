@@ -45,8 +45,8 @@ import com.arosbio.ml.cp.nonconf.regression.AbsDiffNCM;
 import com.arosbio.ml.cp.nonconf.regression.LogNormalizedNCM;
 import com.arosbio.ml.cp.nonconf.regression.NCMRegression;
 import com.arosbio.ml.cp.nonconf.regression.NormalizedNCM;
-import com.arosbio.ml.io.ModelInfo;
 import com.arosbio.ml.io.ConfAISerializer;
+import com.arosbio.ml.io.ModelInfo;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.sampling.RandomSampling;
 import com.arosbio.ml.testing.KFoldCV;
@@ -56,7 +56,7 @@ import com.arosbio.tests.suites.NonSuiteTest;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.TestUtils;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 import de.bwaldvogel.liblinear.SolverType;
 
@@ -66,7 +66,7 @@ import de.bwaldvogel.liblinear.SolverType;
  *
  */
 @Category(UnitTest.class)
-public class TestACPRegression extends UnitTestInitializer{
+public class TestACPRegression extends TestEnv{
 
 	private static final double CONFIDENCE = 0.8;
 	int recordToTest=1;

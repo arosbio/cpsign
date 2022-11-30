@@ -26,11 +26,11 @@ import com.arosbio.data.Dataset.SubSet;
 import com.arosbio.io.StreamUtils;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 
 
 @Category(UnitTest.class)
-public class TestStreamUtils extends UnitTestInitializer{
+public class TestStreamUtils extends TestEnv {
 	
 	
 	@Test

@@ -44,9 +44,9 @@ import com.arosbio.ml.sampling.RandomSampling;
 import com.arosbio.ml.testing.KFoldCV;
 import com.arosbio.ml.testing.TestRunner;
 import com.arosbio.tests.suites.UnitTest;
-import com.arosbio.testutils.TestDataLoader;
 import com.arosbio.testutils.ConfaiTestUtils;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestDataLoader;
+import com.arosbio.testutils.TestEnv;
 import com.github.cliftonlabs.json_simple.JsonArray;
 import com.github.cliftonlabs.json_simple.JsonException;
 import com.github.cliftonlabs.json_simple.Jsoner;
@@ -59,7 +59,7 @@ import de.bwaldvogel.liblinear.Linear;
  *
  */
 @Category(UnitTest.class)
-public class TestACPClassification extends UnitTestInitializer{
+public class TestACPClassification extends TestEnv{
 
 	private static final int numToTest = 20;
 	private static final boolean PRINT_RESULTS = false;

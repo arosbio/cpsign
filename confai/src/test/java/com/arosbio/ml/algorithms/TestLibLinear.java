@@ -27,12 +27,12 @@ import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.NonSuiteTest;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 import com.google.common.collect.ImmutableMap;
 
 
 @Category(UnitTest.class)
-public class TestLibLinear extends UnitTestInitializer{
+public class TestLibLinear extends TestEnv{
 	
 	@Test
 	public void testLinearSVC_train_pred() throws Exception {

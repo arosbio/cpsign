@@ -31,14 +31,14 @@ import com.arosbio.ml.testing.KFoldCV;
 import com.arosbio.ml.testing.TestRunner;
 import com.arosbio.tests.suites.PerformanceTest;
 import com.arosbio.testutils.TestDataLoader;
-import com.arosbio.testutils.UnitTestInitializer;
+import com.arosbio.testutils.TestEnv;
 /**
  * 
  * @author ola
  *
  */
 @Category(PerformanceTest.class)
-public class TestACPClassificationCV extends UnitTestInitializer{
+public class TestACPClassificationCV extends TestEnv {
 
 	private static final int NR_FOLDS = 5; //NR_MODELS=3,
 	//	private static final double CALIBRATION_RATIO = 0.2;
