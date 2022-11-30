@@ -153,7 +153,7 @@ public abstract class CLIBaseTest extends TestEnv {
 	public static File generateEncryptionKeyFile(){
 		try {
 			File encryptKeyFile = TestUtils.createTempFile("encryption", ".key");
-			mockMain(GenerateEncryptionKey.CMD_NAME,"-l","16","-f",encryptKeyFile.getAbsolutePath());
+			mockMain(GenerateEncryptionKey.CMD_NAME,"-l","16","-f",encryptKeyFile.getAbsolutePath(), "-q");
 			return encryptKeyFile;
 		} catch (Exception e){
 			Assert.fail("Could not create encryption file: "+ e.getMessage());

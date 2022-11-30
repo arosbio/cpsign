@@ -52,16 +52,21 @@ public class TestUsageTexts extends CLIBaseTest {
 	public void testVersion() {
 		// Test without sub-command
 		StringOutputStream sos = new StringOutputStream();
-		System.setOut(new PrintStream(sos,true));
-		mockMain("-V");
+		PrintStream original = System.out;
+		try{
+			System.setOut(new PrintStream(sos,true));
+			mockMain("-V");
 
-		// test using a sub-command and then -V
-		StringOutputStream sos2 = new StringOutputStream();
-		System.setOut(new PrintStream(sos2, true));
-		mockMain(Precompute.CMD_NAME, "-V");
+			// test using a sub-command and then -V
+			StringOutputStream sos2 = new StringOutputStream();
+			System.setOut(new PrintStream(sos2, true));
+			mockMain(Precompute.CMD_NAME, "-V");
 
-		resetOutputs();
-		Assert.assertEquals(sos.toString(), sos2.toString());
+			
+			Assert.assertEquals(sos.toString(), sos2.toString());
+		} finally {
+			System.setOut(original);
+		}
 	}
 
 	@Test

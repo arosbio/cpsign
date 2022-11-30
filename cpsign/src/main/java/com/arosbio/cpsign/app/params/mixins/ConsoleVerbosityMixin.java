@@ -21,13 +21,13 @@ public class ConsoleVerbosityMixin {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ConsoleVerbosityMixin.class);
 
-	@Option(names = { "-q","--quiet", "--silent" }, 
+	@Option(names = { "-q", "--quiet", "--silent" }, 
 			description = "Silent/quiet mode. Only prints crucial results/warnings or output to logfile if specified",
 			required = false
 			)
 	public boolean silentMode;
 
-	@Option(names = {"-v","--verbose"}, 
+	@Option(names = {"-v", "--verbose"}, 
 			description = "Verbose mode",
 			required = false)
 	public boolean verboseMode;
