@@ -28,15 +28,12 @@ import com.arosbio.data.DataRecord;
 import com.arosbio.data.DataUtils;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.Dataset.SubSet;
-import com.arosbio.data.splitting.FoldedSplitter;
-import com.arosbio.data.splitting.RandomSplitter;
 import com.arosbio.data.splitting.TestDataSplitting;
 import com.arosbio.data.transform.duplicates.UseVoting;
 import com.arosbio.ml.algorithms.svm.LinearSVC;
 import com.arosbio.ml.cp.acp.ACPClassifier;
 import com.arosbio.ml.cp.icp.ICPClassifier;
 import com.arosbio.ml.cp.nonconf.classification.NegativeDistanceToHyperplaneNCM;
-import com.arosbio.ml.sampling.impl.TrainSplitWrapper;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.testutils.TestDataLoader;
@@ -110,7 +107,6 @@ public class TestSamplingStrategies {
 		for (int i = 0; i < problem.getDataset().size(); i++) {
 			boolean foundMatch = false;
 			DataRecord problemRecord = problem.getDataset().get(i);
-			// Double problemActivity = problem.getY().get(i);
 
 			// Check for the record in the calibration set
 			for (int j = 0; j < dataset.getCalibrationSet().size(); j++)
@@ -142,17 +138,15 @@ public class TestSamplingStrategies {
 		public void TestFoldedCalibrationSet() throws Exception {
 
 			// Read in problem from file
-			Dataset problem = TestDataLoader.loadDataset(TestResources.SVMLIGHTFiles.REGRESSION_HOUSING);
+			Dataset data = TestDataLoader.loadDataset(TestResources.SVMLIGHTFiles.REGRESSION_HOUSING);
 
-			int sizeBefore = problem.getDataset().size();
+			int sizeBefore = data.getDataset().size();
 
-			Iterator<TrainSplit> datasets = new TrainSplitWrapper(new FoldedSplitter.Builder().numFolds(NR_FOLDS).build(problem));
-			// new FoldedCalibSetIterator(problem,
-			// 		10);
+			Iterator<TrainSplit> datasets = new FoldedSampling(NR_FOLDS).withNumRepeats(2).getIterator(data); 
 
-			Assert.assertTrue(problem.getDataset().size() == sizeBefore);
+			Assert.assertTrue(data.getDataset().size() == sizeBefore);
 
-			assertFoldedCalibrationSetupOK(datasets, 10, problem);
+			assertFoldedCalibrationSetupOK(datasets, 10, 2, data);
 
 		}
 
@@ -163,10 +157,8 @@ public class TestSamplingStrategies {
 			long seed = 42L;
 			int nrFolds = 3;
 
-			Iterator<TrainSplit> datasets1 = new TrainSplitWrapper(new FoldedSplitter.Builder().numFolds(nrFolds).seed(seed).build(data)); 
-			//new FoldedCalibSetIterator(problem, nrFolds, seed);
-			Iterator<TrainSplit> datasets2 = new TrainSplitWrapper(new FoldedSplitter.Builder().numFolds(nrFolds).seed(seed).build(clonedData)); 
-			// new FoldedCalibSetIterator(clonedProblem, nrFolds, seed);
+			Iterator<TrainSplit> datasets1 = new FoldedSampling(nrFolds).getIterator(data, seed); 
+			Iterator<TrainSplit> datasets2 = new FoldedSampling(nrFolds).getIterator(clonedData, seed); 
 
 			for (int i = 0; i < nrFolds; i++) {
 				TrainSplit ds1 = datasets1.next();
@@ -187,8 +179,7 @@ public class TestSamplingStrategies {
 			dataset.withCalibrationExclusiveDataset(ds_split1[0]); // this should be 20% of the data
 			dataset.withModelingExclusiveDataset(ds_split2[0]); // this should be 16% of the data
 
-			Iterator<TrainSplit> datasets1 = new TrainSplitWrapper(new FoldedSplitter.Builder().numFolds(NR_FOLDS).build(dataset));
-			// new FoldedCalibSetIterator(problem, NR_FOLDS);
+			Iterator<TrainSplit> datasets1 = new FoldedSampling(NR_FOLDS).getIterator(dataset); 
 			int nrDs = 0;
 			while (datasets1.hasNext()) {
 				nrDs++;
@@ -212,50 +203,38 @@ public class TestSamplingStrategies {
 			// 34 - 10 folds
 			Dataset smallProblem34 = new Dataset();
 			smallProblem34.getDataset().setRecords(new ArrayList<>(problem.getDataset().subList(0, 34)));
-			// smallProblem34.setY(new ArrayList<>(problem.getY().subList(0, 34)));
 			int sizeBefore = smallProblem34.getDataset().size();
-			Iterator<TrainSplit> datasets = new TrainSplitWrapper(new FoldedSplitter.Builder().numFolds(NR_FOLDS).build(smallProblem34));
-			//   FoldedCalibSetIterator(smallProblem34,10);
+			Iterator<TrainSplit> datasets = new FoldedSampling(NR_FOLDS).getIterator(smallProblem34);
 			Assert.assertTrue(smallProblem34.getDataset().size() == sizeBefore);
 
-			assertFoldedCalibrationSetupOK(datasets, 10, smallProblem34);
+			assertFoldedCalibrationSetupOK(datasets, 10, 1, smallProblem34);
 
 			// 36 - 10 folds
 			Dataset smallProblem36 = new Dataset();
 			smallProblem36.getDataset().setRecords(new ArrayList<>(problem.getDataset().subList(0, 36)));
-			// smallProblem36.setY(new ArrayList<>(problem.getY().subList(0, 36)));
 
 			sizeBefore = smallProblem36.getDataset().size();
 
-			Iterator<TrainSplit> datasets36 = new TrainSplitWrapper(new FoldedSplitter.Builder().numFolds(NR_FOLDS).build(smallProblem36));
-			// new FoldedCalibSetIterator(smallProblem36,
-			// 		10);
+			Iterator<TrainSplit> datasets36 = new FoldedSampling(NR_FOLDS).getIterator(smallProblem36);
 
 			Assert.assertTrue(smallProblem36.getDataset().size() == sizeBefore);
 
-			assertFoldedCalibrationSetupOK(datasets36, 10, smallProblem36);
+			assertFoldedCalibrationSetupOK(datasets36, 10,1, smallProblem36);
 
 		}
 
 		@Test
 		public void TestStratifiedFoldedSplit() throws Exception {
 			long seed = 21423l;
-			// Read in problem from file
-			Dataset problem = TestDataLoader.loadDataset(TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS);
-			problem.apply(new UseVoting());
-			// problem.getDataset().resolveDuplicates(DuplicatesStrategyFactory.keepOfClass(0));
-			int initSize = problem.getNumRecords();
-			Map<Double, Integer> freqs = problem.getDataset().getLabelFrequencies();
+			// Read in data from file
+			Dataset data = TestDataLoader.loadDataset(TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS);
+			data.apply(new UseVoting());
+			int initSize = data.getNumRecords();
+			Map<Double, Integer> freqs = data.getDataset().getLabelFrequencies();
 			double class0ratio = (double) (freqs.get(Double.valueOf(0))) / initSize;
-			// original_err.println(freqs);
-			// original_err.println(initSize + ", class0freq=" + class0ratio + ",
-			// class0num=" + freqs.get(new Double(0.0)));
 
-			// LoggerUtils.setDebugMode();
-			Iterator<TrainSplit> it = new TrainSplitWrapper(new FoldedSplitter.Builder().numFolds(NR_FOLDS).stratify(true).seed(seed).build(problem)); 
-			//new StratifiedFoldedCalibSetIterator(problem, NR_FOLDS, seed);
-			Iterator<TrainSplit> it2 = new TrainSplitWrapper(new FoldedSplitter.Builder().numFolds(NR_FOLDS).stratify(true).seed(seed).build(problem)); 
-			//new StratifiedFoldedCalibSetIterator(problem, NR_FOLDS, seed);
+			Iterator<TrainSplit> it = new FoldedStratifiedSampling(NR_FOLDS).getIterator(data, seed); 
+			Iterator<TrainSplit> it2 = new FoldedStratifiedSampling(NR_FOLDS).getIterator(data, seed);
 			TrainSplit split1 = null;
 
 			int nrSplits = 0;
@@ -265,12 +244,8 @@ public class TestSamplingStrategies {
 				nrSplits++;
 				SubSet calibset = new SubSet();
 				calibset.setRecords(ts.getCalibrationSet());
-				// original.println(calibset.getLabelFrequencies().get(new Double(0))+ ", "+
-				// calibset.size()+", " + class0ratio);
 				SubSet prop = new SubSet();
 				prop.setRecords(ts.getProperTrainingSet());
-				// original.println(prop.getLabelFrequencies().get(new Double(0))+",
-				// "+prop.size()+ ", " + class0ratio);
 
 				Assert.assertTrue(Math.abs(
 						calibset.getLabelFrequencies().get(Double.valueOf(0)) - calibset.size() * class0ratio) <= 2);
@@ -282,7 +257,6 @@ public class TestSamplingStrategies {
 
 				if (DO_EXTENSIVE_CHECK)
 					assertEqualICPDatasets(ts, ts2);
-				// original.println("round=" +nrSplits);
 				if (nrSplits == 1) {
 					split1 = ts;
 				} else {
@@ -292,9 +266,8 @@ public class TestSamplingStrategies {
 
 			Assert.assertEquals(NR_FOLDS, nrSplits);
 
-			Iterator<TrainSplit> it3 = new TrainSplitWrapper(new FoldedSplitter.Builder().numFolds(NR_FOLDS).stratify(true).build(problem));  
-			//new StratifiedFoldedCalibSetIterator(problem, NR_FOLDS);
-			assertFoldedCalibrationSetupOK(it3, NR_FOLDS, problem);
+			Iterator<TrainSplit> it3 = new FoldedStratifiedSampling(NR_FOLDS).getIterator(data, seed); 
+			assertFoldedCalibrationSetupOK(it3, NR_FOLDS, 1, data);
 		}
 
 		@Test
@@ -304,7 +277,6 @@ public class TestSamplingStrategies {
 			Dataset dataset = TestDataLoader.loadDataset(TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS);
 
 			dataset.apply(new UseVoting());
-			// problem.getDataset().resolveDuplicates(DuplicatesStrategyFactory.keepOfClass(0));
 
 			SubSet[] split_ds1 = dataset.getDataset().splitRandom(.530);
 			SubSet[] split_ds2 = split_ds1[1].splitRandom(0.854);
@@ -321,15 +293,10 @@ public class TestSamplingStrategies {
 					.get(Double.valueOf(0));
 			Map<Double, Integer> freqs = dataset.getDataset().getLabelFrequencies();
 			double class0ratio = (double) (freqs.get(Double.valueOf(0))) / initSize;
-			// original_err.println(freqs);
-			// original_err.println(initSize + ", class0freq=" + class0ratio + ",
-			// class0num=" + freqs.get(new Double(0.0)));
 
 			// LoggerUtils.setDebugMode();
-			Iterator<TrainSplit> it = new TrainSplitWrapper(new FoldedSplitter.Builder().numFolds(NR_FOLDS).stratify(true).seed(seed).build(dataset)); 
-			//new StratifiedFoldedCalibSetIterator(dataset, NR_FOLDS, seed);
-			Iterator<TrainSplit> it2 = new TrainSplitWrapper(new FoldedSplitter.Builder().numFolds(NR_FOLDS).stratify(true).seed(seed).build(dataset)); 
-			// new StratifiedFoldedCalibSetIterator(dataset, NR_FOLDS, seed);
+			Iterator<TrainSplit> it = new FoldedStratifiedSampling(NR_FOLDS).getIterator(dataset,seed); 
+			Iterator<TrainSplit> it2 = new FoldedStratifiedSampling(NR_FOLDS).getIterator(dataset,seed);
 			TrainSplit split1 = null;
 
 			int nrSplits = 0;
@@ -339,12 +306,8 @@ public class TestSamplingStrategies {
 				nrSplits++;
 				SubSet calibset = new SubSet();
 				calibset.setRecords(ts.getCalibrationSet());
-				// original.println(calibset.getLabelFrequencies().get(new Double(0))+ ", "+
-				// calibset.size()+", " + class0ratio);
 				SubSet prop = new SubSet();
 				prop.setRecords(ts.getProperTrainingSet());
-				// original.println(prop.getLabelFrequencies().get(new Double(0))+",
-				// "+prop.size()+ ", " + class0ratio);
 				Assert.assertTrue(Math.abs(initSize / NR_FOLDS + calibExclusiveSize - calibset.size()) <= 2);
 				Assert.assertEquals(class0ratio,
 						((double) calibset.getLabelFrequencies().get(Double.valueOf(0)) - calibExclusiveClass0)
@@ -371,38 +334,43 @@ public class TestSamplingStrategies {
 
 			Assert.assertEquals(NR_FOLDS, nrSplits);
 
-			Iterator<TrainSplit> it3 = new TrainSplitWrapper(new FoldedSplitter.Builder().numFolds(NR_FOLDS).stratify(true).build(dataset)); 
-			// new StratifiedFoldedCalibSetIterator(dataset, NR_FOLDS);
-			assertFoldedCalibrationSetupOK(it3, NR_FOLDS, dataset);
+			Iterator<TrainSplit> it3 = new FoldedStratifiedSampling(NR_FOLDS).withNumRepeats(3).getIterator(dataset); 
+			assertFoldedCalibrationSetupOK(it3, NR_FOLDS, 3, dataset);
 		}
 
-		private void assertFoldedCalibrationSetupOK(Iterator<TrainSplit> iter, int numDatasets, Dataset problem)
+		private void assertFoldedCalibrationSetupOK(Iterator<TrainSplit> iter, int numDatasets, int nRep, Dataset dataset)
 				throws Exception {
 			int numDatasetsReal = 0;
 
-			List<DataRecord> glist = new ArrayList<>();
+			List<DataRecord> allCalibInstances = new ArrayList<>();
 
 			while (iter.hasNext()) {
 				TrainSplit trainSet = iter.next();
 				numDatasetsReal++;
 
-				Assert.assertEquals(problem.getNumRecords(),
+				Assert.assertEquals(dataset.getNumRecords(),
 						(trainSet.getCalibrationSet().size() + trainSet.getProperTrainingSet().size()));
 
 				// Ensure none in calibration set is in global list
-				// CCP folds should cover all dataset
 				List<DataRecord> calibRecords = trainSet.getCalibrationSet();
-				if (!problem.getCalibrationExclusiveDataset().isEmpty())
-					calibRecords.removeAll(problem.getCalibrationExclusiveDataset());
-				Assert.assertTrue(Collections.disjoint(glist, calibRecords));
-				glist.addAll(calibRecords);
+				if (!dataset.getCalibrationExclusiveDataset().isEmpty())
+					calibRecords.removeAll(dataset.getCalibrationExclusiveDataset());
+				Assert.assertTrue(Collections.disjoint(allCalibInstances, calibRecords));
+				allCalibInstances.addAll(calibRecords);
 
 				if (DO_EXTENSIVE_CHECK)
-					assertAllRecordsPreserved(problem, trainSet);
+					assertAllRecordsPreserved(dataset, trainSet);
+
+				if (numDatasetsReal != 0 && numDatasetsReal % numDatasets == 0){
+					Assert.assertEquals("All examples should have been part of the calibration set",
+						allCalibInstances.size(), dataset.getDataset().size());
+					// clear the list of calibration instances 
+					allCalibInstances.clear();
+				}
 
 			}
-			Assert.assertEquals(numDatasets, numDatasetsReal);
-			Assert.assertEquals(glist.size(), problem.getDataset().size());
+			Assert.assertEquals(numDatasets * nRep, numDatasetsReal);
+
 		}
 	}
 
@@ -411,19 +379,37 @@ public class TestSamplingStrategies {
 
 		private static final double CALIB_PART = 0.2;
 		private static final int NUM_SAMPLES = 10;
+		private static final int NUM_CALIB_SAMPLES = 5;
+
+		@Test
+		public void testFixedNumberOfCalibSamples() throws Exception {
+			RandomSampling sampler = new RandomSampling(NUM_CALIB_SAMPLES, CALIB_PART);
+			sampler.setConfigParameters(Map.of("numCalib", NUM_CALIB_SAMPLES));
+			Assert.assertEquals(Integer.valueOf(NUM_CALIB_SAMPLES), sampler.getNumCalibrationInstances());
+
+			// Read some test data
+			Dataset data = TestDataLoader.loadDataset(TestResources.SVMLIGHTFiles.REGRESSION_HOUSING_25);
+			int dataSize = data.size();
+
+			Iterator<TrainSplit> iter = sampler.getIterator(data);
+			while (iter.hasNext()){
+				TrainSplit split = iter.next();
+				Assert.assertEquals(NUM_CALIB_SAMPLES, split.getCalibrationSet().size());
+				Assert.assertEquals(dataSize, split.getProperTrainingSet().size() + NUM_CALIB_SAMPLES);
+			}
+		}
 
 		@Test
 		public void TestStratifiedRandomSplit() throws Exception {
-			// Read in problem from file
-			Dataset problem = TestDataLoader.loadDataset(TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS);
+			// Read in data from file
+			Dataset data = TestDataLoader.loadDataset(TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS);
 
-			int initSize = problem.getNumRecords();
-			Map<Double, Integer> originalFreq = problem.getDataset().getLabelFrequencies();
+			int initSize = data.getNumRecords();
+			Map<Double, Integer> originalFreq = data.getDataset().getLabelFrequencies();
 
 			long seed = 500l;
-			// LoggerUtils.setDebugMode();
-			Iterator<TrainSplit> it = new TrainSplitWrapper(new RandomSplitter.Builder().stratify(true).splitRatio(CALIB_PART).seed(seed).numSplits(NUM_SAMPLES).build(problem));
-			Iterator<TrainSplit> it2 = new TrainSplitWrapper(new RandomSplitter.Builder().stratify(true).splitRatio(CALIB_PART).seed(seed).numSplits(NUM_SAMPLES).build(problem));
+			Iterator<TrainSplit> it = new RandomStratifiedSampling(NUM_SAMPLES, CALIB_PART).getIterator(data, seed);
+			Iterator<TrainSplit> it2 = new RandomStratifiedSampling(NUM_SAMPLES, CALIB_PART).getIterator(data, seed);
 			TrainSplit split1 = null;
 
 			int nrSplits = 0;
@@ -472,15 +458,10 @@ public class TestSamplingStrategies {
 					.get(Double.valueOf(0));
 			Map<Double, Integer> freqs = problem.getDataset().getLabelFrequencies();
 			double class0ratio = (double) (freqs.get(Double.valueOf(0))) / initSize;
-			// System.err.println(freqs);
-			// System.err.println(initSize + ", class0freq=" + class0ratio + ", class0num="
-			// + freqs.get(new Double(0.0)));
+
 			long seed = 500l;
-			// LoggerUtils.setDebugMode();
-			Iterator<TrainSplit> it = new TrainSplitWrapper(new RandomSplitter.Builder().stratify(true).splitRatio(CALIB_PART).seed(seed).numSplits(NUM_SAMPLES).build(problem));
-			// new StratifiedRandomCalibSetIterator(problem, CALIB_PART, NUM_SAMPLES, 500l);
-			Iterator<TrainSplit> it2 = new TrainSplitWrapper(new RandomSplitter.Builder().stratify(true).splitRatio(CALIB_PART).seed(seed).numSplits(NUM_SAMPLES).build(problem));
-			// new StratifiedRandomCalibSetIterator(problem, CALIB_PART, NUM_SAMPLES, 500l);
+			Iterator<TrainSplit> it = new RandomStratifiedSampling(NUM_SAMPLES, CALIB_PART).getIterator(problem, seed);
+			Iterator<TrainSplit> it2 = new RandomStratifiedSampling(NUM_SAMPLES, CALIB_PART).getIterator(problem, seed);
 			TrainSplit split1 = null;
 
 			int nrSplits = 0;
@@ -508,7 +489,6 @@ public class TestSamplingStrategies {
 
 				if (DO_EXTENSIVE_CHECK)
 					assertEqualICPDatasets(ts, ts2);
-				// System.out.println("round=" +nrSplits);
 				if (nrSplits == 1) {
 					split1 = ts;
 				} else {
@@ -537,8 +517,8 @@ public class TestSamplingStrategies {
 			Dataset clonedData = data.clone();
 			long seed = 1242L;
 
-			Iterator<TrainSplit> datasets1 = new TrainSplitWrapper(new RandomSplitter.Builder().splitRatio(CALIB_PART).seed(seed).numSplits(NUM_SAMPLES).build(data));
-			Iterator<TrainSplit> datasets2 = new TrainSplitWrapper(new RandomSplitter.Builder().splitRatio(CALIB_PART).seed(seed).numSplits(NUM_SAMPLES).build(clonedData));
+			Iterator<TrainSplit> datasets1 = new RandomSampling(NUM_SAMPLES, CALIB_PART).getIterator(data, seed);
+			Iterator<TrainSplit> datasets2 = new RandomSampling(NUM_SAMPLES, CALIB_PART).getIterator(clonedData, seed);
 
 			for (int i = 0; i < NUM_SAMPLES; i++) {
 				TrainSplit ds1 = datasets1.next();
@@ -559,8 +539,7 @@ public class TestSamplingStrategies {
 			data.withCalibrationExclusiveDataset(ds_split1[0]); // this should be 20% of the data
 			data.withModelingExclusiveDataset(ds_split2[0]); // this should be 16% of the data
 
-			Iterator<TrainSplit> datasets1 = new TrainSplitWrapper(new RandomSplitter.Builder().splitRatio(CALIB_PART).numSplits(NUM_SAMPLES).build(data));
-			// new RandomSplitIterator(problem, CALIB_PART, NUM_SAMPLES);
+			Iterator<TrainSplit> datasets1 = new RandomSampling(NUM_SAMPLES, CALIB_PART).getIterator(data);
 			int nrDs = 0;
 			while (datasets1.hasNext()) {
 				nrDs++;

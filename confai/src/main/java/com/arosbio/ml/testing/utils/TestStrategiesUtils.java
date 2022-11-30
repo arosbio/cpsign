@@ -7,7 +7,7 @@
  *
  * 2) CPSign Proprietary License that allows you to use CPSign for commercial activities, such as in a revenue-generating operation or environment, or integrate CPSign in your proprietary software without worrying about disclosing the source code of your proprietary software, which is required if you choose to use the software under GPLv3 license. See arosbio.com/cpsign/commercial-license for details.
  */
-package com.arosbio.ml.testing;
+package com.arosbio.ml.testing.utils;
 
 import java.util.Arrays;
 import java.util.List;
@@ -17,19 +17,20 @@ import com.arosbio.commons.config.Configurable.ConfigParameter;
 import com.arosbio.commons.config.IntegerConfig;
 import com.google.common.collect.Range;
 
-class TestStrategiesUtils {
+public class TestStrategiesUtils {
 
-	static List<String> shuffleParamNames = Arrays.asList("shuffle");
-	static ConfigParameter shuffleParameter = new BooleanConfig.Builder(shuffleParamNames, true).build();
+	public final static List<String> shuffleParamNames = Arrays.asList("shuffle");
+	public final static ConfigParameter shuffleParameter = new BooleanConfig.Builder(shuffleParamNames, true).build();
 	
-	static List<String> numRepParamNames = Arrays.asList("numRepeat");
-	static ConfigParameter numRepParameter = new IntegerConfig.Builder(numRepParamNames, 1)
+	public final static List<String> numRepParamNames = Arrays.asList("numRepeat", "nRep");
+	public final static ConfigParameter numRepParameter = new IntegerConfig.Builder(numRepParamNames, 1)
 		.range(Range.atLeast(1))
 		.description("Num repeats that the strategy should be performed, using different seeds for shuffling").build();
 	
-	static List<String> stratifiedParamNames = Arrays.asList("stratified", "stratify");
-	static ConfigParameter stratifiedParameter = new BooleanConfig.Builder(stratifiedParamNames, false)
-			.description("If the splitting should be stratified (i.e. preserving the class-ratios in the test and training splits). Note that stratification is only valid for classification!")
+	public final static List<String> stratifiedParamNames = Arrays.asList("stratified", "stratify");
+	public final static ConfigParameter stratifiedParameter = new BooleanConfig.Builder(stratifiedParamNames, false)
+			.description("If the splitting should be stratified (i.e. preserving the class-ratios in "+
+			"the test and training splits). Note that stratification is only valid for classification!")
 			.build();
 
 }

@@ -24,8 +24,6 @@ public class PropertyNameSettings {
 	
 	// Model properties (general)
 	public static final String SAMPLING_STRATEGY_KEY = "samplingStrategy";
-	public final static String SAMPLING_STRATEGY_NR_MODELS_KEY = "samplingStrategyNrModels";
-	public final static String SAMPLING_STRATEGY_CALIB_RATIO_KEY = "samplingStrategyCalibrationRatio";
 	
 	// Nesting 
 	public static final String PREDICTOR_NESTING_KEY = "predictor";

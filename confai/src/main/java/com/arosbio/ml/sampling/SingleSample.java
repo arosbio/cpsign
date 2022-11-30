@@ -71,7 +71,6 @@ public class SingleSample implements SamplingStrategy, Described {
 	public Map<String, Object> getProperties() {
 		Map<String,Object> props = new HashMap<>();
 		props.put(PropertyNameSettings.SAMPLING_STRATEGY_KEY, ID);
-		props.put(PropertyNameSettings.SAMPLING_STRATEGY_NR_MODELS_KEY, 1);
 		return props;
 	}
 

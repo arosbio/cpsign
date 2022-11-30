@@ -20,6 +20,7 @@ import com.arosbio.commons.TypeUtils;
 import com.arosbio.commons.config.IntegerConfig;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.splitting.FoldedSplitter;
+import com.arosbio.ml.testing.utils.TestStrategiesUtils;
 import com.arosbio.ml.testing.utils.TestTrainWrapper;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
@@ -33,7 +34,6 @@ import com.google.common.collect.Range;
 public class KFoldCV implements TestingStrategy {
 
 	public static final String STRATEGY_NAME = "KFoldCV";
-	// private static final Logger LOGGER = LoggerFactory.getLogger(KFoldCV.class);
 	public static final int DEFAULT_K = 10;
 
 	private boolean stratified = false;

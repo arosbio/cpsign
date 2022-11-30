@@ -163,7 +163,7 @@ public class FoldedSplitter implements DataSplitter {
     private List<List<DataRecord>> getFoldsForRep(int forRep) {
         long seedForRep = getSeedForRep(forRep);
         LOGGER.debug("generating folds for repetition {} using stratify={}, shuffle={}, seed={}",
-            forRep, stratify,shuffle,seedForRep);
+            forRep, stratify, shuffle,seedForRep);
         
         if (stratify) {
 
@@ -180,17 +180,19 @@ public class FoldedSplitter implements DataSplitter {
                 List<DataRecord> tmp = recs;
                 // Shuffle if set to do so
                 if (shuffle){
+                    tmp = new ArrayList<>(tmp); // Need copy before we shuffle 
                     Collections.shuffle(tmp, new Random(seedForRep));
                 }
 
-                // Folds for each strata - note the first ones will be the largest ones
+                // Folds for each strata - note the first ones will be the largest ones (if not evenly divisible)
                 List<List<DataRecord>> foldStrata = CollectionUtils.getDisjunctSets(tmp, numFolds, true);
-
+               
                 if (tmp.size() % numFolds == 0){
                     // The folds will all have the same size, no need to worry about order
                     for (int i=0; i<numFolds; i++) {
                         folds.get(i).addAll(foldStrata.get(i));
                     }
+                    
                 } else {
                     // The records are not evenly divisible - need to find where to put the larger folds
                    

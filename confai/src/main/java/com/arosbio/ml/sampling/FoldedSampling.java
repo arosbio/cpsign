@@ -29,8 +29,10 @@ public class FoldedSampling implements MultiSampling {
 	public static final String NAME = "Folded";
 	public static final int DEFAULT_NUM_SAMPLES = 10;
 	public static final String[] CONFIG_NUM_SAMPLES_PARAM_NAMES = new String[] {"folds", "numSamples"};
+	private static final String[] CONFIG_NUM_REPEATS_PARAM_NAMES = new String[] {"numRepeats", "nRep"};
 	
 	private int numFolds;
+	private int numRepeat = 1;
 	
 	public FoldedSampling() {
 		this(DEFAULT_NUM_SAMPLES);
@@ -64,6 +66,17 @@ public class FoldedSampling implements MultiSampling {
 	public int getNumSamples() {
 		return numFolds;
 	}
+
+	public FoldedSampling withNumRepeats(int num){
+		if (num < 1)
+			throw new IllegalArgumentException("number of repeats must be at least 1 (i.e. performed once)");
+		this.numRepeat = num;
+		return this;
+	}
+
+	public int getNumRepeats() {
+		return numRepeat;
+	}
 	
 	@Override
 	public TrainSplitGenerator getIterator(Dataset dataset)
@@ -76,6 +89,7 @@ public class FoldedSampling implements MultiSampling {
 			throws IllegalArgumentException {
 		return new TrainSplitWrapper(new FoldedSplitter.Builder()
 			.numFolds(numFolds)
+			.numRepeat(numRepeat)
 			.seed(seed)
 			.shuffle(true)
 			.stratify(false)
@@ -88,6 +102,7 @@ public class FoldedSampling implements MultiSampling {
 		Map<String,Object> props = new HashMap<>();
 		props.put(PropertyNameSettings.SAMPLING_STRATEGY_KEY, ID);
 		props.put(CONFIG_NUM_SAMPLES_PARAM_NAMES[0], numFolds);
+		props.put(CONFIG_NUM_REPEATS_PARAM_NAMES[0],numRepeat);
 		return props;
 	}
 
@@ -106,7 +121,7 @@ public class FoldedSampling implements MultiSampling {
 		if (! (obj instanceof FoldedSampling))
 			return false;
 		FoldedSampling other = (FoldedSampling) obj;
-		return this.numFolds == other.numFolds;
+		return this.numFolds == other.numFolds && this.numRepeat == other.numRepeat;
 	}
 	
 	public String toString() {
@@ -115,9 +130,14 @@ public class FoldedSampling implements MultiSampling {
 
 	@Override
 	public List<ConfigParameter> getConfigParameters() {
-		return Arrays.asList(new IntegerConfig.Builder(Arrays.asList(CONFIG_NUM_SAMPLES_PARAM_NAMES), DEFAULT_NUM_SAMPLES)
+		return Arrays.asList(
+			new IntegerConfig.Builder(Arrays.asList(CONFIG_NUM_SAMPLES_PARAM_NAMES), DEFAULT_NUM_SAMPLES)
 			.range(Range.atLeast(2))
-			.description("Number of folds to split the dataset into").build());
+			.description("Number of folds to split the dataset into").build(),
+			new IntegerConfig.Builder(Arrays.asList(CONFIG_NUM_REPEATS_PARAM_NAMES),1)
+			.range(Range.atLeast(1))
+			.description("Number of times the folded sampling should be performed, the default is doing a single k-fold sampling").build()
+		);
 	}
 
 	@Override
@@ -126,12 +146,21 @@ public class FoldedSampling implements MultiSampling {
 		for (Map.Entry<String, Object> kv : params.entrySet()) {
 			if (CollectionUtils.containsIgnoreCase(Arrays.asList(CONFIG_NUM_SAMPLES_PARAM_NAMES), kv.getKey())) {
 				if (!TypeUtils.isInt(kv.getValue())) {
-					throw new IllegalArgumentException("Parameter " + CONFIG_NUM_SAMPLES_PARAM_NAMES[0] + " must be integer number, got: " + kv.getValue());
+					throw new IllegalArgumentException("Parameter " + kv.getKey() + " must be an integer number, got: " + kv.getValue());
 				}
 				int nFold = TypeUtils.asInt(kv.getValue());
 				if (nFold < 2)
-					throw new IllegalArgumentException("Parameter " + CONFIG_NUM_SAMPLES_PARAM_NAMES[0] + " must be >=2");
+					throw new IllegalArgumentException("Parameter " + kv.getKey() + " must be >=2");
 				numFolds = nFold;
+			}
+			else if (CollectionUtils.containsIgnoreCase(CONFIG_NUM_REPEATS_PARAM_NAMES, kv.getKey())){
+				if (!TypeUtils.isInt(kv.getValue())) {
+					throw new IllegalArgumentException("Parameter " + kv.getKey() + " must be an integer number, got: " + kv.getValue());
+				}
+				int nRep = TypeUtils.asInt(kv.getValue());
+				if (nRep < 1)
+					throw new IllegalArgumentException("Parameter " + kv.getKey() + " must be >=1");
+				numRepeat = nRep;
 			}
 		}
 	}

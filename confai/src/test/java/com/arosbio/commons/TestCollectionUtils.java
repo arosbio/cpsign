@@ -215,18 +215,14 @@ public class TestCollectionUtils {
 	@Test
 	public void testSplitToDisjointSets() {
 
-		//		int numTests = 0;
-		for (int n=10; n<=1000; n+=100) {
+		for (int n=11; n<=1000; n+=102) {
 			doTestDisjointSets(IntStream.range(0, n).boxed().collect(Collectors.toList()), 5);
 			doTestDisjointSets(IntStream.range(0, n).boxed().collect(Collectors.toList()), 10);
-			//			numTests +=2;
 		}
-		//		System.out.println("Num tests: " + numTests);
 	}
 
 	public <T> void doTestDisjointSets(List<T> originalList, int numSets) {
 		List<List<T>> sets = CollectionUtils.getDisjunctSets(originalList, numSets, false);
-
 		Assert.assertEquals(numSets, sets.size());
 
 		List<T> allRecords = new ArrayList<>();
@@ -324,45 +320,4 @@ public class TestCollectionUtils {
 		Assert.assertTrue("empty indices should return an empty list",CollectionUtils.getIndices(values, new ArrayList<>()).isEmpty());
 	}
 
-/*
-	@Test
-	public void testCloneRange() {
-
-		// inf, lim)
-		Range<Double> oneSide = Range.upTo(5.321, BoundType.OPEN);
-//		System.err.println(oneSide);
-		Range<Double> clonedOneSide = CollectionUtils.clone(oneSide);
-//		System.err.println(clonedOneSide);
-		Assert.assertEquals(oneSide, clonedOneSide);
-
-		// [lim, inf 
-		Range<Integer> otherSide = Range.downTo(-50, BoundType.CLOSED);
-//		System.err.println(otherSide);
-		Range<Integer> clonedOtherSide = CollectionUtils.clone(otherSide);
-//		System.err.println(clonedOtherSide);
-		Assert.assertEquals(otherSide, clonedOtherSide);
-
-		// ALL
-		Range<BigInteger> all = Range.all();
-//		System.err.println(all);
-		Range<BigInteger> cpyAll = CollectionUtils.clone(all);
-//		System.err.println(cpyAll);
-		Assert.assertEquals(all, cpyAll);
-
-		// Single
-		Range<Integer> single = Range.singleton(928392836);
-//		System.err.println(single);
-		Range<Integer> cpySingle = CollectionUtils.clone(single);
-//		System.err.println(cpySingle);
-		Assert.assertEquals(single, cpySingle);
-
-		// [ ]
-		Range<Double> closed = Range.closed(-1.5, 4.3);
-//		System.err.println(closed);
-		Range<Double> cpyClosed = CollectionUtils.clone(closed);
-//		System.err.println(cpyClosed);
-		Assert.assertEquals(closed, cpyClosed);
-
-	}
-	*/
 }

@@ -64,6 +64,7 @@ public class FoldedStratifiedSampling extends FoldedSampling {
 			throws IllegalArgumentException {
 		return new TrainSplitWrapper(new FoldedSplitter.Builder()
 			.numFolds(getNumSamples())
+			.numRepeat(getNumRepeats())
 			.seed(seed)
 			.shuffle(true)
 			.stratify(true)
@@ -83,7 +84,8 @@ public class FoldedStratifiedSampling extends FoldedSampling {
 		if (! (obj instanceof FoldedStratifiedSampling))
 			return false;
 		FoldedStratifiedSampling other = (FoldedStratifiedSampling) obj;
-		return this.getNumSamples() == other.getNumSamples();
+		return this.getNumSamples() == other.getNumSamples() && 
+			this.getNumRepeats() == other.getNumRepeats();
 	}
 	
 	public String toString() {

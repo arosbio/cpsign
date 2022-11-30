@@ -40,6 +40,8 @@ import com.arosbio.testutils.TestEnv;
 @RunWith(Enclosed.class)
 public class TestDataSplitting extends TestEnv {
 
+	private final static boolean PRINT_DEBUG = false;
+
 	/**
 	 * Assertion method for checking that stratified splitting is OK
 	 * @param f1
@@ -64,9 +66,9 @@ public class TestDataSplitting extends TestEnv {
 
 	}
 
-	private static final int numFolds = 10;
-	private static final int numModels = 10;
-	private static final double calibrationPart = 0.2;
+	private static final int NUM_FOLDS = 10;
+	private static final int NUM_SPLITS = 10;
+	private static final double RATIO_SECOND = 0.2;
 
 	@Category(UnitTest.class)
 	public static class TestFolded {
@@ -86,13 +88,13 @@ public class TestDataSplitting extends TestEnv {
 
 			FoldedSplitter splitter = new FoldedSplitter.Builder()
 				.findLabelRange(true)
-				.numFolds(numFolds)
+				.numFolds(NUM_FOLDS)
 				.stratify(false)
 				.seed(seed)
 				.build(firstData);
 			FoldedSplitter splitter2 = new FoldedSplitter.Builder()
 				.findLabelRange(true)
-				.numFolds(numFolds)
+				.numFolds(NUM_FOLDS)
 				.stratify(false)
 				.seed(seed)
 				.build(secondData);
@@ -114,30 +116,29 @@ public class TestDataSplitting extends TestEnv {
 			Dataset secondDataset = originalDataset.clone();
 			FoldedSplitter splitter = new FoldedSplitter.Builder()
 				.findLabelRange(true)
-				.numFolds(numFolds)
-				.stratify(false)
+				.numFolds(NUM_FOLDS)
+				.stratify(true)
 				.seed(seed)
 				.build(firstDataset);
 			FoldedSplitter splitter2 = new FoldedSplitter.Builder()
 				.findLabelRange(true)
-				.numFolds(numFolds)
-				.stratify(false)
+				.numFolds(NUM_FOLDS)
+				.stratify(true)
 				.seed(seed)
 				.build(secondDataset);
 
 			doCheckFoldedSplits(originalDataset, splitter, splitter2, true);
-			// printLogs();
+			
 
 			// Check that regression data should fail
 			try {
 				new FoldedSplitter.Builder()
-				.numFolds(numModels)
+				.numFolds(NUM_SPLITS)
 				.seed(seed)
 				.stratify(true)
 				.build(TestDataLoader.loadDataset(TestResources.SVMLIGHTFiles.REGRESSION_HOUSING));
 				Assert.fail("Regression data not allowed for stratified splitting");
 			} catch (IllegalArgumentException e){
-				// e.printStackTrace();
 			}
 		}
 
@@ -257,11 +258,6 @@ public class TestDataSplitting extends TestEnv {
 				// Make sure the get(fold) returns the same thing as the iterator
 				DataSplit getSplit = splitter.get(fold), 
 					getAgain = splitter.get(fold);
-				// System.err.printf("first: %s%nsecond: %s%nthird: %s%n", split.getSecond().get(0), getSplit.getSecond().get(0),getAgain.getSecond().get(0));
-				// System.err.printf("first: %s%nsecond: %s%nthird: %s%n", 
-				// 	split.getFirst().getDataset().get(0), 
-				// 	getSplit.getFirst().getDataset().get(0),
-				// 	getAgain.getFirst().getDataset().get(0));
 
 				Assert.assertEquals(split.getSecond(), getSplit.getSecond());
 				Assert.assertEquals(split.getSecond(), getAgain.getSecond());
@@ -269,8 +265,14 @@ public class TestDataSplitting extends TestEnv {
 
 				// Make sure frequency is correct!
 				if (isStratified) {
-					assertSameFreq(initialFreq, split.getFirst().getLabelFrequencies(), false);
-					assertSameFreq(initialFreq, new SubSet(split.getSecond()).getLabelFrequencies(), false);
+					Map<Double,Integer> freqFirst = split.getFirst().getLabelFrequencies();
+					assertSameFreq(initialFreq, freqFirst, false);
+					Map<Double,Integer> freqSecond = DataUtils.countLabels(split.getSecond());
+					assertSameFreq(initialFreq, freqSecond, false);
+					if (PRINT_DEBUG){
+						System.out.printf("Initial freq %s first: %s (%s) second: %s (%s)%n",
+							initialFreq,freqFirst,CollectionUtils.sumInts(freqFirst.values()),freqSecond, CollectionUtils.sumInts(freqSecond.values()));
+					}
 				}
 				// Check with a second splitter to make sure everything is still the same!
 				DataSplit split2 = splitter2.get(fold);
@@ -287,18 +289,16 @@ public class TestDataSplitting extends TestEnv {
 			Assert.assertTrue(allSecondSplitRecs.isEmpty());
 
 			try {
-				splitter.get(numFolds);
+				splitter.get(NUM_FOLDS);
 				Assert.fail();
 			} catch (NoSuchElementException e) {
 				Assert.assertTrue(e.getMessage().toLowerCase().contains("invalid"));
-				//			original_err.println(e.getMessage());
 			}
 			try {
 				splitter.get(-1);
 				Assert.fail();
 			} catch (NoSuchElementException e) {
 				Assert.assertTrue(e.getMessage().toLowerCase().contains("invalid"));
-				//			original_err.println(e.getMessage());
 			}
 		}
 
@@ -315,10 +315,8 @@ public class TestDataSplitting extends TestEnv {
 			long seed = System.currentTimeMillis();
 			Dataset firstDataset = original.clone();
 			Dataset secondDataset = original.clone();
-			RandomSplitter splitter = new RandomSplitter.Builder().splitRatio(calibrationPart).numSplits(numModels).seed(seed).build(firstDataset);
-			RandomSplitter splitter2 = new RandomSplitter.Builder().splitRatio(calibrationPart).numSplits(numModels).seed(seed).build(secondDataset);
-			// TrainSplitGenerator splitter = new RandomSplitIterator(prob, calibrationPart,numModels,seed);
-			// TrainSplitGenerator splitter2 = new RandomSplitIterator(secondDataset, calibrationPart,numModels, seed);
+			RandomSplitter splitter = new RandomSplitter.Builder().splitRatio(RATIO_SECOND).numSplits(NUM_SPLITS).seed(seed).build(firstDataset);
+			RandomSplitter splitter2 = new RandomSplitter.Builder().splitRatio(RATIO_SECOND).numSplits(NUM_SPLITS).seed(seed).build(secondDataset);
 
 			doCheckRandomSplits(original, splitter, splitter2, false);
 		}
@@ -333,14 +331,14 @@ public class TestDataSplitting extends TestEnv {
 			Dataset firstDataset = original.clone();
 			Dataset secondDataset = original.clone();
 			RandomSplitter splitter = new RandomSplitter.Builder()
-				.splitRatio(calibrationPart)
-				.numSplits(numModels)
+				.splitRatio(RATIO_SECOND)
+				.numSplits(NUM_SPLITS)
 				.seed(seed)
 				.stratify(true)
 				.build(firstDataset);
 			RandomSplitter splitter2 = new RandomSplitter.Builder()
-				.splitRatio(calibrationPart)
-				.numSplits(numModels)
+				.splitRatio(RATIO_SECOND)
+				.numSplits(NUM_SPLITS)
 				.seed(seed)
 				.stratify(true)
 				.build(secondDataset);
@@ -351,14 +349,13 @@ public class TestDataSplitting extends TestEnv {
 			// Check that regression data should fail
 			try {
 				new RandomSplitter.Builder()
-				.splitRatio(calibrationPart)
-				.numSplits(numModels)
+				.splitRatio(RATIO_SECOND)
+				.numSplits(NUM_SPLITS)
 				.seed(seed)
 				.stratify(true)
 				.build(TestDataLoader.loadDataset(TestResources.SVMLIGHTFiles.REGRESSION_HOUSING));
 				Assert.fail("Regression data not allowed for stratified splitting");
 			} catch (IllegalArgumentException e){
-				// e.printStackTrace();
 			}
 		}
 
@@ -378,8 +375,14 @@ public class TestDataSplitting extends TestEnv {
 
 				// Make sure frequency is correct!
 				if (isStratified) {
-					assertSameFreq(originalFreq, DataUtils.countLabels(split.getSecond()), false);
-					assertSameFreq(originalFreq, split.getFirst().getLabelFrequencies(), false);
+					Map<Double,Integer> freqFirst = split.getFirst().getLabelFrequencies();
+					Map<Double, Integer> freqSecond = DataUtils.countLabels(split.getSecond());
+					assertSameFreq(originalFreq, freqSecond, true);
+					assertSameFreq(originalFreq, freqFirst, true);
+					if (PRINT_DEBUG){
+						System.out.printf("Initial freq %s first: %s (%s) second: %s (%s)%n",
+						originalFreq,freqFirst,CollectionUtils.sumInts(freqFirst.values()),freqSecond, CollectionUtils.sumInts(freqSecond.values()));
+					}
 				}
 
 				// Check with a second splitter to make sure everything is still the same!
@@ -392,23 +395,21 @@ public class TestDataSplitting extends TestEnv {
 			}
 
 			try {
-				splitter.get(numModels);
+				splitter.get(NUM_SPLITS);
 				Assert.fail();
 			} catch (NoSuchElementException e) {
 				Assert.assertTrue(e.getMessage().contains("Cannot get index"));
-				//			original_err.println(e.getMessage());
 			}
 			try {
 				splitter.get(-1);
 				Assert.fail();
 			} catch (NoSuchElementException e) {
 				Assert.assertTrue(e.getMessage().contains("Cannot get index"));
-				//			original_err.println(e.getMessage());
 			}
 
 			// Make sure that different models are not the same dataset!
-			for (int i=0; i<numModels-1; i++) {
-				for (int j=i+1; j<numModels; j++) {
+			for (int i=0; i<NUM_SPLITS-1; i++) {
+				for (int j=i+1; j<NUM_SPLITS; j++) {
 					DataSplit sp1 = splitter.get(i);
 					DataSplit sp2 = splitter.get(j);
 					Assert.assertNotEquals(sp1.getSecond(), sp2.getSecond());
@@ -437,13 +438,9 @@ public class TestDataSplitting extends TestEnv {
 			Dataset p = new Dataset();
 			p.withDataset(d);
 
-			// TestingStrategy strat = new LOOCV();
-			// Assert.assertEquals(nRecs, strat.getNumberOfSplitsAndValidate(p));
-
 			Set<DataRecord> allTestRecs = new HashSet<>();
 
 			Iterator<DataSplit> iter = new LOOSplitter.Builder().shuffle(true).build(p);
-			// Iterator<TestTrainSplit> iter = strat.getSplits(p);
 			int num = 0;
 			while (iter.hasNext()) {
 				num++;
@@ -452,7 +449,6 @@ public class TestDataSplitting extends TestEnv {
 				List<DataRecord> test = split.getSecond();
 				Assert.assertEquals(1, test.size());
 				allTestRecs.addAll(test);
-	//			Assert.assertEquals(test.size()+preAddingToSetSize, allTestRecs.size());
 				// Train records
 				Dataset train = split.getFirst();
 				Assert.assertTrue(train.getCalibrationExclusiveDataset().isEmpty());

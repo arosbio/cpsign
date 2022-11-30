@@ -22,13 +22,12 @@ import com.arosbio.commons.config.NumericConfig;
 import com.arosbio.commons.mixins.Aliased;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.splitting.RandomSplitter;
+import com.arosbio.ml.testing.utils.TestStrategiesUtils;
 import com.arosbio.ml.testing.utils.TestTrainWrapper;
 import com.google.common.collect.Range;
 
 public class RandomSplit implements TestingStrategy, Aliased {
 
-	// private static final Logger LOGGER = LoggerFactory.getLogger(RandomSplit.class);
-	
 	public static final String NAME = "RandomSplit";
 	public static final String[] ALIASES = new String[] {"TestTrainSplit"};
 	
