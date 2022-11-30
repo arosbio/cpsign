@@ -77,7 +77,6 @@ import com.arosbio.ml.metrics.vap.VAPMetric;
 import com.arosbio.ml.vap.avap.CVAPPrediction;
 import com.google.common.collect.Range;
 
-import kotlin.NotImplementedError;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
 import picocli.CommandLine.Model.CommandSpec;
@@ -354,7 +353,7 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 
 		// Make sure we've added some metrics
 		if (validationMetrics.isEmpty())
-			throw new NotImplementedError("validation not implemented for predictor " + predictor.getPredictor().getClass());
+			throw new IllegalArgumentException("validation not implemented for predictor " + predictor.getPredictor().getClass());
 	}
 
 	private void validateParams(){
