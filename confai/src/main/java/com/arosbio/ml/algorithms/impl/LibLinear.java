@@ -152,13 +152,13 @@ public class LibLinear {
 		LOGGER.trace("Training LibLinear model with {} records", trainingset.size());
 
 		//Set up training problem on proper training set
-		de.bwaldvogel.liblinear.Problem trainProblem = createLibLinearTrainProblem(trainingset);				
+		Problem trainProblem = createLibLinearTrainProblem(trainingset);				
 		LOGGER.trace("Finished setting up the LibLinear training problem");
 
 		return train(params,trainProblem);
 	}
 
-	public static Model train(Parameter params, de.bwaldvogel.liblinear.Problem problem) throws IllegalArgumentException {
+	public static Model train(Parameter params, Problem problem) throws IllegalArgumentException {
 		if (problem.l == 0)
 			throw new IllegalArgumentException("Training set cannot be empty");
 		LOGGER.trace("Training liblinear model with #records={}, #attributes={}, using parameters={}",
@@ -168,7 +168,6 @@ public class LibLinear {
 		try {
 			LibLinearSerializer.requireLock();
 			Linear.resetRandom();
-			LOGGER.debug("Got the lock");
 
 			// Do the training!
 			Model model = Linear.train(problem, params);

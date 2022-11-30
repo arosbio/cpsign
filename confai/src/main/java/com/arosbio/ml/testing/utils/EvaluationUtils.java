@@ -139,7 +139,7 @@ public class EvaluationUtils {
 					predIntervals.put(c, prediction.getInterval(c).getInterval());
 				}
 				((CPRegressionMultiMetric) m).addPrediction(example.getLabel(), predIntervals);
-			} else if (m instanceof CIWidthBasedMetric) {
+			} else if (m instanceof CIWidthBasedMetric && widthPrediction!=null) {
 				PredictedInterval interval = widthPrediction.getWidthToConfidenceBasedIntervals().get(((CIWidthBasedMetric) m).getCIWidth());
 				((CIWidthBasedMetric) m).addPrediction(example.getLabel(), interval.getInterval(), interval.getConfidence());
 			} else {

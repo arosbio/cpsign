@@ -725,25 +725,28 @@ public class GridSearch {
 					// Stop the timer for this param combo
 					timer.stop();
 					// Update results
-					GSResult.Builder builder = (currentStatus != EvalStatus.FAILED
-							? GSResult.Builder.success(currentParams, ((SingleValuedMetric) paramResult.get(0)).getScore(),
-									((SingleValuedMetric) paramResult.get(0)), timer.elapsedTimeMillis())
-							: GSResult.Builder.failed(currentParams, ((SingleValuedMetric) paramResult.get(0)), currentStatus,
-									errorMsg));
-					if (paramResult.size() > 1) {
-						builder.secondary(getSecondaryMetrics(paramResult));
+					if (paramResult != null){
+						GSResult.Builder builder = (currentStatus != EvalStatus.FAILED
+								? GSResult.Builder.success(currentParams, ((SingleValuedMetric) paramResult.get(0)).getScore(),
+										((SingleValuedMetric) paramResult.get(0)), timer.elapsedTimeMillis())
+								: GSResult.Builder.failed(currentParams, ((SingleValuedMetric) paramResult.get(0)), currentStatus,
+										errorMsg));
+						if (paramResult.size() > 1) {
+							builder.secondary(getSecondaryMetrics(paramResult));
+						}
+						GSResult r = builder.build();
+						results.add(r);
+					
+						// sort and remove results that are of no interest
+						updateResults(results,sorter);
+
+						// Print the current parameters and the metrics
+						resultPrinter.printRecord(r);
 					}
-					GSResult r = builder.build();
-					results.add(r);
-
-					// sort and remove results that are of no interest
-					updateResults(results,sorter);
-
-					// Print the current parameters and the metrics
-					resultPrinter.printRecord(r);
 
 					// clear allocations from current model
 					predictor.releaseResources();
+
 				}
 			}
 		}
@@ -881,7 +884,7 @@ public class GridSearch {
 					timer.stop(); // Stop current timer!
 
 					// Update results
-					GSResult.Builder builder = errorMsg == null
+					GSResult.Builder builder = errorMsg == null && paramResult != null
 							? GSResult.Builder.success(currentParams,
 									((SingleValuedMetric) paramResult.get(0)).getScore(),
 									((SingleValuedMetric) paramResult.get(0)),
@@ -896,7 +899,7 @@ public class GridSearch {
 								secondary.add((SingleValuedMetric) m);
 						}
 						builder.secondary(secondary);
-					} else if (inputMetrics.size() > 1) {
+					} else if (inputMetrics!= null && inputMetrics.size() > 1) {
 						// If the run failed, the paramResult == null
 						builder.secondary(inputMetrics.subList(1, inputMetrics.size()));
 					}

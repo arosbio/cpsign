@@ -176,6 +176,7 @@ public class TestRunner {
 		// Check if proper mean +/- std should be calculated
 		boolean useAggregation = calculateMeanAndStd && numTestSplits>1;
 		List<Metric> usedMetrics = updateMetricsAndWrap(useAggregation, metrics);
+		LOGGER.debug("Running evaluation of {} using mean +/- std: {}", predictor.getPredictorType(), useAggregation);
 
 
 		while (splitsIterator.hasNext()) {
