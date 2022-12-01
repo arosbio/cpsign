@@ -121,20 +121,6 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 			parameterConsumer = ChemFileConverter.class)
 	private ChemFile trainFile;
 
-	//	@Option(names = { "-md", "--model-data" }, 
-	//			description = "File with molecules that exclusively should be used for training the scoring algorithm. In CSV, SDF or JSON format",
-	//			hidden=true,
-	//			paramLabel = ArgumentType.CHEM_FILE_ARGS,
-	//			parameterConsumer = ChemFileConverter.class)
-	//	private ChemFile properTrainExclusiveFile;
-	//
-	//	@Option(names = { "-cd", "--calibration-data" },
-	//			description = "File with molecules that exclusively should be used for calibrating predictions. In CSV, SDF or JSON format",
-	//			hidden=true,
-	//			paramLabel = ArgumentType.CHEM_FILE_ARGS,
-	//			parameterConsumer = ChemFileConverter.class)
-	//	private ChemFile calibrationExclusiveTrainFile;
-
 	@Mixin
 	private ModelingPropertyMixin propertyMix;
 
@@ -228,15 +214,12 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 
 		// INIT PROBLEM - (Load previous signatures if any)
 		ChemDataset sp = new ChemDataset(descriptorSection.descriptors).setKeepMolRef(true); 
-//		ChemDataset sp = initProblemAndLoadPreviousSignatures();
 		pb.stepProgress();
 
 		// DO PRECOMPUTE
 		pb.setCurrentTask(PB.PARSING_FILE_OR_MODEL_PROGRESS);
 		precompute(sp);
-
 		//pb.stepProgress(); // Stepped internally in method
-
 
 		// SAVE
 		pb.setCurrentTask(PB.RESULTS_WRITING_PROGRESS);
@@ -258,8 +241,6 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 				isClassification, 
 				trainFile,
 				null, null,
-				//				properTrainExclusiveFile,
-				//				calibrationExclusiveTrainFile,
 				propertyMix.endpoint,
 				labelsMix.labels,
 				this, 
@@ -278,7 +259,7 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 
 	private void saveDataAgain(ChemDataset data) {
 		// Print results
-		console.print(WordUtils.wrap("Saving filtered data set to file: " + outputSection.outputFile + ProgressInfoTexts.SPACE_ELIPSES, console.getTextWidth()).trim(), 
+		console.print(WordUtils.wrap("Saving filtered data set to file: " + outputSection.outputFile + ProgressInfoTexts.SPACE_ELLIPSES, console.getTextWidth()).trim(), 
 				PrintMode.NORMAL);
 		try {
 			for (DataRecord r : data.getDataset()) {
@@ -300,12 +281,6 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 
 
 	private void validateParams() {
-
-		// CLIProgramUtils.getEncryptSpec(console, 
-		// null, //TODO
-		// 		encryptSection.encryptLicense,
-		// 		encryptSection.yubiKeyPin);
-
 
 		if ( trainFile == null )
 			console.failDueToMissingParameters(

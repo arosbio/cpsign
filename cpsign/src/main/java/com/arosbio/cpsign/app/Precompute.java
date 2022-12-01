@@ -266,7 +266,7 @@ public class Precompute implements RunnableCmd, SupportsProgressBar {
 
 	private void saveData(ChemDataset chemData) {
 		
-		console.print(WordUtils.wrap("Saving precomputed data set to file: " + outputSection.modelFile + ProgressInfoTexts.SPACE_ELIPSES, console.getTextWidth()).trim(), 
+		console.print(WordUtils.wrap("Saving precomputed data set to file: " + outputSection.modelFile + ProgressInfoTexts.SPACE_ELLIPSES, console.getTextWidth()).trim(), 
 				PrintMode.NORMAL);
 
 		// Write precomputed data to file

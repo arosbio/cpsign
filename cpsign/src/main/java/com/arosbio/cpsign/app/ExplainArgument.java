@@ -409,10 +409,10 @@ public class ExplainArgument implements Named {
 					.append("To reduce the number of parameters-flags in CPSign and to create a more natural grouping of ")
 					.append("arguments, CPSign supports ':-syntax' for many of its arguments. What this means is that ")
 					.append("sub-parameters are specified together with the parameter itself by separating the arguments ") 
-					.append("and subsequent sub-arguments with a ':' character. E.g. when specifying the scorer-model and ")
+					.append("and subsequent sub-arguments with a ':' character. E.g. when specifying the scorer-implementation and ")
 					.append("its unique arguments such as kernel-type, kernel-parameters, cost, epsilon, etc. The available ")
 					.append("sub-arguments are specific for each scorer-implementations and can be retrieved from the ") 
-					.append("corresponding help-menue (explain").append(NON_BREAKING_SPACE).append("scorer).");
+					.append("corresponding help-menu (explain").append(NON_BREAKING_SPACE).append("scorer).");
 			sb.append(com.arosbio.commons.StringUtils.wrap(toWrap.toString(), CONSOLE_WIDTH));
 			sb.append("%n");
 			addSubHeading(sb, "Syntax");
@@ -423,11 +423,11 @@ public class ExplainArgument implements Named {
 					.append("<param-flag> <main-argument>:<sub-param-1-name>=<sub-param-1-value>:<sub-param-2-name>=<sub-param-2-value>%n%n")
 					.append("or, if the order of the sub-parameters is known:%n%n")
 					.append("<param-flag> <main-argument>:<sub-param-1-value>:<sub-param-2-value>%n%n")
-					.append("In the first case, the order of the parameters is not important, wheareas in the second, ")
+					.append("In the first case, the order of the parameters is not important, whereas in the second, ")
 					.append("short hand syntax, the order is critical. Mixing of explicit and short hand arguments is ")
 					.append("allowed as long as the short hand parameters all come before any argument in explicit ")
 					.append("form (otherwise the order is ambiguous). Note that the order of sub-parameters may change " )
-					.append("between versions of CPSign so the explicit version should be prefered for setting up ")
+					.append("between versions of CPSign so the explicit version should be preferred for setting up ")
 					.append("scripts that can be used over a longer time.");
 			sb.append(com.arosbio.commons.StringUtils.wrap(toWrap.toString(), CONSOLE_WIDTH));
 			sb.append("%n");
@@ -518,7 +518,7 @@ public class ExplainArgument implements Named {
 
 		private static enum Arg implements Named, Aliased {
 			CP_REGRESSION ("cp-regression","conformal-regression"),
-			CP_CLASSIFICATON ("cp-classification","conformal-classification"),
+			CP_CLASSIFICATION ("cp-classification","conformal-classification"),
 			VENN_ABERS ("venn-abers","cvap"),
 			ALL ("all");
 
@@ -615,7 +615,7 @@ public class ExplainArgument implements Named {
 
 			for (Arg a : list) {
 				switch (a) {
-				case CP_CLASSIFICATON:
+				case CP_CLASSIFICATION:
 					addCPClass(sb);
 					break;
 
@@ -690,7 +690,7 @@ public class ExplainArgument implements Named {
 		}
 
 		private static enum Arg {
-			REGRESSION, CLASSIFICATON, ALL;
+			REGRESSION, CLASSIFICATION, ALL;
 			public String toString() {
 				return name().toLowerCase();
 			}
@@ -775,7 +775,7 @@ public class ExplainArgument implements Named {
 
 			for (Arg a : list) {
 				switch (a) {
-				case CLASSIFICATON:
+				case CLASSIFICATION:
 					doAppend(sb, "Classification NCMs", classificationNCMs);
 					break;
 				case REGRESSION:
@@ -1386,7 +1386,7 @@ public class ExplainArgument implements Named {
 		}
 
 		private void appendInfo(StringBuilder sb) {
-			String before_text = new StringBuilder("There are many transformations and modifications needed prior to modeling to achive good model performance, ")
+			String before_text = new StringBuilder("There are many transformations and modifications needed prior to modeling to achieve good model performance, ")
 					.append("e.g. feature scaling, feature selection and filtration of outliers. Although CPSign is not intended for extensive changes ")
 					.append("to data, some basic transformations are supported and listed below and users can add custom transformers using Java ")
 					.append("if that would be desired. The transformers parameter follows the :-syntax (run explain syntax for more info). E.g.;%n%n")
@@ -1398,7 +1398,6 @@ public class ExplainArgument implements Named {
 					// Multi-transformer example
 					.append(CODE_EXAMPLE_LINE_START).append("--transform ").append(addArgumentStyle("A B")).append("%n")
 					.append(CODE_EXAMPLE_LINE_START).append("--transform ").append(addArgumentStyle("A")).append(' ').append("--transform ").append(addArgumentStyle("B"))
-					//					.append("%n")
 					.toString();
 
 			sb.append(com.arosbio.commons.StringUtils.wrap(before_text, CONSOLE_WIDTH));
@@ -1522,7 +1521,7 @@ public class ExplainArgument implements Named {
 		public static final String SUB_DESCRIPTION = "Available ML algorithms and their parameters";
 
 		private enum ArgType {
-			REGRESSION, CLASSIFICATON, ALL;
+			REGRESSION, CLASSIFICATION, ALL;
 			public String toString() {
 				return name().toLowerCase();
 			}
@@ -1614,7 +1613,7 @@ public class ExplainArgument implements Named {
 
 			for (ArgType a : list) {
 				switch (a) {
-				case CLASSIFICATON:
+				case CLASSIFICATION:
 					appendClassifiers(text, classifiers);
 					break;
 				case REGRESSION:
@@ -1852,7 +1851,7 @@ public class ExplainArgument implements Named {
 		private void appendInfo(StringBuilder sb) {
 			String before_text = 
 					"There are a few available testing strategies in CPSign and they have a few parameters that can be tweaked (e.g. stratification and number of repeats). "+
-							"Choosing the best testing strategy is problem-dependent, e.g., depending on how much data is available, potential imbalancedness etc.";
+							"Choosing the best testing strategy is problem-dependent, e.g., depending on how much data is available, potential class imbalance etc.";
 
 			sb.append(WordUtils.wrap(before_text, CONSOLE_WIDTH));
 			sb.append("%n");

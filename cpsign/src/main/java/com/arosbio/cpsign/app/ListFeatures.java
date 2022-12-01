@@ -201,7 +201,7 @@ public class ListFeatures implements RunnableCmd {
 
 
 			if (overallStatsFile != null) {
-				console.print(WordUtils.wrap("Writing features to file: "+overallStatsFile + ProgressInfoTexts.SPACE_ELIPSES, console.getTextWidth()), 
+				console.print(WordUtils.wrap("Writing features to file: "+overallStatsFile + ProgressInfoTexts.SPACE_ELLIPSES, console.getTextWidth()), 
 						PrintMode.NORMAL);
 				resultsWriter = BufferedFileWriter.getFileWriter(overallStatsFile);
 			} else {

@@ -431,7 +431,7 @@ public class Train implements RunnableCmd, SupportsProgressBar {
 		LOGGER.debug("training tcp class");
 		console.print("Setting up TCP Classification predictor using NCM " + 
 				tcpClass.getNCM().getName() + " with scorer " + 
-				formatAlgInfo(tcpClass.getNCM().getModel()) + ProgressInfoTexts.ELIPSES, PrintMode.VERBOSE_ON_MATCH);
+				formatAlgInfo(tcpClass.getNCM().getModel()) + ProgressInfoTexts.ELLIPSES, PrintMode.VERBOSE_ON_MATCH);
 		console.print("Setting up TCP Classification predictor... ", PrintMode.NORMAL_ON_MATCH);
 		tcpClass.train(problem);
 		console.println(ProgressInfoTexts.DONE_TAG, PrintMode.NORMAL);
@@ -517,7 +517,7 @@ public class Train implements RunnableCmd, SupportsProgressBar {
 
 
 	private void saveModel(ChemPredictor predictor) {
-		console.print(WordUtils.wrap("Saving model to file: " +  outputSection.modelFile + ProgressInfoTexts.SPACE_ELIPSES, console.getTextWidth()).trim(), 
+		console.print(WordUtils.wrap("Saving model to file: " +  outputSection.modelFile + ProgressInfoTexts.SPACE_ELLIPSES, console.getTextWidth()).trim(), 
 				PrintMode.NORMAL);
 
 		predictor.withModelInfo(new ModelInfo( outputSection.modelName, 

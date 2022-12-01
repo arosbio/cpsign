@@ -242,7 +242,6 @@ public class GenerateSignatures implements RunnableCmd {
 							generationDone = true;
 							count++;
 
-							// ! resultsOutputter.isPrintingToSysOut() && TODO
 							if ( count % progressInterval == 0){
 								// Print progress to stdout
 								console.print(" - Generated signatures for %d/%d molecules%n", PrintMode.NORMAL,count,totalNumMolecules);

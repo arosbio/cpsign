@@ -542,7 +542,7 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 				PrintWriter pw = new PrintWriter(fos);
 				){
 
-			console.print(WordUtils.wrap("Writing optimal @parameter file: " + generateAtFile + ProgressInfoTexts.SPACE_ELIPSES, console.getTextWidth()), 
+			console.print(WordUtils.wrap("Writing optimal @parameter file: " + generateAtFile + ProgressInfoTexts.SPACE_ELLIPSES, console.getTextWidth()), 
 					PrintMode.NORMAL);
 
 			// The predictor should have all the optimal parameters set after the GridSearch finalized

@@ -316,7 +316,7 @@ public class TuneUtils {
 					FileWriter fw = new FileWriter(overallStatsFile);
 					PrintWriter printer = new PrintWriter(fw);) {
 				console.print(
-						WordUtils.wrap("Writing results to file: " + overallStatsFile + ProgressInfoTexts.SPACE_ELIPSES,
+						WordUtils.wrap("Writing results to file: " + overallStatsFile + ProgressInfoTexts.SPACE_ELLIPSES,
 								console.getTextWidth()),
 						PrintMode.NORMAL);
 				printer.printf(txt);

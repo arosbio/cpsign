@@ -215,7 +215,7 @@ public class Aggregate implements RunnableCmd, SupportsProgressBar {
 	private void aggregatePrecomputed(ChemDataset baseModel) {
 
 		int modelIndex = modelsSuccessfullyLoaded+modelsFailed;
-		console.println("Aggregating precomputed models...", PrintMode.NORMAL);
+		console.println("Aggregating precomputed data sets...", PrintMode.NORMAL);
 		console.println(" - Loaded model %s/%s", PrintMode.NORMAL,modelIndex , models.getTotalNum());
 		while (models.hasNext()){
 			modelIndex++;
@@ -263,15 +263,15 @@ public class Aggregate implements RunnableCmd, SupportsProgressBar {
 			try {
 				baseModel.joinShallow(model);
 			} catch(IllegalArgumentException e){
-				failModel("Failed aggregating model: " + models.getLastLoadedURI() +", Reason: "+e.getMessage());
+				failModel("Failed aggregating data: " + models.getLastLoadedURI() +", Reason: "+e.getMessage());
 				continue;
 			} catch(Exception e){
-				LOGGER.debug("Encountered Exception trying to join SignaturesProblems",e);
-				failModel("Failed aggregating model: " + models.getLastLoadedURI() +", Reason: "+e.getMessage());
+				LOGGER.debug("Encountered Exception trying to join ChemDataset",e);
+				failModel("Failed aggregating data: " + models.getLastLoadedURI() +", Reason: "+e.getMessage());
 				continue;
 			}
 
-			console.println(" - Aggregated model %s/%s", PrintMode.NORMAL, modelIndex, models.getTotalNum());
+			console.println(" - Aggregated data set %s/%s", PrintMode.NORMAL, modelIndex, models.getTotalNum());
 			modelsSuccessfullyLoaded++;
 			pb.stepProgress();
 		} // End of for-loop over modelsToAggregate
@@ -280,9 +280,9 @@ public class Aggregate implements RunnableCmd, SupportsProgressBar {
 
 		failIfNotEnoughModelsAggregated();
 		if (modelsFailed>0)
-			console.println("Successfully aggregated "+ modelsSuccessfullyLoaded +" precomputed models, failed to load " + modelsFailed +" model"+(modelsFailed>1?"s":""), PrintMode.NORMAL);
+			console.println("Successfully aggregated "+ modelsSuccessfullyLoaded +" precomputed data sets, failed to load " + modelsFailed +" data set"+(modelsFailed>1?"s":""), PrintMode.NORMAL);
 		else
-			console.println("Successfully aggregated "+ modelsSuccessfullyLoaded +" precomputed models", PrintMode.NORMAL);
+			console.println("Successfully aggregated "+ modelsSuccessfullyLoaded +" precomputed data sets", PrintMode.NORMAL);
 
 		timer.endSection();
 		pb.stepProgress();
@@ -295,7 +295,7 @@ public class Aggregate implements RunnableCmd, SupportsProgressBar {
 	
 
 		try {
-			console.print(WordUtils.wrap("Saving aggregated model to file: " + outputSection.modelFile + ProgressInfoTexts.SPACE_ELIPSES, console.getTextWidth()), 
+			console.print(WordUtils.wrap("Saving aggregated data set to file: " + outputSection.modelFile + ProgressInfoTexts.SPACE_ELLIPSES, console.getTextWidth()), 
 					PrintMode.NORMAL);
 			ModelSerializer.saveDataset(baseModel,
 					new ModelInfo(outputSection.modelName, 
@@ -305,7 +305,7 @@ public class Aggregate implements RunnableCmd, SupportsProgressBar {
 					outputSection.dataToMount);
 		} catch (Exception e){
 			LOGGER.debug("Failed creating aggregated model-bundle", e);
-			console.failWithArgError("Failed creating aggregated precomputed dataset, Reason: " + e.getMessage());
+			console.failWithArgError("Failed creating aggregated precomputed data set, Reason: " + e.getMessage());
 		}
 		console.print(ProgressInfoTexts.DONE_TAG, PrintMode.NORMAL);
 		pb.stepProgress();
@@ -567,7 +567,7 @@ public class Aggregate implements RunnableCmd, SupportsProgressBar {
 	}
 
 	private void saveModel(ChemPredictor predictor) {
-		console.print(WordUtils.wrap("Saving aggregated model to file: " + outputSection.modelFile + ProgressInfoTexts.SPACE_ELIPSES, console.getTextWidth()).trim(), 
+		console.print(WordUtils.wrap("Saving aggregated model to file: " + outputSection.modelFile + ProgressInfoTexts.SPACE_ELLIPSES, console.getTextWidth()).trim(), 
 				PrintMode.NORMAL);
 		pb.setCurrentTask(PB.SAVING_JAR_PROGRESS);
 

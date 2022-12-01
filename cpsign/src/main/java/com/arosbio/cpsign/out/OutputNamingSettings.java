@@ -52,8 +52,8 @@ public class OutputNamingSettings {
 		public static final String FAILED_TAG = "[failed]";
 		public static final String SKIPPED_TAG = "[skipped]";
 		public static final String DONE_TAG = "[done]";
-		public static final String ELIPSES = "... ";
-		public static final String SPACE_ELIPSES = "\u00A0... ";
+		public static final String ELLIPSES = "... ";
+		public static final String SPACE_ELLIPSES = "\u00A0... ";
 	}
 
 
