@@ -167,8 +167,6 @@ public class LibLinear {
 		LOGGER.trace("Requiring LibLinear-lock");
 		try {
 			LibLinearSerializer.requireLock();
-			Linear.resetRandom();
-
 			// Do the training!
 			Model model = Linear.train(problem, params);
 			LOGGER.debug("Finished training the linear model");

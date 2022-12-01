@@ -252,7 +252,7 @@ public abstract class LinearModelBasedSelection implements FeatureSelector {
 			v.removeFeatureIndices(toRemove);
 			return v;
 		} catch (IndexOutOfBoundsException e) {
-			LOGGER.debug("Failed removing feature indicies", e);
+			LOGGER.debug("Failed removing feature indices", e);
 			throw new TransformationException("Failed applying transformation: " + getName());
 		}
 	}

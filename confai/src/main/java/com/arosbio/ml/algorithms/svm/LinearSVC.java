@@ -16,7 +16,9 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
+import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.config.EnumConfig;
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.FeatureVector;
@@ -44,6 +46,10 @@ public class LinearSVC implements SVC, MultiLabelClassifier {
 	 */
 	private Parameter parameters = LibLinear.getDefaultParams(DEFAULT_SOLVER);
 	private Model svm;
+
+	public LinearSVC(){
+		this.parameters.setRandom(new Random(GlobalConfig.getInstance().getRNGSeed()));
+	}
 
 	public static EnumSet<SolverType> getAllowedSolvers(){
 		return ALLOWED_SOLVERS;
@@ -107,15 +113,14 @@ public class LinearSVC implements SVC, MultiLabelClassifier {
 			parameters.setMaxIters(maxIterations);
 	}
 	
-	/**
-	 * Liblinear does not have any internal seed, this is ignored
-	 */
 	@Override
 	public void setSeed(long seed) {
+		this.parameters.setRandom(new Random(seed));
 	}
 
 	/**
-	 * No internal seed used, returns {@code null}
+	 * Cannot access the seed from LibLinear, this method returns {@code null}
+	 * @return {@code null}
 	 */
 	@Override
 	public Long getSeed() {

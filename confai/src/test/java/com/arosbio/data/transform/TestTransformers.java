@@ -495,15 +495,12 @@ public class TestTransformers extends TestEnv {
 		}
 
 		@Test
-		public void testFeatureSelecters() throws Exception {
+		public void testFeatureSelectors() throws Exception {
 			Stopwatch sw = new Stopwatch();
 			sw.start();
 
 			// CLASSIFICATION
-			SubSet ds = null;
-			try (InputStream stream = TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS.openStream()) {
-				ds = SubSet.fromLIBSVMFormat(stream);
-			}
+			SubSet ds = TestDataLoader.loadSubset(TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS);
 			sw.stop();
 			// System.out.println("Loaded " + sw + ", ds:size: " + ds.size() + ", " + ds.getNumFeatures());
 
@@ -543,13 +540,13 @@ public class TestTransformers extends TestEnv {
 			selector.fit(d);
 			sw.stop();
 			int toRm = selector.getFeatureIndicesToRemove().size();
-			// System.out.println(selector.getName() + " (fit): " + sw + ", rm: " + toRm);
+			// System.out.println(selector.getName() + " (fit): " + sw + ", rm: " + toRm + " removing indices: " + selector.getFeatureIndicesToRemove());
 
 			sw.start();
 			selector.transform(d);
 			sw.stop();
 			int diff = initSize - (d.getNumFeatures() + toRm);
-			// System.out.println(selector.getName() + " (transform): " + sw + ", diff rm: " + diff);
+			// System.out.println(selector.getName() + " (transform): " + sw + ", diff rm: " + diff + " out number features: " + d.getNumAttributes());
 			Assert.assertEquals(0, diff);
 		}
 

@@ -16,7 +16,9 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
+import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.config.EnumConfig;
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.FeatureVector;
@@ -42,6 +44,10 @@ public class LinearSVR implements SVR {
 	 */
 	private Parameter parameters = LibLinear.getDefaultParams(DEFAULT_SOLVER);
 	private Model svm;
+
+	public LinearSVR(){
+		this.parameters.setRandom(new Random(GlobalConfig.getInstance().getRNGSeed()));
+	}
 
 	public static EnumSet<SolverType> getAllowedSolvers(){
 		return ALLOWED_SOLVERS;
@@ -113,15 +119,14 @@ public class LinearSVR implements SVR {
 			parameters.setMaxIters(maxIterations);
 	}
 	
-	/**
-	 * Liblinear does not have any internal seed, this is ignored
-	 */
 	@Override
 	public void setSeed(long seed) {
+		this.parameters.setRandom(new Random(seed));
 	}
 
 	/**
-	 * No internal seed used, retuns {@code null}
+	 * Cannot access LibLinear internal seed, this method returns {@code null}
+	 * @return {@code null}
 	 */
 	@Override
 	public Long getSeed() {

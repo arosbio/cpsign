@@ -109,7 +109,7 @@
     <kotlin-stdlib.version>1.6.20</kotlin-stdlib.version> <!-- TODO - hopefully can be removed in future -->
     <filters.version>2.0.235-1</filters.version>
     <libsvm.version>3.24</libsvm.version>
-    <liblinear.version>2.30</liblinear.version>
+    <liblinear.version>2.44</liblinear.version>
   </properties>
 
   <repositories>

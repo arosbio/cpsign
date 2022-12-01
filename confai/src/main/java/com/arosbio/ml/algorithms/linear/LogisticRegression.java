@@ -15,7 +15,9 @@ import java.io.OutputStream;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
+import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.config.EnumConfig;
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.FeatureVector;
@@ -44,6 +46,10 @@ public class LogisticRegression implements MultiLabelClassifier, PseudoProbabili
 	 */
 	private Parameter parameters = LibLinear.getDefaultParams(DEFAULT_SOLVER);
 	private Model svm;
+
+	public LogisticRegression(){
+		this.parameters.setRandom(new Random(GlobalConfig.getInstance().getRNGSeed()));
+	}
 
 	public static EnumSet<SolverType> getAllowedSolvers(){
 		return ALLOWED_SOLVERS;
@@ -102,15 +108,13 @@ public class LogisticRegression implements MultiLabelClassifier, PseudoProbabili
 			parameters.setMaxIters(maxIterations);
 	}
 	
-	/**
-	 * Liblinear does not have any internal seed, this is ignored
-	 */
 	@Override
 	public void setSeed(long seed) {
+		this.parameters.setRandom(new Random(seed));
 	}
 
 	/**
-	 * No internal seed used, will always return -1
+	 * LibLinear now uses a seed, but it is not accessible so this method returns {@code null}
 	 */
 	@Override
 	public Long getSeed() {

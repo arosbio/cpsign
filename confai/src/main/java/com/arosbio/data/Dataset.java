@@ -247,10 +247,14 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 					max = Math.max(max, record.getMaxFeatureIndex());
 					min = Math.min(min, record.getMinFeatureIndex());
 				}
-					
+			}
+			if (max >= 0){
+				// Cap the minium index to 0, in case there was empty feature vectors that returned -1 for minFeatureIndex
+				min = Math.max(min,0);
 			}
 			return Math.max(max + 1 - min, 0); // + 1 for using feature index 0 as well! cap at 0 so we cannot have negative number of features
 		}
+		
 		/**
 		 * Alias for {@link #getNumAttributes()}
 		 * @return the number of features or attributes
