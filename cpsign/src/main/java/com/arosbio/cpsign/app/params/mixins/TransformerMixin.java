@@ -34,7 +34,7 @@ import picocli.CommandLine.TypeConversionException;
 public class TransformerMixin {
 
 	@Option(names = {"--transform", "--transformations" }, 
-			description = "Transformations that filter, solves duplicate entries, feature selection and more. Run "+ParameterUtils.RUN_EXPLAIN_ANSI_ON+"explain transform"+ParameterUtils.ANSI_OFF+
+			description = "Transformations that filter, solves duplicate entries, feature selection and more. Run "+ParameterUtils.RUN_EXPLAIN_ANSI_ON+"explain transformations"+ParameterUtils.ANSI_OFF+
 			" to get a list of all available transformations",
 			parameterConsumer = TransformerParamConsumer.class,
 			split = ParameterUtils.SPLIT_WS_REGEXP,

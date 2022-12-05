@@ -1995,8 +1995,8 @@ public class ExplainArgument implements Named {
 
 			// main text
 			StringBuilder toWrap = new StringBuilder()
-					.append("Specifing a list of numbers, e.g. when chosing multiple confidence values or specify which parameters to try out in tuning, can be done in several different ways. ")
-					.append("The first and most straight forward way is to list them explicitly, but this can be tedious if you wish to specifiy several numbers. ")
+					.append("Specifying a list of numbers, e.g. when choosing multiple confidence values or specifying which parameters to try out in tuning, can be done in several different ways. ")
+					.append("The first and most straight forward way is to list them explicitly, but this can be tedious if you wish to specify several numbers. ")
 					.append("An alternative way is to specify them using a syntax of ")
 					.append(addArgumentStyle("<start>:<stop>[:step]")).append(" or ").append(addArgumentStyle("<start>:<stop>[:step][:base]"))
 					.append(" where cpsign will generate a list automatically. Note ")

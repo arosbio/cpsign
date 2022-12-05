@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.csv.CSVFormat;
 import org.junit.Assert;
@@ -69,15 +70,13 @@ public class TestAggregate extends CLIBaseTest{
 
 	private static final String MODEL_FILE_SUFFIX = ".jar";
 
-	static int nrModels=5; 
-	static double calibrationRatio = 0.2;
+	private final static int NUM_MODELS_TOTAL=5; 
+	private final static Set<Integer> SPLITS_FIRST = Set.of(0,1,2);
+	private final static Set<Integer> SPLITS_SECOND = Set.of(3,4);
+	private final static double CALIBRATION_RATIO = 0.25;
 
 	final static boolean DEFAULT_LibLinear = true, FAIL_FAST=false;
 
-	// static String
-	// trainfileClass_diff = "/resources/smiles_files/smiles_classification.smi",
-	// // REGRESSION
-	// trainfileReg2="/resources/solubility_100test.smi";
 	static Map<Integer,String> labelsDiff = new HashMap<>();
 	static {
 		labelsDiff.put(0,"NEG");
@@ -133,8 +132,6 @@ public class TestAggregate extends CLIBaseTest{
 			fosFaulty.write(key2);
 		}
 		
-		// new GzipEncryption("This is the first key");
-		// faultySpec = new GzipEncryption("some completely different key");
 
 		// init all files
 		setupFiles();
@@ -146,7 +143,7 @@ public class TestAggregate extends CLIBaseTest{
 		//1
 		ChemCPClassifier sigacp = new ChemCPClassifier(new ACPClassifier(
 				new ICPClassifier(new NegativeDistanceToHyperplaneNCM(DEFAULT_LibLinear? new LinearSVC() : new C_SVC())),
-				new RandomSampling(nrModels, calibrationRatio))); 
+				new RandomSampling(NUM_MODELS_TOTAL, CALIBRATION_RATIO))); 
 		sigacp.addRecords(new IteratingSDFReader(classData_1.url().openStream(),SilentChemObjectBuilder.getInstance()), classData_1.property(), new NamedLabels(classData_1.labelsStr()));
 		Map<Integer, String> correctMapping = sigacp.getLabels();
 		ModelSerializer.saveDataset(sigacp, precompClass1, null);
@@ -155,7 +152,13 @@ public class TestAggregate extends CLIBaseTest{
 		ModelSerializer.saveDataset(sigacp, precompClass_diff_labels, spec); 
 
 		sigacp.setLabels(correctMapping);
-		sigacp.train();
+		for (int split : SPLITS_FIRST){
+			((ACPClassifier)sigacp.getPredictor()).train(sigacp.getDataset(), split);
+		}
+		Assert.assertEquals("Only trained partially",SPLITS_FIRST, ((ACPClassifier)sigacp.getPredictor()).getPredictors().keySet());
+		Assert.assertFalse(sigacp.getPredictor().isTrained());
+		Assert.assertTrue(((ACPClassifier) sigacp.getPredictor()).isPartiallyTrained());
+
 		ModelSerializer.saveModel(sigacp, trainedClass1, null);
 		ModelSerializer.saveModel(sigacp, trainedClass_diff_encr, faultySpec);
 
@@ -165,20 +168,25 @@ public class TestAggregate extends CLIBaseTest{
 		ChemDataset sp = sigacp.getDataset();
 		sigacp = new ChemCPClassifier(new ACPClassifier(
 				new ICPClassifier(new NegativeDistanceToHyperplaneNCM(DEFAULT_LibLinear? new LinearSVC() : new C_SVC())), 
-				new RandomSampling(nrModels, calibrationRatio))); 
+				new RandomSampling(NUM_MODELS_TOTAL, CALIBRATION_RATIO))); 
 		sp.getDataset().setRecords(new ArrayList<DataRecord>());
 		sigacp.addRecords(new IteratingSDFReader(classData_1.url().openStream(),SilentChemObjectBuilder.getInstance()),classData_1.property(), new NamedLabels(classData_1.labelsStr()));
 		ModelSerializer.saveDataset(sigacp, precompClass2, spec); 
 
 		sigacp.getDataset().setDescriptors(sp.getDescriptors().get(0).clone()); 
-		sigacp.train(); 
+		for (int split : SPLITS_SECOND){
+			((ACPClassifier)sigacp.getPredictor()).train(sigacp.getDataset(), split);
+		}
+		Assert.assertEquals("Only trained partially",SPLITS_SECOND, ((ACPClassifier)sigacp.getPredictor()).getPredictors().keySet());
+		Assert.assertFalse(sigacp.getPredictor().isTrained());
+		Assert.assertTrue(((ACPClassifier) sigacp.getPredictor()).isPartiallyTrained());
 		ModelSerializer.saveModel(sigacp, trainedClass2, spec);
 		
 
 		// diff impl
 		sigacp = new ChemCPClassifier(new ACPClassifier(
 				new ICPClassifier(new NegativeDistanceToHyperplaneNCM(!DEFAULT_LibLinear ? new LinearSVC() : new C_SVC())), 
-				new RandomSampling(nrModels, calibrationRatio)));
+				new RandomSampling(NUM_MODELS_TOTAL, CALIBRATION_RATIO)));
 		sigacp.addRecords(new IteratingSDFReader(classData_1.url().openStream(),SilentChemObjectBuilder.getInstance()), classData_1.property(), new NamedLabels(classData_1.labelsStr()));
 		sigacp.train(); 
 		ModelSerializer.saveModel(sigacp, trainedClass_diff_impl,null);
@@ -186,13 +194,12 @@ public class TestAggregate extends CLIBaseTest{
 		// diff sigs
 		sigacp = new ChemCPClassifier(new ACPClassifier(
 				new ICPClassifier(new NegativeDistanceToHyperplaneNCM(DEFAULT_LibLinear? new LinearSVC() : new C_SVC())), 
-				new RandomSampling(nrModels, calibrationRatio)));
+				new RandomSampling(NUM_MODELS_TOTAL, CALIBRATION_RATIO)));
 		sigacp.addRecords(new CSVChemFileReader(CSVFormat.TDF.withHeader(), new InputStreamReader(classData_2.url().openStream())), classData_2.property(), new NamedLabels(new ArrayList<>(labelsDiff.values())));
 		sigacp.setLabels(correctMapping); // set "correct labels"
 		ModelSerializer.saveDataset(sigacp, precompClass_diff_sigs, null);
-		sigacp.train(); //ACP(calibrationRatio, nrModels);
+		sigacp.train(); 
 		ModelSerializer.saveModel(sigacp, trainedClass_diff_sigs, spec);
-		// sigacp.saveEncrypted(trainedClass_diff_sigs, spec);
 
 		// ===========================
 		// REGRESSION
@@ -203,11 +210,17 @@ public class TestAggregate extends CLIBaseTest{
 		ChemCPRegressor acpreg = new ChemCPRegressor(new ACPRegressor(
 				new ICPRegressor(new NormalizedNCM((DEFAULT_LibLinear? 
 				new LinearSVR(): new EpsilonSVR()))), 
-				new RandomSampling(nrModels, calibrationRatio)));
+				new RandomSampling(NUM_MODELS_TOTAL, CALIBRATION_RATIO)));
 		acpreg.addRecords(new CSVChemFileReader(CSVFormat.TDF.withHeader(), new InputStreamReader(regData_1.url().openStream())), regData_1.property());
 		ModelSerializer.saveDataset(acpreg, precompReg1, null); 
 		ModelSerializer.saveDataset(acpreg, precompReg_diff_encr, faultySpec); 
-		acpreg.train();
+	
+		for (int split : SPLITS_FIRST){
+			((ACPRegressor)acpreg.getPredictor()).train(acpreg.getDataset(), split);
+		}
+		Assert.assertEquals("Only trained partially",SPLITS_FIRST, ((ACPRegressor)acpreg.getPredictor()).getPredictors().keySet());
+		Assert.assertFalse(acpreg.getPredictor().isTrained());
+		Assert.assertTrue(((ACPRegressor) acpreg.getPredictor()).isPartiallyTrained());
 		ModelSerializer.saveModel(acpreg, trainedReg1, null);
 		ModelSerializer.saveModel(acpreg, trainedReg_diff_encr, faultySpec);
 		allSigs = Lists.newArrayList(((SignaturesDescriptor)acpreg.getDataset().getDescriptors().get(0)).getSignatures()); 
@@ -218,21 +231,27 @@ public class TestAggregate extends CLIBaseTest{
 		ChemCPRegressor acpreg2 = new ChemCPRegressor(new ACPRegressor(
 				new ICPRegressor(new NormalizedNCM((DEFAULT_LibLinear? 
 						new LinearSVR(): new EpsilonSVR()))), 
-				new RandomSampling(nrModels, calibrationRatio)));
+				new RandomSampling(NUM_MODELS_TOTAL, CALIBRATION_RATIO)));
 		acpreg2.setDataset(spReg);
 		acpreg2.addRecords(new CSVChemFileReader(CSVFormat.TDF.withHeader(), new InputStreamReader(regData_1.url().openStream())), regData_1.property());
 		ModelSerializer.saveDataset(acpreg2, precompReg2, null); 
 		
 		acpreg2.getDataset().setDescriptors(new SignaturesDescriptor()); 
 		((SignaturesDescriptor) acpreg2.getDataset().getDescriptors().get(0)).setSignatures(allSigs);
-		acpreg2.train(); 
+
+		for (int split : SPLITS_SECOND){
+			((ACPRegressor)acpreg2.getPredictor()).train(acpreg2.getDataset(), split);
+		}
+		Assert.assertEquals("Only trained partially",SPLITS_SECOND, ((ACPRegressor)acpreg2.getPredictor()).getPredictors().keySet());
+		Assert.assertFalse(acpreg2.getPredictor().isTrained());
+		Assert.assertTrue(((ACPRegressor) acpreg2.getPredictor()).isPartiallyTrained());
 		ModelSerializer.saveModel(acpreg2, trainedReg2, spec);
 
 		// different implementation
 		acpreg2.setPredictor(new ACPRegressor(
 				new ICPRegressor(new NormalizedNCM((!DEFAULT_LibLinear? 
 						new LinearSVR(): new EpsilonSVR()))),
-				new RandomSampling(nrModels, calibrationRatio)));
+				new RandomSampling(NUM_MODELS_TOTAL, CALIBRATION_RATIO)));
 		acpreg2.train();
 		ModelSerializer.saveModel(acpreg2, trainedReg_diff_impl, null);
 		// different signatures
@@ -337,7 +356,6 @@ public class TestAggregate extends CLIBaseTest{
 			if(FAIL_FAST)
 				Assert.fail();
 		} catch(Exception e){
-			//e.printStackTrace(original_err);
 			if(!FAIL_FAST)
 				Assert.fail();
 		}
@@ -525,8 +543,7 @@ public class TestAggregate extends CLIBaseTest{
 
 	@Test
 	public void trainedReg_SUCCESS()throws Exception{
-		File modelOut = TestUtils.createTempFile("out", MODEL_FILE_SUFFIX); //new File("/Users/staffan/Desktop/aggregated.osgi"); //
-
+		File modelOut = TestUtils.createTempFile("out", MODEL_FILE_SUFFIX);
 
 		mockMain(new String[]{
 				"aggregate",
@@ -538,7 +555,7 @@ public class TestAggregate extends CLIBaseTest{
 				"--progress-bar",
 		});
 
-		//		printLogs();
+				// printLogs();
 	}
 
 	@Test

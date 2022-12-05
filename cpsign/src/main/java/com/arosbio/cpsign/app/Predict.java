@@ -177,7 +177,6 @@ public class Predict implements RunnableCmd, SupportsProgressBar{
 	 *****************************************/
 
 	// State of the current execution
-	// private PredictionResultsWriter resultsOutputter;
 	private int molIterationCounter = 0; // for images/output text
 	private int numSuccessfulPreds = 0;
 	private int numMissingDataFails = 0;
