@@ -69,7 +69,7 @@ public class PredictionImageHandler {
 				ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(3) red:blue:red%n"+
 				ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(4) cyan:magenta%n"+
 				ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(5) rainbow%n"+
-				"Appart from these pred-defined options you can specify either 2 or 3 colors, separated by a \":\" for a custom "+
+				"Apart from these pred-defined options you can specify either 2 or 3 colors, separated by a \":\" for a custom "+
 				"gradient, e.g. forestgreen:rgb(15,16,100):#730707. The colors can be a mix of common color-names, RGB-values and hex-codes. "+
 				"You may have to include quotation marks around this when using the # character for hex-codes.\n" +
 				"For further customizations - contact Aros Bio%n"+
@@ -119,9 +119,9 @@ public class PredictionImageHandler {
 				" (e.g. '.' - current folder using default file name, '/tmp/imgs/DefaultImageName.png' "+
 				"- use '/tmp/imgs/' as directory and use 'DefaultImageName' as file name)%n"+
 				ParameterUtils.DEFAULT_VALUE_LINE,
-				defaultValue="images/SigificantSignatureDepiction.png",
+				defaultValue="images/SignificantSignatureDepiction.png",
 				paramLabel = ArgumentType.FILE_PATH)
-		public File imageFile = new File("images/SigificantSignatureDepiction.png");
+		public File imageFile = new File("images/SignificantSignatureDepiction.png");
 		
 		@Option(names = {"-si:c", "--si:color"}, 
 				description = "The color that should be used for the highlighting of the significant signature%n"+

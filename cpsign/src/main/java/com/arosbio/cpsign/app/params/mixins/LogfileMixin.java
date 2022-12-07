@@ -11,6 +11,7 @@ package com.arosbio.cpsign.app.params.mixins;
 
 import com.arosbio.cpsign.app.utils.ParameterUtils.ArgumentType;
 
+import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Option;
 
 /**
@@ -19,21 +20,7 @@ import picocli.CommandLine.Option;
  * and pre-validated before executing the command and validating remaining arguments
  */
 public class LogfileMixin {
-
-	@Option(names = "--logfile", 
-			description = "Path to a user-set logfile, specific for each run",
-			paramLabel = ArgumentType.FILE_PATH,
-			negatable = false)
-	public String logfile;
-
-	@Option(names= "--no-logfile",
-			description = "Write no logfile",
-			negatable = false)
-	public boolean turnOfLogging = false;
 	
-	/*
-	This was the original code, but it started failing when introducing the pre-validation/setup 
-	in CPSignApp which sets up the logfile and rng-seed before the actual sub-commands are parsed and executed
 
 	@ArgGroup(exclusive = true, multiplicity = "0..1")
 	public ExclusiveOptions exclusive = new ExclusiveOptions();
@@ -50,6 +37,5 @@ public class LogfileMixin {
 				negatable = false)
 		public boolean turnOfLogging = false;
 	}
-	*/
 
 }
