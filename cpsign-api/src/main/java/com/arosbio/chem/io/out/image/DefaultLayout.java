@@ -25,9 +25,9 @@ import com.arosbio.chem.io.out.MoleculeFigureBuilder;
  */
 public class DefaultLayout implements Layout {
 	 
-	private MoleculeFigureBuilder builder;
+	private MoleculeFigureBuilder<?> builder;
 
-	public DefaultLayout(MoleculeFigureBuilder builder) {
+	public DefaultLayout(MoleculeFigureBuilder<?> builder) {
 		this.builder = builder;
 	}
 	

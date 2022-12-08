@@ -22,7 +22,7 @@ import com.arosbio.chem.io.out.depictors.MoleculeSignificantSignatureDepictor;
 import com.arosbio.chem.io.out.image.Layout;
 
 
-public class SignificantSignatureFigureBuilder extends MoleculeFigureBuilder {
+public class SignificantSignatureFigureBuilder extends MoleculeFigureBuilder<SignificantSignatureFigureBuilder> {
 
 	private MoleculeSignificantSignatureDepictor depictor;
 
@@ -32,6 +32,10 @@ public class SignificantSignatureFigureBuilder extends MoleculeFigureBuilder {
 
 	public MoleculeSignificantSignatureDepictor getDepictor(){
 		return depictor;
+	}
+
+	protected SignificantSignatureFigureBuilder getThis(){
+		return this;
 	}
 
 	public MoleculeFigure build(IAtomContainer mol, Set<?> atoms){

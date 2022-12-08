@@ -21,12 +21,16 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import com.arosbio.chem.io.out.depictors.MoleculeGradientDepictor;
 import com.arosbio.chem.io.out.image.Layout;
 
-public class GradientFigureBuilder extends MoleculeFigureBuilder {
+public class GradientFigureBuilder extends MoleculeFigureBuilder<GradientFigureBuilder> {
 
 	private MoleculeGradientDepictor depictor;
 
 	public GradientFigureBuilder(MoleculeGradientDepictor depictor) {
 		this.depictor = depictor;
+	}
+
+	protected GradientFigureBuilder getThis(){
+		return this;
 	}
 
 	public MoleculeGradientDepictor getDepictor(){

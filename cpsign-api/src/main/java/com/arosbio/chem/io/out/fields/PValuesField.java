@@ -10,12 +10,12 @@
 package com.arosbio.chem.io.out.fields;
 
 import java.text.AttributedString;
+import java.awt.font.TextAttribute;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import com.arosbio.commons.MathUtils;
-import com.arosbio.commons.SimpleHTMLTagTokenizer;
 
 public class PValuesField extends TextField {
 	
@@ -25,8 +25,11 @@ public class PValuesField extends TextField {
 	
 	private static List<AttributedString> getStrings(Map<String, Double> pVals){
 		List<AttributedString> lines = new ArrayList<>();
-		for(Map.Entry<String, Double> pval: pVals.entrySet())
-			lines.add(new SimpleHTMLTagTokenizer("<i>p</i>["+pval.getKey()+"]="+MathUtils.roundTo3significantFigures(pval.getValue())).toAttributedString());
+		for(Map.Entry<String, Double> pval : pVals.entrySet()){
+			AttributedString line = new AttributedString("p["+pval.getKey()+"]="+MathUtils.roundTo3significantFigures(pval.getValue()));
+			line.addAttribute(TextAttribute.POSTURE, TextAttribute.POSTURE_OBLIQUE,0,1);
+			lines.add(line);
+		}
 		return lines;
 	}
 

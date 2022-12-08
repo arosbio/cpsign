@@ -28,7 +28,6 @@ public class HighlightExplanationField extends ColoredBoxField {
 	private static AttributedString getString(String label){
 		AttributedString str = new AttributedString("Largest impact on p["+label+"]");
 		str.addAttribute(TextAttribute.POSTURE, TextAttribute.POSTURE_OBLIQUE,18,19);
-		str.addAttribute(TextAttribute.TRACKING, TextAttribute.TRACKING_TIGHT,17,19);
 		return str;
 	}
 

@@ -65,15 +65,11 @@ public class FontFactory {
 		return boldItalic;
 	}
 	
-//	private static Font tryLoadFont(String otf){
-//		return tryLoadFont(otf, DEFAULT_FONT_SIZE);
-//	}
-	
 	private static Font tryLoadFont(String otf, int size){
 		try(InputStream fontStream = FontFactory.class.getClassLoader().getResourceAsStream(otf)){
 			return Font.createFont(Font.TRUETYPE_FONT, fontStream).deriveFont((float)size);
 		} catch (IOException | FontFormatException e) {
-			LOGGER.debug("could not load font from "+otf,e);
+			LOGGER.debug("could not load font from : "+otf,e);
 		}
 		return null;
 	}

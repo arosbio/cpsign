@@ -69,7 +69,7 @@ import org.slf4j.LoggerFactory;
  * }</pre>
  * 
  * @author Aros Bio AB
- * @author Staffan Arvidsson
+ * @author Staffan Arvidsson McShane
  */
 public class MoleculeDepictor {
 	

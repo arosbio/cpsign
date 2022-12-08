@@ -15,82 +15,80 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
-public class CustomLayout implements Layout{
+public class CustomLayout implements Layout {
 	
-	private Boarder boarder;
-	private Padding padding;
-	private Margin margin;
+	private final Boarder boarder;
+	private final Padding padding;
+	private final Margin margin;
+	private final int addedW, addedH;
+
+	public static class Builder {
+		private Boarder b;
+		private Padding p;
+		private Margin m;
+
+		public Builder boarder(Boarder b){
+			this.b = b;
+			return this;
+		}
+
+		public Builder padding(Padding p){
+			this.p = p;
+			return this;
+		}
+		public Builder margin(Margin m){
+			this.m = m;
+			return this;
+		}
+
+		public CustomLayout build(){
+			return new CustomLayout(this);
+		}
+	}
 	
-	public CustomLayout(Padding padding, Boarder boarder, Margin margin){
-		this.padding = padding;
-		this.boarder = boarder;
-		this.margin = margin;
-		if (padding == null)
-			this.padding = new Padding(0);
-		if (margin==null)
-			this.margin = new Margin(0);
+	public CustomLayout(Builder b){
+		if (b.p == null && b.m == null && b.b == null)
+			throw new IllegalArgumentException("Custom layout cannot be empty");
+
+		this.padding = b.p != null? b.p : new Padding(0);
+		this.boarder = b.b; // note - this may be null!
+		this.margin = b.m != null? b.m : new Margin(0);
+		int tmpW = padding.getW() + margin.getW();
+		int tmpH = padding.getH() + margin.getH();
+		if (this.boarder != null){
+			tmpW += this.boarder.getWidth()*2;
+			tmpH += this.boarder.getWidth()*2;
+		}
+		this.addedH = tmpH;
+		this.addedW = tmpW;
+
+		if (addedH == 0 && addedW == 0)
+			throw new IllegalArgumentException("Custom layout cannot be empty");
 	}
 	
 	public int getAdditionalWidth(){
-		return padding.left+padding.right + margin.left+margin.right+(boarder!=null? boarder.getWidth()*2:0);
+		return addedW;
 	}
 	
 	public int getAdditionalHeight(){
-		return padding.top+padding.bottom + margin.top+margin.bottom+(boarder!=null? boarder.getWidth()*2:0);
+		return addedH;
 	}
 
-	public Boarder getBoarder(){
-		return boarder;
-	}
-	public void setBoarder(Boarder boarder){
-		this.boarder = boarder;
-	}
-	
-	public Padding getPadding(){
-		return padding;
-	}
-	
-	public void setPadding(Padding padding){
-		if (padding==null)
-			this.padding = new Padding(0);
-		else
-			this.padding = padding;
-	}
-	
-	public Margin getMargin(){
-		return margin;
-	}
-	
-	public void setMargin(Margin margin){
-		if(margin==null)
-			this.margin = new Margin(0);
-		else
-			this.margin = margin;
-	}
 	
 	public BufferedImage addLayout(BufferedImage img){
 		
-		int addedWidth = padding.left+padding.right+
-				(boarder!=null?boarder.getWidth()*2:0)+
-				 margin.left+margin.right;
-		int addedHeight = padding.top+padding.bottom+
-				(boarder!=null?boarder.getWidth()*2:0)+
-				margin.top+margin.bottom;
-		if (addedHeight==0 && addedWidth==0)
-			return img;
-		
-		BufferedImage withOrnament = new BufferedImage(img.getWidth()+addedWidth, img.getHeight()+addedHeight, img.getType());
-		Graphics2D g = withOrnament.createGraphics();
+		BufferedImage withLayout = new BufferedImage(img.getWidth()+addedW, img.getHeight()+addedH, img.getType());
+		Graphics2D g = withLayout.createGraphics();
 		
 		if (boarder!=null){
-			boarder.paint(g, margin.left, margin.top, withOrnament.getWidth()-margin.right-1, withOrnament.getHeight()-margin.bottom-1);
+			boarder.paint(g, margin.left, margin.top, withLayout.getWidth()-margin.right-1, withLayout.getHeight()-margin.bottom-1);
 		}
 		
 		int imgStartX = padding.left + (boarder!=null?boarder.getWidth():0)+margin.left;
 		int imgStartY = padding.top + (boarder!=null?boarder.getWidth():0)+margin.top;
 		g.drawImage(img, imgStartX, imgStartY, img.getWidth(), img.getHeight(), null);
 		g.dispose();
-		return withOrnament;
+		return withLayout;
 	}
 	
 	private static class BoxSpace {
@@ -118,6 +116,13 @@ public class CustomLayout implements Layout{
 		
 		public int getBottom(){
 			return bottom;
+		}
+
+		public int getW(){
+			return left+right;
+		}
+		public int getH(){
+			return bottom+top;
 		}
 		
 		public boolean isEmpty(){
@@ -155,53 +160,49 @@ public class CustomLayout implements Layout{
 	
 	public static class Boarder {
 		
-		private double roundingFactor = 0.05;
-		private Color boarderColor = Color.BLACK; 
-		private BasicStroke stroke = new BasicStroke();
-		private BoarderShape shape = BoarderShape.RECTANGLE;
+		private static final double ROUNDING_FACTOR = 0.05;
 		
+		private final Color boarderColor;
+		private final BasicStroke stroke;
+		private final BoarderShape shape;
 		
+		public static class Builder {
+			private BoarderShape shape = BoarderShape.RECTANGLE;
+			private BasicStroke stroke = new BasicStroke();
+			private Color color = Color.BLACK;
+
+			public Builder shape(BoarderShape shape){
+				this.shape = shape;
+				return this;
+			}
+			public Builder stroke(BasicStroke stroke){
+				if (stroke == null)
+					throw new NullPointerException("Stroke cannot be null");
+				this.stroke = stroke;
+				return this;
+			}
+			public Builder color(Color color){
+				this.color = color;
+				return this;
+			}
+			public Boarder build(){
+				return new Boarder(this);
+			}
+
+		}
+
 		public enum BoarderShape {
 			RECTANGLE, ROUNDED_RECTANGLE
 		}
 		
-		public Boarder() {
-			// defaults
+		private Boarder(Builder b) {
+			this.stroke = b.stroke;
+			this.boarderColor = b.color;
+			this.shape = b.shape;
 		}
-		
-		public Boarder(BasicStroke stroke){
-			this.stroke = stroke;
-		}
-		
-		public Boarder(BoarderShape shape){
-			this.shape = shape;
-		}
-		
-		public Boarder(BoarderShape shape, BasicStroke stroke){
-			this.stroke = stroke;
-			this.shape = shape;
-		}
-		
-		public Boarder(BoarderShape shape, BasicStroke stroke, Color color){
-			this.stroke = stroke;
-			this.shape = shape;
-			this.boarderColor = color;
-		}
-			
-		public void setStroke(BasicStroke stroke){
-			this.stroke = stroke;
-		}
-		
-		public void setShape(BoarderShape shape){
-			this.shape = shape;
-		}
-		
-		public void setColor(Color color){
-			this.boarderColor = color;
-		}
-		
+
 		/**
-		 * Returns the boarder width used (which will be the Math.round value of whatever was set in the {@link BasicStroke})
+		 * Returns the boarder width used (which will be the Math.ceil value of whatever was set in the {@link BasicStroke})
 		 * @return the width
 		 */
 		public int getWidth(){
@@ -219,7 +220,7 @@ public class CustomLayout implements Layout{
 			int height =  (y1-startY)-(int)(stroke.getLineWidth()/2.001); // - (int)stroke.getLineWidth();//Math.ceil(
 			
 			if(shape == BoarderShape.ROUNDED_RECTANGLE){
-				int archWidth = (int) Math.round((x1-x0)*roundingFactor);
+				int archWidth = (int) Math.round((x1-x0)*ROUNDING_FACTOR);
 				g2d.drawRoundRect(startX, startY,
 						width, 
 						height, 

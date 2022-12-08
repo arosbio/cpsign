@@ -117,10 +117,10 @@ public class ImageUtils {
 			Font font,
 			Color textColor){
 
-		LOGGER.debug("maxWidth in drawString=" + maxWidth + ", using font="+font);
+		LOGGER.debug("maxWidth in drawString={}, using font={}", maxWidth, font);
 
 		BufferedImage imgTmp_ = new BufferedImage(maxWidth,Math.min(maxWidth, 1000), IOSettings.BUFFERED_IMAGE_TYPE);
-		Graphics2D g2d = getGraphicsForText(imgTmp_); //imgTmp_.createGraphics();
+		Graphics2D g2d = getGraphicsForText(imgTmp_);
 		g2d.setColor(textColor);
 		g2d.setFont(font);
 		float y = 0;
@@ -140,14 +140,14 @@ public class ImageUtils {
 				textLayout.draw(g2d, getStartPosition(alignment, maxWidth, textLayout.getAdvance()), y);
 				y += textLayout.getDescent() + textLayout.getLeading();
 				actualMaxWidth = (float) Math.max(actualMaxWidth, textLayout.getAdvance());
-				LOGGER.debug("text-advance="+textLayout.getAdvance());
+				LOGGER.debug("text-advance={}",textLayout.getAdvance());
 			}
 		}
 		g2d.dispose();
 
 		//make box as tight as possible!
 		int finalWidth = Math.round(actualMaxWidth);
-		LOGGER.debug("FinalWidth="+finalWidth);
+		LOGGER.debug("FinalWidth={}",finalWidth);
 		BufferedImage res = new BufferedImage(
 				finalWidth, 
 				(int)Math.ceil(y), IOSettings.BUFFERED_IMAGE_TYPE);
@@ -183,6 +183,7 @@ public class ImageUtils {
 		return x;
 	}
 
+	@SuppressWarnings("null")
 	public static BufferedImage drawStringToBufferedImage(
 			final String formattedText, 
 			final Font font, 
@@ -203,7 +204,7 @@ public class ImageUtils {
 		Graphics2D graphicsTmp_ = tmp_.createGraphics();
 		int width=0, height=0;
 		FontMetrics fm = null;
-		for (TextSection section: sections){
+		for (TextSection section : sections){
 			fm = graphicsTmp_.getFontMetrics(getFont(font, section.getFontTypes()));
 			width+=fm.stringWidth(section.getText());
 			height = Math.max(fm.getHeight(), height);
@@ -259,7 +260,7 @@ public class ImageUtils {
 		if (!setRenderingHints){
 			// else use the default ones
 			if(DEFAULT_RENDERING_HINTS == null || DEFAULT_RENDERING_HINTS.isEmpty())
-				LOGGER.error("Rendering hints was null or empty: " + DEFAULT_RENDERING_HINTS);
+				LOGGER.error("Rendering hints was null or empty: {}", DEFAULT_RENDERING_HINTS);
 			try{
 				graphics.setRenderingHints(DEFAULT_RENDERING_HINTS);
 				setRenderingHints=true;

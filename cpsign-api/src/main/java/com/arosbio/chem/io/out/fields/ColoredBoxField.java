@@ -48,6 +48,8 @@ public class ColoredBoxField extends OrnamentField {
 	}
 
 	public ColoredBoxField(Color boxColor, AttributedString text) {
+		if (text==null)
+			throw new NullPointerException("Cannot create this field without any text");
 		this.boxColor = boxColor;
 		this.text = text;
 	}
@@ -86,10 +88,7 @@ public class ColoredBoxField extends OrnamentField {
 		
 		LOGGER.debug("Place to write text (removed space for box + padding)={}",(maxWidth-padding-size));
 		// The text
-		BufferedImage textImg = null;
-		if (text !=null) {
-			textImg = ImageUtils.drawString(text, maxWidth-padding-size, getFont(), getTextColor());
-		}
+		BufferedImage textImg = ImageUtils.drawString(text, maxWidth-padding-size, getFont(), getTextColor());;
 		LOGGER.debug("Text-img.width={}", textImg.getWidth());
 
 		// Final img

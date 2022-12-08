@@ -18,17 +18,6 @@ import com.arosbio.commons.MathUtils;
 import com.google.common.collect.Range;
 
 public class PredictionIntervalField extends TextField {
-
-//	public PredictionIntervalField( 
-//			Pair<Double,Double> interval, 
-//			double conf, 
-//			String modelVariable ) {
-//		super(getText(Range.closed(interval.getValue0(), interval.getValue1()), conf, modelVariable));
-//	}
-
-//	public PredictionIntervalField(Pair<Double,Double> interval, double conf) {
-//		this(interval,conf, null);
-//	}
 	
 	public PredictionIntervalField( 
 			Range<Double> interval, 

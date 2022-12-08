@@ -34,7 +34,7 @@ import com.arosbio.io.IOSettings;
  * @author staffan
  *
  */
-public abstract class MoleculeFigureBuilder {
+public abstract class MoleculeFigureBuilder<T> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MoleculeFigureBuilder.class);
 
@@ -60,43 +60,63 @@ public abstract class MoleculeFigureBuilder {
 			field.addLayout(new DefaultLayout(this));
 	}
 
+	protected abstract T getThis();
+	protected abstract MoleculeImageDepictor getDepictor();
+
 	// SETTERS / GETTERS
-	public void setFieldsOverImg(List<OrnamentField> fields){
+	/**
+	 * Replaces any existing fields with new ones
+	 * @param fields new fields to use
+	 */
+	public T fieldsOverImg(List<OrnamentField> fields){
 		this.fieldsOverMol = fields;
+		if (this.fieldsOverMol == null)
+			this.fieldsOverMol = new ArrayList<>();
+		return getThis();
 	}
 
 	public List<OrnamentField> getFieldsOverImg(){
 		return fieldsOverMol;
 	}
 
-	public void setFieldsUnderImg(List<OrnamentField> fields){
+	public T fieldsUnderImg(List<OrnamentField> fields){
 		this.fieldsUnderMol = fields;
+		if (this.fieldsUnderMol == null)
+			this.fieldsUnderMol = new ArrayList<>();
+		return getThis();
 	}
 
 	public List<OrnamentField> getFieldsUnderImg(){
 		return fieldsUnderMol;
 	}
 
-	public void addFieldOverImg(OrnamentField field){
+	public T addFieldOverImg(OrnamentField field){
 		this.fieldsOverMol.add(field);
+		return getThis();
 	}
 
-	public void addFieldUnderImg(OrnamentField field){
+	public T addFieldUnderImg(OrnamentField field){
 		this.fieldsUnderMol.add(field);
+		return getThis();
 	}
-
-	public abstract MoleculeImageDepictor getDepictor();
 
 	public Font getFont() {
 		return font;
 	}
 
-	public void setFont(Font font) {
+	public T font(Font font) {
 		this.font = font;
+		return getThis();
+	}
+
+	public T bg(Color background) {
+		this.backgroundColor = background;
+		return getThis();
 	}
 	
-	public void setBackgroundColor(Color background) {
+	public T background(Color background) {
 		this.backgroundColor = background;
+		return getThis();
 	}
 	
 	public Color getBackgroundColor() {
@@ -108,12 +128,14 @@ public abstract class MoleculeFigureBuilder {
 		return defaultPadding;
 	}
 
-	public void setFigureHeight(int height) {
+	public T figureHeight(int height) {
 		explicitFigureHeight = height;
+		return getThis();
 	}
 
-	public void setFigureWidth(int width) {
+	public T figureWidth(int width) {
 		explicitFigureWidth = width;
+		return getThis();
 	}
 
 	public boolean explicitFigureSizeBeenSet() {
@@ -129,7 +151,7 @@ public abstract class MoleculeFigureBuilder {
 			totalWidth = explicitFigureWidth;
 		else {
 			totalWidth = getDepictor().getImageWidth();
-			for (Layout l: getDepictor().getLayouts()) {
+			for (Layout l : getDepictor().getLayouts()) {
 				totalWidth += l.getAdditionalWidth();
 			}
 		}
@@ -211,60 +233,9 @@ public abstract class MoleculeFigureBuilder {
 		FontMetrics fm = g2d.getFontMetrics(font);
 		defaultPadding = (int)(PADDING_SCALE_FACTOR*fm.getHeight());
 		g2d.dispose();
-		LOGGER.debug("computed metrics for MoleculeFigure, using font: " + font + ", defaultPadding="+defaultPadding);
+		LOGGER.debug("computed metrics for MoleculeFigure, using font: {}, defaultPadding={}",
+			font, defaultPadding);
 	}
 
-	// BUILD
-//	private MoleculeFigure build(BufferedImage molImg){
-//		computeMetrics();
-//
-//		int totalHeight = molImg.getHeight();
-//		final int totalWidth = molImg.getWidth();
-//		BufferedImage pointer=null;
-//
-//		// For all fields before the mol-img
-//		List<BufferedImage> before = new ArrayList<>();
-//		for (OrnamentField field: fieldsOverMol) {
-//			pointer = depictField(field, totalWidth);
-//			before.add(pointer);
-//			totalHeight += pointer.getHeight();
-//		}
-//
-//		// For all fields after the mol-img
-//		List<BufferedImage> after = new ArrayList<>();
-//		for(OrnamentField field: fieldsUnderMol) {
-//			pointer = depictField(field, totalWidth);
-//			after.add(pointer);
-//			totalHeight += pointer.getHeight();
-//		}
-//
-//		// create the final img
-//		BufferedImage finalImg = new BufferedImage(totalWidth, totalHeight, molImg.getType());
-//		Graphics2D g2d = finalImg.createGraphics();
-//
-//		if (backgroundColor!=null){
-//			g2d.setColor(backgroundColor);
-//			g2d.fillRect(0, 0, totalWidth, totalHeight);
-//		}
-//
-//		int yCoord = 0;
-//		// fields before
-//		for(BufferedImage img: before){
-//			g2d.drawImage(img, 0, yCoord, null);
-//			yCoord+=img.getHeight();
-//		}
-//		// mol
-//		g2d.drawImage(molImg, 0, yCoord, null);
-//		yCoord+=molImg.getHeight();
-//		// fields after
-//		for(BufferedImage img: after){
-//			g2d.drawImage(img, 0, yCoord, null);
-//			yCoord+=img.getHeight();
-//		}
-//
-//		g2d.dispose();
-//
-//		return new MoleculeFigure(finalImg);
-//	}
 
 }

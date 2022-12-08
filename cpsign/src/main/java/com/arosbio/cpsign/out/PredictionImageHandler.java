@@ -190,13 +190,15 @@ public class PredictionImageHandler {
 			Map<String,Double> pvals,
 			Map<String,Double> probs,
 			String label){
-		// Get the file
+		
 		try{
+			// Get the file
 			File imgFile = signatureFileHandler.getNextImageFile(mol);
 
-			SignificantSignatureFigureBuilder figBuilder = new SignificantSignatureFigureBuilder(signatureDepictor);
-			figBuilder.setFigureHeight(significantSignatureParams.imageHeight);
-			figBuilder.setFigureWidth(significantSignatureParams.imageWidth);
+			SignificantSignatureFigureBuilder figBuilder = new SignificantSignatureFigureBuilder(signatureDepictor)
+				.figureHeight(significantSignatureParams.imageHeight)
+				.figureWidth(significantSignatureParams.imageWidth);
+
 			if (pvals != null) {
 				figBuilder.addFieldUnderImg(new PValuesField(pvals));
 			}
@@ -227,9 +229,10 @@ public class PredictionImageHandler {
 		try{
 			File imgFile = gradientFileHandler.getNextImageFile(mol);
 
-			GradientFigureBuilder figBuilder = new GradientFigureBuilder(gradientDepictor);
-			figBuilder.setFigureHeight(gradientParams.imageHeight);
-			figBuilder.setFigureWidth(gradientParams.imageWidth);
+			GradientFigureBuilder figBuilder = new GradientFigureBuilder(gradientDepictor)
+				.figureHeight(gradientParams.imageHeight)
+				.figureWidth(gradientParams.imageWidth);
+			
 			if (pvals!=null)
 				figBuilder.addFieldUnderImg(new PValuesField(pvals));
 			if (probs != null) 

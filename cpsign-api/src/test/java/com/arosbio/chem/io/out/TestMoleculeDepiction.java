@@ -64,7 +64,7 @@ public class TestMoleculeDepiction extends UnitTestBase{
 	private static Set<Integer> sigSign;
 	private final static int pageSize = 400;
 
-	private static boolean SAVE_IN_TMP_DIR = true;
+	private static boolean SAVE_IN_TMP_DIR = false;
 	static String imageOutputFolder = null;
 
 	@BeforeClass
@@ -99,8 +99,8 @@ public class TestMoleculeDepiction extends UnitTestBase{
 		MoleculeGradientDepictor gradDep = new MoleculeGradientDepictor();
 		GradientFigureBuilder builder = new GradientFigureBuilder(gradDep);
 		// Changed for generating a GitHub repo-image of the preferred size 
-		builder.setFigureHeight(640);
-		builder.setFigureWidth(1500);
+		builder.figureHeight(640);
+		builder.figureWidth(1500);
 		// OrnamentField grad = new ColorGradientField(((MoleculeGradientDepictor)builder.getDepictor()).getColorGradient());
 		// builder.addFieldUnderImg(grad);
 
@@ -121,8 +121,8 @@ public class TestMoleculeDepiction extends UnitTestBase{
 //		builder.addFieldOverImg(new TitleField("Some title.."));
 		builder.addFieldUnderImg(new PValuesField(pvals));
 		builder.addFieldUnderImg(new HighlightExplanationField(Color.BLUE, "this is the label"));
-		builder.setFigureHeight(pageSize);
-		builder.setFigureWidth(pageSize);
+		builder.figureHeight(pageSize);
+		builder.figureWidth(pageSize);
 		builder.build(getTestMol(), sigSign).saveToFile(new File(imageOutputFolder, "signSignCustomWithPvals.png"));
 	}
 	
@@ -132,10 +132,10 @@ public class TestMoleculeDepiction extends UnitTestBase{
 		builder.addFieldOverImg(new TitleField("Some title.."));
 		builder.addFieldUnderImg(new HighlightExplanationField(Color.BLUE, "this is the label"));
 		builder.addFieldUnderImg(new PValuesField(pvals));
-		builder.setFigureHeight(pageSize+100);
-		builder.setFigureWidth(pageSize);
-		Boarder molBoarder = new Boarder(BoarderShape.RECTANGLE, new BasicStroke(3f), Color.BLUE);
-		builder.getDepictor().addLayout(new CustomLayout(new Padding(10), molBoarder, new Margin(0)));
+		builder.figureHeight(pageSize+100);
+		builder.figureWidth(pageSize);
+		Boarder molBoarder = new Boarder.Builder().shape(BoarderShape.RECTANGLE).stroke(new BasicStroke(3f)).color(Color.BLUE).build();
+		builder.getDepictor().addLayout(new CustomLayout.Builder().padding(new Padding(10)).boarder(molBoarder).build());
 		builder.build(getTestMol(), gradient).saveToFile(new File(imageOutputFolder, "molGradCustomWithPvals.png"));
 	}
 	
@@ -144,29 +144,46 @@ public class TestMoleculeDepiction extends UnitTestBase{
 		GradientFigureBuilder builder = new GradientFigureBuilder(new MoleculeGradientDepictor());
 		builder.getDepictor().setImageHeight(100);
 		builder.getDepictor().setImageWidth(1000);
-		Boarder molBoarder = new Boarder(BoarderShape.RECTANGLE, new BasicStroke(3f), Color.BLUE);
-		builder.getDepictor().addLayout(new CustomLayout(new Padding(10), molBoarder, new Margin(0)));
-		Boarder molBoarder2 = new Boarder(BoarderShape.RECTANGLE, new BasicStroke(4f), Color.PINK);
-		builder.getDepictor().addLayout(new CustomLayout(new Padding(0), molBoarder2, new Margin(0)));
-		Boarder molBoarder3 = new Boarder(BoarderShape.RECTANGLE, new BasicStroke(5f), Color.GREEN);
-		builder.getDepictor().addLayout(new CustomLayout(new Padding(0), molBoarder3, new Margin(0)));
+		Boarder molBoarder = new Boarder.Builder()
+			.shape(BoarderShape.RECTANGLE)
+			.stroke(new BasicStroke(3f))
+			.color(Color.BLUE)
+			.build();
+		builder.getDepictor().addLayout(
+			new CustomLayout.Builder()
+				.padding(new Padding(10))
+				.boarder(molBoarder)
+				.margin(new Margin(0)).build());
+		Boarder molBoarder2 = new Boarder.Builder().shape(BoarderShape.RECTANGLE).stroke(new BasicStroke(4f)).color(Color.PINK).build();
+		builder.getDepictor().addLayout(new CustomLayout.Builder().boarder(molBoarder2).build());
+		Boarder molBoarder3 = new Boarder.Builder().shape(BoarderShape.RECTANGLE).stroke(new BasicStroke(5f)).color(Color.GREEN).build();
+		builder.getDepictor().addLayout(new CustomLayout.Builder().boarder(molBoarder3).build());
 		TitleField tit = new TitleField("<b>TITLE</b>");
 		tit.setAlignment(Vertical.LEFT_ADJUSTED);
 		tit.underlineText();
 		builder.addFieldOverImg(tit);
 		OrnamentField pvalsF = new PValuesField(pvals);
-		CustomLayout pvalsFLayout = new CustomLayout(new Padding(10), new Boarder(), new Margin(0));
+		CustomLayout pvalsFLayout = new CustomLayout.Builder()
+			.padding(new Padding(10))
+			.boarder(new Boarder.Builder()
+				.shape(BoarderShape.ROUNDED_RECTANGLE)
+				.color(Color.CYAN)
+				.stroke(new BasicStroke(2f))
+				.build())
+			.build();
 		pvalsF.addLayout(pvalsFLayout);
 		
-		pvalsFLayout.setBoarder(new Boarder(BoarderShape.ROUNDED_RECTANGLE, new BasicStroke(2f)));
-		pvalsFLayout.getBoarder().setColor(Color.CYAN);
+		// pvalsFLayout.setBoarder(new Boarder(BoarderShape.ROUNDED_RECTANGLE, new BasicStroke(2f)));
+		// pvalsFLayout.getBoarder().setColor(Color.CYAN);
 		pvalsF.setAlignment(Vertical.CENTERED);
 		builder.addFieldUnderImg(pvalsF);
 		OrnamentField region = new PredictionIntervalField(Range.closed(-.35, 14.3),0.8,"Activity");
 		region.setAlignment(Vertical.RIGHT_ADJUSTED);
 		builder.addFieldUnderImg(region);
 		OrnamentField region2 = new PredictionIntervalField(Range.closed(-.35, 14.3),0.8);
-		region2.addLayout(new CustomLayout(new Padding(0), new Boarder(new BasicStroke(3.f)), new Margin(0)));
+		region2.addLayout(new CustomLayout.Builder()
+			.boarder(new Boarder.Builder().stroke(new BasicStroke(3.f)).build())
+			.build());
 		
 		builder.addFieldUnderImg(new HighlightExplanationField(Color.BLUE));
 		HighlightExplanationField field = new HighlightExplanationField(Color.CYAN,"mutagen");
@@ -194,11 +211,7 @@ public class TestMoleculeDepiction extends UnitTestBase{
 
 	@Test
 	public void testRoundedBoarder() throws Exception {
-		Boarder boarder = new Boarder();
-		boarder.setColor(Color.RED);
-		boarder.setShape(BoarderShape.ROUNDED_RECTANGLE);
 		
-		CustomLayout orn = new CustomLayout(new Padding(3),boarder, new Margin(1));
 		
 		final float dash1[] = {6.0f, 3.0f, 2.0f, 3.0f}; 
 	    final BasicStroke dashed =
@@ -206,7 +219,16 @@ public class TestMoleculeDepiction extends UnitTestBase{
 	                        BasicStroke.CAP_BUTT,
 	                        BasicStroke.JOIN_MITER,
 	                        10.0f, dash1, 0.0f);
-		boarder.setStroke(dashed);
+		Boarder boarder = new Boarder.Builder()
+			.color(Color.RED)
+			.shape(BoarderShape.ROUNDED_RECTANGLE)
+			.stroke(dashed)
+			.build();
+		
+		CustomLayout orn = new CustomLayout.Builder()
+			.padding(new Padding(3))
+			.boarder(boarder)
+			.margin(new Margin(1)).build();
 		BufferedImage imgToEnclose = new BufferedImage(10, 10, IOSettings.BUFFERED_IMAGE_TYPE);
 		Graphics2D g2d = imgToEnclose.createGraphics();
 		g2d.setColor(Color.GRAY);
@@ -218,7 +240,10 @@ public class TestMoleculeDepiction extends UnitTestBase{
 	
 	@Test
 	public void testRectangleBoarder() throws Exception {
-		CustomLayout orn = new CustomLayout(new Padding(1), new Boarder(), new Margin(1));
+		CustomLayout orn = new CustomLayout.Builder()
+			.padding(new Padding(1))
+			.boarder(new Boarder.Builder().build())
+			.margin(new Margin(1)).build();
 
 		BufferedImage imgToEnclose = new BufferedImage(7, 7, IOSettings.BUFFERED_IMAGE_TYPE);
 		Graphics2D g2d = imgToEnclose.createGraphics();

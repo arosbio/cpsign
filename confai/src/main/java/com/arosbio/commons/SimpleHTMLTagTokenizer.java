@@ -35,7 +35,7 @@ public class SimpleHTMLTagTokenizer {
 	
 	public SimpleHTMLTagTokenizer(String text) throws MalformattedHTMLException{
 		this.text = text;
-		parseText(0, 0, new Stack<FontType>());
+		parseText(0, 0, new Stack<>());
 	}
 	
 	private void parseText(int sectionStartIndex, int currIndex, Stack<FontType> tags) throws MalformattedHTMLException {
@@ -88,7 +88,7 @@ public class SimpleHTMLTagTokenizer {
 			if (text.regionMatches(tagStartIndex, tag.openingTag, 0, tag.openingTag.length())){
 				// Found an opening tag, make sure that it does not exist before in the stack
 				if (tags.search(tag) != -1)
-					throw new MalformattedHTMLException("Illegal nesting of tags found, multiple occurrances of tag: " + tag);
+					throw new MalformattedHTMLException("Illegal nesting of tags found, multiple occurrences of tag: " + tag);
 				// here we should add the new tag - it was valid
 				tags.push(tag);
 				return ImmutableTriple.of(true,tagStartIndex+tag.openingTag.length(), tags);
