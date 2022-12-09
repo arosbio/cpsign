@@ -291,6 +291,8 @@ public class MinMaxScaler extends ColumnTransformer implements FeatureScaler, Al
 		if (scaleFactors == null) {
 			throw new IllegalStateException("Transformer " + this + " not fit yet");
 		}
+		if (data.isEmpty())
+			return inPlace ? data : new SubSet(data.getDataType());
 
 		LOGGER.debug("Applying scaler transformer {}", this);
 		SubSet transformed = data;

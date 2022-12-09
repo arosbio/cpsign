@@ -1097,7 +1097,7 @@ public class CLIProgramUtils {
 		}
 
 		for (Transformer t : transformers) {
-			if (t instanceof ColumnTransformer)
+			if (t instanceof ColumnTransformer && !((ColumnTransformer)t).getColumns().useAll())
 				console.println(" - Applying %s to %s...", PrintMode.NORMAL,
 					t.getName(),((ColumnTransformer) t).getColumns());
 			else

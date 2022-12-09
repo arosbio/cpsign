@@ -81,7 +81,9 @@ public class MissingDataFilter implements Filter {
 
 	@Override
 	public SubSet transform(SubSet data) throws IllegalStateException {
-		LOGGER.debug("Applying Filter transformer " + this);
+		if (data.isEmpty())
+			return inPlace ? data : new SubSet(data.getDataType());
+		LOGGER.debug("Applying Filter transformer {}" + this);
 
 		int initialSize = data.size();
 
@@ -93,7 +95,7 @@ public class MissingDataFilter implements Filter {
 
 			info = new TransformInfo(initialSize-data.size(), 0);
 
-			LOGGER.debug("Finished transformer: " + info);
+			LOGGER.debug("Finished transformer: {}" + info);
 
 			return data;
 		} else {
@@ -104,7 +106,7 @@ public class MissingDataFilter implements Filter {
 			}
 			info = new TransformInfo(initialSize-transformed.size(), 0);
 
-			LOGGER.debug("Finished transformer: " + info);
+			LOGGER.debug("Finished transformer: {}" + info);
 
 			return transformed;
 		}

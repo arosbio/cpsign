@@ -211,6 +211,8 @@ public abstract class LinearModelBasedSelection implements FeatureSelector {
 
 		if (! isFitted())
 			throw new IllegalStateException("Transformer " + getName() + " not fitted yet");
+		if (data.isEmpty())
+			return inPlace ? data : new SubSet(data.getDataType());
 
 		if (toRemove.isEmpty()) {
 			// Nothing should be removed - simply return

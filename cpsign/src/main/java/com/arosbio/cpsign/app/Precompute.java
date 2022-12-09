@@ -107,7 +107,7 @@ public class Precompute implements RunnableCmd, SupportsProgressBar {
 
 	// Data input
 	@Option(names = { "-td", "--train-data" }, 
-			description = "File with molecules in CSV, SDF or JSON format. run @|bold explain chem-formats|@ to get further info.",
+			description = "File with molecules in CSV, SDF or JSON format. run "+ParameterUtils.RUN_EXPLAIN_ANSI_ON+"explain chem-formats|@ to get further info.",
 			paramLabel = ArgumentType.CHEM_FILE_ARGS,
 			parameterConsumer = ChemFileConverter.class)
 	private ChemFile trainFile;

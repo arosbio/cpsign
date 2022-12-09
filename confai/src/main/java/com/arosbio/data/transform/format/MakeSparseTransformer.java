@@ -72,6 +72,8 @@ public class MakeSparseTransformer implements FormatTransformer{
 
 	@Override
 	public SubSet transform(SubSet data) throws IllegalStateException {
+		if (data.isEmpty())
+			return inPlace ? data : new SubSet(data.getDataType());
 
 		if (inPlace) {
 			for (DataRecord r : data) {

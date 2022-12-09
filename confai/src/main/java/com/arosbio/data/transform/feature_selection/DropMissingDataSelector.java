@@ -111,6 +111,8 @@ public class DropMissingDataSelector implements FeatureSelector {
 	public SubSet transform(SubSet data) throws IllegalStateException {
 		if (! isFitted())
 			throw new IllegalStateException("Transformer " + NAME + " not fitted yet");
+		if (data.isEmpty())
+			return inPlace ? data : new SubSet(data.getDataType());
 		LOGGER.debug("Applying transformer {}", this);
 		
 		if (toRemove.isEmpty()) {

@@ -40,7 +40,6 @@ public class InterDatasetDuplicatesResolver {
 		transformer.fitAndTransform(dNew);
 	}
 	
-	@SuppressWarnings("serial")
 	private class CustomSubSet extends SubSet {
 		private List<DataRecord> recs;
 		

@@ -324,9 +324,12 @@ public class SingleFeatureImputer extends ColumnTransformer implements Imputer {
 
 	@Override
 	public SubSet transform(SubSet data) throws IllegalStateException {
-		LOGGER.debug("Applying transformer {}", this);
 		if (substitutions == null)
 			throw new IllegalStateException("Transformer " + NAME + " not fitted yet");
+		if (data.isEmpty())
+			return inPlace ? data : new SubSet(data.getDataType());
+		
+		LOGGER.debug("Applying transformer {}", this);
 		if (substitutions.isEmpty())
 			return inPlace ? data : data.clone();
 

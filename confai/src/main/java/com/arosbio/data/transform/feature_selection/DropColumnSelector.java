@@ -130,6 +130,8 @@ public class DropColumnSelector implements FeatureSelector {
 	public SubSet transform(SubSet data) throws IllegalStateException {
 		if (!isFitted())
 			throw new IllegalStateException("Transformer " + TRANSFORMER_NAME + " not fitted yet");
+		if (data.isEmpty())
+			return inPlace ? data : new SubSet(data.getDataType());
 		LOGGER.debug("Applying transformer {}", this);
 		
 		

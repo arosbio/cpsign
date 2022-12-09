@@ -269,7 +269,9 @@ public class Standardizer extends ColumnTransformer implements FeatureScaler, Al
 		if (scaleFactors == null || scaleFactors.isEmpty()) {
 			throw new IllegalStateException("Transformer " + NAME + " not fit yet");
 		}
-		LOGGER.debug("Applying scaler transformer " + this);
+		if (data.isEmpty())
+			return inPlace ? data : new SubSet(data.getDataType());
+		LOGGER.debug("Applying scaler transformer {}", this);
 		
 		SubSet toReturn = data;
 		if (inPlace) {

@@ -79,6 +79,8 @@ public class UseVoting implements DuplicatesResolverTransformer {
 
 	@Override
 	public SubSet transform(SubSet data) throws IllegalStateException {
+		if (data.isEmpty())
+			return inPlace ? data : new SubSet(data.getDataType());
 		LOGGER.debug("Applying Duplicate-resolving transformer {}", this);
 		
 		SubSet transformed = inPlace ? data : data.clone(); 
@@ -116,7 +118,7 @@ public class UseVoting implements DuplicatesResolverTransformer {
 		
 		info = new TransformInfo(initialSize-transformed.size(), dups.size());
 		
-		LOGGER.debug("Finished transformer: " + info);
+		LOGGER.debug("Finished transformer: {}", info);
 		
 		return transformed;
 	}

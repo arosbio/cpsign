@@ -80,11 +80,13 @@ public class KeepMeanLabel implements DuplicatesResolverTransformer {
 	 */
 	@Override
 	public SubSet transform(SubSet data) throws IllegalStateException {
+		if (data.isEmpty())
+			return inPlace ? data : new SubSet(data.getDataType());
 		LOGGER.debug("Applying Duplicate-resolving transformer {}", this);
 		
 		SubSet transformed = inPlace ? data : data.clone();
 		
-		int initalSize = transformed.size();
+		int initialSize = transformed.size();
 		
 		Set<DuplicateEntry> dups = DuplicateResolvingUtils.findDuplicates(transformed);
 		
@@ -92,9 +94,9 @@ public class KeepMeanLabel implements DuplicatesResolverTransformer {
 			entry.getRemainingRecord().setLabel(MathUtils.mean(entry.getLabels()));
 		}
 		
-		info = new TransformInfo(initalSize-transformed.size(), dups.size());
+		info = new TransformInfo(initialSize-transformed.size(), dups.size());
 		
-		LOGGER.debug("Finished transformer: " + info);
+		LOGGER.debug("Finished transformer: {}", info);
 		
 		return transformed;
 	}

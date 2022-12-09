@@ -38,8 +38,6 @@ import picocli.CommandLine.Option;
 @Category(CLITest.class)
 public class TestTune extends CLIBaseTest {
 
-	//	String smilesClassFile = AmesBinaryClass.TEST_FILE_PATH; //"/resources/datasets/classification/cox2.smi"
-	//	String trainRegFile = getFile("/resources/solubility_100test.smi").getAbsolutePath();
 	String smilesLabels = "-1,1";
 	String smilesProperty = "class";
 	boolean isLibLinear = true;

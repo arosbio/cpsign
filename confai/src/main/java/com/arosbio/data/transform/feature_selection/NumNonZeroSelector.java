@@ -214,6 +214,8 @@ public class NumNonZeroSelector extends ColumnTransformer implements FeatureSele
 		LOGGER.debug("Applying transformer {}", this);
 		if (!isFitted())
 			throw new IllegalStateException("Transformer " + NAME + " not fitted yet");
+		if (data.isEmpty())
+			return inPlace ? data : new SubSet(data.getDataType());
 
 		if (toRemove.isEmpty()) {
 			info = new TransformInfo(0,0);

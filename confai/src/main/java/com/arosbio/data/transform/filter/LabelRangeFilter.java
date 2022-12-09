@@ -118,6 +118,8 @@ public class LabelRangeFilter implements Filter {
 			LOGGER.debug("Failed applying Filter transformer {} no range given",this);
 			throw new IllegalStateException("Transformer not configured properly");
 		}
+		if (data.isEmpty())
+			return inPlace ? data : new SubSet(data.getDataType());
 
 		LOGGER.debug("Applying Filter transformer {} with range: {}",this, range);
 

@@ -324,7 +324,9 @@ public class RobustScaler extends ColumnTransformer implements FeatureScaler, Al
 		if (scaleFactors == null || scaleFactors.isEmpty()) {
 			throw new IllegalStateException("Transformer " + NAME + " not fitted yet");
 		}
-		LOGGER.debug("Applying scaler transformer " + this);
+		if (data.isEmpty())
+			return inPlace ? data : new SubSet(data.getDataType());
+		LOGGER.debug("Applying scaler transformer {}", this);
 		SubSet transformed = data;
 		if (inPlace) {
 			for (DataRecord r : data) {
@@ -339,7 +341,7 @@ public class RobustScaler extends ColumnTransformer implements FeatureScaler, Al
 
 		info = new TransformInfo(0, data.size());
 
-		LOGGER.debug("Finished transformer: " + info);
+		LOGGER.debug("Finished transformer: {}", info);
 
 		return transformed;
 	}

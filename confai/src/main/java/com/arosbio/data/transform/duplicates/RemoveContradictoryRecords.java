@@ -94,11 +94,13 @@ public class RemoveContradictoryRecords implements DuplicatesResolverTransformer
 
 	@Override
 	public SubSet transform(SubSet data) throws IllegalStateException {
+		if (data.isEmpty())
+			return inPlace ? data : new SubSet(data.getDataType());
 		LOGGER.debug("Applying Duplicate-resolving transformer {}", this);
 		
 		SubSet transformed = inPlace ? data : data.clone();
 		
-		int initalSize = transformed.size();
+		int initialSize = transformed.size();
 		int numAltered = 0;
 
 		Set<DuplicateEntry> dups = DuplicateResolvingUtils.findDuplicates(transformed);
@@ -118,7 +120,7 @@ public class RemoveContradictoryRecords implements DuplicatesResolverTransformer
 			}
 		}
 
-		info = new TransformInfo(initalSize-transformed.size(), numAltered);
+		info = new TransformInfo(initialSize-transformed.size(), numAltered);
 		
 		LOGGER.debug("Finished transformer: {}", info);
 

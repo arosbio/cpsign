@@ -23,7 +23,7 @@ public class RNGSeedMixin {
 	@Option(names={"--seed"}, 
 			description = "Set this flag if an explicit RNG seed should be used in tasks that require a RNG "
 			+ "(randomization of training data, splitting in cross-validation, learning algorithms etc).",
-			paramLabel= ArgumentType.NUMBER
+			paramLabel= ArgumentType.INTEGER
 			)
 	public long rngSeed;
 	

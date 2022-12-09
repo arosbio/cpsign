@@ -267,10 +267,11 @@ public class ZeroMaxScaler extends ColumnTransformer implements FeatureScaler, A
 
 	@Override
 	public SubSet transform(SubSet data) throws IllegalStateException {
-		LOGGER.debug("Applying transformer " + this);
 		if (scaleFactors == null || scaleFactors.isEmpty()) {
 			throw new IllegalStateException("Transformer " + NAME + " not fit yet");
 		}
+		if (data.isEmpty())
+			return inPlace ? data : new SubSet(data.getDataType());
 
 		LOGGER.debug("Applying scaler transformer {}", this);
 		SubSet transformed = data; 
