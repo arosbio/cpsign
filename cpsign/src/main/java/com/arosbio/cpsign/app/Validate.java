@@ -156,6 +156,10 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 	private ValidationPointsMixin validationSection = new ValidationPointsMixin();
 
 	// Output
+	@Option(
+			names = {"--print-predictions"}, 
+			description="Print the prediction output in json/csv/sdf format (default is only printing overall statistics). Use together with the --output parameter to print the predictions to a file")
+	private boolean printPredictions = false;
 	@Mixin
 	private OutputChemMixin outputSection = new OutputChemMixin();  
 
@@ -170,10 +174,7 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 			description = "Output the ROC curve (VAP only), the ROC curve has many points and lead to verbose output. Default is to only print the AUC score")
 	private boolean outputROC = false;
 
-	@Option(
-			names = {"--print-predictions"}, 
-			description="Print the prediction output in json/csv/sdf format (default is only printing overall statistics). Use together with the --output parameter to print the predictions to a file")
-	private boolean printPredictions = false;
+	
 
 
 	// Encrypted model

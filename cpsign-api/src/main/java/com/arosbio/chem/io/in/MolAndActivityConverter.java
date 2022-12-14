@@ -297,7 +297,7 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 			if (terminateOnNumFails>= 0 && failedRecords.size() > terminateOnNumFails) {
 				if (numOKmols == 0) {
 					// Here we might have issues with the parameters!
-					throw new IllegalArgumentException(String.format("MolAndActivityConverter was called with class-labels: {} but cannot find a match in labels in first {} records",
+					throw new IllegalArgumentException(String.format("MolAndActivityConverter was called with class-labels: %s but cannot find a match in labels in first %d records",
 							classLabels, terminateOnNumFails));
 				} else {
 					LOGGER.debug("Number of allowed failures passed - will return an exception in case next() has been called or on the next call to that method");  

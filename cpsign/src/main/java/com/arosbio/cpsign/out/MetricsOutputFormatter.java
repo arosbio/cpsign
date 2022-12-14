@@ -37,7 +37,7 @@ public class MetricsOutputFormatter {
 			else if (m instanceof PlotMetric)
 				plotMetrics.add((PlotMetric) m);
 			else
-				throw new RuntimeException("Metric " + m.getClass() + " not recognized - it must implement SimpleMetric or PlotMetric!");
+				throw new RuntimeException("Metric " + m.getClass() + " not recognized - it must implement SingleValuedMetric or PlotMetric!");
 		}
 	}
 

@@ -16,9 +16,12 @@ import java.util.Map;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CSVTable {
 
+	private final static Logger LOGGER = LoggerFactory.getLogger(CSVTable.class);
 	private final Map<String, List<? extends Object>> columns;
 	private final int numRows;
 
@@ -44,14 +47,16 @@ public class CSVTable {
 		columns.put(header, CollectionUtils.rep(value, numRows));
 	}
 
-	public String toCSV(char delim) throws IOException {
+	public String toCSV(char delim) {
 		return toCSV(CSVFormat.DEFAULT.withDelimiter(delim));
 	}
 
-	public String toCSV(CSVFormat format) throws IOException {
+	public String toCSV(CSVFormat format) {
 		StringBuilder sb = new StringBuilder();
 		try(CSVPrinter p = new CSVPrinter(sb, format)){
 			toCSV(p);
+		} catch (IOException e){
+			LOGGER.debug("exception printing CSVTable to string, should never happen",e);
 		}
 
 		return sb.toString();

@@ -498,7 +498,7 @@ public class CLIProgramUtils {
 			sb.append(" records marked exclusively for calibration.");
 		}
 		if (sp.getModelingExclusiveDataset().size()>0) {
-			LOGGER.debug("SubSet contains "+sp.getModelingExclusiveDataset().size()+" modeing-exclusive records");
+			LOGGER.debug("SubSet contains "+sp.getModelingExclusiveDataset().size()+" modeling-exclusive records");
 			sb.append(" SubSet also includes ");
 			sb.append(sp.getModelingExclusiveDataset().size());
 			sb.append(" records marked exclusively for scoring-model training.");
@@ -506,7 +506,7 @@ public class CLIProgramUtils {
 		if (sp.getTextualLabels() != null && !sp.getTextualLabels().isEmpty()) {
 			LOGGER.debug("labels=" + sp.getLabels());
 			// classification - print info about how many of each label
-			sb.append(" Occurances of each class: ");
+			sb.append(" Occurrences of each class: ");
 			Map<Double, Integer> dsFreq = ds.getLabelFrequencies();
 			NamedLabels nl = sp.getTextualLabels();
 

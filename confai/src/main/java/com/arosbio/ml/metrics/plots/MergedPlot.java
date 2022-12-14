@@ -9,7 +9,6 @@
  */
 package com.arosbio.ml.metrics.plots;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -76,7 +75,7 @@ public class MergedPlot extends Plot {
 		setCurves(mergedCurves);
 	}
 	
-	public String toCSV(char delim, Map<String, Object> extraFields) throws IOException {
+	public String toCSV(char delim, Map<String, Object> extraFields) {
 		Map<String,List<? extends Object>> theCols = new LinkedHashMap<>(getCurves());
 		CSVTable table = new CSVTable(theCols,extraFields);
 		 

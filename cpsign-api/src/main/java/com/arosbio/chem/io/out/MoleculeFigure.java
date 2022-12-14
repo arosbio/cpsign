@@ -19,7 +19,7 @@ import com.arosbio.chem.io.out.image.ImageUtils;
 
 public class MoleculeFigure {
 
-	private BufferedImage depiction;
+	private final BufferedImage depiction;
 
 	MoleculeFigure(BufferedImage depiction) {
 		this.depiction = depiction;
