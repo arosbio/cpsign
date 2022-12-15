@@ -28,8 +28,8 @@
 		<!-- Here setting the names during the package phase - as we're both building a thin and fat jar -->
 		<thin.final.name>${project.name}-${project.version}.jar</thin.final.name>
 
-		<!-- The name of the final 'fat jar' (it adds '.jar' automatically) -->
-		<fat.final.name>${project.name}-${project.version}-uber.jar</fat.final.name>
+		<!-- The name of the final 'fat jar' -->
+		<fat.final.name>${project.name}-${project.version}-fatjar.jar</fat.final.name>
 
 		<main.class>com.arosbio.cpsign.app.CPSignApp</main.class>
 		<parent.basedir>${project.basedir}/..</parent.basedir>

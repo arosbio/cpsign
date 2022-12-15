@@ -167,7 +167,7 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION_C_BEFORE + "(1) "+ProportionSingleLabelPredictions.METRIC_ALIAS + "%n"+
 					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION_C_BEFORE + "(2) "+ProportionMultiLabelPredictions.METRIC_ALIAS + "%n"+
 					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(3) "+ObservedFuzziness.METRIC_ALIAS+"%n"+
-					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(4) "+AverageC.METRIC_NAME+"%n"+
+					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION_C_BEFORE + "(4) "+AverageC.METRIC_NAME+"%n"+
 					// VAP Classification:
 					"VAP Classification:%n" +
 					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(1) "+LogLoss.METRIC_ALIAS+"%n"+
