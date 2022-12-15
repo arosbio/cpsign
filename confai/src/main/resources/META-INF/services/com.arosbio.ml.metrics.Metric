@@ -23,6 +23,7 @@ com.arosbio.ml.metrics.cp.CPAccuracy
 
 
 # CP Classification
+com.arosbio.ml.metrics.cp.classification.AverageC
 com.arosbio.ml.metrics.cp.classification.ObservedFuzziness
 com.arosbio.ml.metrics.cp.classification.BalancedObservedFuzziness
 com.arosbio.ml.metrics.cp.classification.UnobservedConfidence

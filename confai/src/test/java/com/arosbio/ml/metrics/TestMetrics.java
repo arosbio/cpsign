@@ -38,6 +38,7 @@ import com.arosbio.ml.metrics.cp.CPAccuracy;
 import com.arosbio.ml.metrics.cp.CalibrationPlot;
 import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
 import com.arosbio.ml.metrics.cp.EfficiencyPlot;
+import com.arosbio.ml.metrics.cp.classification.AverageC;
 import com.arosbio.ml.metrics.cp.classification.BalancedObservedFuzziness;
 import com.arosbio.ml.metrics.cp.classification.CPClassificationCalibrationPlotBuilder;
 import com.arosbio.ml.metrics.cp.classification.MultiLabelPredictionsPlotBuilder;
@@ -67,6 +68,7 @@ import com.google.common.collect.Range;
 @SuppressWarnings("deprecation")
 @Category(UnitTest.class)
 @RunWith(Enclosed.class)
+//@RunWith(Suite.class)
 public class TestMetrics {
 
 	/**
@@ -166,49 +168,52 @@ public class TestMetrics {
 		Assert.assertEquals(0, m.getNumExamples());
 	}
 
-	@Test
-	public void testMetricFactory() throws Exception {
-		Iterator<Metric> mets = MetricFactory.getAllMetrics();
+	@Category(UnitTest.class)
+	public static class TestFactoryMethods {
+		@Test
+		public void testMetricFactory() throws Exception {
+			Iterator<Metric> mets = MetricFactory.getAllMetrics();
 
-		while (mets.hasNext()) {
-			Metric m = mets.next();
-			m.clone(); // Make sure this doesn't fail
-			m.toString();
-			// System.err.println(m);
-		}
-
-		Assert.assertTrue(MetricFactory.getACPRegressionMetrics().size() > 5);
-		// System.err.println("Reg:");
-		// for (Metric m : MetricFactory.getACPRegressionMetrics()) {
-		// System.err.println(m);
-		// }
-
-		Assert.assertTrue(MetricFactory.getCPClassificationMetrics(true).size() > 5);
-		// System.err.println("Class:");
-		// for (Metric m : MetricFactory.getCPClassificationMetrics()) {
-		// System.err.println(m);
-		// }
-
-		Assert.assertTrue(MetricFactory.getAVAPClassificationMetrics().size() > 5);
-		// System.err.println("VAP:");
-		// for (Metric m : MetricFactory.getAVAPClassificationMetrics()) {
-		// System.err.println(m);
-		// }
-
-	}
-
-	@Test
-	public void listAllMetrics() {
-		Iterator<Metric> metrics = MetricFactory.getAllMetrics();
-		int count = 0;
-		while (metrics.hasNext()) {
-			Metric m = metrics.next();
-			if (m instanceof SingleValuedMetric) {
-				count++;
-				// System.err.println(m.getName());
+			while (mets.hasNext()) {
+				Metric m = mets.next();
+				m.clone(); // Make sure this doesn't fail
+				m.toString();
+				// System.err.println(m);
 			}
+
+			Assert.assertTrue(MetricFactory.getACPRegressionMetrics().size() > 5);
+			// System.err.println("Reg:");
+			// for (Metric m : MetricFactory.getACPRegressionMetrics()) {
+			// System.err.println(m);
+			// }
+
+			Assert.assertTrue(MetricFactory.getCPClassificationMetrics(true).size() > 5);
+			// System.err.println("Class:");
+			// for (Metric m : MetricFactory.getCPClassificationMetrics()) {
+			// System.err.println(m);
+			// }
+
+			Assert.assertTrue(MetricFactory.getAVAPClassificationMetrics().size() > 5);
+			// System.err.println("VAP:");
+			// for (Metric m : MetricFactory.getAVAPClassificationMetrics()) {
+			// System.err.println(m);
+			// }
+
 		}
-		Assert.assertTrue(count > 10);
+
+		@Test
+		public void listAllMetrics() {
+			Iterator<Metric> metrics = MetricFactory.getAllMetrics();
+			int count = 0;
+			while (metrics.hasNext()) {
+				Metric m = metrics.next();
+				if (m instanceof SingleValuedMetric) {
+					count++;
+					// System.err.println(m.getName());
+				}
+			}
+			Assert.assertTrue(count > 10);
+		}
 	}
 
 	@Category(UnitTest.class)
@@ -1023,6 +1028,52 @@ public class TestMetrics {
 					toMap(.3, .3, .32));
 			final static int n_examples = y_pred.size();
 
+		}
+
+		@Test
+		public void AverageC(){
+			AverageC m = new AverageC();
+			assertNone(m);
+			Assert.assertEquals(ConfidenceDependentMetric.DEFAULT_CONFIDENCE, m.getConfidence(), 0.0001);
+
+			// -------------------
+			// The 2 class problem
+			// -------------------
+
+			// 1
+			m.addPrediction(0, Pvalues.y_pred.get(0));
+			Assert.assertEquals(1, m.getNumExamples());
+			Assert.assertEquals(1, m.getScore(), 0.001);
+			// 2
+			m.addPrediction(0, Pvalues.y_pred.get(1));
+			Assert.assertEquals(2, m.getNumExamples());
+			Assert.assertEquals(1.5, m.getScore(), 0.001);
+			// 3
+			m.addPrediction(0, Pvalues.y_pred.get(2));
+			Assert.assertEquals(3, m.getNumExamples());
+			Assert.assertEquals(4./3, m.getScore(), 0.001);
+
+			// Clone
+			AverageC m2 = m.clone();
+			assertNone(m2);
+			m2.setConfidence(.9);
+
+			// -------------------
+			// The 3 class problem
+			// -------------------
+
+			// 1
+			m2.addPrediction(0, Pvalues3class.y_pred.get(0));
+			Assert.assertEquals(1, m2.getNumExamples());
+			Assert.assertEquals(3, m2.getScore(), 0.001);
+			// 2
+			m2.addPrediction(0, Pvalues3class.y_pred.get(1));
+			Assert.assertEquals(2, m2.getNumExamples());
+			Assert.assertEquals(2., m2.getScore(), 0.001);
+			// 3
+			m2.addPrediction(0, Pvalues3class.y_pred.get(2));
+			Assert.assertEquals(3, m2.getNumExamples());
+			Assert.assertEquals(7./3, m2.getScore(), 0.001);
 		}
 
 		@Test

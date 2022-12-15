@@ -23,16 +23,14 @@ public class CPAccuracy implements SingleValuedMetric, CPClassificationMetric, C
 	public static final String METRIC_NAME = "CP Accuracy";
 	public static final String METRIC_DESCRIPTION = "Conformal Prediction (CP) accuracy calculate the proportion of correct predictions (i.e., where the prediction set/interval contains the true value).";
 	
-	private double confidence;
+	private double confidence = ConfidenceDependentMetric.DEFAULT_CONFIDENCE;
 	private int numCorrect = 0;
 	private int numTotal = 0;
 	
-	public CPAccuracy() {
-		this(ConfidenceDependentMetric.DEFAULT_CONFIDENCE);
-	}
+	public CPAccuracy() {}
 	
 	public CPAccuracy(double confidence) {
-		this.confidence = confidence;
+		setConfidence(confidence);
 	}
 	
 	@Override

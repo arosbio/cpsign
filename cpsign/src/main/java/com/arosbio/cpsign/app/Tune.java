@@ -86,6 +86,7 @@ import com.arosbio.ml.metrics.classification.LabelDependent;
 import com.arosbio.ml.metrics.classification.LogLoss;
 import com.arosbio.ml.metrics.classification.ROC_AUC;
 import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
+import com.arosbio.ml.metrics.cp.classification.AverageC;
 import com.arosbio.ml.metrics.cp.classification.ObservedFuzziness;
 import com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictions;
 import com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictions;
@@ -166,6 +167,7 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION_C_BEFORE + "(1) "+ProportionSingleLabelPredictions.METRIC_ALIAS + "%n"+
 					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION_C_BEFORE + "(2) "+ProportionMultiLabelPredictions.METRIC_ALIAS + "%n"+
 					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(3) "+ObservedFuzziness.METRIC_ALIAS+"%n"+
+					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(4) "+AverageC.METRIC_NAME+"%n"+
 					// VAP Classification:
 					"VAP Classification:%n" +
 					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(1) "+LogLoss.METRIC_ALIAS+"%n"+
@@ -351,7 +353,6 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 		SingleValuedMetric optMetric = null;
 
 		// If input was an integer
-
 		try {
 			int id = Integer.parseInt(optimizationString);
 			if (predictor instanceof ACPRegressor) {
@@ -369,6 +370,8 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 					optMetric = new ProportionMultiLabelPredictions(cvConfidence);
 				} else if (id == 3) {
 					optMetric = new ObservedFuzziness();
+				} else if (id == 4){
+					optMetric = new AverageC();
 				}
 			} else if (predictor instanceof AVAPClassifier) {
 				if (id == 1) {
@@ -395,6 +398,7 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 		} catch (Exception e) {
 			LOGGER.debug("Was not an integer ID");
 		}
+		// END if metric was Integer
 
 		if (optMetric == null) {
 			// If not a integer-value, try assuming it's the name of a metric
