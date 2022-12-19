@@ -75,6 +75,7 @@ public class MoleculeDepictor {
 	
 	private final static Font DEFAULT_FONT = new Font(Font.SANS_SERIF,Font.PLAIN,13);
 	private final static int BUFFERED_IMAGE_TYPE = BufferedImage.TYPE_4BYTE_ABGR;
+	private final static Color ATOM_NUM_OUTLINE_COLOR = new Color(255,255,255,64);
 	private final static Logger LOGGER = LoggerFactory.getLogger(MoleculeDepictor.class);
 
 	private final int imageWidth, imageHeight;
@@ -88,6 +89,7 @@ public class MoleculeDepictor {
 	private final Font font;
 	private final boolean forceRecalcCoordinates;
 	private final List<IGenerator<IAtomContainer>> generators;
+	
 
 	private MoleculeDepictor(Builder b){
 		imageHeight = b.h;
@@ -427,6 +429,21 @@ public class MoleculeDepictor {
 	 */
 	public BufferedImage depict(IAtomContainer mol, Map<?, Double> atomColors)
 		throws IllegalArgumentException {
+			Graphics2D g2 = null;
+			try {
+				Rectangle2D drawArea = new Rectangle2D.Double(0,0,imageWidth,imageHeight);
+				BufferedImage img = new BufferedImage(imageWidth, imageHeight, BUFFERED_IMAGE_TYPE);
+				g2 = img.createGraphics();
+				BufferedImage out = depict(mol, atomColors, img, g2, drawArea);
+				return out;
+			} finally {
+				if (g2 != null)
+					g2.dispose();
+			}
+		}
+
+	public BufferedImage depict(IAtomContainer mol, Map<?, Double> atomColors, BufferedImage img, Graphics2D g2, Rectangle2D drawArea) 
+		throws IllegalArgumentException {
 		
 		try {
 
@@ -437,14 +454,12 @@ public class MoleculeDepictor {
 				}
 			}
 
-			Rectangle2D drawArea = new Rectangle2D.Double(0,0,imageWidth,imageHeight);
-
-			BufferedImage img = new BufferedImage(imageWidth, imageHeight, BUFFERED_IMAGE_TYPE);
-			Graphics2D g2 = img.createGraphics();
+			
 			if (bgColor != null){
 				// Add background
 				g2.setColor(bgColor);
-				g2.fillRect(0, 0, imageWidth, imageHeight);
+				g2.fillRect((int) drawArea.getMinX(), (int) drawArea.getMinY(), 
+					Math.round((float)drawArea.getMaxX()),  Math.round((float)drawArea.getMaxY()));
 			}
 
 			IDrawVisitor visitor = new BloomDrawVisitor(g2, colorGradient).setGridStepSize(bloomRasterSize);
@@ -463,21 +478,20 @@ public class MoleculeDepictor {
 
 			//Add highlight for readability
 			if (model.get(StandardGenerator.Highlighting.class).equals(StandardGenerator.HighlightStyle.OuterGlow)) {
-				Color highlightColor = new Color(255,255,255,64);
 				for (IAtom atom : mol.atoms()) {
 					if (atom.getAtomicNumber() != 6 || 
 							(atom.getAtomTypeName()!= null && (atom.getAtomTypeName().startsWith("C.plus") ||
 							(atom.getAtomTypeName().startsWith("C.minus"))))){ // do not display carbon, unless with a charge (best effort-hack)
-						atom.setProperty(StandardGenerator.HIGHLIGHT_COLOR, highlightColor);
+						atom.setProperty(StandardGenerator.HIGHLIGHT_COLOR, ATOM_NUM_OUTLINE_COLOR);
 					}
 				}
 			}
 
 			renderer.paint(mol, visitor, drawArea, true);
-			g2.dispose();
-			
 
 			if (imageOp != null && !imageOp.isEmpty()){
+				if (img == null)
+					throw new IllegalArgumentException("The buffered image source must be given in case image operations should be performed");
 				// Apply custom image operations
 				for (BufferedImageOp op : imageOp){
 					BufferedImage tmp = op.createCompatibleDestImage(img, null);
@@ -492,7 +506,7 @@ public class MoleculeDepictor {
 		} finally {
 			// Clean up the molecule/atom properties
 			if (showNumbers){
-				// Remove the annotations in case someone else doesn't want them
+				// Remove the annotations
 				for (IAtom atom : mol.atoms()){
 					atom.removeProperty(StandardGenerator.ANNOTATION_LABEL);
 				}

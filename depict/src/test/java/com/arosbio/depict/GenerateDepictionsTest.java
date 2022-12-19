@@ -11,6 +11,7 @@ package com.arosbio.depict;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
@@ -35,6 +36,7 @@ import org.openscience.cdk.smiles.SmilesParser;
 import com.arosbio.color.gradient.ColorGradient;
 import com.arosbio.color.gradient.GradientFactory;
 import com.arosbio.color.gradient.impl.DefaultGradient;
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.ImmutableMap;
 import com.jhlabs.image.ContrastFilter;
 import com.jhlabs.image.UnsharpFilter;
@@ -102,19 +104,12 @@ public class GenerateDepictionsTest extends BaseTestClass {
 		graphics.setColor(Color.WHITE);
 		graphics.fillRect(0, 0, pageWidth, pageHeight);
 
-		// System.err.printf("Using color-map (values): %s%n",coloringMap1.values());
-		
 		BufferedImage imgToAdd1; 
 		for (int i=0; i<depictors.size(); i++){ //
 			
 			imgToAdd1 = depictors.get(i).depict(mol1, coloringMap1);
 			graphics.drawImage(imgToAdd1, padding, (i+1)*padding + i*imageSize, null);
 			
-//			imgToAdd2 = depictors[i].depict(mol1, coloringMap1);
-//			graphics.drawImage(imgToAdd2, ops[0], padding*2 + imageSize, (i+1)*padding + i*imageSize);
-//			
-//			imgToAdd2 = depictors[i].depict(mol1, coloringMap1);
-//			graphics.drawImage(imgToAdd2, ops[1], padding*3 + 2*imageSize, (i+1)*padding + (i*1)*imageSize);
 		}
 
 		ImageIO.write(pageImage, "png", new File(BaseTestClass.TEST_OUTPUT_DIR, "vanilla.png"));	
@@ -332,25 +327,42 @@ public class GenerateDepictionsTest extends BaseTestClass {
 		depictors[3] = new MoleculeDepictor.Builder()
 			.color(GradientFactory.getCustomGradient("[ { \"color\": \"#FB877D\", \"pos\": 0.000000 }, { \"color\": \"#FF0004\", \"pos\": 0.300000 }, { \"color\": \"#FFFF00\", \"pos\": 0.400000 }, { \"color\": \"#00FF00\", \"pos\": 0.506796 }, { \"color\": \"#00FFFF\", \"pos\": 0.601923 }, { \"color\": \"#0000FF\", \"pos\": 0.707692 }, { \"color\": \"#8080FF\", \"pos\": 1.000000 }]"))
 			.build(); 
+
+		// OLD - get the bufferedImage and re-paint it in a new image
 		
-		BufferedImage pageImage = new BufferedImage(pageWidth, pageHeight, BufferedImage.TYPE_INT_RGB);
+		Stopwatch watch = Stopwatch.createStarted();
+		
+		BufferedImage pageImage = new BufferedImage(pageWidth /3, pageHeight, BufferedImage.TYPE_INT_RGB);
 		Graphics2D graphics = pageImage.createGraphics();
 		graphics.setColor(Color.WHITE);
-		graphics.fillRect(0, 0, pageWidth, pageHeight);
+		graphics.fillRect(0, 0, pageWidth /3, pageHeight);
 		
 		BufferedImage imgToAdd1;
 		for(int i=0; i< depictors.length; i++){
 			imgToAdd1 = depictors[i].depict(mol1, coloringMap1);
 			graphics.drawImage(imgToAdd1, padding, (i+1)*padding + i*imageSize, null);
-			
-//			imgToAdd2 = depictors[i].depict(mol1, coloringMap1);
-//			graphics.drawImage(imgToAdd2, padding*2 + imageSize, (i+1)*padding + i*imageSize, null);
-//			
-//			imgToAdd2 = depictors[i].depict(mol1, coloringMap1);
-//			graphics.drawImage(imgToAdd2, padding*3 + 2*imageSize, (i+1)*padding + (i*1)*imageSize, null);
 		}
+		graphics.dispose();
+		watch.stop();
 		
-        ImageIO.write(pageImage, "png", new File(BaseTestClass.TEST_OUTPUT_DIR, "outputStdFactory.png"));	
+        ImageIO.write(pageImage, "png", new File(BaseTestClass.TEST_OUTPUT_DIR, "outputStdFactory.png"));
+
+		// NEW version
+		Stopwatch watch2 = Stopwatch.createStarted();
+		
+		BufferedImage pageImageNew = new BufferedImage(pageWidth /3, pageHeight, BufferedImage.TYPE_INT_RGB);
+		Graphics2D graphics2 = pageImageNew.createGraphics();
+		graphics2.setColor(Color.WHITE);
+		graphics2.fillRect(0, 0, pageWidth /3, pageHeight);
+		
+		// BufferedImage imgToAdd1;
+		for(int i=0; i< depictors.length; i++){
+			Rectangle2D drawArea = new Rectangle2D.Double(padding,(i+1)*padding + i*imageSize,imageSize,imageSize);
+			imgToAdd1 = depictors[i].depict(mol1, coloringMap1, pageImageNew, graphics2, drawArea);
+		}
+		watch2.stop();
+		
+        ImageIO.write(pageImage, "png", new File(BaseTestClass.TEST_OUTPUT_DIR, "outputStdFactory_new.png"));
 	}
 	
 	public static BufferedImage drawGradient(int width, ColorGradient gradient) {
