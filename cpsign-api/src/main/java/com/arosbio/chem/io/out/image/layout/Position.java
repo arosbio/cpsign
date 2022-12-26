@@ -7,37 +7,39 @@
  *
  * 2) CPSign Proprietary License that allows you to use CPSign for commercial activities, such as in a revenue-generating operation or environment, or integrate CPSign in your proprietary software without worrying about disclosing the source code of your proprietary software, which is required if you choose to use the software under GPLv3 license. See arosbio.com/cpsign/commercial-license for details.
  */
-package com.arosbio.chem.io.out.fields;
+package com.arosbio.chem.io.out.image.layout;
 
-import java.awt.Color;
-import java.awt.Font;
-import java.util.List;
+public class Position {
+	
+	public static enum Vertical {
+		LEFT_ADJUSTED, CENTERED, RIGHT_ADJUSTED;
+	}
+	
+	public static enum Horizontal {
+		TOP, CENTER, BOTTOM;
+	}
+	
+	private Vertical x;
+	private Horizontal y;
+	
+	public Position(Vertical vertical, Horizontal horizontal) {
+		this.x = vertical;
+		this.y = horizontal;
+	}
 
-import com.arosbio.chem.io.out.image.Layout;
-import com.arosbio.chem.io.out.image.Position.Vertical;
-
-public interface FigureField {
+	public Vertical getVertical(){
+		return x;
+	}
 	
-	public Vertical getAlignment();
+	public void setVertical(Vertical vertical){
+		this.x = vertical;
+	}
 	
-	public void setAlignment(Vertical alignment);
-		
-	public Font getFont();
+	public Horizontal getHorizontal(){
+		return y;
+	}
 	
-	public void setFont(Font font);
-	
-	public boolean isFontSet();
-	
-	public Color getTextColor();
-	
-	public void setTextColor(Color color);
-	
-	public boolean isTextColorSet();
-	
-	public List<Layout> getLayouts();
-	
-	public void addLayout(Layout layout);
-	
-	public void setLayouts(List<Layout> layout);
-	
+	public void setHorizontal(Horizontal horizontal){
+		this.y = horizontal;
+	}
 }

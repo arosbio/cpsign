@@ -7,7 +7,7 @@
  *
  * 2) CPSign Proprietary License that allows you to use CPSign for commercial activities, such as in a revenue-generating operation or environment, or integrate CPSign in your proprietary software without worrying about disclosing the source code of your proprietary software, which is required if you choose to use the software under GPLv3 license. See arosbio.com/cpsign/commercial-license for details.
  */
-package com.arosbio.chem.io.out.fields;
+package com.arosbio.chem.io.out.image.fields;
 
 import java.awt.Color;
 import java.awt.font.TextAttribute;
@@ -16,16 +16,47 @@ import java.text.AttributedString;
 public class HighlightExplanationField extends ColoredBoxField {
 	
 	private static final String DEFAULT_TEXT = "Largest impact on the prediction";
-		
-	public HighlightExplanationField(Color highlightColor) {
-		super(highlightColor, new AttributedString(DEFAULT_TEXT));
+
+    public static class Builder extends ColoredBoxField.Builder {
+
+        public Builder(Color highlight){
+            this(highlight, DEFAULT_TEXT);
+        }
+        public Builder(Color highlight, String text){
+            super(highlight, text);
+        }
+        @Override
+        public Builder getThis(){
+            return this;
+        }
+
+        public Builder basedOnPValueOfClass(String label){
+            text(getPValueText(label));
+            return this;
+        }
+
+        public Builder basedOnProbabilityOfClass(String label){
+            text(getProbabilityText(label));
+            return this;
+        }
+
+        public HighlightExplanationField build(){
+            return new HighlightExplanationField(this);
+        }
+    }
+
+    private HighlightExplanationField(Builder b){
+        super(b);
+
+    }
+
+    private static AttributedString getProbabilityText(String label){
+		AttributedString str = new AttributedString("Largest impact on P["+label+"]");
+		str.addAttribute(TextAttribute.POSTURE, TextAttribute.POSTURE_OBLIQUE,18,19);
+		return str;
 	}
 	
-	public HighlightExplanationField(Color highlightColor, String label) {
-		super(highlightColor, getString(label));
-	}
-	
-	private static AttributedString getString(String label){
+	private static AttributedString getPValueText(String label){
 		AttributedString str = new AttributedString("Largest impact on p["+label+"]");
 		str.addAttribute(TextAttribute.POSTURE, TextAttribute.POSTURE_OBLIQUE,18,19);
 		return str;

@@ -11,7 +11,6 @@ package com.arosbio.cpsign.app;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Map;
 
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
@@ -189,7 +188,7 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 		verifyGeneralParams();
 		LOGGER.debug("Validated arguments");
 
-		// if Predict from a SMILES- or SDF-file - count total number of molecules
+		// if Predict from a CSV- or SDF-file - count total number of molecules
 		int totalNumMolsToPredict = 0, progressInterval = 0; 
 		if (toPredict.toPredict.predictFile != null){
 
@@ -212,11 +211,6 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 			pb.addAdditionalSteps(numSteps); // add the additional steps 
 		}
 
-		// Set up prediction depictions
-		imageHandler = new PredictionImageHandler(
-				gradientImageSection, 
-				signatureImageSection);
-
 		// FINISHED SETUP
 		console.println(ProgressInfoTexts.DONE_TAG, PrintMode.NORMAL);
 		console.println("Using RNG seed: "+ GlobalConfig.getInstance().getRNGSeed(), PrintMode.VERBOSE);
@@ -226,6 +220,11 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 		// LOAD DATA
 		pb.setCurrentTask(PB.LOADING_FILE_OR_MODEL_PROGRESS);
 		ChemPredictor predictor = initAndLoad();
+		// Set up prediction depictions
+		imageHandler = new PredictionImageHandler(
+				gradientImageSection, 
+				signatureImageSection,
+				predictor);
 		if (imageHandler.isUsed() && !predictor.usesSignaturesDescriptor()) {
 			LOGGER.debug("Loaded model without signatures descriptor and got argument for generating prediction images - failing!");
 			console.failWithArgError("Generating prediction images is only available when using the signatures descriptor");
@@ -411,7 +410,6 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 	private int numPredictedCount = 0; // for images/output text
 	private int numFailedMolecules = 0;
 
-	@SuppressWarnings("null")
 	private void doPredict(ChemCPClassifier predictor, PredictionResultsWriter predWriter, int numMolsInPredFile, int progressInterval) {
 
 		// Predict single SMILES
@@ -533,15 +531,15 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 
 		if (imageHandler.isPrintingSignatureImgs()){
 			try {
-				String label = "";
-				double highestPval = -Double.MAX_VALUE;
-				for (Map.Entry<String, Double> pval: resHandler.pValues.entrySet()) {
-					if (pval.getValue() > highestPval) {
-						highestPval = pval.getValue();
-						label = pval.getKey();
-					}
-				}
-				imageHandler.writeSignificantSignatureImage(mol, resHandler.signSign.getAtoms(), resHandler.pValues, null,label);
+				// String label = "";
+				// double highestPval = -Double.MAX_VALUE;
+				// for (Map.Entry<String, Double> pval: resHandler.pValues.entrySet()) {
+				// 	if (pval.getValue() > highestPval) {
+				// 		highestPval = pval.getValue();
+				// 		label = pval.getKey();
+				// 	}
+				// }
+				imageHandler.writeSignificantSignatureImage(resHandler.toRenderInfo(mol)); // mol, resHandler.signSign.getAtoms(), resHandler.pValues, null,label);
 			} catch (Exception e) {
 				LOGGER.debug("Exception writing significant signature depiction", e);
 				LOGGER.error("Error writing significant signature depiction: {}", e.getMessage());
@@ -549,7 +547,7 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 		}
 		if (imageHandler.isPrintingGradientImgs()) {
 			try {
-				imageHandler.writeGradientImage(mol, resHandler.signSign.getAtomContributions(),resHandler.pValues, null);
+				imageHandler.writeGradientImage(resHandler.toRenderInfo(mol)); //mol, resHandler.signSign.getAtomContributions(),resHandler.pValues, null);
 			} catch (Exception e) {
 				LOGGER.debug("Exception writing gradient depiction", e);
 				LOGGER.error("Error writing gradient depiction: {}", e.getMessage());

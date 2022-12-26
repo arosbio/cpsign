@@ -7,27 +7,41 @@
  *
  * 2) CPSign Proprietary License that allows you to use CPSign for commercial activities, such as in a revenue-generating operation or environment, or integrate CPSign in your proprietary software without worrying about disclosing the source code of your proprietary software, which is required if you choose to use the software under GPLv3 license. See arosbio.com/cpsign/commercial-license for details.
  */
-package com.arosbio.chem.io.out.fields;
+package com.arosbio.chem.io.out.image.layout;
 
-import java.text.AttributedString;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
 
-import com.arosbio.commons.MathUtils;
-import com.arosbio.commons.SimpleHTMLTagTokenizer;
+import org.apache.commons.lang3.tuple.Pair;
 
-public class ProbabilityField extends TextField {
-	
-	public ProbabilityField(Map<String, Double> probs) {
-		super(getStrings(probs));
+/**
+ * A completely empty {@link Layout} with <b>no padding</b>, <b>no boarder</b> and <b>no margin</b>.
+ * @author staffan
+ *
+ */
+public class EmptyLayout implements Layout {
+
+	public Rectangle2D addLayout(Graphics2D g, Rectangle2D area){
+		// pass through - nothing done
+		return area;
 	}
-	
-	private static List<AttributedString> getStrings(Map<String, Double> probs){
-		List<AttributedString> lines = new ArrayList<>();
-		for(Map.Entry<String, Double> pval: probs.entrySet())
-			lines.add(new SimpleHTMLTagTokenizer("<i>P</i>("+pval.getKey()+")="+MathUtils.roundTo3significantFigures(pval.getValue())).toAttributedString());
-		return lines;
+
+	@Override
+	public int getAdditionalWidth() {
+		return 0;
+	}
+
+	public Pair<Integer,Integer> getAddedLRWidth(){
+		return Pair.of(0,0);
+	}
+
+	@Override
+	public int getAdditionalHeight() {
+		return 0;
+	}
+
+	public Pair<Integer,Integer> getAddedTBHeight(){
+		return Pair.of(0,0);
 	}
 
 }

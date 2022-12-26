@@ -12,6 +12,9 @@ package com.arosbio.chem.io.out.image;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
+import java.awt.Dimension;
+import java.awt.geom.Rectangle2D;
+import java.awt.geom.Dimension2D;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.Toolkit;
@@ -37,7 +40,8 @@ import javax.imageio.ImageIO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.arosbio.chem.io.out.image.Position.Vertical;
+import com.arosbio.chem.io.out.image.layout.Position;
+import com.arosbio.chem.io.out.image.layout.Position.Vertical;
 import com.arosbio.commons.SimpleHTMLTagTokenizer;
 import com.arosbio.commons.SimpleHTMLTagTokenizer.FontType;
 import com.arosbio.commons.SimpleHTMLTagTokenizer.TextSection;
@@ -50,6 +54,7 @@ public class ImageUtils {
 	private static final Base64.Encoder ENCODER = Base64.getEncoder();
 
 	public static final Map<RenderingHints.Key,Object> DEFAULT_RENDERING_HINTS = new HashMap<>();
+	private static final FontRenderContext CONTEXT;
 	static{
 		DEFAULT_RENDERING_HINTS.put(
 				RenderingHints.KEY_TEXT_ANTIALIASING,
@@ -71,6 +76,11 @@ public class ImageUtils {
 				RenderingHints.VALUE_FRACTIONALMETRICS_ON);
 		System.setProperty("awt.useSystemAAFontSettings", "lcd");
 		System.setProperty("swing.aatext", "true");
+
+		BufferedImage tmp = new BufferedImage(1,1 ,IOSettings.BUFFERED_IMAGE_TYPE);
+		Graphics2D gTmp = getGraphicsForText(tmp);
+		CONTEXT = gTmp.getFontRenderContext();
+		gTmp.dispose(); // Does this work? or does it need to be active?
 	}
 
 	public static String convertToBase64(BufferedImage img) throws IllegalArgumentException {
@@ -137,7 +147,7 @@ public class ImageUtils {
 			while (measurer.getPosition() < characterIterator.getEndIndex()) {
 				TextLayout textLayout = measurer.nextLayout(maxWidth*0.98f);
 				y += textLayout.getAscent();
-				textLayout.draw(g2d, getStartPosition(alignment, maxWidth, textLayout.getAdvance()), y);
+				textLayout.draw(g2d, getStartPosition(alignment, new Rectangle2D.Float(0,0,maxWidth,0), textLayout.getAdvance()), y);
 				y += textLayout.getDescent() + textLayout.getLeading();
 				actualMaxWidth = (float) Math.max(actualMaxWidth, textLayout.getAdvance());
 				LOGGER.debug("text-advance={}",textLayout.getAdvance());
@@ -166,24 +176,18 @@ public class ImageUtils {
 		return res;
 	}
 
-	private static float getStartPosition(Position.Vertical alignment, int totalWidth, double textWidth){
-		float x = 0f; // default is LEFT_ADJUSTED 
+	private static float getStartPosition(Position.Vertical alignment, Rectangle2D textArea, double textWidth){
 		switch (alignment) {
 		case CENTERED:
-			x = Math.round(totalWidth/2d - textWidth/2d);
-			break;
+			return Math.round(textArea.getCenterX() - textWidth/2d);
 		case RIGHT_ADJUSTED:
-			x= (float) (totalWidth - textWidth);
-			break;
+			return (float) (textArea.getMaxX() - textWidth);
 		case LEFT_ADJUSTED:
-			x = 0;
 		default:
-			x = 0; // Default is LEFT_ADJUSTED
+			return (float) textArea.getMinX(); // Default is LEFT_ADJUSTED
 		}
-		return x;
 	}
 
-	@SuppressWarnings("null")
 	public static BufferedImage drawStringToBufferedImage(
 			final String formattedText, 
 			final Font font, 
@@ -244,32 +248,30 @@ public class ImageUtils {
 	}
 
 	public static Graphics2D getGraphicsForText(BufferedImage img){
-		Graphics2D graphics = img.createGraphics();
+		return setRenderHints(img.createGraphics());
+	}
 
-		boolean setRenderingHints = false;
+	public static Graphics2D setRenderHints(Graphics2D g){
 		// try to use optimal rendering hints
 		try{
 			Map<?, ?> desktopHints = 
 					(Map<?, ?>) Toolkit.getDefaultToolkit().getDesktopProperty("awt.font.desktophints");
-			graphics.setRenderingHints(desktopHints);
-			setRenderingHints = true;
+			g.setRenderingHints(desktopHints);
+			return g;
 		} catch(Exception | Error e){
 			LOGGER.debug("Failed setting rendering hints from awt.font.desktophints");
 		}
 
-		if (!setRenderingHints){
-			// else use the default ones
-			if(DEFAULT_RENDERING_HINTS == null || DEFAULT_RENDERING_HINTS.isEmpty())
-				LOGGER.error("Rendering hints was null or empty: {}", DEFAULT_RENDERING_HINTS);
-			try{
-				graphics.setRenderingHints(DEFAULT_RENDERING_HINTS);
-				setRenderingHints=true;
-			} catch(Exception | Error e){
-				LOGGER.debug("Failed setting rendering hints from DEFAULT_RENDERING_HINTS");
-			}
+		// else use the default ones
+		if(DEFAULT_RENDERING_HINTS == null || DEFAULT_RENDERING_HINTS.isEmpty())
+			LOGGER.error("Rendering hints was null or empty: {}", DEFAULT_RENDERING_HINTS);
+		try{
+			g.setRenderingHints(DEFAULT_RENDERING_HINTS);
+		} catch(Exception | Error e){
+			LOGGER.debug("Failed setting rendering hints from DEFAULT_RENDERING_HINTS");
 		}
 
-		return graphics;
+		return g;
 	}
 
 	public static AttributedString addDefaultFont(AttributedString str, Font defaultFont){
@@ -295,6 +297,130 @@ public class ImageUtils {
 
 		return resulting;
 	}
+
+	public static void drawText(BufferedImage image, 
+		final List<AttributedString> lines,
+		Rectangle2D drawArea,
+		Position.Vertical alignment,
+		Font defaultFont
+		){
+		Graphics2D g2d = null;
+		try {
+			g2d = getGraphicsForText(image);
+			drawText(g2d, lines, drawArea, alignment, defaultFont);
+		} finally {
+			if (g2d != null)
+				g2d.dispose();
+		}
+	}
+
+	public static void drawText(Graphics2D g2d, 
+		final List<AttributedString> lines,
+		Rectangle2D textArea,
+		Position.Vertical alignment,
+		Font defaultFont
+		){
+		
+		drawText(g2d, lines, textArea, alignment, defaultFont, Color.BLACK);
+	}
+
+	public static void drawText(Graphics2D g2d, 
+		final List<AttributedString> lines,
+		Rectangle2D textArea,
+		Position.Vertical alignment,
+		Font defaultFont,
+		Color defaultColor
+		){
+
+		double y = textArea.getMinY();
+		int maxWidth = (int) textArea.getWidth();
+
+		for (AttributedString text : lines){
+			AttributedCharacterIterator characterIterator = standardize(text, defaultFont, defaultColor).getIterator();
+			
+			LineBreakMeasurer measurer = new LineBreakMeasurer(
+					characterIterator,
+					CONTEXT);
+
+			while (measurer.getPosition() < characterIterator.getEndIndex()) {
+				TextLayout textLayout = measurer.nextLayout(maxWidth);
+				y += textLayout.getAscent();
+				textLayout.draw(g2d, getStartPosition(alignment, textArea, textLayout.getAdvance()), (float)y);
+				y += textLayout.getDescent() + textLayout.getLeading();
+			}
+		}
+		
+	}
+
+	public static Dimension2D calculateRequiredSpace(int maxWidth, Font font, AttributedString... lines){
+		if (lines.length==0)
+			return new Dimension(0,0);
+		return calculateRequiredSpace(maxWidth, font, Arrays.asList(lines));
+	}
+	public static Dimension2D calculateRequiredSpace(int maxWidth, Font font, List<AttributedString> lines){
+		if (lines==null || lines.isEmpty())
+			return new Dimension(0,0);
+
+		Dimension d = new Dimension(0,0);
+		
+		for (AttributedString txt : lines){
+			AttributedCharacterIterator characterIterator = standardize(txt, font, null).getIterator();
+			
+			LineBreakMeasurer measurer = new LineBreakMeasurer(
+					characterIterator,
+					CONTEXT);
+
+			while (measurer.getPosition() < characterIterator.getEndIndex()) {
+				TextLayout layout = measurer.nextLayout(maxWidth);
+				// Calculate the increased text area
+				double newW = Math.max(d.width, layout.getAdvance());
+				double newH = d.height + Math.ceil(layout.getAscent() + layout.getDescent() + layout.getLeading());
+				d.setSize(newW, newH);
+			}
+
+		}
+		
+		return d;
+	}
+
+	/**
+	 * Standardize the AttributedString by adding the default font and setting the text color to black (if not set previously)
+	 * @param str AttributedString with the styled text
+	 * @param defaultFont the fallback font in case not set already
+	 * @return styled text with a font and text color set
+	 */
+	public static AttributedString standardize(final AttributedString str, Font defaultFont, Color defaultColor){
+		AttributedString resulting = new AttributedString(str.getIterator());
+		AttributedCharacterIterator iterator = str.getIterator();
+		
+		while (iterator.getIndex() < iterator.getEndIndex()){
+			Map<Attribute, Object> attr = iterator.getAttributes();
+			if (!attr.containsKey(TextAttribute.FONT)){
+				// Add the default font
+				Font charFont = defaultFont;
+				boolean italic = attr.containsKey(TextAttribute.POSTURE) && (float)attr.get(TextAttribute.POSTURE)>=TextAttribute.POSTURE_OBLIQUE;
+				boolean bold = attr.containsKey(TextAttribute.WEIGHT) && (float)attr.get(TextAttribute.WEIGHT)>=TextAttribute.WEIGHT_BOLD;
+				if (italic && bold){
+					charFont = charFont.deriveFont(Font.ITALIC + Font.BOLD);
+				} else if (italic){
+					charFont = charFont.deriveFont(Font.ITALIC);
+				} else if (bold){
+					charFont = charFont.deriveFont(Font.BOLD);
+				}
+				resulting.addAttribute(TextAttribute.FONT, charFont, iterator.getRunStart(), iterator.getRunLimit());
+			}
+
+			if (defaultColor!=null && !attr.containsKey(TextAttribute.FOREGROUND)){
+				// Add default text color
+				resulting.addAttribute(TextAttribute.FOREGROUND, defaultColor,iterator.getRunStart(), iterator.getRunLimit());
+			}
+
+			iterator.next();
+		}
+
+		return resulting;
+	}
+
 
 
 }

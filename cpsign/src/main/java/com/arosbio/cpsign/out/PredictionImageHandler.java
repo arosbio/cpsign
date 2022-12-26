@@ -12,8 +12,6 @@ package com.arosbio.cpsign.out;
 import java.awt.Color;
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.openscience.cdk.CDKConstants;
@@ -21,14 +19,15 @@ import org.openscience.cdk.interfaces.IAtomContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.arosbio.chem.io.out.GradientFigureBuilder;
-import com.arosbio.chem.io.out.SignificantSignatureFigureBuilder;
-import com.arosbio.chem.io.out.depictors.MoleculeGradientDepictor;
-import com.arosbio.chem.io.out.depictors.MoleculeSignificantSignatureDepictor;
-import com.arosbio.chem.io.out.fields.ColorGradientField;
-import com.arosbio.chem.io.out.fields.HighlightExplanationField;
-import com.arosbio.chem.io.out.fields.PValuesField;
-import com.arosbio.chem.io.out.fields.ProbabilityField;
+import com.arosbio.chem.io.out.image.AtomContributionRenderer;
+import com.arosbio.chem.io.out.image.RendererTemplate.RenderInfo;
+import com.arosbio.chem.io.out.image.SignificantSignatureRenderer;
+import com.arosbio.chem.io.out.image.fields.ColorGradientField;
+import com.arosbio.chem.io.out.image.fields.HighlightExplanationField;
+import com.arosbio.chem.io.out.image.fields.PValuesField;
+import com.arosbio.chem.io.out.image.fields.ProbabilityField;
+import com.arosbio.cheminf.ChemClassifier;
+import com.arosbio.cheminf.ChemPredictor;
 import com.arosbio.color.gradient.ColorGradient;
 import com.arosbio.color.gradient.GradientFactory;
 import com.arosbio.cpsign.app.params.CLIParameters;
@@ -36,6 +35,8 @@ import com.arosbio.cpsign.app.params.converters.ColorConverter;
 import com.arosbio.cpsign.app.params.converters.ColorGradientConverter;
 import com.arosbio.cpsign.app.utils.ParameterUtils;
 import com.arosbio.cpsign.app.utils.ParameterUtils.ArgumentType;
+import com.arosbio.ml.cp.ConformalClassifier;
+import com.arosbio.ml.vap.VennABERSPredictor;
 
 import picocli.CommandLine.Option;
 
@@ -162,15 +163,18 @@ public class PredictionImageHandler {
 	private GradientImageOpts gradientParams;
 	private SignificantSignatureImageOpts significantSignatureParams;
 
-	private MoleculeGradientDepictor gradientDepictor;
+	private AtomContributionRenderer gradientDepictor;
 	private ImageFileHandler gradientFileHandler;
-	private MoleculeSignificantSignatureDepictor signatureDepictor;
+	private SignificantSignatureRenderer signatureDepictor;
 	private ImageFileHandler signatureFileHandler;
 
-	public PredictionImageHandler(GradientImageOpts gradientParams, SignificantSignatureImageOpts signatureParams) {
+	public PredictionImageHandler(GradientImageOpts gradientParams, 
+		SignificantSignatureImageOpts signatureParams, 
+		ChemPredictor predictor) {
+		
 		this.gradientParams = gradientParams;
 		this.significantSignatureParams = signatureParams;
-		setupImageDepictors();
+		setupImageDepictors(predictor);
 	}
 
 	public boolean isUsed() {
@@ -185,61 +189,22 @@ public class PredictionImageHandler {
 		return gradientDepictor != null;
 	}
 
-	public void writeSignificantSignatureImage(IAtomContainer mol, 
-			Set<Integer> ss, 
-			Map<String,Double> pvals,
-			Map<String,Double> probs,
-			String label){
+	public void writeSignificantSignatureImage(RenderInfo info) {
 		
-		try{
-			// Get the file
-			File imgFile = signatureFileHandler.getNextImageFile(mol);
-
-			SignificantSignatureFigureBuilder figBuilder = new SignificantSignatureFigureBuilder(signatureDepictor)
-				.figureHeight(significantSignatureParams.imageHeight)
-				.figureWidth(significantSignatureParams.imageWidth);
-
-			if (pvals != null) {
-				figBuilder.addFieldUnderImg(new PValuesField(pvals));
-			}
-			if (probs != null) {
-				figBuilder.addFieldUnderImg(new ProbabilityField(probs));
-			}
-			if (significantSignatureParams.depictColorScheme) {
-				if (label != null && pvals != null)
-					figBuilder.addFieldUnderImg(new HighlightExplanationField(
-							(signatureDepictor).getHighlightColor(),
-							label));
-				else // Regression and CVAP
-					figBuilder.addFieldUnderImg(new HighlightExplanationField(
-							(signatureDepictor).getHighlightColor()));
-			}
-			figBuilder.build(mol, ss).saveToFile(imgFile);
+		try {
+			signatureDepictor.render(info).saveToFile(signatureFileHandler.getNextImageFile(info.getMol()));
 		} catch(Exception e){
 			LOGGER.debug("Failed depicting molecule",e);
 		} 
 
 	}
 
-	public void writeGradientImage(IAtomContainer mol, 
-			Map<Integer,Double> grad, 
-			Map<String,Double> pvals,
-			Map<String,Double> probs){
-		// Get the file
-		try{
-			File imgFile = gradientFileHandler.getNextImageFile(mol);
+	public void writeGradientImage(RenderInfo info) {
+		
+		try {
 
-			GradientFigureBuilder figBuilder = new GradientFigureBuilder(gradientDepictor)
-				.figureHeight(gradientParams.imageHeight)
-				.figureWidth(gradientParams.imageWidth);
-			
-			if (pvals!=null)
-				figBuilder.addFieldUnderImg(new PValuesField(pvals));
-			if (probs != null) 
-				figBuilder.addFieldUnderImg(new ProbabilityField(probs));
-			if (gradientParams.depictColorScheme)
-				figBuilder.addFieldUnderImg(new ColorGradientField(gradientDepictor));
-			figBuilder.build(mol, grad).saveToFile(imgFile);
+			gradientDepictor.render(info).saveToFile(gradientFileHandler.getNextImageFile(info.getMol()));
+
 		} catch(Exception e){
 			LOGGER.debug("Failed depicting molecule",e);
 		} 
@@ -266,7 +231,7 @@ public class PredictionImageHandler {
 
 
 			else if (outputDir.getName().contains(".")){
-				LOGGER.debug("User has set a specific file name: " + outputDir.getName());
+				LOGGER.debug("User has set a specific file name: {}", outputDir.getName());
 
 				imageBaseName = outputDir.getName().substring(0, outputDir.getName().lastIndexOf('.'));
 
@@ -294,7 +259,7 @@ public class PredictionImageHandler {
 
 			}
 
-			LOGGER.debug("Image ouput directory is '{}' with base name '{}'",directory,imageBaseName);
+			LOGGER.debug("Image output directory is '{}' with base name '{}'",directory,imageBaseName);
 
 		}
 
@@ -324,12 +289,12 @@ public class PredictionImageHandler {
 
 
 
-	private void setupImageDepictors() throws IllegalArgumentException {
+	private void setupImageDepictors(ChemPredictor predictor) throws IllegalArgumentException {
 		if (gradientParams.createImgs){
 			if (gradientParams.imageFile == null)
 				throw new IllegalArgumentException("Image file must be given when creating images");
 
-			try{
+			try {
 				// set up the output folder
 				gradientFileHandler = new ImageFileHandler(gradientParams.imageFile);
 			} catch(IOException e){
@@ -338,10 +303,26 @@ public class PredictionImageHandler {
 						gradientParams.imageFile);
 			}
 
+			AtomContributionRenderer.Builder builder = new AtomContributionRenderer.Builder()
+				.colorScheme(gradientParams.colorScheme)
+				.width(gradientParams.imageWidth)
+				.height(gradientParams.imageHeight);
+			// Configure the molecule depiction
+			builder.molBuilder()
+				.showAtomNumbers(gradientParams.atomNumberColor!=null)
+				.numberColor(gradientParams.atomNumberColor);
+				
+			// Add predictions
+			if (predictor.getPredictor() instanceof ConformalClassifier){
+				builder.addFieldUnderMol(new PValuesField.Builder(((ChemClassifier) predictor).getLabelsSet()).build());
+			} else if (predictor.getPredictor() instanceof VennABERSPredictor){
+				builder.addFieldOverMol(new ProbabilityField.Builder(((ChemClassifier)predictor).getLabelsSet()).build());
+			}
 
-			gradientDepictor = new MoleculeGradientDepictor(gradientParams.colorScheme);
-			gradientDepictor.setDepictAtomNumbers(gradientParams.atomNumberColor!=null);
-			gradientDepictor.setAtomNumColor(gradientParams.atomNumberColor);
+			// Add gradient
+			if (gradientParams.depictColorScheme)
+				builder.addFieldUnderMol(new ColorGradientField.Builder(gradientParams.colorScheme).build());
+			
 			LOGGER.debug("finished configuring gradient depictor");
 		}
 
@@ -358,10 +339,26 @@ public class PredictionImageHandler {
 				throw new IllegalArgumentException("Image file must be given when creating images");
 			}
 
+			SignificantSignatureRenderer.Builder builder = new SignificantSignatureRenderer.Builder()
+				.highlight(significantSignatureParams.highlightColor)
+				.width(significantSignatureParams.imageWidth)
+				.height(significantSignatureParams.imageHeight);
+			// Configure the molecule depiction
+			builder.molBuilder()
+				.showAtomNumbers(significantSignatureParams.atomNumberColor!=null)
+				.numberColor(significantSignatureParams.atomNumberColor);
+			// Add predictions
+			if (predictor.getPredictor() instanceof ConformalClassifier){
+				// Add the p-values
+				builder.addFieldUnderMol(new PValuesField.Builder(((ChemClassifier) predictor).getLabelsSet()).build());
+			} else if (predictor.getPredictor() instanceof VennABERSPredictor){
+				builder.addFieldOverMol(new ProbabilityField.Builder(((ChemClassifier)predictor).getLabelsSet()).build());
+			}
 
-			signatureDepictor = new MoleculeSignificantSignatureDepictor(significantSignatureParams.highlightColor);
-			signatureDepictor.setDepictAtomNumbers(significantSignatureParams.atomNumberColor!=null);
-			signatureDepictor.setAtomNumColor(significantSignatureParams.atomNumberColor);
+			// Add gradient
+			if (significantSignatureParams.depictColorScheme)
+				builder.addFieldUnderMol(new HighlightExplanationField.Builder(significantSignatureParams.highlightColor).build());
+
 			LOGGER.debug("finished configuring significant signature depictor");
 		}
 		

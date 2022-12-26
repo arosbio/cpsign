@@ -101,7 +101,7 @@ public class MoleculeDepictor {
 		bgColor = b.background;
 		imageOp = b.imageOp;
 		atomNumberScaleFactor = b.atomNumberScaleFactor;
-		font = b.font;
+		font = b.font != null ? b.font : DEFAULT_FONT;
 		forceRecalcCoordinates = b.forceCalcNew2DCoords;
 		if (b.generators != null)
 			generators = new ArrayList<>(b.generators);
@@ -126,7 +126,7 @@ public class MoleculeDepictor {
 		private Color background = null;
 		private List<BufferedImageOp> imageOp = null;
 		private double atomNumberScaleFactor = 1d;
-		private Font font = DEFAULT_FONT;
+		private Font font = null;
 		private List<IGenerator<IAtomContainer>> generators;
 		private boolean forceCalcNew2DCoords = false;
 
@@ -315,7 +315,7 @@ public class MoleculeDepictor {
 		}
 		/**
 		 * Get the Font used for atoms and atom numbers
-		 * @return the Builder instance
+		 * @return the Font, or {@code null} if no explicit font was set
 		 */
 		public Font font(){
 			return font;

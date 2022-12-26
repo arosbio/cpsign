@@ -213,7 +213,6 @@ public class Predict implements RunnableCmd, SupportsProgressBar{
 
 
 		// if Predict from an input file
-
 		if (toPredict.toPredict.predictFile!=null){
 
 			try {
@@ -236,10 +235,7 @@ public class Predict implements RunnableCmd, SupportsProgressBar{
 			pb.addAdditionalSteps(numSteps); 
 		}
 
-		// Setup prediction depictions
-		imageHandler = new PredictionImageHandler(
-				gradientImageSection, 
-				signatureImageSection);
+		
 
 		console.println(ProgressInfoTexts.DONE_TAG, PrintMode.NORMAL);
 		pb.stepProgress();
@@ -252,6 +248,11 @@ public class Predict implements RunnableCmd, SupportsProgressBar{
 		// LOAD MODEL
 		pb.setCurrentTask(PB.LOADING_FILE_OR_MODEL_PROGRESS);
 		ChemPredictor predictor = loadModel();
+		// Setup prediction depictions
+		imageHandler = new PredictionImageHandler(
+				gradientImageSection, 
+				signatureImageSection,
+				predictor);
 		if (imageHandler.isUsed() && !predictor.usesSignaturesDescriptor()) {
 			LOGGER.debug("Loaded model without signatures descriptor and got argument for generating prediction images - failing!");
 			console.failWithArgError("Generating prediction images is only available when using the signatures descriptor");
@@ -275,7 +276,6 @@ public class Predict implements RunnableCmd, SupportsProgressBar{
 
 	}
 
-	@SuppressWarnings("null")
 	private ChemPredictor loadModel() {
 		console.print(OutputNamingSettings.ProgressInfoTexts.LOADING_MODEL, PrintMode.NORMAL);
 
@@ -650,14 +650,14 @@ public class Predict implements RunnableCmd, SupportsProgressBar{
 	private void generateImgs(IAtomContainer mol, ResultsHandler res) {
 		if (imageHandler.isPrintingSignatureImgs()){
 			try {
-				String label = null;
-				if (res.pValues != null) {
-					label = ClassificationUtils.getPredictedClass(res.pValues);
-				} else if (res.probabilities != null) {
-					label = ClassificationUtils.getPredictedClass(res.probabilities);
-				}
+				// String label = null;
+				// if (res.pValues != null) {
+				// 	label = ClassificationUtils.getPredictedClass(res.pValues);
+				// } else if (res.probabilities != null) {
+				// 	label = ClassificationUtils.getPredictedClass(res.probabilities);
+				// }
 
-				imageHandler.writeSignificantSignatureImage(mol, res.signSign.getAtoms(), res.pValues, res.getProbabilities(), label);
+				imageHandler.writeSignificantSignatureImage(res.toRenderInfo(mol)); // mol, res.signSign.getAtoms(), res.pValues, res.getProbabilities(), label);
 			} catch (Exception e) {
 				LOGGER.debug("Exception writing significant signature depiction", e);
 				LOGGER.error("Error writing significant signature depiction: {}", e.getMessage());
@@ -665,7 +665,7 @@ public class Predict implements RunnableCmd, SupportsProgressBar{
 		}
 		if (imageHandler.isPrintingGradientImgs()) {
 			try {
-				imageHandler.writeGradientImage(mol, res.signSign.getAtomContributions(), res.pValues, res.probabilities);
+				imageHandler.writeGradientImage(res.toRenderInfo(mol)); //mol, res.signSign.getAtomContributions(), res.pValues, res.probabilities);
 			} catch (Exception e) {
 				LOGGER.debug("Exception writing gradient depiction", e);
 				LOGGER.error("Error writing gradient depiction: {}", e.getMessage());

@@ -7,30 +7,26 @@
  *
  * 2) CPSign Proprietary License that allows you to use CPSign for commercial activities, such as in a revenue-generating operation or environment, or integrate CPSign in your proprietary software without worrying about disclosing the source code of your proprietary software, which is required if you choose to use the software under GPLv3 license. See arosbio.com/cpsign/commercial-license for details.
  */
-package com.arosbio.chem.io.out.fields;
+package com.arosbio.chem.io.out.image.fields;
 
-import java.text.AttributedString;
-import java.awt.font.TextAttribute;
-import java.util.ArrayList;
+import java.awt.Graphics2D;
+import java.awt.geom.Dimension2D;
+import java.awt.geom.Rectangle2D;
 import java.util.List;
-import java.util.Map;
 
-import com.arosbio.commons.MathUtils;
+import com.arosbio.chem.io.out.image.RendererTemplate;
+import com.arosbio.chem.io.out.image.RendererTemplate.RenderInfo;
+import com.arosbio.chem.io.out.image.layout.Layout;
+import com.arosbio.chem.io.out.image.layout.Position.Vertical;
 
-public class PValuesField extends TextField {
+public interface FigureField {
 	
-	public PValuesField(Map<String, Double> pVals) {
-		super(getStrings(pVals));
-	}
+	public Vertical getAlignment();
 	
-	private static List<AttributedString> getStrings(Map<String, Double> pVals){
-		List<AttributedString> lines = new ArrayList<>();
-		for(Map.Entry<String, Double> pval : pVals.entrySet()){
-			AttributedString line = new AttributedString("p["+pval.getKey()+"]="+MathUtils.roundTo3significantFigures(pval.getValue()));
-			line.addAttribute(TextAttribute.POSTURE, TextAttribute.POSTURE_OBLIQUE,0,1);
-			lines.add(line);
-		}
-		return lines;
-	}
+	public List<Layout> getLayouts();
 
+	public Dimension2D calculateDim(RendererTemplate.Context context);
+
+	public void render(Graphics2D graphics, Rectangle2D area, RenderInfo info) throws IllegalStateException;
+	
 }

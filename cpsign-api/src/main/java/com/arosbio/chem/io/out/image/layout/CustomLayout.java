@@ -7,20 +7,22 @@
  *
  * 2) CPSign Proprietary License that allows you to use CPSign for commercial activities, such as in a revenue-generating operation or environment, or integrate CPSign in your proprietary software without worrying about disclosing the source code of your proprietary software, which is required if you choose to use the software under GPLv3 license. See arosbio.com/cpsign/commercial-license for details.
  */
-package com.arosbio.chem.io.out.image;
+package com.arosbio.chem.io.out.image.layout;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Graphics;
+import java.awt.Stroke;
 import java.awt.Graphics2D;
-import java.awt.image.BufferedImage;
+import java.awt.geom.Rectangle2D;
+
+import org.apache.commons.lang3.tuple.Pair;
 
 public class CustomLayout implements Layout {
 	
 	private final Boarder boarder;
 	private final Padding padding;
 	private final Margin margin;
-	private final int addedW, addedH;
+	private final Pair<Integer,Integer> addedWidthLeftRight, addedHeightTopBottom;
 
 	public static class Builder {
 		private Boarder b;
@@ -46,56 +48,72 @@ public class CustomLayout implements Layout {
 		}
 	}
 	
-	public CustomLayout(Builder b){
+	private CustomLayout(Builder b){
 		if (b.p == null && b.m == null && b.b == null)
 			throw new IllegalArgumentException("Custom layout cannot be empty");
 
 		this.padding = b.p != null? b.p : new Padding(0);
 		this.boarder = b.b; // note - this may be null!
 		this.margin = b.m != null? b.m : new Margin(0);
-		int tmpW = padding.getW() + margin.getW();
-		int tmpH = padding.getH() + margin.getH();
+		int tmpL = padding.left + margin.left,
+			tmpR = padding.right + margin.right,
+			tmpT = padding.top + margin.top,
+			tmpB = padding.top + margin.bottom;
 		if (this.boarder != null){
-			tmpW += this.boarder.getWidth()*2;
-			tmpH += this.boarder.getWidth()*2;
+			int w = this.boarder.getWidth();
+			tmpL += w;
+			tmpR += w;
+			tmpT += w;
+			tmpB += w;
 		}
-		this.addedH = tmpH;
-		this.addedW = tmpW;
+		this.addedHeightTopBottom = Pair.of(tmpT, tmpB);
+		this.addedWidthLeftRight = Pair.of(tmpL,tmpR);
 
-		if (addedH == 0 && addedW == 0)
+		if (tmpT+tmpB == 0 && tmpL+tmpR == 0)
 			throw new IllegalArgumentException("Custom layout cannot be empty");
 	}
 	
 	public int getAdditionalWidth(){
-		return addedW;
-	}
-	
-	public int getAdditionalHeight(){
-		return addedH;
+		return addedWidthLeftRight.getLeft() + addedWidthLeftRight.getRight();
 	}
 
-	
-	public BufferedImage addLayout(BufferedImage img){
-		
-		BufferedImage withLayout = new BufferedImage(img.getWidth()+addedW, img.getHeight()+addedH, img.getType());
-		Graphics2D g = withLayout.createGraphics();
+	@Override
+	public Pair<Integer, Integer> getAddedLRWidth() {
+		return addedWidthLeftRight;
+	}
+
+	public int getAdditionalHeight(){
+		return addedHeightTopBottom.getLeft() + addedHeightTopBottom.getRight();
+	}
+
+	@Override
+	public Pair<Integer, Integer> getAddedTBHeight() {
+		return addedHeightTopBottom;
+	}
+
+	public Rectangle2D addLayout(Graphics2D g, Rectangle2D area){
 		
 		if (boarder!=null){
-			boarder.paint(g, margin.left, margin.top, withLayout.getWidth()-margin.right-1, withLayout.getHeight()-margin.bottom-1);
+			boarder.paint(g, 
+				(int) (area.getMinX() + margin.left), // x0
+				(int) (area.getMinY() + margin.top), // y0
+				(int) (area.getWidth() - margin.getW() ), // width
+				(int) (area.getHeight() - margin.getH() )); // height
 		}
-		
-		int imgStartX = padding.left + (boarder!=null?boarder.getWidth():0)+margin.left;
-		int imgStartY = padding.top + (boarder!=null?boarder.getWidth():0)+margin.top;
-		g.drawImage(img, imgStartX, imgStartY, img.getWidth(), img.getHeight(), null);
-		g.dispose();
-		return withLayout;
+		// Compute the output area
+		Rectangle2D out =  new Rectangle2D.Double(
+			area.getMinX()+addedWidthLeftRight.getLeft(),
+			area.getMinY()+addedHeightTopBottom.getLeft(),
+			area.getWidth() - getAdditionalWidth(),
+			area.getHeight() - getAdditionalHeight());
+		return out;
 	}
 	
-	private static class BoxSpace {
+	private static class BoxDimension {
 		
 		final int left, right, top, bottom;
 		
-		public BoxSpace(int top, int right, int bottom, int left){
+		public BoxDimension(int top, int right, int bottom, int left){
 			this.left = Math.max(0, left);
 			this.right = Math.max(0, right);
 			this.top = Math.max(0, top);
@@ -130,7 +148,7 @@ public class CustomLayout implements Layout {
 		}
 	}
 	
-	public static class Padding extends BoxSpace {
+	public static class Padding extends BoxDimension implements Layout  {
 		public Padding(int padding){
 			this(padding, padding, padding, padding);
 		}
@@ -142,9 +160,38 @@ public class CustomLayout implements Layout {
 		public Padding(int top, int right, int bottom, int left){
 			super(top, right, bottom, left);
 		}
+
+		@Override
+		public int getAdditionalWidth() {
+			return getW();
+		}
+
+		@Override
+		public Pair<Integer, Integer> getAddedLRWidth() {
+			return Pair.of(left, right);
+		}
+
+		@Override
+		public int getAdditionalHeight() {
+			return getH();
+		}
+
+		@Override
+		public Pair<Integer, Integer> getAddedTBHeight() {
+			return Pair.of(top,bottom);
+		}
+
+		@Override
+		public Rectangle2D addLayout(Graphics2D g, Rectangle2D area) {
+			return new Rectangle2D.Double(
+				area.getMinX()+left,
+				area.getMinY()+top,
+				area.getWidth()-left-right,
+				area.getHeight()-top-bottom);
+		}
 	}
 	
-	public static class Margin extends BoxSpace {
+	public static class Margin extends BoxDimension implements Layout {
 		public Margin(int margin){
 			this(margin, margin, margin, margin);
 		}
@@ -155,6 +202,35 @@ public class CustomLayout implements Layout {
 		
 		public Margin(int top, int right, int bottom, int left){
 			super(top, right, bottom, left);
+		}
+
+		@Override
+		public int getAdditionalWidth() {
+			return getW();
+		}
+
+		@Override
+		public Pair<Integer, Integer> getAddedLRWidth() {
+			return Pair.of(left, right);
+		}
+
+		@Override
+		public int getAdditionalHeight() {
+			return getH();
+		}
+
+		@Override
+		public Pair<Integer, Integer> getAddedTBHeight() {
+			return Pair.of(top,bottom);
+		}
+
+		@Override
+		public Rectangle2D addLayout(Graphics2D g, Rectangle2D area) {
+			return new Rectangle2D.Double(
+				area.getMinX()+left,
+				area.getMinY()+top,
+				area.getWidth()-left-right,
+				area.getHeight()-top-bottom);
 		}
 	}
 	
@@ -209,30 +285,33 @@ public class CustomLayout implements Layout {
 			return (int) Math.ceil(stroke.getLineWidth());
 		}
 		
-		public void paint(Graphics g, int x0, int y0, int x1, int y1){
-			Graphics2D g2d = (Graphics2D) g;
+		public void paint(Graphics2D g2d, int x0, int y0, int w, int h){
+			Color tmpC = g2d.getColor();
+			Stroke tmpStroke = g2d.getStroke();
 			g2d.setColor(boarderColor);
 			g2d.setStroke(stroke);
 			
-			int startX = x0+(int)(stroke.getLineWidth()/2);
-			int width =  (x1-startX)-(int)(stroke.getLineWidth()/2.001); // - Math.round(stroke.getLineWidth());
-			int startY = y0+(int)(stroke.getLineWidth()/2);
-			int height =  (y1-startY)-(int)(stroke.getLineWidth()/2.001); // - (int)stroke.getLineWidth();//Math.ceil(
+			w -= getWidth();
+			h -= getWidth();
 			
-			if(shape == BoarderShape.ROUNDED_RECTANGLE){
-				int archWidth = (int) Math.round((x1-x0)*ROUNDING_FACTOR);
-				g2d.drawRoundRect(startX, startY,
-						width, 
-						height, 
+			if (shape == BoarderShape.ROUNDED_RECTANGLE){
+				int archWidth = (int) Math.round(h*ROUNDING_FACTOR);
+				g2d.drawRoundRect(x0, y0,
+						w, 
+						h, 
 						archWidth, archWidth);
 			} else {
-				g2d.drawRect(startX, startY, 
-						width, 
-						height);
+				g2d.drawRect(x0, y0,
+						w, 
+						h);
 			}
-			
+			// Set back the original settings
+			g2d.setColor(tmpC);
+			g2d.setStroke(tmpStroke);
 		}
 
 	}
+
+
 
 }

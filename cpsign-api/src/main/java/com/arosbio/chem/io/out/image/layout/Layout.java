@@ -7,33 +7,27 @@
  *
  * 2) CPSign Proprietary License that allows you to use CPSign for commercial activities, such as in a revenue-generating operation or environment, or integrate CPSign in your proprietary software without worrying about disclosing the source code of your proprietary software, which is required if you choose to use the software under GPLv3 license. See arosbio.com/cpsign/commercial-license for details.
  */
-package com.arosbio.chem.io.out.depictors;
+package com.arosbio.chem.io.out.image.layout;
 
-import java.awt.image.BufferedImage;
-import java.util.Map;
+import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
 
-import org.openscience.cdk.interfaces.IAtom;
-import org.openscience.cdk.interfaces.IAtomContainer;
+import org.apache.commons.lang3.tuple.Pair;
 
-import com.arosbio.color.gradient.ColorGradient;
-import com.arosbio.color.gradient.GradientFactory;
-
-public class MoleculeGradientDepictor extends MoleculeImageDepictor {
-
-	public MoleculeGradientDepictor(){
-		super(GradientFactory.getDefaultBloomGradient());
-	}
+public interface Layout {
 	
-	public MoleculeGradientDepictor(ColorGradient gradient) {
-		super(gradient);
-	}
-	
-	public ColorGradient getColorGradient(){
-		return super.getColorGradient();
-	}
-	
-	public BufferedImage depict(IAtomContainer mol, Map<IAtom, Double> gradient){
-		return super.doDepict(mol, gradient);
-	}
+	public int getAdditionalWidth();
 
+	public Pair<Integer,Integer> getAddedLRWidth();
+	
+	public int getAdditionalHeight();
+
+	/**
+	 * Getter for the top - bottom height
+	 * @return pair with top and bottom heights
+	 */
+	public Pair<Integer,Integer> getAddedTBHeight();
+
+	public Rectangle2D addLayout(Graphics2D g, Rectangle2D area);
+	
 }

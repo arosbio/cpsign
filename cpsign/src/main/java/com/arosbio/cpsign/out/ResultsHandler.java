@@ -15,8 +15,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.openscience.cdk.interfaces.IAtomContainer;
+
 import java.util.Set;
 
+import com.arosbio.chem.io.out.image.RendererTemplate.RenderInfo;
 import com.arosbio.cheminf.SignificantSignature;
 import com.arosbio.commons.MathUtils;
 import com.arosbio.cpsign.out.OutputNamingSettings.JSON;
@@ -211,6 +215,13 @@ public class ResultsHandler {
 		cobj.put(JSON.REG_RANGE_UPPER_CAPPED_KEY, upperCapped);
 
 		return cobj;
+	}
+
+	public RenderInfo toRenderInfo(IAtomContainer mol){
+		return new RenderInfo.Builder(mol,signSign)
+			.pValues(pValues)
+			.probabilities(probabilities)
+			.build();
 	}
 
 	public Map<Object,Object> getFlatMapping(){

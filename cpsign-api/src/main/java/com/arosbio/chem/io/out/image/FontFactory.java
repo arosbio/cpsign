@@ -20,6 +20,10 @@ public class FontFactory {
 	private static final Logger LOGGER = LoggerFactory.getLogger(FontFactory.class);
 	private static final int DEFAULT_FONT_SIZE = 13;
 	
+	/**
+	 * Get the plain font using the default 13pt font size
+	 * @return the default 13pt font size
+	 */
 	public static Font plain(){
 		return plain(DEFAULT_FONT_SIZE);
 	}
