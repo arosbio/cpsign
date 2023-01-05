@@ -189,7 +189,7 @@ public class CLIConsole {
 
 	private void writeStdError(String text, boolean newLine, Object... args) {
 		if (text != null) {
-			System.err.printf(text,args); // TODO - is JANSI fixing this?
+			System.err.printf(text,args);
 			if (newLine)
 				System.err.println();
 		} else {

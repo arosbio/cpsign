@@ -321,7 +321,6 @@ public class TestSubSet extends TestEnv {
 		prob = new KeepMaxLabel().fitAndTransform(prob);
 //		prob.resolveDuplicates(DuplicatesStrategyFactory.keepMax());
 		Assert.assertEquals(4, prob.size());
-		System.err.println(prob.size());
 		
 		prob.add(new DataRecord(0.0, feature));
 		prob.add(new DataRecord(0.0, feature2));
@@ -336,7 +335,6 @@ public class TestSubSet extends TestEnv {
 		Assert.assertEquals(4*3, prob.size());
 		
 		prob = new UseVoting().fitAndTransform(prob);
-//		prob.resolveDuplicates(DuplicatesStrategyFactory.voting());
 		Assert.assertEquals(4, prob.size());
 	}
 

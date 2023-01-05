@@ -42,9 +42,6 @@ public class TestCollectionUtils {
 		Assert.assertEquals(9, doubleList.size());
 		Assert.assertEquals(Math.pow(2, 0), (double) doubleList.get(0),0.00001);
 		Assert.assertEquals(Math.pow(2, -8), (double) doubleList.get(8),0.00001);
-
-		// System.err.println(CollectionUtils.listRange(0, -8, -1));
-		// System.err.println(CollectionUtils.listRange(0, -8, -1, 2));
 	}
 
 	@Test
@@ -88,7 +85,6 @@ public class TestCollectionUtils {
 	public void testListRangeInteger() {
 		Assert.assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
 				CollectionUtils.listRange(1, 10, 1));
-		//		System.err.println(CollectionUtils.listRange(1, 10, 1));
 
 		try {
 			CollectionUtils.listRange(0, 1001);

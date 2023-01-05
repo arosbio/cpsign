@@ -79,9 +79,9 @@ public class TestMathUtils {
 		Assert.assertEquals("4770.0", n.toString());
 		double original = 0.1251212159128519241299866;
 		for (int i=1; i<10; i++) {
-			System.err.println(MathUtils.roundToNSignificantFigures(original, i));
+			// System.err.println(MathUtils.roundToNSignificantFigures(original, i));
 			String rounded = ""+MathUtils.roundToNSignificantFigures(original, i);
-			System.out.println(""+ i + " : " + rounded);
+			// System.out.println(""+ i + " : " + rounded);
 			String decimals = rounded.split("\\.")[1];
 			Assert.assertEquals(i,decimals.length());
 		}
@@ -166,14 +166,6 @@ public class TestMathUtils {
 		for (Integer k : correctValues.keySet()){
 			Assert.assertEquals(correctValues.get(k), normalized.get(k), 0.000001);
 		}
-	}
-
-	// @Test
-	public void compareNonFiniteDoubles(){
-		System.err.println("NaN: " + Double.compare(Double.NaN, Double.NaN));
-		System.err.println("NaN: " + Double.compare(Double.POSITIVE_INFINITY, Double.NaN));
-		System.err.println("NaN: " + Double.compare(Double.NaN, Double.POSITIVE_INFINITY));
-		System.err.println("NaN: " + Double.compare(Double.NEGATIVE_INFINITY, Double.NaN));
 	}
 
 	public static enum EnumType {

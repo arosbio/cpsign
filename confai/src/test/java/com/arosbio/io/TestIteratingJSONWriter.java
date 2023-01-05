@@ -61,7 +61,6 @@ public class TestIteratingJSONWriter {
 	public void testMultipleItems() throws IOException {
 		JsonArray arr = new JsonArray(Arrays.asList(jsonItem, jsonItem, jsonItem, jsonItem));
 		String written = doTestWrite(arr,false); 
-//		System.err.println(written);
 		
 		String correct = Jsoner.prettyPrint(arr.toJson());
 		Assert.assertEquals("should equal, with a trailing new-line",correct, written);

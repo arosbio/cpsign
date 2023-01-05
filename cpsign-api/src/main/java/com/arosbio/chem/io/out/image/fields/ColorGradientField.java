@@ -110,39 +110,17 @@ public class ColorGradientField extends AbstractField {
 
         // make sure we have a OK gradient height
         if (gradientHeight == null || gradientHeight<=0){
-            gradientHeight = (int) Math.round(context.defaultFont.getSize()*GRADIENT_HEIGHT_SCALE_FACTOR); //(int) Math.round
-            // System.err.println("setting using default values");
+            gradientHeight = (int) Math.round(context.defaultFont.getSize()*GRADIENT_HEIGHT_SCALE_FACTOR);
         }
-        // int tmpHeight = gradientHeight + calculateAddedLayoutHeight();
         plusMinusFont = getPlusMinusFont(context);
         padding = (int)(context.defaultFont.getSize()*PADDING_BETWEEN_GRADIENT_AND_TEXT_SCALE_FACTOR);
 
         int legendHeight = (displayPlusMinus? padding+context.defaultFont.getSize() : 0) +
             gradientHeight + calculateAddedLayoutHeight();
-        // if (displayPlusMinus){
-        //     // Create the larger font for the +/- sign
-            
-            
-        //     tmpHeight += padding + gradientHeight; // add the padding between and height of text
-        // }
 
         return new Dimension(
             context.imageFullWidth,
             legendHeight);
-        // plusMinusFont = getPlusMinusFont(context);
-
-        // int legendFontSizeTrueSizePix = FontUtils.getHeight(plusMinusFont);
-		// padding = (int)(legendFontSizeTrueSizePix*PADDING_BETWEEN_GRADIENT_AND_TEXT_SCALE_FACTOR);
-		// if (gradientHeight == null || gradientHeight<=0){
-        //     gradientHeight = (int) Math.round(legendFontSizeTrueSizePix);
-        //     System.err.println("setting using default values");
-        // }
-			
-		// int legendHeight = (displayPlusMinus ? legendFontSizeTrueSizePix+padding : 0) + gradientHeight;
-
-        // return new Dimension(
-        //     context.imageFullWidth,
-        //     legendHeight + calculateAddedLayoutHeight());
     }
 
     @Override
@@ -187,7 +165,7 @@ public class ColorGradientField extends AbstractField {
 
             Rectangle2D gradientArea = new Rectangle2D.Double(
                 currentArea.getMinX(), // 
-                currentArea.getMaxY()-gradientHeight.doubleValue(), //
+                currentArea.getMaxY()-gradientHeight.doubleValue(),
                 currentArea.getWidth(),
                 gradientHeight.doubleValue());
             drawGradient(graphics, gradientArea);

@@ -29,8 +29,6 @@ public abstract class TextField extends FieldWithText {
         super(b);
     }
 
-    // static abstract class Builder<F extends TextField, B extends Builder<F,B>> extends FieldWithText.Builder<F,Builder<F,B>> {}
-
     /**
      * An immutable text field (i.e. will not change between depictions)
      */
@@ -141,7 +139,6 @@ public abstract class TextField extends FieldWithText {
             this.context = context;
             
             Dimension2D textDim = ImageUtils.calculateRequiredSpace(context.imageFullWidth, getFont(context), replacer.getBase());
-            // System.err.printf("Num lines: %d size: %s from field %s%n",replacer.getBase().size(),textDim, this.getClass().getSimpleName());
             return new Dimension(
                 (int)Math.ceil(textDim.getWidth()) + calculateAddedLayoutWidth(),
                 (int)Math.ceil(textDim.getHeight()) + calculateAddedLayoutHeight());

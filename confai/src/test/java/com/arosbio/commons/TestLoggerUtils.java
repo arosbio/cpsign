@@ -103,15 +103,6 @@ public class TestLoggerUtils {
 		return list;
 	}
 	
-//	protected static void printAllAppenders(Logger theLogger){
-//		Iterator<Appender<ILoggingEvent>> appenders = theLogger.iteratorForAppenders();
-//		Appender<ILoggingEvent> currAppender=null;
-//		while(appenders.hasNext()){
-//			currAppender = appenders.next();
-//			System.out.println(currAppender);
-//		}
-//	}
-	
 	// This appender doesn't exist any more!
 //	@Test
 	public void testRemoveStdout_err(){
@@ -201,27 +192,5 @@ public class TestLoggerUtils {
 		}
 	}
 	
-//	@Test
-//	public void testFileNamingMethods() {
-//		String defaultName = "cpsign";
-//		System.err.println(getFileBaseName(defaultName));
-//		System.err.println(getFilePrefix(defaultName));
-//	}
-//	
-//	private static String getFileBaseName(String fullPath){
-//		String fileName = new File(fullPath).getName();
-//		if (fileName.contains("."))
-//			return fileName.substring(0, fileName.lastIndexOf('.'));
-//		return fileName;
-//	}
-//	
-//	private static String getFilePrefix(String fullPath) {
-//		if (fullPath.contains(".")) {
-//			String prefix = fullPath.substring(fullPath.lastIndexOf('.')+1).trim();
-//			if (prefix.length()>0)
-//				return prefix;
-//		}
-//		return "log";
-//	}
 	
 }

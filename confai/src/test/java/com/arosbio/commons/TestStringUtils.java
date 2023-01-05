@@ -57,23 +57,6 @@ public class TestStringUtils {
 		}
 	}
 
-	//	@Test
-	//	public void testFailingWrapSmart2() {
-	//		String text = "Writing cross \n   dadsf\n   dsfadsfvalidation results to file: "+"/private/var/folders/5_/_ndtqgjn17l9y3vc3vcrygym0000gp/T/crossvalidationRes6723143346650463830.tsv";
-	//		String wrapped = StringUtils.wrap(text, CLIConsole.DEFAULT_CLI_CHARS_WIDTH, "");
-	//		System.out.println(wrapped);
-	//		//		assertWrappWorks(text, CLIConsole.CLI_CHARS_WIDTH); No longer works - as long "words" are not wrapped!
-	//	}
-	//
-	//	@Test
-	//	public void testWrapSmart2(){
-	//		String text = "\tThis is and very long texts, how\twill this be handled?";
-	//		assertWrappWorks(text, 10);
-	//		//		String longTextNoSpace = "01234567890123456789012345678901234567890123456789";
-	//		//		assertWrappWorks(longTextNoSpace, 15);
-	//		String textContainingNewLine = "This is a very\n\tlong text, how\twill this\nbe handled?";
-	//		assertWrappWorks(textContainingNewLine, 15);
-	//	}
 
 	void assertWrapWorks(String txt) {
 		assertWrappWorks(txt, null);
@@ -168,26 +151,7 @@ public class TestStringUtils {
 				Assert.assertTrue(lines[i].startsWith("\t"));
 		}
 	}
-	
-//	@Test
-	public void testIndent() {
-		String txt = "Some text%nwithSome lines\nand other stuff..";
-		System.err.println(StringUtils.indent(txt));
-	}
 
-	//	@Test
-	//	public void testWrapSmart() {
-	//		String text = "ds dfad fa";
-	//		String wrapped = StringUtils.wrap(text, 20, "   ");
-	//		if(print)
-	//			System.out.println("'\n"+wrapped+"'");
-	//
-	//		String txt = "Some string with%nNew lines already added both as %n and as \n";
-	//		//		System.err.println(StringUtils.wrapSmart(txt, 15, "  -"));
-	//		//		System.err.println();
-	//		if (print)
-	//			System.out.println(StringUtils.wrap(txt, 15, "\n  -"));
-	//	}
 	
 //	@Test
 	public void testWordWrap() {

@@ -120,7 +120,7 @@ public class TestTransformers extends TestEnv {
 
 		while (iter.hasNext()) {
 			Transformer t = iter.next();
-			System.err.println(t);
+			// System.err.println(t);
 			Assert.assertFalse(t.toString().contains("arosbio"));
 
 		}

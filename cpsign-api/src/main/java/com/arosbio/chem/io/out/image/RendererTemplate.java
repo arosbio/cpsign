@@ -325,7 +325,6 @@ public abstract class RendererTemplate <T> {
             for (Layout l : b.molLayouts){
                 // The outer boundaries of this layout
                 molLayouts.add(Pair.of(l, new Rectangle2D.Double(xStart, topPixelY, xStop-xStart, bottomPixelY - topPixelY)));
-                // System.err.println("Added layout for mol using area: " + molLayouts.get(molLayouts.size()-1).getRight());
                 // left - right
                 Pair<Integer,Integer> lr = l.getAddedLRWidth();
                 xStart += lr.getLeft();

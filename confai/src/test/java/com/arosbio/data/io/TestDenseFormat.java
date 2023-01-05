@@ -68,7 +68,6 @@ public class TestDenseFormat {
             read3 = fmt_sparse.read(is);
         }
         Assert.assertTrue(DataUtils.equals(sparseOriginalData, read3));
-        // System.err.println(os.size() + " vs " + os3.size());
     }
 
     @Test
@@ -99,6 +98,5 @@ public class TestDenseFormat {
         Assert.assertTrue(DataUtils.equals(denseOriginalData, read2));
         Assert.assertTrue(DataUtils.equals(read, read2)); // check that both loaded data sets equals as well
 
-        // System.err.println(os.size() + " vs " + os2.size());
     }
 }

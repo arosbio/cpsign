@@ -87,28 +87,6 @@ public class LoggerUtils {
 		addStreamAppenderToRootLogger(stream);
 		setDebugMode();
 		
-//		Logger rootLogger = 
-//				(Logger)LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME);
-//		LoggerContext context = rootLogger.getLoggerContext();
-//
-//		PatternLayoutEncoder ple = new PatternLayoutEncoder();
-//		ple.setPattern(DEFAULT_PATTERN);
-//		ple.setContext(context);
-//		ple.start();
-//
-//		OutputStreamAppender<ILoggingEvent> streamAppender = new OutputStreamAppender<ILoggingEvent>();
-//		streamAppender.setContext(context);
-//		//		streamAppender.setEncoder(ple);
-//		streamAppender.setOutputStream(stream);
-//		streamAppender.clearAllFilters();
-//
-//		ThresholdFilter thresholdFilter = new ThresholdFilter();
-//		thresholdFilter.setLevel("DEBUG");
-//		streamAppender.addFilter(thresholdFilter);
-//
-//		streamAppender.start();
-//
-//		rootLogger.addAppender(streamAppender);
 	}
 
 	public static String getDefaultLogfileName(){

@@ -53,7 +53,6 @@ public class TestDataSplitting extends TestEnv {
 		Assert.assertEquals(f1.keySet(), f2.keySet());
 		int tot1 = CollectionUtils.sumInts(f1.values()), tot2 = CollectionUtils.sumInts(f2.values());
 		double percentageF2 = ((double) tot2) / tot1;
-		// System.err.println("percentage: " + percentageF2);
 		int numAllowedDiff = evenlyDivisible ? 2 : 3; // 
 
 		for(Double label : f1.keySet()) {

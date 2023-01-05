@@ -68,7 +68,6 @@ public class TestFeatureVectors {
 
 		assertOrdered(v);
 		assertOrdered(sp);
-		//		System.err.println("vec:" + dense);
 
 		doDeleteFeaturesTest(false);
 
@@ -117,8 +116,6 @@ public class TestFeatureVectors {
 
 		FeatureVector clone = v.clone();
 		FeatureVector spClone = sp.clone();
-		//		System.err.println(v);
-		//		System.err.println(clone);
 
 		v.removeFeatureIndex(1);
 		Assert.assertEquals(10, v.getNumExplicitFeatures());
@@ -127,8 +124,6 @@ public class TestFeatureVectors {
 		sp.removeFeatureIndex(2);
 		Assert.assertEquals(9, sp.getNumExplicitFeatures());
 		Assert.assertEquals(9, sp.getLargestFeatureIndex());
-		//		System.err.println(v);
-		//		System.err.println(clone);
 
 		clone.removeFeatureIndices(Arrays.asList(0,2,4,6));
 		Assert.assertEquals(11-4, clone.getNumExplicitFeatures());
@@ -137,7 +132,6 @@ public class TestFeatureVectors {
 		spClone.removeFeatureIndices(Arrays.asList(0,2,4,6));
 		Assert.assertEquals(11-4, spClone.getNumExplicitFeatures());
 		Assert.assertEquals(10-4, spClone.getLargestFeatureIndex());
-		//		System.err.println(clone);
 	}
 
 	public void assert1to10(FeatureVector v) {
@@ -161,7 +155,6 @@ public class TestFeatureVectors {
 			.withFeature(5, 3d)
 			.withFeature(6, -4d)
 			.withFeature(0, 40d);
-		//		System.err.println(v);
 
 		Assert.assertEquals(3d, v.getFeature(5), 0.00001);
 		Assert.assertEquals(40d, v.getFeature(0), 0.00001);
@@ -173,12 +166,6 @@ public class TestFeatureVectors {
 		} catch (IndexOutOfBoundsException e) {}
 
 		doDeleteFeaturesTest(true);
-		//		v.removeFeatureIndex(3);
-		//		System.err.println(v);
-		//		
-		//		v.removeFeatureIndex(0);
-		//		System.err.println(v);
-
 
 	}
 
@@ -207,9 +194,6 @@ public class TestFeatureVectors {
 			indToRemove.add(i);
 		}
 
-		//				SparseVector vec = new SparseVector(feats);
-		//				System.err.println(vec);
-		//				System.err.println("Ind to remove: "+ indToRemove);
 		vec.removeFeatureIndices(indToRemove);
 
 		int ind=0;
@@ -258,7 +242,6 @@ public class TestFeatureVectors {
 		for (int i=0;i<numFeatures;i++) {
 			feats.add(new SparseFeatureImpl(i, i+1));
 		}
-//		System.err.println(feats);
 		// First remove 70% features to make it a sparse array
 		Random rng =  new Random();
 		Set<Integer> sparseIndices = new HashSet<>();
@@ -272,7 +255,6 @@ public class TestFeatureVectors {
 		SparseVector vec = new SparseVector(feats);
 		
 		// Only 30 features left !
-//		int maxFeatIndVec = vec.getLargestFeatureIndex();
 		// Removing 10% more random features
 		Set<Integer> removedIndSet = new HashSet<>();
 		for (int i=0; i<numFeatures*.1; i++) {
@@ -393,8 +375,6 @@ public class TestFeatureVectors {
 		// 0, 3, 6,...,18 --> implicit 0s
 		tmp = sparse.clone();
 		tmp.removeFeatureIndices(Range.closed(0, 2)); // remove 3 - the old "3" feature is implicit and not saved - i.e. new smallest index is 1
-		//		System.err.println(sparse);
-		//		System.err.println(tmp);
 		Assert.assertEquals(tmp.getSmallestFeatureIndex(), 1);
 		Assert.assertEquals(tmp.getLargestFeatureIndex(), testVecLength-1-3);
 		Assert.assertEquals(tmp.getFeature(0), sparse.getFeature(3),.0001);
@@ -473,7 +453,6 @@ public class TestFeatureVectors {
 		tmp.removeFeatureIndices(Range.closed(tmp.getLargestFeatureIndex()-5,tmp.getLargestFeatureIndex())); 
 		Assert.assertEquals(tmp.toString(),tmp.getLargestFeatureIndex(), vectorLength-1-6);
 		Assert.assertEquals(tmp.toString(),tmp.getSmallestFeatureIndex(), 0);
-		//		System.err.println("at least 10" + clone2);
 		////		Assert.assertEquals(clone2.getLargestFeatureIndex(), 9);
 
 
@@ -483,31 +462,7 @@ public class TestFeatureVectors {
 		Assert.assertEquals(tmp.toString(),tmp.getLargestFeatureIndex(), 14);
 		Assert.assertEquals(tmp.toString(),tmp.getSmallestFeatureIndex(), 0);
 
-		//		Assert.assertEquals(v.getSmallestFeatureIndex(), 0);
-		//		Assert.assertEquals(v.getLargestFeatureIndex(), testVecLength-1);
-		//		FeatureVector clone1 = v.clone();
-		//		FeatureVector clone2 = v.clone();
-		//		FeatureVector clone3 = v.clone();
-		//		FeatureVector clone4 = v.clone();
-
-		//		v.removeFeatureIndices(Range.all());
-		//		Assert.assertEquals(v.getLargestFeatureIndex(), -1);
-		//		Assert.assertEquals(v.getSmallestFeatureIndex(), -1);
-		//		
-		//		clone1.removeFeatureIndices(Range.upTo(3, BoundType.CLOSED)); // E.g. including 3 (removing 0-3 --> 4 indices)
-		//		System.err.println(clone1);
-		//		Assert.assertEquals(clone1.getLargestFeatureIndex(), testVecLength-1-4);
-		//		Assert.assertEquals(clone1.getSmallestFeatureIndex(), 0);
-		//		
-		//		
-		//		
-		//		clone2.removeFeatureIndices(Range.atLeast(10));
-		//		System.err.println("at least 10" + clone2);
-		////		Assert.assertEquals(clone2.getLargestFeatureIndex(), 9);
-		//		
-		//		clone3.removeFeatureIndices(Range.closed(5, 20));
-		//		
-		//		clone3.removeFeatureIndices(Range.closed(0, 4));
+		
 	}
 	
 	@Test

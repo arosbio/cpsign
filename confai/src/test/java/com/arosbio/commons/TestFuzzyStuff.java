@@ -34,20 +34,10 @@ public class TestFuzzyStuff {
 
 	@Test
 	public void testPValMatching() {
-//		System.err.println((int)("SplineInterpolation".length()/3.));
 		Assert.assertTrue(FuzzyServiceLoader.load(PValueCalculator.class, "Spline_interpolation") instanceof SplineInterpolatedPValue);
 		Assert.assertTrue(FuzzyServiceLoader.load(PValueCalculator.class, "Spline_interpola") instanceof SplineInterpolatedPValue);
-//		System.err.println(OldFuzzyMatcher.getSubQueries("linearInter"));
-//		System.err.println(FuzzyServiceLoader.load(PValueCalculator.class, "linearInter")); 
 		Assert.assertTrue(FuzzyServiceLoader.load(PValueCalculator.class, "linearInterpol") instanceof LinearInterpolationPValue);
 	}
-	
-	@Test
-	public void testSplit() {
-//		System.err.println(OldFuzzyMatcher.getSubQueries("KFoldCV"));
-	}
-
-	
 
 	
 	@Test
@@ -66,45 +56,9 @@ public class TestFuzzyStuff {
 	
 	@Test
 	public void testFuzzyMatcher2() {
-		
-//		System.err.println((int)(3.*"platt-scaled-svc".length()/5));
-		
-//		FuzzyServiceLoader fsl = new FuzzyServiceLoader();
 		Assert.assertTrue(FuzzyServiceLoader.load(MLAlgorithm.class, "platt-scaled-c-svc") instanceof PlattScaledC_SVC);
-		
-//		Iterator<MLAlgorithm> list = FuzzyServiceLoader.listAll(MLAlgorithm.class);
-//		
-//		while (list.hasNext()) {
-//			System.err.println(list.next());
-//		}
-		
-//		System.err.println(alg);
-		
-//		FuzzyMatcher matcher = new FuzzyMatcher();
-//		matcher.match(objects, query)
 	}
 	
-	@Test
-	public void testDist() {
-//		LevenshteinDistance dist = new LevenshteinDistance(1);
-//		System.err.println(dist.apply("svc", "SVC"));
-//		System.err.println(dist.apply("C SVC", "SVC"));
-//		System.err.println(dist.apply("C SVC", "CostSVC"));
-//		System.err.println(dist.apply("C SVC", "C-SVC"));
-//		System.err.println(dist.apply("C_SVC", "NuSVC"));
-//		System.err.println(dist.apply("C_SVC", "CSVC"));
-	}
-	
-	
-	
-	
-	
-//	public void test(String temp, String query) {
-//		int score = new FuzzyScore(Locale.ENGLISH).fuzzyScore(FuzzyMatcher.standardizeSplits(temp), FuzzyMatcher.standardizeSplits(query));
-//		int score2 = new FuzzyScore(Locale.ENGLISH).fuzzyScore(temp, FuzzyMatcher.standardizeSplits(query));
-//		
-//		System.err.println(score + "  " + score2);
-//	}
 	
 	@Test
 	public void testC_SVC() {

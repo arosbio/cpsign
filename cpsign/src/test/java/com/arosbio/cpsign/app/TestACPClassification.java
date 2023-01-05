@@ -594,8 +594,8 @@ public class TestACPClassification extends CLIBaseTest {
 		CSVParser p = CSVFormat.DEFAULT.withDelimiter('\t').withFirstRecordAsHeader().parse(reader);){
 			
 			List<String> predHeaders = p.getHeaderNames();
-			System.err.println("predHeaders: " + predHeaders);
-			System.err.println("orignalHeaders: " + originalHeaders);
+			// System.err.println("predHeaders: " + predHeaders);
+			// System.err.println("originalHeaders: " + originalHeaders);
 
 			Assert.assertEquals(originalHeaders, predHeaders.subList(0, originalHeaders.size()));
 			Assert.assertTrue(predHeaders.size() >= originalHeaders.size()+2);
