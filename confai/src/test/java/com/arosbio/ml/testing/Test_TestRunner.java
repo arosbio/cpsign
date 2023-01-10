@@ -63,7 +63,7 @@ public class Test_TestRunner extends TestEnv {
 		Classifier svc = new LinearSVC();
 		List<Metric> metrics = MetricFactory.getMetrics(svc, false);
 		TestRunner runner = new TestRunner.Builder(new KFoldCV(NUM_CV_FOLDS, seed)).build();
-		List<Metric> mets = runner.evalulateClassifier(TestDataLoader.getInstance().getDataset(true, true), 
+		List<Metric> mets = runner.evaluateClassifier(TestDataLoader.getInstance().getDataset(true, true), 
 				svc, 
 				metrics);
 		//		SYS_OUT.println(mets);

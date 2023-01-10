@@ -10,7 +10,7 @@ import com.arosbio.ml.cp.PValueTools;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
 
-public class AverageC implements SingleValuedMetric, CPClassificationMetric, ConfidenceDependentMetric, Aliased, Described {
+public class AverageC implements SingleValuedMetric, CPClassifierMetric, ConfidenceDependentMetric, Aliased, Described {
 
     public final static String METRIC_NAME = "AverageC";
     public final static String METRIC_ALIAS = "AvgC";

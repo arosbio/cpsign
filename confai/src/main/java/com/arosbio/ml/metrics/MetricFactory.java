@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.ServiceLoader;
 
 import com.arosbio.commons.FuzzyServiceLoader;
+import com.arosbio.commons.TypeUtils;
 import com.arosbio.data.NamedLabels;
 import com.arosbio.ml.algorithms.Classifier;
 import com.arosbio.ml.algorithms.MLAlgorithm;
@@ -24,6 +25,7 @@ import com.arosbio.ml.algorithms.PseudoProbabilisticClassifier;
 import com.arosbio.ml.algorithms.Regressor;
 import com.arosbio.ml.algorithms.ScoringClassifier;
 import com.arosbio.ml.cp.ConformalClassifier;
+import com.arosbio.ml.cp.ConformalRegressor;
 import com.arosbio.ml.cp.acp.ACPRegressor;
 import com.arosbio.ml.interfaces.Predictor;
 import com.arosbio.ml.metrics.classification.ClassifierMetric;
@@ -31,13 +33,9 @@ import com.arosbio.ml.metrics.classification.LabelDependent;
 import com.arosbio.ml.metrics.classification.PointClassifierMetric;
 import com.arosbio.ml.metrics.classification.ProbabilisticMetric;
 import com.arosbio.ml.metrics.classification.ScoringClassifierMetric;
-import com.arosbio.ml.metrics.cp.classification.CPClassificationMetric;
-import com.arosbio.ml.metrics.cp.regression.CIWidthBasedMetric;
-import com.arosbio.ml.metrics.cp.regression.CPRegressionMetric;
-import com.arosbio.ml.metrics.cp.regression.CPRegressionMultiMetric;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 import com.arosbio.ml.metrics.regression.PointPredictionMetric;
-import com.arosbio.ml.metrics.vap.VAPMetric;
+import com.arosbio.ml.testing.utils.EvaluationUtils;
 import com.arosbio.ml.vap.avap.AVAPClassifier;
 
 public class MetricFactory {
@@ -71,45 +69,34 @@ public class MetricFactory {
 	 */
 	public static List<Metric> getAVAPClassificationMetrics(){
 		List<Metric> metrics = new ArrayList<>();
+		Class<?>[] allowedMetricsClasses = EvaluationUtils.getSupportedMetricClasses(AVAPClassifier.class);
 		
 		Iterator<Metric> iter = getAllMetrics();
 		while (iter.hasNext()) {
 			Metric m = iter.next();
-			if (m instanceof ProbabilisticMetric || 
-					m instanceof ScoringClassifierMetric ||
-					m instanceof PointClassifierMetric || 
-					m instanceof VAPMetric)
+			if (TypeUtils.objectIsOfType(m, allowedMetricsClasses))
 				metrics.add(m);
 		}
-		
+
 		return metrics;
 	}
 
 	public static List<Metric> getCPClassificationMetrics(boolean multiclass){
 		List<Metric> metrics = new ArrayList<>();
+		Class<?>[] allowedMetricsClasses = EvaluationUtils.getSupportedMetricClasses(ConformalClassifier.class);
 		
 		Iterator<Metric> iter = getAllMetrics();
 		while (iter.hasNext()) {
 			Metric m = iter.next();
+			// only care about classifier metrics
+			if (! (m instanceof ClassifierMetric))
+				continue;
+			// If we have a multi-class problem - skip if the metric does not support it
+			if (multiclass && ! ((ClassifierMetric)m).supportsMulticlass())
+				continue;
+			if (TypeUtils.objectIsOfType(m, allowedMetricsClasses))
+				metrics.add(m);
 			
-			if (m instanceof CPClassificationMetric) {
-				// Skip if we have a multi-class problem but metric dosn't support multiclass
-				if (multiclass && ! ((CPClassificationMetric) m).supportsMulticlass())
-					continue;
-				
-				metrics.add(m);
-			} else if (m instanceof PointClassifierMetric) {
-				// Skip if we have a multi-class problem but metric dosn't support multiclass
-				if (multiclass && ! ((PointClassifierMetric) m).supportsMulticlass())
-					continue;
-				metrics.add(m);
-			} else if (m instanceof ScoringClassifierMetric){
-				// Skip if we have a multi-class problem but metric dosn't support multiclass
-				if (multiclass && ! ((ScoringClassifierMetric) m).supportsMulticlass())
-					continue;
-				metrics.add(m);
-			}
-				
 		}
 				
 		return metrics;
@@ -117,13 +104,11 @@ public class MetricFactory {
 
 	public static List<Metric> getACPRegressionMetrics(){
 		List<Metric> metrics = new ArrayList<>();
+		Class<?>[] allowedMetricsClasses = EvaluationUtils.getSupportedMetricClasses(ConformalRegressor.class);
 		Iterator<Metric> iter = getAllMetrics();
 		while (iter.hasNext()) {
 			Metric m = iter.next();
-			if (m instanceof PointPredictionMetric ||
-					m instanceof CPRegressionMetric || 
-					m instanceof CPRegressionMultiMetric ||
-					m instanceof CIWidthBasedMetric)
+			if (TypeUtils.objectIsOfType(m, allowedMetricsClasses))
 				metrics.add(m);
 		}
 		

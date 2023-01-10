@@ -11,7 +11,7 @@ package com.arosbio.ml.metrics;
 
 import com.arosbio.commons.mixins.Named;
 
-public interface Metric extends Named {
+public interface Metric extends Named, Cloneable {
 
 	static String toString(Metric m){
 		return String.format("%s metric",m.getName());

@@ -39,14 +39,9 @@ import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.metrics.classification.PointClassifierMetric;
 import com.arosbio.ml.metrics.classification.ProbabilisticMetric;
 import com.arosbio.ml.metrics.classification.ScoringClassifierMetric;
-import com.arosbio.ml.metrics.cp.classification.CPClassificationMetric;
-import com.arosbio.ml.metrics.cp.regression.CIWidthBasedMetric;
-import com.arosbio.ml.metrics.cp.regression.CPRegressionMetric;
-import com.arosbio.ml.metrics.cp.regression.CPRegressionMultiMetric;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 import com.arosbio.ml.metrics.plots.PlotMetricAggregation;
 import com.arosbio.ml.metrics.regression.PointPredictionMetric;
-import com.arosbio.ml.metrics.vap.VAPMetric;
 import com.arosbio.ml.testing.utils.EvaluationUtils;
 import com.arosbio.ml.vap.avap.AVAPClassifier;
 
@@ -288,17 +283,17 @@ public class TestRunner {
 	}
 
 	private List<Metric> getTestSplitMetrics(List<? extends Metric> metrics){
-		List<Metric> testSplitMets = new ArrayList<>();
+		List<Metric> testSplitMetrics = new ArrayList<>();
 		for (Metric m : metrics){
 			if (m instanceof MetricAggregation){
-				testSplitMets.add( ((MetricAggregation) m).spawnNewMetricInstance());
+				testSplitMetrics.add( ((MetricAggregation) m).spawnNewMetricInstance());
 			} else if (m instanceof PlotMetricAggregation){
-				testSplitMets.add(((PlotMetricAggregation) m).spawnNewMetricInstance());
+				testSplitMetrics.add(((PlotMetricAggregation) m).spawnNewMetricInstance());
 			} else {
-				testSplitMets.add(m); 
+				testSplitMetrics.add(m); 
 			}
 		}
-		return testSplitMets;
+		return testSplitMetrics;
 	}
 
 	private void updateAggregatedMetrics(List<Metric> aggMetrics, List<Metric> splitMetrics){
@@ -317,18 +312,6 @@ public class TestRunner {
 				// Do nothing
 			}
 		}
-	}
-
-	public static boolean metricSupportedByPredictor(Metric metric, Predictor predictor) {
-		// TODO - move to EvaluationUtils class instead
-		if (predictor instanceof ConformalClassifier) {
-			return metric instanceof CPClassificationMetric || metric instanceof PointClassifierMetric || metric instanceof ScoringClassifierMetric;
-		} else if (predictor instanceof ACPRegressor) {
-			return metric instanceof PointPredictionMetric || metric instanceof CPRegressionMetric || metric instanceof CPRegressionMultiMetric || metric instanceof CIWidthBasedMetric;
-		} else if (predictor instanceof AVAPClassifier) {
-			return metric instanceof PointClassifierMetric || metric instanceof VAPMetric || metric instanceof ProbabilisticMetric || metric instanceof ScoringClassifierMetric;
-		} else 
-			throw new IllegalArgumentException("Predictor not supported by testing framework");
 	}
 
 	public static <T extends Metric> boolean metricSupportedByAlgorithm(T metric, MLAlgorithm alg) {
@@ -350,15 +333,11 @@ public class TestRunner {
 	}
 
 	public static boolean supports(Predictor predictor) {
-		if (predictor instanceof ConformalClassifier)
-			return true;
-		if (predictor instanceof ACPRegressor)
-			return true;
-		if (predictor instanceof AVAPClassifier)
-			return true;
-		LOGGER.debug("Was called with predictor of type: {} which is not supported for testing",
-				predictor.getClass());
-		return false;
+		boolean supported = predictor instanceof ConformalClassifier ||predictor instanceof ACPRegressor|| predictor instanceof AVAPClassifier;
+		
+		LOGGER.debug("Was called with predictor of type: {} which is{} supported for testing",
+				predictor.getClass(), supported? "" : " not");
+		return supported;
 	}
 
 	public static class UnsupportedPredictorException extends RuntimeException {
@@ -427,17 +406,17 @@ public class TestRunner {
 				foldAlgorithm.setSeed(strategy.getSeed());
 				foldAlgorithm.train(foldDataset);
 
-				List<Metric> testSplitMets = (useAggregation ? getTestSplitMetrics(usedMetrics) : usedMetrics);
+				List<Metric> testSplitMetrics = (useAggregation ? getTestSplitMetrics(usedMetrics) : usedMetrics);
 
 				for (DataRecord test : currentSplit.getTestSet()) {
 					double yHat = foldAlgorithm.predictValue(test.getFeatures());
-					for (Metric m : testSplitMets) {
+					for (Metric m : testSplitMetrics) {
 						if (m instanceof PointPredictionMetric)
 							((PointPredictionMetric) m).addPrediction(test.getLabel(),yHat);
 					}
 				}
 				if (useAggregation){
-					updateAggregatedMetrics(usedMetrics, testSplitMets);
+					updateAggregatedMetrics(usedMetrics, testSplitMetrics);
 				}
 
 
@@ -463,7 +442,7 @@ public class TestRunner {
 	 * @return Either the same list of metrics given to {@code metrics} or those metrics wrapped in {@link MetricAggregation} and {@link PlotMetricAggregation} instances, depending on the test-strategy and if mean+/- std should be returned
 	 * @throws IllegalArgumentException In case of invalid arguments
 	 */
-	public List<Metric> evalulateClassifier(Dataset data, 
+	public List<Metric> evaluateClassifier(Dataset data, 
 		Classifier algorithm, List<? extends Metric> metrics) throws IllegalArgumentException {
 		
 		if (algorithm == null)
@@ -475,12 +454,12 @@ public class TestRunner {
 		// Validate the metrics
 		if (metrics == null || metrics.isEmpty())
 			throw new IllegalArgumentException("No Metrics given");
-		boolean requireProbabs=false, requireStdPred=false, requireScores=false;
+		boolean requireProbabilities=false, requireStdPred=false, requireScores=false;
 		for (Metric m : metrics) {
 			if (m instanceof PointClassifierMetric)
 				requireStdPred=true;
 			else if (m instanceof ProbabilisticMetric && algorithm instanceof PseudoProbabilisticClassifier)
-				requireProbabs = true;
+				requireProbabilities = true;
 			else if (m instanceof ScoringClassifierMetric && algorithm instanceof ScoringClassifier)
 				requireScores = true;
 			else
@@ -507,17 +486,17 @@ public class TestRunner {
 				Classifier foldAlgorithm = algorithm.clone();
 				foldAlgorithm.train(foldDataset);
 
-				List<Metric> testSplitMets = (useAggregation ? getTestSplitMetrics(usedMetrics) : usedMetrics);
+				List<Metric> testSplitMetrics = (useAggregation ? getTestSplitMetrics(usedMetrics) : usedMetrics);
 
 				for (DataRecord test: currentSplit.getTestSet()) {
 					int observedLabel = (int) test.getLabel();
 					// Predict the stuff
-					Map<Integer, Double> probabs = null;
+					Map<Integer, Double> probabilities = null;
 					Map<Integer, Double> scores = null;
 					int predictedLabel = -Integer.MAX_VALUE;
 
-					if (requireProbabs) {
-						probabs = ((PseudoProbabilisticClassifier)foldAlgorithm).predictProbabilities(test.getFeatures());
+					if (requireProbabilities) {
+						probabilities = ((PseudoProbabilisticClassifier)foldAlgorithm).predictProbabilities(test.getFeatures());
 					} 
 					if (requireScores) {
 						scores = ((ScoringClassifier) foldAlgorithm).predictScores(test.getFeatures());
@@ -526,18 +505,18 @@ public class TestRunner {
 						predictedLabel = foldAlgorithm.predictClass(test.getFeatures());
 					}
 
-					for (Metric builder : testSplitMets) {
+					for (Metric builder : testSplitMetrics) {
 						if (builder instanceof PointClassifierMetric)
 							((PointClassifierMetric) builder).addPrediction(observedLabel, predictedLabel);
 						else if (builder instanceof ProbabilisticMetric && algorithm instanceof PseudoProbabilisticClassifier)
-							((ProbabilisticMetric)builder).addPrediction(observedLabel, probabs);
+							((ProbabilisticMetric)builder).addPrediction(observedLabel, probabilities);
 						else 
 							((ScoringClassifierMetric)builder).addPrediction(observedLabel, scores);
 					}
 				}
 
 				if (useAggregation){
-					updateAggregatedMetrics(usedMetrics, testSplitMets);
+					updateAggregatedMetrics(usedMetrics, testSplitMetrics);
 				}
 
 				split++;

@@ -47,7 +47,7 @@ public class TestLogisticRegression extends TestEnv {
 
 		// Evaluate the LR algorithm
 		sw.start();
-		tester.evalulateClassifier(p, new LogisticRegression(), mets);
+		tester.evaluateClassifier(p, new LogisticRegression(), mets);
 		sw.stop();
 		System.err.println(mets);
 		System.err.println("LR: " +sw);
@@ -55,7 +55,7 @@ public class TestLogisticRegression extends TestEnv {
 		// compare with e.g. linearSVC
 		List<Metric> mets2 = cloneMetrics(mets);
 		sw.start();
-		tester.evalulateClassifier(p, new LinearSVC(), mets2);
+		tester.evaluateClassifier(p, new LinearSVC(), mets2);
 		sw.stop();
 		System.err.println(mets2);
 		System.err.println("linear SVC: " +sw);

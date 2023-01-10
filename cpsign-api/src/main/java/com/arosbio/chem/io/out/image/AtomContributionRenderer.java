@@ -30,6 +30,10 @@ public class AtomContributionRenderer extends RendererTemplate<AtomContributionR
             return this;
         }
 
+        public ColorGradient colorScheme(){
+            return super.figBuilder.colorScheme();
+        }
+
         public AtomContributionRenderer build(){
             return new AtomContributionRenderer(this);
         }

@@ -13,6 +13,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.arosbio.ml.metrics.classification.ClassifierAccuracy;
+import com.arosbio.ml.metrics.classification.PointClassifierMetric;
+import com.arosbio.ml.metrics.regression.RMSE;
 import com.arosbio.tests.suites.UnitTest;
 
 @Category(UnitTest.class)
@@ -44,4 +47,18 @@ public class TestTypeUtils {
 		Assert.assertTrue(TypeUtils.isOfType(C.class, MyInterface.class));
 		Assert.assertFalse(TypeUtils.isOfType(NotExtending.class, MyInterface.class));
 	}
+
+	@Test
+	public void testMetrics(){
+		Assert.assertTrue(TypeUtils.isOfType(ClassifierAccuracy.class, PointClassifierMetric.class));
+		Assert.assertTrue(TypeUtils.objectIsOfType(new ClassifierAccuracy(), PointClassifierMetric.class));
+		Assert.assertFalse(TypeUtils.isOfType(RMSE.class, PointClassifierMetric.class));
+		Assert.assertFalse(TypeUtils.objectIsOfType(new RMSE(), PointClassifierMetric.class));
+		Assert.assertTrue(TypeUtils.objectIsOfType(Double.valueOf(0), Number.class));
+		Assert.assertTrue(TypeUtils.objectIsOfType(Double.valueOf(0), Object.class));
+		Assert.assertTrue(TypeUtils.objectIsOfType(Double.valueOf(0), MyInterface.class, Number.class));
+		Assert.assertTrue(TypeUtils.objectIsOfType(Double.valueOf(0), Double.class));
+		Assert.assertFalse(TypeUtils.objectIsOfType(Double.valueOf(0), String.class));
+	}
+
 }

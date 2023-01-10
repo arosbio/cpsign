@@ -35,7 +35,7 @@ import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.classification.ROC_AUC;
 import com.arosbio.ml.sampling.FoldedSampling;
 import com.arosbio.ml.sampling.RandomSampling;
-import com.arosbio.ml.testing.ModelEvaluator;
+import com.arosbio.ml.testing.utils.EvaluationUtils;
 import com.arosbio.ml.vap.avap.AVAPClassifier;
 import com.arosbio.ml.vap.avap.CVAPPrediction;
 import com.arosbio.ml.vap.ivap.IVAPClassifier;
@@ -202,7 +202,7 @@ public class TestCVAPClassification extends TestEnv {
 		// }
 		// Pair<List<DataRecord>,DescriptorCalcInfo> computedTestSet = pred.getDataset().convertToFeatureVector(mols);
 		ROC_AUC roc = new ROC_AUC();
-		ModelEvaluator.evaluate(pred, testSet, (Metric) roc);
+		EvaluationUtils.evaluate(pred, testSet, (Metric) roc);
 		
 		
 		// TestRunner tester = new TestRunner.Builder(new FixedTestSet(testSet)).build();

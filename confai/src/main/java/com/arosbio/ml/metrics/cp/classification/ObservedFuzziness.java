@@ -17,7 +17,7 @@ import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
 public class ObservedFuzziness implements SingleValuedMetric, 
-	CPClassificationMetric, Aliased, Described { 
+	CPClassifierMetric, Aliased, Described { 
 
 	public static final String METRIC_NAME = "Observed Fuzziness";
 	public static final String METRIC_ALIAS = "OF";

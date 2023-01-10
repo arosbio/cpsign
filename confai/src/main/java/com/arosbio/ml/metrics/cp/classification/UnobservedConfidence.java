@@ -27,7 +27,7 @@ import com.google.common.collect.ImmutableMap;
  * @author staffan
  *
  */
-public class UnobservedConfidence implements SingleValuedMetric, CPClassificationMetric, Described, Aliased {
+public class UnobservedConfidence implements SingleValuedMetric, CPClassifierMetric, Described, Aliased {
 	
 	public final static String METRIC_NAME = "Unobserved Confidence";
 	public final static String METRIC_DESCRIPTION = "An unobserved metric that aims to evaluate the efficiency of a Conformal classifier without knowing the true label of the test examples. This metric computes the average of 1 - 'the second largest p-value' in the predictions. Larger values are preferable.";

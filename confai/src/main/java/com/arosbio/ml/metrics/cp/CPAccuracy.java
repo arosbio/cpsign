@@ -13,12 +13,12 @@ import java.util.Map;
 
 import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
-import com.arosbio.ml.metrics.cp.classification.CPClassificationMetric;
+import com.arosbio.ml.metrics.cp.classification.CPClassifierMetric;
 import com.arosbio.ml.metrics.cp.regression.CPRegressionMetric;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Range;
 
-public class CPAccuracy implements SingleValuedMetric, CPClassificationMetric, CPRegressionMetric, Described {
+public class CPAccuracy implements SingleValuedMetric, CPClassifierMetric, CPRegressionMetric, Described {
 
 	public static final String METRIC_NAME = "CP Accuracy";
 	public static final String METRIC_DESCRIPTION = "Conformal Prediction (CP) accuracy calculate the proportion of correct predictions (i.e., where the prediction set/interval contains the true value).";

@@ -59,6 +59,7 @@ import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
 import com.arosbio.ml.testing.KFoldCV;
 import com.arosbio.ml.testing.TestRunner;
 import com.arosbio.ml.testing.TestingStrategy;
+import com.arosbio.ml.testing.utils.EvaluationUtils;
 import com.arosbio.ml.vap.VennABERSPredictor;
 
 /**
@@ -868,7 +869,7 @@ public class GridSearch {
 					if (alg instanceof Regressor)
 						paramResult = runner.evaluateRegressor(data, (Regressor) pAlg, inputMetrics);
 					else
-						paramResult = runner.evalulateClassifier(data, (Classifier) pAlg, inputMetrics);
+						paramResult = runner.evaluateClassifier(data, (Classifier) pAlg, inputMetrics);
 
 					foundValid = true;
 				} catch (MissingDataException e) {
@@ -985,7 +986,7 @@ public class GridSearch {
 		List<String> notOKmetrics = new ArrayList<>();
 
 		for (SingleValuedMetric m : metrics) {
-			if (!TestRunner.metricSupportedByPredictor(m, predictor)) {
+			if (!EvaluationUtils.validateMetrics(predictor,m)) {
 				notOKmetrics.add(m.getName());
 			}
 		}

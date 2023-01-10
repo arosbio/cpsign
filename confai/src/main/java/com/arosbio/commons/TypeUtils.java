@@ -172,26 +172,31 @@ public class TypeUtils {
 			return false;
 		}
 	}
+
+	public static boolean objectIsOfType(Object obj, Class<?> type){
+		return isOfType(obj.getClass(), type);
+	}
+
+	public static boolean objectIsOfType(Object obj, Class<?>... types){
+		return isOfType(obj.getClass(), types);
+	}
 	
 	public static boolean isOfType(Class<?> clazz, Class<?> type) {
 		if (clazz == null)
 			return false;
-		
-		// Check interfaces
-		Class<?>[] interfaces = clazz.getInterfaces();
-		for (Class<?> interf : interfaces) {
-			if (interf.isAssignableFrom(type)) {
-				return true;
-			}
-			// Check the super-type recursively
-			if (isOfType(interf, type))
+		if (clazz == type)
+			return true;
+		return type.isAssignableFrom(clazz);
+	}
+
+	public static boolean isOfType(Class<?> clazz, Class<?>... types) {
+		if (types == null || types.length == 0)
+			throw new IllegalArgumentException("No classes given");
+		for (Class<?> t : types){
+			boolean check = isOfType(clazz, t);
+			if (check)
 				return true;
 		}
-		
-		// Check super-classes
-		if (isOfType(clazz.getSuperclass(), type))
-			return true;
-		
 		return false;
 	}
 }

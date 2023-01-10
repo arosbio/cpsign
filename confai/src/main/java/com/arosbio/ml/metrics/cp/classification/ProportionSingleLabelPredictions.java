@@ -19,7 +19,7 @@ import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
 import com.google.common.collect.ImmutableMap;
 
 public class ProportionSingleLabelPredictions implements SingleValuedMetric, 
-	CPClassificationMetric, ConfidenceDependentMetric, Aliased, Described {
+	CPClassifierMetric, ConfidenceDependentMetric, Aliased, Described {
 
 	public static final String METRIC_NAME = "Proportion single-label prediction sets";
 	public static final String METRIC_ALIAS = "PropSingleLabel";

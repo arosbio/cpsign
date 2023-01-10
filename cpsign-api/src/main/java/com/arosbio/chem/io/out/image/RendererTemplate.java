@@ -151,9 +151,9 @@ public abstract class RendererTemplate <T> {
     static abstract class Builder <T,B> {
 
         /** The full width of the rendered image - including all fields */
-        protected int width = 400;
+        private int width = 400;
         /** The full height of the rendered image - including all fields */
-        protected int height = 400;
+        private int height = 400;
         private Color background = Color.WHITE;
 
         private List<FigureField> above = new ArrayList<>();
@@ -162,7 +162,7 @@ public abstract class RendererTemplate <T> {
         private List<Layout> molLayouts = new ArrayList<>();
 
         // Rendering defaults
-        private Font defaultFont = null; // by default we calculate this based on the image size  = FontFactory.plain(13);
+        private Font defaultFont = null; // by default we calculate this based on the image size
         private Color defaultTextColor = Color.BLACK;
 
         
@@ -177,9 +177,15 @@ public abstract class RendererTemplate <T> {
             this.width = w;
             return getThis();
         }
+        public int width(){
+            return width;
+        }
         public B height(int h){
             this.height = h;
             return getThis();
+        }
+        public int height(){
+            return height;
         }
         /** Set the background - a transparent background is achieved using either passing {@code null} here
          * or setting a color with an transparent alpha value
@@ -189,9 +195,15 @@ public abstract class RendererTemplate <T> {
             this.background = bg;
             return getThis();
         }
+        public Color background(){
+            return background;
+        }
         public B addFieldOverMol(FigureField f){
             above.add(f);
             return getThis();
+        }
+        public B withFieldsOverMol(FigureField... fields){
+            return withFieldsOverMol(Arrays.asList(fields));
         }
         public B withFieldsOverMol(List<FigureField> fields){
             if (fields != null) {
@@ -205,6 +217,10 @@ public abstract class RendererTemplate <T> {
         public B addFieldUnderMol(FigureField f){
             below.add(f);
             return getThis();
+        }
+
+        public B withFieldsUnderMol(FigureField... fields){
+            return withFieldsOverMol(Arrays.asList(fields));
         }
 
         public B withFieldsUnderMol(List<FigureField> fields){
@@ -245,17 +261,26 @@ public abstract class RendererTemplate <T> {
             return figBuilder;
         }
 
+        /**
+         * Set the default font to use - which can be overwritten individually for each field
+         * @param font the default font
+         * @return the Builder instance 
+         */
         public B defaultFont(Font font){
             this.defaultFont = font;
             return getThis();
         }
 
+        /**
+         * Set the default text color - which can be overwritten individually for each field
+         * @param c default Color to use
+         * @return the Builder instance
+         */
         public B defaultTextColor(Color c){
             this.defaultTextColor = c;
             return getThis();
         }
        
-
     }
 
     private final MoleculeDepictor depictor;

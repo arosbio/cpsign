@@ -26,7 +26,7 @@ import com.arosbio.ml.metrics.plots.Plot2D.X_Axis;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 import com.google.common.collect.ImmutableList;
 
-public class CPClassificationCalibrationPlotBuilder implements PlotMetric, LabelsMixin, CPClassificationMetric {
+public class CPClassificationCalibrationPlotBuilder implements PlotMetric, LabelsMixin, CPClassifierMetric {
 
 	public static final String METRIC_NAME = "Calibration plot";
 

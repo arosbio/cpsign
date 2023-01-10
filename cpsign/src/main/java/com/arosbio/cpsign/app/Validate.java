@@ -69,7 +69,7 @@ import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.classification.PointClassifierMetric;
 import com.arosbio.ml.metrics.classification.ProbabilisticMetric;
 import com.arosbio.ml.metrics.classification.ScoringClassifierMetric;
-import com.arosbio.ml.metrics.cp.classification.CPClassificationMetric;
+import com.arosbio.ml.metrics.cp.classification.CPClassifierMetric;
 import com.arosbio.ml.metrics.cp.regression.CPRegressionMetric;
 import com.arosbio.ml.metrics.cp.regression.CPRegressionMultiMetric;
 import com.arosbio.ml.metrics.regression.PointPredictionMetric;
@@ -492,8 +492,8 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 			Map<Integer, Double> numericPvals = chemPredictor.getNamedLabels().reverse(pvals);
 			int forcedPredLabel = ClassificationUtils.getPredictedClass(numericPvals);
 			for (Metric m : validationMetrics) {
-				if (m instanceof CPClassificationMetric) {
-					((CPClassificationMetric) m).addPrediction(trueLabel, numericPvals);
+				if (m instanceof CPClassifierMetric) {
+					((CPClassifierMetric) m).addPrediction(trueLabel, numericPvals);
 				} else if (m instanceof ScoringClassifierMetric) {
 					((ScoringClassifierMetric) m).addPrediction(trueLabel, numericPvals);
 				} else if (m instanceof PointClassifierMetric) {

@@ -14,7 +14,7 @@ import java.util.Map;
 import com.arosbio.ml.metrics.classification.ClassifierMetric;
 import com.arosbio.ml.metrics.cp.CPMetric;
 
-public interface CPClassificationMetric extends CPMetric, ClassifierMetric {
+public interface CPClassifierMetric extends CPMetric, ClassifierMetric {
 
 	public void addPrediction(int observedLabel, Map<Integer,Double> pValues);
 	

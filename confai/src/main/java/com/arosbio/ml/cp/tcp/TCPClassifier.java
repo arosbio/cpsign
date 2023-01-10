@@ -302,7 +302,7 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 
 		int beforeSize = trainingData.size(); 
 		for (int label: labels) {
-			prediction.put(label, predictPvalueForClass(label, example));
+			prediction.put(label, predictPValueForClass(label, example));
 		}
 
 		int afterSize = trainingData.size();
@@ -316,7 +316,7 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 		return prediction;
 	}
 
-	private double predictPvalueForClass(int label, FeatureVector example) {
+	private double predictPValueForClass(int label, FeatureVector example) {
 		// Add the record, with the assumed label
 		trainingData.add(new DataRecord((double)label, example));
 
@@ -362,11 +362,11 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 
 		//Pick class with largest pValue
 		int selectedClass = 0;
-		double highestPvalue = -1d;
-		for(Map.Entry<Integer, Double> pvals: result.entrySet()){
-			if (pvals.getValue()>highestPvalue){
-				selectedClass=pvals.getKey();
-				highestPvalue = pvals.getValue();
+		double highestPValue = -1d;
+		for(Map.Entry<Integer, Double> pVales : result.entrySet()){
+			if (pVales.getValue()>highestPValue){
+				selectedClass=pVales.getKey();
+				highestPValue = pVales.getValue();
 			}
 		}
 		return doCalc(example, stepsize, selectedClass,result);
@@ -392,7 +392,7 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 
 		// First do a normal prediction
 		// Map<Integer, Double> pvals = predict(example);
-		double normalPvalue = pvals.get(label);
+		double normalPValue = pvals.get(label);
 
 		for (Feature f : example) {
 			// Get the old value
@@ -402,7 +402,7 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 			example.withFeature(f.getIndex(), f.getValue()+stepsize);
 
 			// Predict it and store in the gradient
-			double diff = (predictPvalueForClass(label, example)-normalPvalue)/stepsize;
+			double diff = (predictPValueForClass(label, example)-normalPValue)/stepsize;
 			gradient.add(new SparseFeatureImpl(f.getIndex(), diff));
 
 			// Change it back to what it was!

@@ -618,18 +618,6 @@ public class CollectionUtils {
 		return noNull;
 	}
 	
-	// public static <T extends Comparable<T>> Range<T> clone(Range<T> range){
-	// 	if (range.hasUpperBound() && range.hasLowerBound()) {
-	// 		return Range.range(range.lowerEndpoint(), range.lowerBoundType(), range.upperEndpoint(), range.upperBoundType());
-	// 	} else if (range.hasUpperBound()) {
-	// 		return Range.upTo(range.upperEndpoint(), range.upperBoundType());
-	// 	} else if (range.hasLowerBound()) {
-	// 		return Range.downTo(range.lowerEndpoint(), range.lowerBoundType());
-	// 	} else {
-	// 		return Range.all();
-	// 	}
-	// }
-	
 	public static<T extends Number> SummaryStatistics getStatistics(Collection<T> col) {
 		SummaryStatistics ss = new SummaryStatistics();
 		for (Number n: col) {

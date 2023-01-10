@@ -34,7 +34,7 @@ import com.arosbio.ml.metrics.MetricFactory;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.metrics.cp.CalibrationPlot;
 import com.arosbio.ml.metrics.cp.classification.CPClassificationCalibrationPlotBuilder;
-import com.arosbio.ml.metrics.cp.classification.CPClassificationMetric;
+import com.arosbio.ml.metrics.cp.classification.CPClassifierMetric;
 import com.arosbio.ml.metrics.cp.classification.MultiLabelPredictionsPlotBuilder;
 import com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder;
 import com.arosbio.ml.metrics.plots.MergedPlot;
@@ -121,7 +121,7 @@ public class TestACPClassification extends TestEnv{
 		CPClassificationCalibrationPlotBuilder plotBuilder = new CPClassificationCalibrationPlotBuilder();
 		SingleLabelPredictionsPlotBuilder singleBuilder = new SingleLabelPredictionsPlotBuilder();
 		MultiLabelPredictionsPlotBuilder multiBuilder = new MultiLabelPredictionsPlotBuilder();
-		List<CPClassificationMetric> mets = new ArrayList<>();
+		List<CPClassifierMetric> mets = new ArrayList<>();
 		mets.add(plotBuilder);
 		mets.add(singleBuilder);
 		mets.add(multiBuilder);

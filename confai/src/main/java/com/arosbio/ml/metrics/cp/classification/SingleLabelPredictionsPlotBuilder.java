@@ -20,7 +20,7 @@ import com.arosbio.ml.metrics.cp.EfficiencyPlot;
 import com.arosbio.ml.metrics.plots.Plot2D.X_Axis;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 
-public class SingleLabelPredictionsPlotBuilder implements PlotMetric, CPClassificationMetric {
+public class SingleLabelPredictionsPlotBuilder implements PlotMetric, CPClassifierMetric {
 	
 	public static final X_Axis X_AXIS = X_Axis.CONFIDENCE;
 	public static final String Y_AXIS = "Proportion single-label prediction sets";

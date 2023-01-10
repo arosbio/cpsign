@@ -40,8 +40,10 @@ public abstract class TestBase {
 	}
 
 	public void printLogs() {
-		SYS_OUT.println(systemOutRule.getLog());
-		SYS_ERR.println(systemErrRule.getLog());
+		if (systemOutRule.getLog()!=null && !systemOutRule.getLog().isEmpty())
+			SYS_OUT.println(systemOutRule.getLog());
+		if (systemErrRule.getLog()!=null && !systemErrRule.getLog().isEmpty())	
+			SYS_ERR.println(systemErrRule.getLog());
 	}
 
 	public void clearLogs() {

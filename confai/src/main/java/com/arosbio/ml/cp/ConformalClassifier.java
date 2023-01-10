@@ -29,7 +29,6 @@ public interface ConformalClassifier extends ConformalPredictor, ClassificationP
 	public Map<Integer, Double> predict(FeatureVector example) 
 			throws IllegalStateException;
 	
-	// Override just to give the correct return-class
 	public List<SparseFeature> calculateGradient(FeatureVector example, int label) 
 			throws IllegalStateException;
 	

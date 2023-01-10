@@ -11,7 +11,6 @@ package com.arosbio.chem.io.out.image;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
@@ -55,31 +54,6 @@ import com.arosbio.chem.io.out.image.layout.CustomLayout.Padding;
 import com.arosbio.chem.io.out.image.layout.Layout;
 import com.arosbio.chem.io.out.image.layout.Position.Vertical;
 import com.arosbio.cheminf.ChemCPClassifier;
-// import com.arosbio.chem.io.out.image.layout.CustomLayout;
-// import com.arosbio.chem.io.out.image.layout.CustomLayout.Boarder;
-// import com.arosbio.chem.io.out.image.layout.CustomLayout.Margin;
-// import com.arosbio.chem.io.out.image.layout.CustomLayout.Padding;
-// import com.arosbio.chem.io.out.image.layout.CustomLayout.Boarder.BoarderShape;
-// import com.arosbio.chem.io.out.image.layout.Position.Vertical;
-// import com.arosbio.chem.io.out.image.legacy.CustomLayout.Boarder;
-// import com.arosbio.chem.io.out.image.legacy.CustomLayout.Margin;
-// import com.arosbio.chem.io.out.image.legacy.CustomLayout.Padding;
-// import com.arosbio.chem.io.out.image.legacy.CustomLayout.Boarder.BoarderShape;
-// import com.arosbio.chem.io.out.image.legacy.CustomLayout;
-// import com.arosbio.chem.io.out.image.legacy.GradientFigureBuilder;
-// import com.arosbio.chem.io.out.image.legacy.MoleculeFigure;
-// import com.arosbio.chem.io.out.image.legacy.SignificantSignatureFigureBuilder;
-// import com.arosbio.chem.io.out.image.legacy.depictors.MoleculeGradientDepictor;
-// import com.arosbio.chem.io.out.image.legacy.depictors.MoleculeSignificantSignatureDepictor;
-// import com.arosbio.chem.io.out.image.legacy.fields.ColorGradientField;
-// import com.arosbio.chem.io.out.image.legacy.fields.ColoredBoxField;
-// import com.arosbio.chem.io.out.image.legacy.fields.ColoredBoxField.BoxLocation;
-// import com.arosbio.chem.io.out.image.legacy.fields.ColoredBoxField.BoxShape;
-// import com.arosbio.chem.io.out.image.legacy.fields.HighlightExplanationField;
-// import com.arosbio.chem.io.out.image.legacy.fields.OrnamentField;
-// import com.arosbio.chem.io.out.image.legacy.fields.PValuesField;
-// import com.arosbio.chem.io.out.image.legacy.fields.PredictionIntervalField;
-// import com.arosbio.chem.io.out.image.legacy.fields.TitleField;
 import com.arosbio.cheminf.ChemVAPClassifier;
 import com.arosbio.cheminf.SignificantSignature;
 import com.arosbio.cheminf.io.ModelSerializer;
@@ -147,22 +121,14 @@ public class TestMoleculeDepiction extends UnitTestBase {
 
 	// @Test
 	public void generateExampleImageForDepict() throws Exception {
-		AtomContributionRenderer template = new AtomContributionRenderer.Builder()
+		AtomContributionRenderer template = new AtomContributionRenderer.Builder().colorScheme(null)
 			.height(640)
 			.width(1500)
 			.build();
-		// MoleculeGradientDepictor gradDep = new MoleculeGradientDepictor();
-		// GradientFigureBuilder builder = new GradientFigureBuilder(gradDep);
-		// // Changed for generating a GitHub repo-image of the preferred size 
-		// builder.figureHeight(640);
-		// builder.figureWidth(1500);
-		// OrnamentField grad = new ColorGradientField(((MoleculeGradientDepictor)builder.getDepictor()).getColorGradient());
-		// builder.addFieldUnderImg(grad);
 
 
 		ChemVAPClassifier predictor = (ChemVAPClassifier) ModelSerializer.loadChemPredictor(TestChemDataLoader.PreTrainedModels.CVAP_LIBLINEAR.toURI(), null);
-		// ChemCPClassifier predictor = (ChemCPClassifier) ModelSerializer.loadChemPredictor(TestChemDataLoader.PreTrainedModels.ACP_CLF_LIBLINEAR.toURI(), null);
-		IAtomContainer mol = sp.parseSmiles(TEST_SMILES_2); // getTestMol();
+		IAtomContainer mol = sp.parseSmiles(TEST_SMILES_2);
 		SignificantSignature signature =  predictor.predictSignificantSignature(mol);
 
 		template.render(new RenderInfo.Builder(mol, signature).build())
@@ -356,35 +322,6 @@ public class TestMoleculeDepiction extends UnitTestBase {
 				.build()
 			)
 
-		// GradientFigureBuilder builder = new GradientFigureBuilder(new MoleculeGradientDepictor());
-		// builder.getDepictor().setImageHeight(100);
-		// builder.getDepictor().setImageWidth(1000);
-		
-		// builder.getDepictor().addLayout(
-		// 	new CustomLayout.Builder()
-		// 		.padding(new Padding(10))
-		// 		.boarder(molBoarder)
-		// 		.margin(new Margin(0)).build());
-		
-		// builder.getDepictor().addLayout(new CustomLayout.Builder().boarder(molBoarder2).build());
-		
-		// builder.getDepictor().addLayout(new CustomLayout.Builder().boarder(molBoarder3).build());
-		// TitleField tit = new TitleField("<b>TITLE</b>");
-		// tit.setAlignment(Vertical.LEFT_ADJUSTED);
-		// tit.underlineText();
-		// builder.addFieldOverImg(tit);
-		// OrnamentField pvalsF = new PValuesField(pvals);
-		// CustomLayout pvalsFLayout = new CustomLayout.Builder()
-		// 	.padding(new Padding(10))
-		// 	.boarder(new Boarder.Builder()
-		// 		.shape(BoarderShape.ROUNDED_RECTANGLE)
-		// 		.color(Color.CYAN)
-		// 		.stroke(new BasicStroke(2f))
-		// 		.build())
-		// 	.build();
-		// pvalsF.addLayout(pvalsFLayout);
-		// pvalsF.setAlignment(Vertical.CENTERED);
-		// builder.addFieldUnderImg(pvalsF);
 		.addFieldUnderMol(new PredictionIntervalField.Builder(0.8)
 			.property("Activity")
 			.alignment(Vertical.RIGHT_ADJUSTED).build())
@@ -395,38 +332,6 @@ public class TestMoleculeDepiction extends UnitTestBase {
 		.addFieldUnderMol(new HighlightExplanationField.Builder(Color.CYAN,"mutagen").boxLocation(BoxLocation.RIGHT).alignment(Vertical.RIGHT_ADJUSTED).boxShape(BoxShape.TRIANGLE).build())
 		.addFieldUnderMol(new ColorGradientField.Builder(grad).build())
 		.build().render(info).saveToFile(new File(imageOutputFolder, "gradientDepiction.png"));
-		// OrnamentField region = new PredictionIntervalField(Range.closed(-.35, 14.3),0.8,"Activity");
-		// region.setAlignment(Vertical.RIGHT_ADJUSTED);
-		// builder.addFieldUnderImg(region);
-		// OrnamentField region2 = new PredictionIntervalField(Range.closed(-.35, 14.3),0.8);
-		// region2.addLayout(new CustomLayout.Builder()
-		// 	.boarder(new Boarder.Builder().stroke(new BasicStroke(3.f)).build())
-		// 	.build());
-		
-		// builder.addFieldUnderImg(new HighlightExplanationField(Color.BLUE));
-		// HighlightExplanationField field = new HighlightExplanationField(Color.CYAN,"mutagen");
-		// field.setBoxLocation(BoxLocation.RIGHT);
-		// field.setAlignment(Vertical.RIGHT_ADJUSTED);
-		// field.setBoxShape(BoxShape.TRIANGLE);
-		// builder.addFieldUnderImg(field);
-		
-		// ColoredBoxField circleLARGE = new ColoredBoxField(Color.MAGENTA, "This is a very long long <b>looooong</b> text lorem ipsum ipsum dsagadgalkn sdad sdf");
-//		HighlightExplanationField circle = new HighlightExplanationField(Color.CYAN,"nonmutagen");
-		// circleLARGE.setBoxShape(BoxShape.CIRCLE);
-		// circleLARGE.setBoxSize(200);
-		// builder.addFieldOverImg(circleLARGE);
-		
-		// HighlightExplanationField circleSmall = new HighlightExplanationField(Color.CYAN,"nonmutagen");
-		// circleSmall.setBoxShape(BoxShape.CIRCLE);
-		// circleSmall.setBoxSize(6);
-		// builder.addFieldOverImg(circleSmall);
-		// builder.addFieldUnderImg(region2);
-		// OrnamentField grad = new ColorGradientField(((MoleculeGradientDepictor)builder.getDepictor()).getColorGradient());
-		
-		// builder.addFieldUnderImg(grad);
-		// LoggerUtils.setDebugMode();
-		// MoleculeFigure depiction = builder.build(getTestMol(), gradient);
-		// depiction.saveToFile(new File(imageOutputFolder, "gradientDepiction.png"));
 	}
 
 	@Test
@@ -485,12 +390,6 @@ public class TestMoleculeDepiction extends UnitTestBase {
 		g2d.fill(out);
 		g2d.dispose();
 
-		// BufferedImage imgToEnclose = new BufferedImage(7, 7, IOSettings.BUFFERED_IMAGE_TYPE);
-		// Graphics2D g2d = imgToEnclose.createGraphics();
-		// g2d.setColor(Color.WHITE);
-		// g2d.fillRect(1, 1, imgToEnclose.getWidth()-2, imgToEnclose.getHeight()-2);
-		// g2d.dispose();
-		// BufferedImage withBoarder = orn.addLayout(imgToEnclose);
 		ImageIO.write(image, "png", new File(imageOutputFolder,"withRectangleBoarder.png"));
 	}
 	
@@ -507,21 +406,5 @@ public class TestMoleculeDepiction extends UnitTestBase {
 		ImageIO.write(img, "png", new File(imageOutputFolder, "line.png"));
 	}
 
-
-	// @Test
-	public void testFonts(){
-		Font f = FontFactory.plain();
-		Font bold = f.deriveFont(Font.BOLD);
-		Font boldAndItalics = bold.deriveFont(Font.ITALIC);
-		Font sameTime = f.deriveFont(Font.ITALIC + Font.BOLD);
-		System.err.println(f.equals(sameTime));
-		System.err.println(boldAndItalics.equals(sameTime));
-		System.err.println(f);
-		System.err.println(bold);
-		System.err.println(boldAndItalics);
-		System.err.println(sameTime);
-		printLogs();
-	}
-	
 
 }

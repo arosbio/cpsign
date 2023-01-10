@@ -35,9 +35,15 @@ public class SignificantSignatureRenderer extends RendererTemplate<SignificantSi
             this.highlight = c != null ?  c : DEFAULT_HIGHLIGHT_COLOR;
             return this;
         }
+        public Color highlight(){
+            return highlight;
+        }
         public Builder bloomBackground(Color c){
             this.bloomColor = c != null ? c : NODE_COLOR;
             return this;
+        }
+        public Color bloomBackground(){
+            return bloomColor;
         }
 
         public SignificantSignatureRenderer build(){

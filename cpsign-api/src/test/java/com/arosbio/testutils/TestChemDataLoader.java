@@ -14,6 +14,7 @@ import java.io.InputStream;
 import java.net.URL;
 
 import com.arosbio.chem.io.in.CSVFile;
+import com.arosbio.chem.io.in.JSONFile;
 import com.arosbio.chem.io.in.SDFile;
 import com.arosbio.cheminf.data.ChemDataset;
 import com.arosbio.data.Dataset;
@@ -22,6 +23,7 @@ import com.arosbio.data.NamedLabels;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.TestResources.CSVCmpdData;
 import com.arosbio.tests.TestResources.CmpdData;
+import com.arosbio.tests.TestResources.CmpdData.Format;
 
 public class TestChemDataLoader {
 	
@@ -98,6 +100,20 @@ public class TestChemDataLoader {
 		try (InputStream iStream = resource.openStream()){
 			return Dataset.fromLIBSVMFormat(iStream);
 		}
+	}
+
+	public static Dataset loadDataset(CmpdData data) throws IOException {
+		ChemDataset d = new ChemDataset();
+		d.initializeDescriptors();
+		if (data instanceof CSVCmpdData){
+			d.add(new CSVFile(data.uri()).setDelimiter(((CSVCmpdData)data).delim()).getIterator(), data.property(), new NamedLabels(data.labelsStr()));
+		} else if (data.getFormat() == Format.SDF) {
+			d.add(new SDFile(data.uri()).getIterator(),data.property(), new NamedLabels(data.labelsStr()));
+		} else {
+			// JSON left
+			d.add(new JSONFile(data.uri()).getIterator(), data.property(), new NamedLabels(data.labelsStr()));
+		}
+		return d;
 	}
 	
 	public static interface PreTrainedModels {

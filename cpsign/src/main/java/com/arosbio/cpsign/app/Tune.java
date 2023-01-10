@@ -95,7 +95,7 @@ import com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth;
 import com.arosbio.ml.metrics.cp.regression.MedianPredictionIntervalWidth;
 import com.arosbio.ml.metrics.regression.RMSE;
 import com.arosbio.ml.sampling.SamplingStrategy;
-import com.arosbio.ml.testing.TestRunner;
+import com.arosbio.ml.testing.utils.EvaluationUtils;
 import com.arosbio.ml.vap.avap.AVAPClassifier;
 
 import picocli.CommandLine.Command;
@@ -419,7 +419,7 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 		}
 
 		// Here check if tune allows given criteria for given predictor type
-		if (! TestRunner.metricSupportedByPredictor(optMetric, predictor))
+		if (! EvaluationUtils.validateMetrics(predictor, optMetric)) 
 			console.failWithArgError("Optimization metric '%s' not allowed for given predictor type", optMetric.getName());
 
 		List<SingleValuedMetric> secondaryMetrics = null;

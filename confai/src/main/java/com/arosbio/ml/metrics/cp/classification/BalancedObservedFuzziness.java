@@ -21,7 +21,7 @@ import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
-public class BalancedObservedFuzziness implements SingleValuedMetric, CPClassificationMetric, Aliased, Described { 
+public class BalancedObservedFuzziness implements SingleValuedMetric, CPClassifierMetric, Aliased, Described { 
 
 	public static final String METRIC_NAME = "Balanced Observed Fuzziness";
 	public static final String METRIC_ALIAS = "BalancedOF";
