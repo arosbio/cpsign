@@ -30,6 +30,7 @@ import com.arosbio.tests.suites.PerformanceTest;
 import com.arosbio.testutils.TestDataLoader;
 import com.arosbio.testutils.TestEnv;
 
+@Category(PerformanceTest.class)
 public class BenchmarkData extends TestEnv {
 
 	public static final int NUM_ITER = 10;

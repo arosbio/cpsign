@@ -73,6 +73,35 @@ public class LinearSVR implements SVR {
 		return "Support Vector Regression (SVR) implemented in LIBLINEAR. Restricted to a linear kernel and optimized for fast training and predictions for linear kernel SVM. Should be prefered over LIBSVM implementation with a linear kernel.";
 	}
 
+	// Cost
+	public double getC() {
+		return parameters.getC();
+	}
+
+	public void setC(double cost) {
+		parameters.setC(cost);
+	}
+
+	public LinearSVR withC(double cost){
+		parameters.setC(cost);
+		return this;
+	}
+
+	// Epsilon
+	public double getEpsilon() {
+		return parameters.getEps();
+	}
+
+	public void setEpsilon(double eps) {
+		parameters.setEps(eps);
+	}
+
+	public LinearSVR withEpsilon(double eps){
+		parameters.setEps(eps);
+		return this;
+	}
+
+	// Solver type
 	public SolverType getSolverType() {
 		return parameters.getSolverType();
 	}
@@ -84,30 +113,12 @@ public class LinearSVR implements SVR {
 		parameters.setSolverType(type);
 	}
 
-	public double getC() {
-		return parameters.getC();
+	public LinearSVR withSolverType(SolverType type){
+		setSolverType(type);
+		return this;
 	}
 
-	public void setC(double cost) {
-		parameters.setC(cost);
-	}
-
-	public double getEpsilon() {
-		return parameters.getEps();
-	}
-
-	public void setEpsilon(double eps) {
-		parameters.setEps(eps);
-	}
-	
-	public double getSVREpsilon() {
-		return parameters.getP();
-	}
-
-	public void setSVREpsilon(double eps) {
-		parameters.setP(eps);
-	}
-	
+	// Max iterations
 	public int getMaxNumIterations() {
 		return parameters.getMaxIters();
 	}
@@ -118,21 +129,44 @@ public class LinearSVR implements SVR {
 		else
 			parameters.setMaxIters(maxIterations);
 	}
-	
-	@Override
-	public void setSeed(long seed) {
-		this.parameters.setRandom(new Random(seed));
+
+	public LinearSVR withMaxNumIterations(int maxIterations){
+		setMaxNumIterations(maxIterations);
+		return this;
 	}
 
 	/**
-	 * Cannot access LibLinear internal seed, this method returns {@code null}
+	 * Cannot access the seed from LibLinear, this method returns {@code null}
 	 * @return {@code null}
 	 */
 	@Override
 	public Long getSeed() {
 		return null;
 	}
+	
+	@Override
+	public void setSeed(long seed) {
+		this.parameters.setRandom(new Random(seed));
+	}
 
+	public LinearSVR withSeed(long seed){
+		setSeed(seed);
+		return this;
+	}
+
+	public double getSVREpsilon() {
+		return parameters.getP();
+	}
+
+	public void setSVREpsilon(double eps) {
+		parameters.setP(eps);
+	}
+
+	public LinearSVR withSVREpsilon(double eps) {
+		parameters.setP(eps);
+		return this;
+	}
+	
 	@Override
 	public boolean isFitted() {
 		return svm!=null;
@@ -179,13 +213,13 @@ public class LinearSVR implements SVR {
 	 */
 	
 	@Override
-	public void train(List<DataRecord> trainingset) throws IllegalArgumentException {
-		svm = LibLinear.train(parameters, trainingset);
+	public void train(List<DataRecord> trainingSet) throws IllegalArgumentException {
+		svm = LibLinear.train(parameters, trainingSet);
 	}
 
 	@Override
-	public void fit(List<DataRecord> trainingset) throws IllegalArgumentException {
-		svm = LibLinear.train(parameters, trainingset);
+	public void fit(List<DataRecord> trainingSet) throws IllegalArgumentException {
+		svm = LibLinear.train(parameters, trainingSet);
 	}
 	
 	/* 

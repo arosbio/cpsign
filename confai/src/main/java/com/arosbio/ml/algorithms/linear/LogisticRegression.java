@@ -70,6 +70,35 @@ public class LogisticRegression implements MultiLabelClassifier, PseudoProbabili
 		return "Logistic regression implemented in LIBLINEAR. Performs multi-class classification and outputs probability estimates";
 	}
 
+	// Cost
+	public double getC() {
+		return parameters.getC();
+	}
+
+	public void setC(double cost) {
+		parameters.setC(cost);
+	}
+
+	public LogisticRegression withC(double cost){
+		parameters.setC(cost);
+		return this;
+	}
+
+	// Epsilon
+	public double getEpsilon() {
+		return parameters.getEps();
+	}
+
+	public void setEpsilon(double eps) {
+		parameters.setEps(eps);
+	}
+
+	public LogisticRegression withEpsilon(double eps) {
+		parameters.setEps(eps);
+		return this;
+	}
+
+	// Solver
 	public SolverType getSolverType() {
 		return parameters.getSolverType();
 	}
@@ -81,22 +110,7 @@ public class LogisticRegression implements MultiLabelClassifier, PseudoProbabili
 		parameters.setSolverType(type);
 	}
 
-	public double getC() {
-		return parameters.getC();
-	}
-
-	public void setC(double cost) {
-		parameters.setC(cost);
-	}
-
-	public double getEpsilon() {
-		return parameters.getEps();
-	}
-
-	public void setEpsilon(double eps) {
-		parameters.setEps(eps);
-	}
-	
+	// Max iterations
 	public int getMaxNumIterations() {
 		return parameters.getMaxIters();
 	}
@@ -107,18 +121,28 @@ public class LogisticRegression implements MultiLabelClassifier, PseudoProbabili
 		else
 			parameters.setMaxIters(maxIterations);
 	}
-	
-	@Override
-	public void setSeed(long seed) {
-		this.parameters.setRandom(new Random(seed));
+	public LogisticRegression withMaxNumIterations(int maxIterations) {
+		setMaxNumIterations(maxIterations);
+		return this;
 	}
 
+	// Seed
 	/**
 	 * LibLinear now uses a seed, but it is not accessible so this method returns {@code null}
 	 */
 	@Override
 	public Long getSeed() {
 		return null;
+	}
+	
+	@Override
+	public void setSeed(long seed) {
+		this.parameters.setRandom(new Random(seed));
+	}
+
+	public LogisticRegression withSeed(long seed) {
+		setSeed(seed);
+		return this;
 	}
 
 	@Override
@@ -176,13 +200,13 @@ public class LogisticRegression implements MultiLabelClassifier, PseudoProbabili
 	 */
 	
 	@Override
-	public void train(List<DataRecord> trainingset) throws IllegalArgumentException {
-		svm = LibLinear.train(parameters, trainingset);
+	public void train(List<DataRecord> trainingSet) throws IllegalArgumentException {
+		svm = LibLinear.train(parameters, trainingSet);
 	}
 
 	@Override
-	public void fit(List<DataRecord> trainingset) throws IllegalArgumentException {
-		train(trainingset);
+	public void fit(List<DataRecord> trainingSet) throws IllegalArgumentException {
+		train(trainingSet);
 	}
 	
 	/* 

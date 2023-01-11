@@ -40,6 +40,7 @@ public class C_SVC implements SVC, MultiLabelClassifier {
 	private svm_model svm;
 	private long seed = GlobalConfig.getInstance().getRNGSeed();
 
+	// Cost
 	public double getC() {
 		return parameters.C;
 	}
@@ -47,7 +48,13 @@ public class C_SVC implements SVC, MultiLabelClassifier {
 	public void setC(double cost) {
 		parameters.C=cost;
 	}
-	
+
+	public C_SVC withC(double cost){
+		parameters.C = cost;
+		return this;
+	}
+
+	// Epsilon
 	public double getEpsilon() {
 		return parameters.eps;
 	}
@@ -56,64 +63,116 @@ public class C_SVC implements SVC, MultiLabelClassifier {
 		parameters.eps = eps;
 	}
 
-	// Kernel type
-	public void setKernel(KernelType kernel) {
-		parameters.kernel_type = kernel.id;
+	public C_SVC withEpsilon(double eps){
+		parameters.eps = eps;
+		return this;
 	}
 
+	// Kernel type
 	public KernelType getKernel() {
 		return KernelType.forID(parameters.kernel_type);
 	}
 
+	public void setKernel(KernelType kernel) {
+		parameters.kernel_type = kernel.id;
+	}
+
+	public C_SVC withKernel(KernelType kernel){
+		parameters.kernel_type = kernel.id;
+		return this;
+	}
+
 	/// Gamma
+	public double getGamma() {
+		return parameters.gamma;
+	}
+
 	public void setGamma(double gamma){
 		if (gamma < 0)
 			throw new IllegalArgumentException("Parameter 'gamma' must be >=0");
 		parameters.gamma = gamma;
 	}
 
-	public double getGamma() {
-		return parameters.gamma;
+	public C_SVC withGamma(double gamma){
+		setGamma(gamma);
+		return this;
 	}
+
 
 	// KERNEL DEGREE
-	public void setDegree(int degree) {
-		parameters.degree = degree;
-	}
-
 	public int getDegree() {
 		return parameters.degree;
 	}
 
-	// KERNEL COEF0
-	public void setCoef0(double coef0) {
-		parameters.coef0=coef0;
+	public void setDegree(int degree) {
+		parameters.degree = degree;
 	}
 
+	public C_SVC withDegree(int degree){
+		parameters.degree = degree;
+		return this;
+	}
+
+	// KERNEL COEF0
 	public double getCoef0() {
 		return parameters.coef0;
 	}
 
+	public void setCoef0(double coef0) {
+		parameters.coef0=coef0;
+	}
+
+	public C_SVC withCoef0(double coef0){
+		parameters.coef0 = coef0;
+		return this;
+	}
+
 	// CACHE SIZE
+	public double getCacheSize() {
+		return parameters.cache_size;
+	}
+
 	public void setCacheSize(double cacheMB) {
 		if (cacheMB < 100)
 			throw new IllegalArgumentException("Parameter 'cache-size' must be >=100");
 		parameters.cache_size = cacheMB;
 	}
-
-	public double getCacheSize() {
-		return parameters.cache_size;
+	
+	public C_SVC withCacheSize(double cacheMB){
+		setCacheSize(cacheMB);
+		return this;
 	}
+	
 
 	// SHRINKING
-	public void setShrinking(boolean doShrinking) {
-		parameters.shrinking = (doShrinking? 1 : 0);
-	}
-
 	public boolean getShrinking() {
 		return parameters.shrinking == 0 ? false : true;
 	}
 
+	public void setShrinking(boolean doShrinking) {
+		parameters.shrinking = (doShrinking? 1 : 0);
+	}
+
+	public C_SVC withShrinking(boolean doShrinking){
+		setShrinking(doShrinking);
+		return this;
+	}
+
+	// Seed
+	@Override
+	public Long getSeed() {
+		return seed;
+	}
+
+	@Override
+	public void setSeed(long seed) {
+		this.seed = seed;
+	}
+
+	public C_SVC withSeed(long seed){
+		this.seed = seed;
+		return this;
+	}
 	
 	@Override
 	public List<ConfigParameter> getConfigParameters(){
@@ -137,16 +196,6 @@ public class C_SVC implements SVC, MultiLabelClassifier {
 		prop.put(ML_ID_PARAM_KEY, ALG_ID);
 		return prop;
 	}
-	
-	@Override
-	public void setSeed(long seed) {
-		this.seed = seed;
-	}
-
-	@Override
-	public Long getSeed() {
-		return seed;
-	}
 
 	@Override
 	public boolean isFitted() {
@@ -163,6 +212,7 @@ public class C_SVC implements SVC, MultiLabelClassifier {
 		C_SVC clone = new C_SVC();
 		// Only copy the actual parameters 
 		clone.parameters = (svm_parameter) parameters.clone();
+		clone.seed = seed;
 		return clone;
 	}
 
@@ -193,13 +243,13 @@ public class C_SVC implements SVC, MultiLabelClassifier {
 	 */
 	
 	@Override
-	public void train(List<DataRecord> trainingset) throws IllegalArgumentException {
-		svm = LibSvm.train(parameters, trainingset, seed);
+	public void train(List<DataRecord> trainingSet) throws IllegalArgumentException {
+		svm = LibSvm.train(parameters, trainingSet, seed);
 	}
 
 	@Override
-	public void fit(List<DataRecord> trainingset) throws IllegalArgumentException {
-		svm = LibSvm.train(parameters, trainingset, seed);
+	public void fit(List<DataRecord> trainingSet) throws IllegalArgumentException {
+		svm = LibSvm.train(parameters, trainingSet, seed);
 	}
 
 	/* 

@@ -49,7 +49,7 @@ public interface NCM extends Cloneable, Saveable, Configurable, Described, Named
 	
 	/**
 	 * Getter for properties of the NCM
-	 * @return A Map with properties for the istance
+	 * @return A Map with properties for the instance
 	 */
 	public Map<String, Object> getProperties();
 	

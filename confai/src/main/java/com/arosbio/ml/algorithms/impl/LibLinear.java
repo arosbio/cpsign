@@ -148,11 +148,11 @@ public class LibLinear {
 	 * =================================================
 	 */
 
-	public static Model train(Parameter params, List<DataRecord> trainingset) throws IllegalArgumentException{
-		LOGGER.trace("Training LibLinear model with {} records", trainingset.size());
+	public static Model train(Parameter params, List<DataRecord> trainingSet) throws IllegalArgumentException{
+		LOGGER.trace("Training LibLinear model with {} records", trainingSet.size());
 
 		//Set up training problem on proper training set
-		Problem trainProblem = createLibLinearTrainProblem(trainingset);				
+		Problem trainProblem = createLibLinearTrainProblem(trainingSet);				
 		LOGGER.trace("Finished setting up the LibLinear training problem");
 
 		return train(params,trainProblem);

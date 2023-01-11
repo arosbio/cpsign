@@ -136,11 +136,6 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 	}
 
 	@Override
-	public Long getSeed() {
-		return super.getSeed();
-	}
-
-	@Override
 	public void setSeed(long seed) {
 		super.setSeed(seed);
 		if (ncm!=null && ncm.getModel() != null)
@@ -183,18 +178,14 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 	public int getNumClasses() {
 		if (!isTrained())
 			return 0;
-		return originalData.getLabels().size();
+		return labels.size();
 	}
 
 	@Override
 	public Set<Integer> getLabels(){
 		if (! isTrained())
 			return new HashSet<>();
-		Set<Integer> set = new HashSet<>();
-		for (double l : originalData.getLabels()){
-			set.add((int)l);
-		}
-		return set;
+		return new HashSet<>(labels);
 	}
 
 	@Override
@@ -250,16 +241,16 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 	 */
 
 	@Override
-	public void train(Dataset problem) throws MissingDataException, IllegalArgumentException {
-		if (problem == null || problem.getNumRecords() <1)
-			throw new IllegalArgumentException("No records sent");
+	public void train(Dataset data) throws MissingDataException, IllegalArgumentException {
+		if (data == null || data.isEmpty())
+			throw new IllegalArgumentException("No records given");
 
-		originalData = problem;
+		originalData = data;
 
-		List<DataRecord> trainingset = new ArrayList<>(problem.getNumRecords()+1);
-		trainingset.addAll(problem.getDataset());
-		trainingset.addAll(problem.getModelingExclusiveDataset());
-		trainingset.addAll(problem.getCalibrationExclusiveDataset());
+		List<DataRecord> trainingset = new ArrayList<>(data.getNumRecords()+1);
+		trainingset.addAll(data.getDataset());
+		trainingset.addAll(data.getModelingExclusiveDataset());
+		trainingset.addAll(data.getCalibrationExclusiveDataset());
 
 		// Validate to make sure it's big enough
 		TrainingsetValidator.getInstance().validateClassification(trainingset);
@@ -301,7 +292,7 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 		Map<Integer, Double> prediction = new HashMap<>();
 
 		int beforeSize = trainingData.size(); 
-		for (int label: labels) {
+		for (int label : labels) {
 			prediction.put(label, predictPValueForClass(label, example));
 		}
 
@@ -309,9 +300,8 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 
 		if (beforeSize != afterSize) {
 			LOGGER.debug("The before and after sizes doesn't match! something is wrong in the code!");
-			throw new RuntimeException("Coding error in TCP Classification");
+			throw new RuntimeException("Coding error in the TCPClassifier class");
 		}
-
 
 		return prediction;
 	}
@@ -320,11 +310,11 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 		// Add the record, with the assumed label
 		trainingData.add(new DataRecord((double)label, example));
 
-		// train the NCM_INFO_FILE
+		// train the NCM
 		ncm.trainNCM(trainingData);
 
 		// Predict all alphas (NCS) for the assumed label
-		List<Double> ncs = new ArrayList<>((int)(trainingData.size()/2d));
+		List<Double> ncs = new ArrayList<>(trainingData.size()/2);
 		for (DataRecord r : trainingData) {
 			if (label == (int)r.getLabel()) {
 				// get the NCS for the label of interest
@@ -391,7 +381,6 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 		List<SparseFeature> gradient = new ArrayList<>(example.getNumExplicitFeatures());
 
 		// First do a normal prediction
-		// Map<Integer, Double> pvals = predict(example);
 		double normalPValue = pvals.get(label);
 
 		for (Feature f : example) {
@@ -421,18 +410,18 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 
 		LOGGER.debug("Saving TCP Classifier to sink, location= {}", tcpDir);
 		originalData.saveToDataSink(sink, tcpDir, encryptSpec);
-		LOGGER.debug("Saved classifier data");
+		LOGGER.debug("Saved TCP data");
 
-		LOGGER.debug("Saving TCP NCM");
 		ncm.saveToDataSink(sink, tcpDir + NCM_BASE, encryptSpec);
+		LOGGER.debug("Saved TCP NCM");
 
-		LOGGER.debug("Saving tcp meta info");
 		try (OutputStream ncmPropertyStream = sink.getOutputStream(tcpDir+ TCP_META_INFO)){
 			MetaFileUtils.writePropertiesToStream(ncmPropertyStream, getProperties());
 		} catch(Exception e) {
 			LOGGER.debug("Failed saving TCP properties to stream", e);
 			throw new IOException("Failed saving TCP");
 		}
+		LOGGER.debug("Saved tcp meta info");
 	}
 
 	@Override
@@ -459,7 +448,7 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 		// p-value calculator
 		if (props.containsKey(PValueCalculator.PVALUE_CALCULATOR_ID_KEY)) {
 			int id = TypeUtils.asInt(props.get(PValueCalculator.PVALUE_CALCULATOR_ID_KEY));
-			LOGGER.debug("Retreiving pvalue-calculator based on ID: {}", id);
+			LOGGER.debug("Retrieving pvalue-calculator based on ID: {}", id);
 			pValueCalculator = FuzzyServiceLoader.load(PValueCalculator.class, id);
 		} else if (props.containsKey(PValueCalculator.PVALUE_CALCULATOR_NAME_KEY)) {
 			String name = props.get(PValueCalculator.PVALUE_CALCULATOR_NAME_KEY).toString();
@@ -477,7 +466,7 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 		NCM ncmLoaded = FuzzyServiceLoader.load(NCM.class, props.get(PropertyNameSettings.NCM_ID).toString());
 		if (!(ncmLoaded instanceof NCMMondrianClassification)) {
 			LOGGER.debug("TCP meta pointed to a faulty NCM implementation of non-correct type: {}", ncmLoaded.getName()); 
-			throw new IOException("Failed initiatlizing the NCM for TCP");
+			throw new IOException("Failed initializing the NCM for TCP");
 		}
 		ncm = (NCMMondrianClassification) ncmLoaded;
 

@@ -39,7 +39,7 @@ public class NuSVR implements SVR {
 	private svm_model svm;
 	private long seed = GlobalConfig.getInstance().getRNGSeed();
 
-
+	// Nu
 	public double getNu() {
 		return parameters.nu;
 	}
@@ -48,6 +48,12 @@ public class NuSVR implements SVR {
 		parameters.nu = nu;
 	}
 
+	public NuSVR withNu(double nu) {
+		parameters.nu = nu;
+		return this;
+	}
+
+	// SVR Epsilon
 	public double getSVREpsilon() {
 		return parameters.p;
 	}
@@ -55,7 +61,13 @@ public class NuSVR implements SVR {
 	public void setSVREpsilon(double eps) {
 		parameters.p = eps;
 	}
+
+	public NuSVR withSVREpsilon(double eps) {
+		parameters.p = eps;
+		return this;
+	}
 	
+	// Epsilon
 	public double getEpsilon() {
 		return parameters.eps;
 	}
@@ -64,64 +76,115 @@ public class NuSVR implements SVR {
 		parameters.eps = eps;
 	}
 
-	// Kernel type
-	public void setKernel(KernelType kernel) {
-		parameters.kernel_type = kernel.id;
+	public NuSVR withEpsilon(double eps) {
+		parameters.eps = eps;
+		return this;
 	}
 
+	// Kernel type
 	public KernelType getKernel() {
 		return KernelType.forID(parameters.kernel_type);
 	}
 
-	/// Gamma
+	public void setKernel(KernelType kernel) {
+		parameters.kernel_type = kernel.id;
+	}
+
+	public NuSVR withKernel(KernelType kernel) {
+		parameters.kernel_type = kernel.id;
+		return this;
+	}
+	
+
+	// Gamma
+	public double getGamma() {
+		return parameters.gamma;
+	}
+
 	public void setGamma(double gamma){
 		if (gamma < 0)
 			throw new IllegalArgumentException("Parameter 'gamma' must be >=0");
 		parameters.gamma = gamma;
 	}
 
-	public double getGamma() {
-		return parameters.gamma;
+	public NuSVR withGamma(double gamma){
+		setGamma(gamma);
+		return this;
 	}
 
 	// KERNEL DEGREE
-	public void setDegree(int degree) {
-		parameters.degree = degree;
-	}
-
 	public int getDegree() {
 		return parameters.degree;
 	}
 
-	// KERNEL COEF0
-	public void setCoef0(double coef0) {
-		parameters.coef0=coef0;
+	public void setDegree(int degree) {
+		parameters.degree = degree;
 	}
 
+	public NuSVR withDegree(int degree) {
+		parameters.degree = degree;
+		return this;
+	}
+
+	// KERNEL COEF0
 	public double getCoef0() {
 		return parameters.coef0;
 	}
 
+	public void setCoef0(double coef0) {
+		parameters.coef0=coef0;
+	}
+
+	public NuSVR withCoef0(double coef0) {
+		parameters.coef0=coef0;
+		return this;
+	}
+
 	// CACHE SIZE
+	public double getCacheSize() {
+		return parameters.cache_size;
+	}
+
 	public void setCacheSize(double cacheMB) {
 		if (cacheMB < 100)
 			throw new IllegalArgumentException("Parameter 'cache-size' must be >=100");
 		parameters.cache_size = cacheMB;
 	}
 
-	public double getCacheSize() {
-		return parameters.cache_size;
+	public NuSVR withCacheSize(double cacheMB) {
+		setCacheSize(cacheMB);
+		return this;
 	}
 
 	// SHRINKING
-	public void setShrinking(boolean doShrinking) {
-		parameters.shrinking = (doShrinking? 1 : 0);
-	}
-
 	public boolean getShrinking() {
 		return parameters.shrinking == 0 ? false : true;
 	}
 
+	public void setShrinking(boolean doShrinking) {
+		parameters.shrinking = (doShrinking? 1 : 0);
+	}
+
+	public NuSVR withShrinking(boolean doShrinking) {
+		setShrinking(doShrinking);
+		return this;
+	}
+
+	// Seed
+	@Override
+	public Long getSeed() {
+		return seed;
+	}
+
+	@Override
+	public void setSeed(long seed) {
+		this.seed = seed;
+	}
+
+	public NuSVR withSeed(long seed) {
+		this.seed = seed;
+		return this;
+	}
 
 	public List<ConfigParameter> getConfigParameters(){
 		List<ConfigParameter> params = new ArrayList<>();
@@ -147,16 +210,6 @@ public class NuSVR implements SVR {
 	}
 
 	@Override
-	public void setSeed(long seed) {
-		this.seed = seed;
-	}
-
-	@Override
-	public Long getSeed() {
-		return seed;
-	}
-
-	@Override
 	public boolean isFitted() {
 		return svm!=null;
 	}
@@ -166,6 +219,7 @@ public class NuSVR implements SVR {
 		NuSVR clone = new NuSVR();
 		// Only copy the actual parameters 
 		clone.parameters = (svm_parameter) parameters.clone();
+		clone.seed = seed;
 		return clone;
 	}
 
@@ -196,13 +250,13 @@ public class NuSVR implements SVR {
 	 */
 	
 	@Override
-	public void train(List<DataRecord> trainingset) throws IllegalArgumentException {
-		svm = LibSvm.train(parameters, trainingset, seed);
+	public void train(List<DataRecord> trainingSet) throws IllegalArgumentException {
+		svm = LibSvm.train(parameters, trainingSet, seed);
 	}
 
 	@Override
-	public void fit(List<DataRecord> trainingset) throws IllegalArgumentException {
-		svm = LibSvm.train(parameters, trainingset, seed);
+	public void fit(List<DataRecord> trainingSet) throws IllegalArgumentException {
+		svm = LibSvm.train(parameters, trainingSet, seed);
 	}
 
 	/* 

@@ -102,7 +102,7 @@ public class TestChemDataLoader {
 		}
 	}
 
-	public static Dataset loadDataset(CmpdData data) throws IOException {
+	public static ChemDataset loadDataset(CmpdData data) throws IOException {
 		ChemDataset d = new ChemDataset();
 		d.initializeDescriptors();
 		if (data instanceof CSVCmpdData){

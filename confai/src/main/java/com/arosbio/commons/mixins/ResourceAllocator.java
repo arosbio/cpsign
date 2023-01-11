@@ -20,8 +20,8 @@ public interface ResourceAllocator {
     public boolean releaseResources();
 
     /**
-     * Specificies if the object has resources that needs to be de-allocated
-     * at object descruction, and thus if the {@link #releaseResources()} method must be called 
+     * Specifies if the object has resources that needs to be de-allocated
+     * at object destruction, and thus if the {@link #releaseResources()} method must be called 
      * at that point
      * @return {@code true} if resources are allocated and needs to be manually released
      */

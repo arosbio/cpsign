@@ -49,13 +49,13 @@ public class ClassificationUtils {
 		return predictedClasses;
 	}
 
-	public static double getNextHighestPvalue(Map<String, Double> pvals){
+	public static <K> double getNextHighestPvalue(Map<K, Double> pvals){
 		if(pvals.size() == 2){
 			return Collections.min(pvals.values()); // return the smallest value
 		}
 		double highestVal=-1d, nextHighestVal=-1d;
 
-		for(String label: pvals.keySet()){
+		for (K label : pvals.keySet()){
 			if(pvals.get(label)>highestVal){
 				nextHighestVal = highestVal;
 				highestVal = pvals.get(label);
@@ -66,9 +66,9 @@ public class ClassificationUtils {
 		return nextHighestVal;
 	}
 
-	public static double max(Map<String, Double> vals){
+	public static double max(Map<?, Double> vals){
 		double max=-1d;
-		for(Entry<String,Double> val: vals.entrySet())
+		for(Entry<?,Double> val: vals.entrySet())
 			if(val.getValue()>max)
 				max = val.getValue();
 

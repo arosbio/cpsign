@@ -9,13 +9,14 @@
  */
 package com.arosbio.ml.metrics;
 
+import java.util.Locale;
 import java.util.Map;
 
 public interface SingleValuedMetric extends Metric {
 
 	static String toString(SingleValuedMetric m){
 		if (m.getNumExamples()>0)
-			return String.format("%s: %.3f",m.getName(),m.getScore());
+			return String.format(Locale.ENGLISH,"%s: %.3f",m.getName(),m.getScore());
 		return Metric.toString(m);
 	}
 	

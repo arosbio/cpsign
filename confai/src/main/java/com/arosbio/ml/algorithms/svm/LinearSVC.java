@@ -75,6 +75,35 @@ public class LinearSVC implements SVC, MultiLabelClassifier {
 		return "Support Vector Classification (SVC) implemented in LIBLINEAR. Restricted to a linear kernel and optimized for fast training and predictions for linear kernel SVM. Should be prefered over LIBSVM implementation with a linear kernel.";
 	}
 
+	// Cost
+	public double getC() {
+		return parameters.getC();
+	}
+
+	public void setC(double cost) {
+		parameters.setC(cost);
+	}
+
+	public LinearSVC withC(double cost){
+		parameters.setC(cost);
+		return this;
+	}
+
+	// Epsilon
+	public double getEpsilon() {
+		return parameters.getEps();
+	}
+
+	public void setEpsilon(double eps) {
+		parameters.setEps(eps);
+	}
+
+	public LinearSVC withEpsilon(double eps){
+		parameters.setEps(eps);
+		return this;
+	}
+
+	// Solver type
 	public SolverType getSolverType() {
 		return parameters.getSolverType();
 	}
@@ -86,22 +115,12 @@ public class LinearSVC implements SVC, MultiLabelClassifier {
 		parameters.setSolverType(type);
 	}
 
-	public double getC() {
-		return parameters.getC();
+	public LinearSVC withSolverType(SolverType type){
+		setSolverType(type);
+		return this;
 	}
 
-	public void setC(double cost) {
-		parameters.setC(cost);
-	}
-
-	public double getEpsilon() {
-		return parameters.getEps();
-	}
-
-	public void setEpsilon(double eps) {
-		parameters.setEps(eps);
-	}
-	
+	// Max iterations
 	public int getMaxNumIterations() {
 		return parameters.getMaxIters();
 	}
@@ -112,10 +131,10 @@ public class LinearSVC implements SVC, MultiLabelClassifier {
 		else
 			parameters.setMaxIters(maxIterations);
 	}
-	
-	@Override
-	public void setSeed(long seed) {
-		this.parameters.setRandom(new Random(seed));
+
+	public LinearSVC withMaxNumIterations(int maxIterations){
+		setMaxNumIterations(maxIterations);
+		return this;
 	}
 
 	/**
@@ -125,6 +144,16 @@ public class LinearSVC implements SVC, MultiLabelClassifier {
 	@Override
 	public Long getSeed() {
 		return null;
+	}
+	
+	@Override
+	public void setSeed(long seed) {
+		this.parameters.setRandom(new Random(seed));
+	}
+
+	public LinearSVC withSeed(long seed){
+		setSeed(seed);
+		return this;
 	}
 
 	@Override
