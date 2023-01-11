@@ -127,13 +127,18 @@ public class KFoldCV implements TestingStrategy {
 	}
 
 	@Override
+	public Long getSeed() {
+		return rngSeed;
+	}
+
+	@Override
 	public void setSeed(long seed) {
 		this.rngSeed = seed;
 	}
 
-	@Override
-	public Long getSeed() {
-		return rngSeed;
+	public KFoldCV withSeed(long seed){
+		this.rngSeed = seed;
+		return this;
 	}
 
 	@Override
