@@ -68,7 +68,6 @@ import com.google.common.collect.Range;
 @SuppressWarnings("deprecation")
 @Category(UnitTest.class)
 @RunWith(Enclosed.class)
-//@RunWith(Suite.class)
 public class TestMetrics {
 
 	/**

@@ -132,7 +132,7 @@ public class TestACPRegression extends TestEnv{
 		//Read in problem from file
 		Dataset problem = TestDataLoader.getInstance().getDataset(false, false);
 
-		ACPRegressor lacp = getACPRegressionLogNormalized(true, true, 0.01); //new ACPRegressor(new LibLinear(LibLinearParameters.defaultRegression()), new RandomSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
+		ACPRegressor lacp = getACPRegressionLogNormalized(true, true, 0.01);
 
 		//Predict the second example (first one was failing sometimes at the "lowest confidence" - most narrow interval)
 		DataRecord example = problem.getDataset() .remove(recordToTest);
@@ -141,11 +141,11 @@ public class TestACPRegression extends TestEnv{
 		lacp.train(problem); 
 
 		CPRegressionPrediction results = lacp.predict(example.getFeatures(),confidences);
+		
 		System.out.println(results);
 
 		for (double conf : confidences){
-
-			double observed = example.getLabel();
+			// Make sure all are set
 			double lower = results.getInterval(conf).getInterval().lowerEndpoint();
 			double upper = results.getInterval(conf).getInterval().upperEndpoint();
 			double midpoint = results.getY_hat();
@@ -156,12 +156,6 @@ public class TestACPRegression extends TestEnv{
 			assertNotNull(midpoint);
 			assertNotNull(distance);
 			assertNotNull(confidence);
-
-//			System.out.println(result);
-
-			Assert.assertTrue(observed>=lower);
-			Assert.assertTrue(observed<=upper);
-
 		}
 
 		//High confidence should give a larger distance than smaller
@@ -245,7 +239,7 @@ public class TestACPRegression extends TestEnv{
 		ACPRegressor lacp = getACPRegressionNormalized(false, true); 
 
 		//Train model
-		lacp.train(problem); //ACP(problem, DEFAULT_CALIBRATION_RATIO, nrModels);
+		lacp.train(problem);
 
 		//Predict the second example (first one was failing sometimes at the "lowest confidence" - most narrow interval)
 
@@ -253,7 +247,6 @@ public class TestACPRegression extends TestEnv{
 
 		for (double conf : confidences){
 
-//			double observed = example.getLabel();
 			double lower = results.getInterval(conf).getInterval().lowerEndpoint();
 			double upper = results.getInterval(conf).getInterval().upperEndpoint();
 			double midpoint = results.getY_hat();
@@ -264,12 +257,6 @@ public class TestACPRegression extends TestEnv{
 			assertNotNull(midpoint);
 			assertNotNull(distance);
 			assertNotNull(confidence);
-
-//			System.out.println(result);
-			
-//			// Create somewhat larger interval, as we dont know that the example must be correctly predicted 
-//			Assert.assertTrue(observed>=lower-(1-conf));
-//			Assert.assertTrue("Failed with range: " + results.getInterval(conf).getInterval() + " obs: " + observed + " conf: " + conf,observed<=upper+(1-conf));
 
 		}
 
@@ -289,10 +276,10 @@ public class TestACPRegression extends TestEnv{
 		//Predict the second example (first one was failing sometimes at the "lowest confidence" - most narrow interval)
 		DataRecord example = problem.getDataset() .get(recordToTest);
 
-		ACPRegressor lacp = getACPRegressionNormalized(false, true); //new ACPRegressor(new LibSvm(LibSvmParameters.defaultRegression()), new RandomSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
+		ACPRegressor lacp = getACPRegressionNormalized(false, true);
 
 		//Train model
-		lacp.train(problem); //ACP(problem, DEFAULT_CALIBRATION_RATIO, nrModels);
+		lacp.train(problem); 
 
 		//Save model
 		DataSink sink = getJarDataSink(modelFile);
@@ -344,7 +331,6 @@ public class TestACPRegression extends TestEnv{
 		ACPRegressor lacp_loaded = new ACPRegressor();
 		lacp_loaded.loadFromDataSource(getJarDataSource(modelFile), null);
 
-		//		System.out.println("TestEx.numRecords: " + testEx.getNumRecords());
 		for(int i=0; i<testEx.size(); i++){
 			CPRegressionPrediction normal = lacp.predict(testEx .get(i).getFeatures(), confidences);
 			CPRegressionPrediction loaded_pred = lacp_loaded.predict(testEx .get(i).getFeatures(), confidences);

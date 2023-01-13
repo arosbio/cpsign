@@ -12,8 +12,11 @@ package com.arosbio.data.transform;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -27,6 +30,8 @@ import com.arosbio.data.transform.feature_selection.VarianceBasedSelector;
 import com.arosbio.data.transform.scale.MinMaxScaler;
 import com.arosbio.data.transform.scale.RobustScaler;
 import com.arosbio.data.transform.scale.Standardizer;
+import com.arosbio.ml.algorithms.Classifier;
+import com.arosbio.ml.algorithms.Regressor;
 import com.arosbio.ml.algorithms.svm.LinearSVC;
 import com.arosbio.ml.algorithms.svm.LinearSVR;
 import com.arosbio.ml.algorithms.svm.SVC;
@@ -37,8 +42,11 @@ import com.arosbio.ml.cp.icp.ICPClassifier;
 import com.arosbio.ml.cp.icp.ICPRegressor;
 import com.arosbio.ml.cp.nonconf.classification.NegativeDistanceToHyperplaneNCM;
 import com.arosbio.ml.cp.nonconf.regression.LogNormalizedNCM;
+import com.arosbio.ml.cp.nonconf.regression.NormalizedNCM;
 import com.arosbio.ml.interfaces.Predictor;
 import com.arosbio.ml.metrics.Metric;
+import com.arosbio.ml.metrics.SingleValuedMetric;
+import com.arosbio.ml.metrics.regression.PointPredictionMetric;
 import com.arosbio.ml.sampling.RandomSampling;
 import com.arosbio.ml.testing.KFoldCV;
 import com.arosbio.ml.testing.TestRunner;
@@ -53,7 +61,6 @@ public class PerformanceEvaluation {
 	
 	static ACPClassifier getPredictor() {
 		SVC alg = new LinearSVC();
-//		SVM alg = new LibSvm(LibSvmParameters.defaultClassification());
 		return new ACPClassifier(
 				new ICPClassifier(new NegativeDistanceToHyperplaneNCM(alg)), 
 				new RandomSampling(10, .2));
@@ -64,8 +71,8 @@ public class PerformanceEvaluation {
 	}
 	
 	static ACPRegressor getPredictorReg() {
-		SVR alg = new LinearSVR();
-//		SVM alg = new LibSvm(LibSvmParameters.defaultRegression());
+		LinearSVR alg = new LinearSVR();
+
 		return new ACPRegressor(
 				new ICPRegressor(new LogNormalizedNCM(alg, 0d)), 
 				new RandomSampling(10, .2));
@@ -77,6 +84,72 @@ public class PerformanceEvaluation {
 	
 	static Dataset getLargeRegProblem() throws IOException {
 		return TestDataLoader.loadDataset(TestResources.SVMLIGHTFiles.REGRESSION_ANDROGEN);
+	}
+
+	/*
+==== the getDataset(false,false) - data set
+ACP METRICS:
+MAE: 3.689+/-0.542
+R^2: 0.663+/-0.121
+RMSE: 5.125+/-0.820
+CP Accuracy: 0.805+/-0.081
+Confidence for given prediction interval width: 0.114+/-0.029
+Calibration plot builder
+Efficiency plot builder
+Mean prediction-interval width: 12.370+/-2.318
+Median prediction-interval width: 12.474+/-2.444
+SVR METRICS:
+MAE: 3.671+/-0.470
+R^2: 0.671+/-0.107
+RMSE: 5.073+/-0.720
+
+== from getLargeRegProblem()
+ACP METRICS:
+MAE: 0.665+/-0.057
+R^2: 0.147+/-0.439
+RMSE: 0.900+/-0.128
+CP Accuracy: 0.783+/-0.048
+Confidence for given prediction interval width: 0.474+/-0.045
+Calibration plot builder
+Efficiency plot builder
+Mean prediction-interval width: 2.325+/-0.246
+Median prediction-interval width: 2.254+/-0.200
+SVR METRICS:
+MAE: 0.649+/-0.067
+R^2: 0.232+/-0.276
+RMSE: 0.863+/-0.098
+
+===== After correcting the Bias term
+ACP METRICS:
+MAE: 0.644+/-0.085
+R^2: 0.328+/-0.192
+RMSE: 0.835+/-0.133
+CP Accuracy: 0.828+/-0.058
+Confidence for given prediction interval width: 0.515+/-0.027
+Calibration plot builder
+Efficiency plot builder
+Mean prediction-interval width: 2.299+/-0.154
+Median prediction-interval width: 2.244+/-0.190
+SVR METRICS:
+MAE: 0.624+/-0.071
+R^2: 0.357+/-0.166
+RMSE: 0.818+/-0.116
+	 */
+	@Test
+	public void testModelVsACP_reg() throws Exception {
+		GlobalConfig.getInstance().setRNGSeed(SEED);
+		SVR model = new LinearSVR();
+		Dataset data = getLargeRegProblem();
+		ACPRegressor acp = new ACPRegressor(new NormalizedNCM(model.clone()), new RandomSampling());
+		TestRunner tester = new TestRunner.Builder(new KFoldCV()).calcMeanAndStd(true).build();
+		List<Metric> acpMetrics = tester.evaluate(data, acp);
+		System.err.println("ACP METRICS:");
+		for (Metric m : acpMetrics)
+			System.err.println(m);
+		List<Metric> svrMetrics = tester.evaluateRegressor(data, model);
+		System.out.println("SVR METRICS:");
+		for(Metric m : svrMetrics)
+			System.out.println(m);
 	}
 
 
@@ -157,6 +230,78 @@ Proportion multi-label prediction sets builder
 		doTest(getPredictor(), getProb(), Arrays.asList(new MinMaxScaler(), new VarianceBasedSelector()), "Min-Max + Variance based");
 	}
 	
+	public static class ObservedVsPredictedCheck implements PointPredictionMetric, SingleValuedMetric {
+
+		public List<Pair<Double,Double>> xAndDiff = new ArrayList<>();
+		public List<Pair<Double,Double>> obsAndPred = new ArrayList<>();
+
+		public ObservedVsPredictedCheck clone(){
+			return new ObservedVsPredictedCheck();
+		}
+
+		@Override
+		public int getNumExamples() {
+			return xAndDiff.size();
+		}
+
+		@Override
+		public void clear() {
+			xAndDiff.clear();
+			obsAndPred.clear();
+		}
+
+		@Override
+		public boolean goalIsMinimization() {
+			return false;
+		}
+
+		@Override
+		public String getName() {
+			return "this";
+		}
+
+		@Override
+		public double getScore() {
+			return 0;
+		}
+
+		@Override
+		public Map<String, ? extends Object> asMap() {
+			return new HashMap<>();
+		}
+
+		@Override
+		public void addPrediction(double observedLabel, double predictedLabel) {
+			xAndDiff.add(Pair.of(observedLabel, predictedLabel-observedLabel));
+			obsAndPred.add(Pair.of(observedLabel,predictedLabel));
+		}
+
+	}
+
+	// public void doTestReg(ACPRegressor pred, Dataset prob, List<Transformer> trans, String runID) throws Exception {
+	// 	System.out.println("\n==== Running with Predictor "+pred + " using transformers: " + getTransList(trans) + " ID: " + runID);
+		
+	// 	System.out.println("Init ds: " + prob.getDataset());
+	// 	Stopwatch sw = new Stopwatch();
+	// 	sw.start();
+	// 	prob.apply(trans);
+	// 	sw.stop();
+	// 	System.out.println("Applied transformers " + sw + ", resulted in: " + prob.getDataset());
+		
+	// 	TestRunner runner = new TestRunner.Builder(new KFoldCV(10,SEED)).calcMeanAndStd(false).build();
+		
+	// 	List<Metric> metrics = MetricFactory.getRegressorMetrics();
+	// 	metrics.add(0,new RegChecker());
+
+	// 	Regressor alg = pred.getICPImplementation().getNCM().getModel().clone();
+	// 	List<Metric> mets = runner.evaluateRegressor(prob, alg, metrics);
+	// 	System.out.println("Regressor metrics:");
+	// 	for (Metric m : mets) {
+	// 		System.out.println(m);
+	// 	}
+
+		
+	// }
 	
 	public void doTest(Predictor pred, Dataset prob, List<Transformer> trans, String runID) throws Exception {
 		System.out.println("\n==== Running with Predictor "+pred + " using transformers: " + getTransList(trans) + " ID: " + runID);
@@ -176,6 +321,22 @@ Proportion multi-label prediction sets builder
 			System.out.println(m);
 		}
 		System.out.println();
+
+		if (pred instanceof ACPRegressor){
+			Regressor alg = ((ACPRegressor) pred).getICPImplementation().getNCM().getModel().clone();
+			mets = runner.evaluateRegressor(prob, alg);
+			System.out.println("Regressor metrics:");
+			for (Metric m : mets) {
+				System.out.println(m);
+			}
+		}else if (pred instanceof ACPClassifier){
+			Classifier alg = ((ACPClassifier)pred).getICPImplementation().getNCM().getModel();
+			mets = runner.evaluateClassifier(prob, alg);
+			System.out.println("Classifier metrics:");
+			for (Metric m : mets) {
+				System.out.println(m);
+			}
+		}
 		
 	}
 	
@@ -233,14 +394,26 @@ CP regression calibration plot builder
 	}
 	
 	/*
-	 * ==== Running with Predictor ACP regression with Random sampling with 10 models and 0.2 calibration ratio using transformers: standardize,  ID: SCALED
-Init ds: SubSet with 1040 records and 306 features
-Applied transformers 166 ms, resulted in: SubSet with 1040 records and 306 features
-Finished in 15 min 24 s with metrics:
-RMSE : 247.9813966059762
-R^2 : -47429.60706224914
-CP regression efficiency plot builder
-CP regression calibration plot builder
+
+==== Running with Predictor ACP regression with Random sampling with 10 models and 0.2 calibration ratio using transformers: Standardizer,  ID: SCALED
+Init ds: Dataset with 688 records and 97 features
+Applied transformers 116 ms, resulted in: Dataset with 688 records and 97 features
+Finished in 6.804 s with metrics:
+MAE: 0.610+/-0.054
+R^2: 0.393+/-0.099
+RMSE: 0.795+/-0.057
+CP Accuracy: 0.829+/-0.037
+Confidence for given prediction interval width: 0.518+/-0.020
+Calibration plot builder
+Efficiency plot builder
+Mean prediction-interval width: 2.270+/-0.098
+Median prediction-interval width: 2.081+/-0.145
+
+Regressor metrics:
+MAE: 0.612+/-0.052
+R^2: 0.385+/-0.109
+RMSE: 0.800+/-0.060
+
 	 */
 	@Test
 	public void testStandardizedReg() throws Exception {
@@ -248,14 +421,20 @@ CP regression calibration plot builder
 	}
 	
 	/*
-	 * ==== Running with Predictor ACP regression with Random sampling with 10 models and 0.2 calibration ratio using transformers: standardize, l2-svr,  ID: SCALED+L2
-Init ds: SubSet with 1040 records and 306 features
-Applied transformers 704 ms, resulted in: SubSet with 1040 records and 118 features
-Finished in 1 min 3 s with metrics:
-RMSE : 218.39280593313913
-R^2 : -36786.234136209794
-CP regression efficiency plot builder
-CP regression calibration plot builder
+	 * 
+==== Running with Predictor ACP regression with Random sampling with 10 models and 0.2 calibration ratio using transformers: Standardizer, L2SVRSelector,  ID: SCALED+L2
+Init ds: Dataset with 688 records and 97 features
+Applied transformers 190 ms, resulted in: Dataset with 688 records and 42 features
+Finished in 1.734 s with metrics:
+MAE: 0.591+/-0.043
+R^2: 0.432+/-0.110
+RMSE: 0.765+/-0.065
+CP Accuracy: 0.804+/-0.055
+Confidence for given prediction interval width: 0.544+/-0.023
+Calibration plot builder
+Efficiency plot builder
+Mean prediction-interval width: 2.040+/-0.140
+Median prediction-interval width: 1.938+/-0.117
 	 */
 	@Test
 	public void testScaledAndL2CReg() throws Exception {
@@ -263,14 +442,19 @@ CP regression calibration plot builder
 	}
 	
 	/*
-	 * ==== Running with Predictor ACP regression with Random sampling with 10 models and 0.2 calibration ratio using transformers: standardize, variance-based-selection,  ID: SCALED+variance
-Init ds: SubSet with 1040 records and 306 features
-Applied transformers 455 ms, resulted in: SubSet with 1040 records and 236 features
-Finished in 12 min 17 s with metrics:
-RMSE : 247.78833327976125
-R^2 : -47355.78260361923
-CP regression efficiency plot builder
-CP regression calibration plot builder
+==== Running with Predictor ACP regression with Random sampling with 10 models and 0.2 calibration ratio using transformers: Standardizer, VarianceBasedSelector,  ID: SCALED+variance
+Init ds: Dataset with 688 records and 97 features
+Applied transformers 152 ms, resulted in: Dataset with 688 records and 87 features
+Finished in 7.146 s with metrics:
+MAE: 0.605+/-0.082
+R^2: 0.411+/-0.128
+RMSE: 0.785+/-0.110
+CP Accuracy: 0.826+/-0.066
+Confidence for given prediction interval width: 0.522+/-0.018
+Calibration plot builder
+Efficiency plot builder
+Mean prediction-interval width: 2.192+/-0.103
+Median prediction-interval width: 2.018+/-0.122
 	 */
 	@Test
 	public void testScaledVarianceReg() throws Exception {

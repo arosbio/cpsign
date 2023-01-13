@@ -9,20 +9,26 @@
  */
 package com.arosbio.ml.algorithms;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.arosbio.commons.GlobalConfig;
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.Dataset.SubSet;
 import com.arosbio.data.transform.feature_selection.VarianceBasedSelector;
 import com.arosbio.ml.algorithms.svm.LinearSVC;
 import com.arosbio.ml.algorithms.svm.LinearSVR;
+import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.classification.BalancedAccuracy;
 import com.arosbio.ml.metrics.classification.ClassifierAccuracy;
+import com.arosbio.ml.testing.KFoldCV;
+import com.arosbio.ml.testing.TestRunner;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.NonSuiteTest;
 import com.arosbio.tests.suites.UnitTest;
@@ -109,6 +115,42 @@ public class TestLibLinear extends TestEnv{
 		Assert.assertEquals(c,clone.getC(),0.00001);
 		Assert.assertEquals(eps,clone.getEpsilon(),0.00001);
 		Assert.assertTrue(clone.getSolverType().toString().equalsIgnoreCase(solverStr));
+
+		// printLogs();
+	}
+
+	/*
+	Regularize Bias 
+	MAE: 0.659+/-0.055
+R^2: 0.240+/-0.302
+RMSE: 0.868+/-0.094
+
+// without reg bias
+MAE: 0.703+/-0.062
+R^2: 0.181+/-0.246
+RMSE: 0.908+/-0.076
+
+// With reg and large bias term
+MAE: 0.698+/-0.062
+R^2: 0.182+/-0.281
+RMSE: 0.904+/-0.079
+// Adding that extra column for bias, and bias == 1
+MAE: 0.618+/-0.043
+R^2: 0.342+/-0.188
+RMSE: 0.815+/-0.063
+
+	 */
+	@Test
+	public void testBiasTerm() throws IOException{
+		GlobalConfig.getInstance().setRNGSeed(987654l);
+		LinearSVR alg = new LinearSVR();
+
+		Dataset data = TestDataLoader.loadDataset(TestResources.SVMLIGHTFiles.REGRESSION_ANDROGEN);
+		// System.err.println(data);
+		TestRunner runner = new TestRunner.Builder(new KFoldCV()).build();
+		List<Metric> metrics = runner.evaluateRegressor(data, alg);
+		for(Metric m : metrics)
+			System.out.println(m);
 
 		// printLogs();
 	}

@@ -123,7 +123,7 @@ public class TestComputeSignificantSignature {
         ChemCPClassifier acp1 = new ChemCPClassifier(new ACPClassifier(new NegativeDistanceToHyperplaneNCM(new LinearSVC()), new RandomSampling()));
         ChemCPClassifier acp2 = new ChemCPClassifier(new ACPClassifier(new NegativeDistanceToHyperplaneNCM(new LinearSVC()), new RandomSampling()));
         // But change the descriptor of the second one
-        acp2.getDataset().setDescriptors(new MockNoninformativeDescriptor(), new MockNoninformativeDescriptor(0,3), acp1.getDataset().getDescriptors().get(0).clone());
+        acp2.getDataset().setDescriptors(new MockNoninformativeDescriptor(0,3), acp1.getDataset().getDescriptors().get(0).clone());
 
         // Load same training set
         try(SDFReader r1 = new SDFile(ames.uri()).getIterator();
@@ -134,7 +134,7 @@ public class TestComputeSignificantSignature {
         }
 
         // equals apart from the sometimes failing descriptor
-        Assert.assertEquals(acp1.getDataset().getNumAttributes() + 4, acp2.getDataset().getNumAttributes());
+        Assert.assertEquals(acp1.getDataset().getNumAttributes() + 3, acp2.getDataset().getNumAttributes());
 
         // Train them both
         acp1.train();
@@ -149,27 +149,31 @@ public class TestComputeSignificantSignature {
 
         // Check the full gradients - need to counter for the first 4 features that should have 0 in value (non-informative)
         List<SparseFeature> ss1_full = ss1.getFullGradient(), ss2_full = ss2.getFullGradient();
+
+        // System.err.println("sign-sign: " + ss2);
+        // System.err.println("sign-sign extra grad: " + ss2.getAdditionalFeaturesGradient());
+        // System.err.println("full grad (ss2): " + ss2.getFullGradient());
+        // System.err.println("full grad (ss1): " + ss1.getFullGradient());
+        // System.err.println("mol-grad: " + ss2.getAtomContributions());
+        // System.out.println(ss2.getAdditionalFeaturesGradient());
+
         // First 4 features should be == 0
         Assert.assertEquals(0, ss2_full.get(0).getValue(), 0.00001);
         Assert.assertEquals(0, ss2_full.get(1).getValue(), 0.00001);
         Assert.assertEquals(0, ss2_full.get(2).getValue(), 0.00001);
-        Assert.assertEquals(0, ss2_full.get(3).getValue(), 0.00001);
+        // Assert.assertEquals(0, ss2_full.get(3).getValue(), 0.00001);
 
         // The remaining ones should be identical!
         for (int i=0; i<ss1_full.size(); i++){
-            Assert.assertEquals(ss1_full.get(i).getValue(), ss2_full.get(i+4).getValue(), 0.000001);
+            Assert.assertEquals("failed for index "+i+"="+ss1_full.get(i).getIndex(),ss1_full.get(i).getValue(), ss2_full.get(i+3).getValue(), 0.000001);
         }
 
         // Check the additional features gradient (they should all have ==0 feats)
-        Assert.assertEquals(4, ss2.getAdditionalFeaturesGradient().size());
+        Assert.assertEquals(3, ss2.getAdditionalFeaturesGradient().size());
         for (double v : ss2.getAdditionalFeaturesGradient().values()){
             Assert.assertEquals(0, v, .00001);
         }
-        // System.err.println("sign-sign: " + ss2);
-        // System.err.println("sign-sign extra grad: " + ss2.getAdditionalFeaturesGradient());
-        // System.err.println("full grad: " + ss2.getFullGradient());
-        // System.err.println("mol-grad: " + ss2.getAtomContributions());
-        // System.out.println(ss2.getAdditionalFeaturesGradient());
+
     }
 
     // sign-sign: Significant signature "[C](p[C]([C]p[C])p[C](p[C][O]))" of height 2

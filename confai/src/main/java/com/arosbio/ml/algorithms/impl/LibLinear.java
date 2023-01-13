@@ -33,6 +33,7 @@ import com.arosbio.data.DataRecord;
 import com.arosbio.data.DataUtils;
 import com.arosbio.data.FeatureVector;
 import com.arosbio.data.MissingDataException;
+import com.arosbio.data.MissingValueFeature;
 
 import de.bwaldvogel.liblinear.Feature;
 import de.bwaldvogel.liblinear.FeatureNode;
@@ -53,6 +54,7 @@ public class LibLinear {
 	private static final Logger LOGGER = LoggerFactory.getLogger(LibLinear.class);
 
 	public final static int DEFAULT_MAX_ITERATIONS = 1000;
+	private static final double bias = 1; // The bias term
 
 	//	// TUNABLE PARAMETERS
 	public static final List<String> SOLVER_TYPE_PARAM_NAMES = Arrays.asList("solverType", "solver");
@@ -174,19 +176,21 @@ public class LibLinear {
 	public static Problem createLibLinearTrainProblem(
 			List<DataRecord> trainingset) {
 		LOGGER.debug("trainingset.size={}", trainingset.size());
+		int maxFeatIndex = DataUtils.getMaxFeatureIndex(trainingset) + 1; // +1 for indices starting at 1 instead of 0 
+		int biasColumn = maxFeatIndex+1;
 		Problem trainProblem = new Problem();
 		trainProblem.l = trainingset.size();
-		trainProblem.n = DataUtils.getMaxFeatureIndex(trainingset) + 1; // Need to add 1 for the bias term
+		trainProblem.n = biasColumn; // add 1 for bias term 
 		trainProblem.x = new Feature[trainProblem.l][];
 		trainProblem.y = new double[trainProblem.l];
-		trainProblem.bias = 1;
+		trainProblem.bias = bias;
 
 		try {
 			for (int ex=0; ex < trainProblem.l; ex++) {
 				// Copy the target value
 				trainProblem.y[ex] = trainingset.get(ex).getLabel();
 				// Convert the feature vector
-				trainProblem.x[ex] = createFeatureArray(trainingset.get(ex).getFeatures());
+				trainProblem.x[ex] = createFeatureArray(trainingset.get(ex).getFeatures(),biasColumn);
 			}
 		} catch (MissingDataException e) {
 			LOGGER.debug("Failed setting up LibLinear problem due to missing data: ",e);
@@ -204,17 +208,22 @@ public class LibLinear {
 		clone.n = problem.n;
 		clone.x = problem.x.clone();
 		clone.y = problem.y.clone();
+		clone.bias = problem.bias;
 
 		return clone;
 	}
+	
 
-	public static Feature[] createFeatureArray(FeatureVector feats){
-		Feature[] nodes = new Feature[feats.getNumExplicitFeatures()];
+	public static Feature[] createFeatureArray(FeatureVector feats, Model m){
+		return createFeatureArray(feats, m.getNrFeature()+1);
+	}
+	public static Feature[] createFeatureArray(FeatureVector feats, int biasCol){
+		Feature[] nodes = new Feature[feats.getNumExplicitFeatures()+1]; // Add one for the bias column
 
 		int index = 0;
 		List<Integer> missingDataIndices = new ArrayList<>();
 		for (FeatureVector.Feature f : feats) {
-			if (!Double.isFinite(f.getValue())) {
+			if (f instanceof MissingValueFeature || !Double.isFinite(f.getValue())) {
 				missingDataIndices.add(f.getIndex());
 			}
 			nodes[index] = new FeatureNode(
@@ -222,6 +231,7 @@ public class LibLinear {
 					f.getValue());
 			index++;
 		}
+		nodes[index] = new FeatureNode(biasCol, bias);
 		if (!missingDataIndices.isEmpty()) {
 			throw new MissingDataException("Encountered feature(s) with missing data (index): " + StringUtils.toStringNoBrackets(missingDataIndices));
 		}
@@ -242,7 +252,7 @@ public class LibLinear {
 
 
 	public static double predictValue(Model model, FeatureVector example) throws IllegalStateException {
-		return predictValue(model,createFeatureArray(example));
+		return predictValue(model,createFeatureArray(example,model));
 	}
 
 	public static double predictValue(Model model, Feature[] instance) throws IllegalStateException {
@@ -252,7 +262,7 @@ public class LibLinear {
 
 	public static  int predictClass(Model model,FeatureVector example) 
 			throws IllegalStateException {
-		return predictClass(model,createFeatureArray(example));
+		return predictClass(model,createFeatureArray(example,model));
 	}
 
 	public static int predictClass(Model model,Feature[] instance) 
@@ -262,7 +272,7 @@ public class LibLinear {
 	}
 
 	public static Map<Integer, Double> predictDistanceToHyperplane(Model model,FeatureVector example) throws IllegalStateException {
-		return predictDistanceToHyperplane(model,createFeatureArray(example));
+		return predictDistanceToHyperplane(model,createFeatureArray(example, model));
 	}
 
 	public static Map<Integer, Double> predictDistanceToHyperplane(Model model,Feature[] example) throws IllegalStateException {
@@ -290,7 +300,7 @@ public class LibLinear {
 
 	public static Map<Integer,Double> predictProbabilities(Model model, FeatureVector example){
 		assertFittedModel(model);
-		return predictProbabilities(model,createFeatureArray(example));
+		return predictProbabilities(model,createFeatureArray(example, model.getNrFeature()+1));
 	}
 
 	public static Map<Integer,Double> predictProbabilities(Model model, Feature[] example){

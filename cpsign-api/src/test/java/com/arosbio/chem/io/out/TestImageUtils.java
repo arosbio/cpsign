@@ -73,7 +73,7 @@ public class TestImageUtils {
     public void calcDimAndDraw() throws Exception {
         // ImageUtils.calculateRequiredSpace(null, null, 0)
         Dimension2D dim = ImageUtils.calculateRequiredSpace(200, FontFactory.plain(), lines);
-        System.err.println("Calculated dimensions: " + dim);
+        // System.err.println("Calculated dimensions: " + dim);
         // Create a larger image - non-centered to make it more difficult
         BufferedImage img = new BufferedImage((int) Math.ceil(dim.getWidth())+100,(int)dim.getHeight() + 150, IOSettings.BUFFERED_IMAGE_TYPE);
 

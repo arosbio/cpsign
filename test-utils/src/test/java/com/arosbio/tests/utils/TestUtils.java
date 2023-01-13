@@ -111,6 +111,14 @@ public class TestUtils {
 		return str;
 	}
 
+	public static void assertEquals(List<Double> l1, List<Double> l2){
+		if (l1.size() != l2.size())
+			Assert.fail("Lists of different length");
+		for (int i=0; i<l1.size(); i++){
+			Assert.assertEquals(l1.get(i), l2.get(i),0.000001);
+		}
+	}
+
 	/**
 	 * Assert that two maps match completely, both keys and values.
 	 * @param <K>
