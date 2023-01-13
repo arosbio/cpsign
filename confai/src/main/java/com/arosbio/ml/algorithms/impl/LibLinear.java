@@ -149,13 +149,7 @@ public class LibLinear {
 	 */
 
 	public static Model train(Parameter params, List<DataRecord> trainingSet) throws IllegalArgumentException{
-		LOGGER.trace("Training LibLinear model with {} records", trainingSet.size());
-
-		//Set up training problem on proper training set
-		Problem trainProblem = createLibLinearTrainProblem(trainingSet);				
-		LOGGER.trace("Finished setting up the LibLinear training problem");
-
-		return train(params,trainProblem);
+		return train(params, createLibLinearTrainProblem(trainingSet));
 	}
 
 	public static Model train(Parameter params, Problem problem) throws IllegalArgumentException {
@@ -164,16 +158,11 @@ public class LibLinear {
 		LOGGER.trace("Training liblinear model with #records={}, #attributes={}, using parameters={}",
 				problem.l,problem.n,params.toString());
 
-		LOGGER.trace("Requiring LibLinear-lock");
-		try {
-			LibLinearSerializer.requireLock();
-			// Do the training!
-			Model model = Linear.train(problem, params);
-			LOGGER.debug("Finished training the linear model");
-			return model;
-		} finally {
-			LibLinearSerializer.releaseLock();
-		}
+		// Do the training!
+		Model model = Linear.train(problem, params);
+		LOGGER.debug("Finished training the linear model");
+		return model;
+		
 	}
 
 	/* 
@@ -190,6 +179,7 @@ public class LibLinear {
 		trainProblem.n = DataUtils.getMaxFeatureIndex(trainingset) + 1; // Need to add 1 for the bias term
 		trainProblem.x = new Feature[trainProblem.l][];
 		trainProblem.y = new double[trainProblem.l];
+		trainProblem.bias = 1;
 
 		try {
 			for (int ex=0; ex < trainProblem.l; ex++) {
@@ -257,15 +247,7 @@ public class LibLinear {
 
 	public static double predictValue(Model model, Feature[] instance) throws IllegalStateException {
 		assertFittedModel(model);
-
-		try {
-			LibLinearSerializer.requireLock();
-
-			return Linear.predict(model, instance);
-
-		} finally {
-			LibLinearSerializer.releaseLock();
-		}
+		return Linear.predict(model, instance);
 	}
 
 	public static  int predictClass(Model model,FeatureVector example) 
@@ -276,15 +258,7 @@ public class LibLinear {
 	public static int predictClass(Model model,Feature[] instance) 
 			throws IllegalStateException {
 		assertFittedModel(model);
-
-		try {
-			LibLinearSerializer.requireLock();
-
-			return (int) Linear.predict(model, instance);
-
-		} finally {
-			LibLinearSerializer.releaseLock();
-		}
+		return (int) Linear.predict(model, instance);
 	}
 
 	public static Map<Integer, Double> predictDistanceToHyperplane(Model model,FeatureVector example) throws IllegalStateException {
@@ -294,29 +268,24 @@ public class LibLinear {
 	public static Map<Integer, Double> predictDistanceToHyperplane(Model model,Feature[] example) throws IllegalStateException {
 		assertFittedModel(model);
 
-		try {
-			LibLinearSerializer.requireLock();
+		int[] labels = model.getLabels();
+		double decValues[] = new double[labels.length];
+		Linear.predictValues(model, example, decValues);
 
-			int[] labels = model.getLabels();
-			double decValues[] = new double[labels.length];
-			Linear.predictValues(model, example, decValues);
-
-			// Convert to the labels used
-			Map<Integer,Double> prediction = new HashMap<>();
-			if (model.getNrClass() ==2) {
-				// Special treat binary classification - only gives a single value
-				prediction.put(labels[0], decValues[0]);
-				prediction.put(labels[1], -1*decValues[0]);
-			} else {
-				for (int i=0; i<decValues.length; i++) {
-					prediction.put(labels[i], decValues[i]);
-				}
+		// Convert to the labels used
+		Map<Integer,Double> prediction = new HashMap<>();
+		if (model.getNrClass() ==2) {
+			// Special treat binary classification - only gives a single value
+			prediction.put(labels[0], decValues[0]);
+			prediction.put(labels[1], -1*decValues[0]);
+		} else {
+			for (int i=0; i<decValues.length; i++) {
+				prediction.put(labels[i], decValues[i]);
 			}
-
-			return prediction;
-		} finally {
-			LibLinearSerializer.releaseLock();
 		}
+
+		return prediction;
+		
 	}
 
 	public static Map<Integer,Double> predictProbabilities(Model model, FeatureVector example){
@@ -329,23 +298,19 @@ public class LibLinear {
 		if (!model.isProbabilityModel()) {
 			throw new IllegalStateException("The model was not trained for predicting probabilities");
 		}
-		try {
-			LibLinearSerializer.requireLock();
 
-			int[] labels = model.getLabels();
-			double[] probs = new double[labels.length];
-			Linear.predictProbability(model, example, probs);
+		int[] labels = model.getLabels();
+		double[] probs = new double[labels.length];
+		Linear.predictProbability(model, example, probs);
 
 
-			Map<Integer,Double> prediction = new HashMap<>();
-			for (int i=0; i<probs.length; i++) {
-				prediction.put(labels[i], probs[i]);
-			}
-
-			return prediction;
-		} finally {
-			LibLinearSerializer.releaseLock();
+		Map<Integer,Double> prediction = new HashMap<>();
+		for (int i=0; i<probs.length; i++) {
+			prediction.put(labels[i], probs[i]);
 		}
+
+		return prediction;
+		
 	}
 
 	/* 
