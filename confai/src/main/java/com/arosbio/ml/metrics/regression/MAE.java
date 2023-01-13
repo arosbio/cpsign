@@ -13,7 +13,6 @@ import java.util.Map;
 
 import com.arosbio.commons.mixins.Aliased;
 import com.arosbio.commons.mixins.Described;
-import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
@@ -56,7 +55,7 @@ public class MAE implements SingleValuedMetric, PointPredictionMetric,
 	
 	@Override
 	public String toString() {
-		return Metric.toString(this);
+		return SingleValuedMetric.toString(this);
 	}
 
 	public double getScore() {

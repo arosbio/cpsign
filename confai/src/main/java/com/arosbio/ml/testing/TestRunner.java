@@ -352,6 +352,11 @@ public class TestRunner {
 
 	}
 
+	public List<Metric> evaluateRegressor(Dataset data, 
+		Regressor algorithm) throws IllegalArgumentException {
+			return evaluateRegressor(data, algorithm, MetricFactory.getRegressorMetrics());
+		}
+
 	/**
 	 * Evaluate an {@link Regressor} algorithm using the specified {@link TestingStrategy}, a given {@link Dataset} and
 	 * a list of {@link Metric Metrics}. 
@@ -364,7 +369,7 @@ public class TestRunner {
 	 */
 	public List<Metric> evaluateRegressor(Dataset data, 
 		Regressor algorithm, 
-		List<? extends SingleValuedMetric> metrics) throws IllegalArgumentException {
+		List<? extends Metric> metrics) throws IllegalArgumentException {
 		
 		if (algorithm == null)
 			throw new IllegalArgumentException("Algorithm cannot be null");
@@ -372,7 +377,7 @@ public class TestRunner {
 		// Validate metrics
 		if (metrics == null || metrics.isEmpty())
 			throw new IllegalArgumentException("No Metrics given");
-		for (SingleValuedMetric m : metrics){
+		for (Metric m : metrics){
 			List<String> invalidMetrics = new ArrayList<>();
 			if (! (m instanceof PointPredictionMetric)){
 				invalidMetrics.add(m.getName());
@@ -432,6 +437,11 @@ public class TestRunner {
 
 		return usedMetrics;
 	}
+
+	public List<Metric> evaluateClassifier(Dataset data, 
+		Classifier algorithm) throws IllegalArgumentException {
+			return evaluateClassifier(data, algorithm, MetricFactory.getClassifierMetrics(DataUtils.checkDataType(data)==DataType.MULTI_CLASS));
+		}
 
 	/**
 	 * Evaluate a {@link Classifier} algorithm using the specified {@link TestingStrategy}, a given {@link Dataset} and

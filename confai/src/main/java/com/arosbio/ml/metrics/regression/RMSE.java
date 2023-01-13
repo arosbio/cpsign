@@ -12,7 +12,6 @@ package com.arosbio.ml.metrics.regression;
 import java.util.Map;
 
 import com.arosbio.commons.mixins.Described;
-import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
@@ -38,7 +37,7 @@ public class RMSE implements SingleValuedMetric, PointPredictionMetric, Describe
 		return ImmutableMap.of(METRIC_NAME,getScore());
 	}
 	public String toString() {
-		return Metric.toString(this);
+		return SingleValuedMetric.toString(this);
 	}
 
 	public double getScore() {
