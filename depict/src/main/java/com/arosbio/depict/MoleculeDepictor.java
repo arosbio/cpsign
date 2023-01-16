@@ -429,19 +429,29 @@ public class MoleculeDepictor {
 	 */
 	public BufferedImage depict(IAtomContainer mol, Map<?, Double> atomColors)
 		throws IllegalArgumentException {
-			Graphics2D g2 = null;
-			try {
-				Rectangle2D drawArea = new Rectangle2D.Double(0,0,imageWidth,imageHeight);
-				BufferedImage img = new BufferedImage(imageWidth, imageHeight, BUFFERED_IMAGE_TYPE);
-				g2 = img.createGraphics();
-				BufferedImage out = depict(mol, atomColors, img, g2, drawArea);
-				return out;
-			} finally {
-				if (g2 != null)
-					g2.dispose();
-			}
+		Graphics2D g2 = null;
+		try {
+			Rectangle2D drawArea = new Rectangle2D.Double(0,0,imageWidth,imageHeight);
+			BufferedImage img = new BufferedImage(imageWidth, imageHeight, BUFFERED_IMAGE_TYPE);
+			g2 = img.createGraphics();
+			BufferedImage out = depict(mol, atomColors, img, g2, drawArea);
+			return out;
+		} finally {
+			if (g2 != null)
+				g2.dispose();
 		}
+	}
 
+	/**
+	 * Depict a molecule using an existing {@link Graphics2D} object
+	 * @param mol the molecule to render
+	 * @param atomColors a map with the values of atom coloring, values should be normalized to be in the range [-1..1]. Keys <b><i>must</i></b> either {@link Integer} or {@link IAtom}.
+	 * @param img The {@link BufferedImage} we're drawing into
+	 * @param g2 The existing {@link Graphics2D} object to use
+	 * @param drawArea The area to draw inside
+	 * @return The same {@link BufferedImage} sent to this method
+	 * @throws IllegalArgumentException In case the keys in {@code atomColors} are neither Integer nor IAtom, or if keys do not match the {@code mol} argument
+	 */
 	public BufferedImage depict(IAtomContainer mol, Map<?, Double> atomColors, BufferedImage img, Graphics2D g2, Rectangle2D drawArea) 
 		throws IllegalArgumentException {
 		
@@ -458,8 +468,7 @@ public class MoleculeDepictor {
 			if (bgColor != null){
 				// Add background
 				g2.setColor(bgColor);
-				g2.fillRect((int) drawArea.getMinX(), (int) drawArea.getMinY(), 
-					Math.round((float)drawArea.getMaxX()),  Math.round((float)drawArea.getMaxY()));
+				g2.fill(drawArea);
 			}
 
 			IDrawVisitor visitor = new BloomDrawVisitor(g2, colorGradient).setGridStepSize(bloomRasterSize);
@@ -513,6 +522,7 @@ public class MoleculeDepictor {
 			}
 			// Remove color map (might not have been set, method call should not fail anyways)
 			mol.removeProperty(BloomGenerator.DS_DATA);
+
 		}
 	}
 

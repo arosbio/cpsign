@@ -25,6 +25,7 @@ import com.arosbio.ml.algorithms.svm.LinearSVR;
 import com.arosbio.ml.cp.acp.ACPClassifier;
 import com.arosbio.ml.cp.acp.ACPRegressor;
 import com.arosbio.ml.cp.nonconf.classification.NegativeDistanceToHyperplaneNCM;
+import com.arosbio.ml.cp.nonconf.regression.LogNormalizedNCM;
 import com.arosbio.ml.interfaces.Predictor;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.MetricFactory;
@@ -158,4 +159,23 @@ public class Test_TestRunner extends TestEnv {
 
 	}
 
+	@Test
+	public void testLOOCV_clf() throws Exception {
+		TestRunner runner = new TestRunner.Builder(new LOOCV()).build();
+		Dataset data = TestDataLoader.getInstance().getDataset(true, true);
+		ACPClassifier model = new ACPClassifier(new NegativeDistanceToHyperplaneNCM(new LinearSVC()), new RandomSampling());
+		List<Metric> metrics = runner.evaluate(data, model);
+		for(Metric m : metrics)
+			System.err.println(m);
+	}
+
+	@Test
+	public void testLOOCV_reg() throws Exception {
+		TestRunner runner = new TestRunner.Builder(new LOOCV()).build();
+		Dataset data = TestDataLoader.getInstance().getDataset(false, true);
+		ACPRegressor model = new ACPRegressor(new LogNormalizedNCM(new LinearSVR()), new RandomSampling());
+		List<Metric> metrics = runner.evaluate(data, model);
+		for(Metric m : metrics)
+			System.err.println(m);
+	}
 }

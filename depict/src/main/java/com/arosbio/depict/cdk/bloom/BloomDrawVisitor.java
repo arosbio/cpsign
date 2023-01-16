@@ -155,11 +155,11 @@ public class BloomDrawVisitor extends AWTDrawVisitor {
         return bounds;
     }
     
-    private static final double ALPHA_RAD_SCALE = .28;
-    private static final double ALPHA_AMPL_SCALE = 100;
+    private static final double ALPHA_RAD_SCALE = .25;
+    private static final double ALPHA_AMPL_SCALE = 150;
     
-    private static final double COLOR_RAD_SCALE = .48;
-    private static final double COLOR_AMPL_SCALE = 1;
+    private static final double COLOR_RAD_SCALE = .4;
+    private static final double COLOR_AMPL_SCALE = 2;
     
     protected int calculateValue(double x, double y) {
         try {
@@ -174,7 +174,7 @@ public class BloomDrawVisitor extends AWTDrawVisitor {
                 double sqrDist = (p.xCoord - x) * (p.xCoord - x) + (p.yCoord - y) * (p.yCoord - y);
                 double dist = Math.sqrt(sqrDist); 
                 if (dist > p.radius*1.5){
-                    // If distance to this point is too long away - we skip it's contribution
+                    // If distance to this point is too long away - we skip its contribution
                     continue;
                 }
                 hasOnePoint = true;
@@ -187,8 +187,8 @@ public class BloomDrawVisitor extends AWTDrawVisitor {
                 }
 
                 // sums for color
-                double value = Math.max(0., 1. - dist / (.85*p.radius)) * p.value; 
-                double guassianScaled = COLOR_AMPL_SCALE * guassian(sqrDist, p.radius*COLOR_RAD_SCALE); //b
+                double value = Math.max(0., 1. - dist / (.97 * p.radius)) * p.value;
+                double guassianScaled = COLOR_AMPL_SCALE * guassian(sqrDist, p.radius*COLOR_RAD_SCALE);
                 z1 += value * guassianScaled;
                 z2 += guassianScaled;
             }
@@ -213,8 +213,7 @@ public class BloomDrawVisitor extends AWTDrawVisitor {
             return color.getRGB() + ((alpha & 0xFF) << 24);
 
         } catch (Error | Exception e) {
-            LOGGER.debug("Failed calculating bloom in point {{},{}}: {}",
-                new Object[]{x,y,e.getMessage()}); 
+            LOGGER.debug("Failed calculating bloom in point {{},{}}: {}",x,y,e.getMessage()); 
             return Color.CYAN.getRGB();
         }
     }
