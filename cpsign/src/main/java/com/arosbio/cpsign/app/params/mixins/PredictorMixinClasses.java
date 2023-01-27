@@ -280,7 +280,7 @@ public abstract class PredictorMixinClasses {
 	public static class ScorerModelParams {
 
 		@Option(names = { "-sc", "--scorer" }, 
-				description = "Scoring algorithm (i.e. underlying machine learning implementation). Run "+ParameterUtils.RUN_EXPLAIN_ANSI_ON+"explain scoring"+ParameterUtils.ANSI_OFF
+				description = "Scoring algorithm (i.e. underlying machine learning implementation). Run "+ParameterUtils.RUN_EXPLAIN_ANSI_ON+"explain scorer"+ParameterUtils.ANSI_OFF
 				+ " for available parameters for each scoring algorithm (and possibly extra scoring algorithms that "
 				+ "can be added through ServiceLoader-functionality).%nRegression algorithms:%n"+
 				// REGRESSION

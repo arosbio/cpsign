@@ -177,7 +177,7 @@ public final class ChemDataset extends Dataset {
 					txt.append(' ');
 				txt.append("Failed ")
 				.append(hacFailed )
-				.append(" molecules due to beeing too small (min Heavy Atom Count is ")
+				.append(" molecules due to being too small (min Heavy Atom Count is ")
 				.append(minimumHAC).append(").");
 			}
 			if (numDescriptorCalcFail>0) {

@@ -38,6 +38,7 @@ public class CSVChemFileReader implements ChemFileIterator {
 	private static final Logger LOGGER = LoggerFactory.getLogger(CSVChemFileReader.class);
 	private static IChemObjectBuilder DEFAULT_BUILDER = SilentChemObjectBuilder.getInstance();
 	private int maxAllowedFails = 10;
+	private boolean hasLoggedFailedSMILES = false;
 
 
 	private SmilesParser sp = new SmilesParser(DEFAULT_BUILDER);
@@ -74,7 +75,7 @@ public class CSVChemFileReader implements ChemFileIterator {
 			throw new IOException("CSV file must contain a header - so properties can be parsed correctly");
 		} else if (format.getHeader().length > 0) {
 			// Done - header has already been set before
-			LOGGER.debug("CSV parser initalized with header programatically, no need to read from the file");
+			LOGGER.debug("CSV parser initialized with header programmatically, no need to read from the file");
 		} 
 
 		this.parser = format.parse(reader);
@@ -136,6 +137,10 @@ public class CSVChemFileReader implements ChemFileIterator {
 			try {
 				nextMol = sp.parseSmiles(smiles);
 			} catch (InvalidSmilesException e) {
+				if (!hasLoggedFailedSMILES){
+					LOGGER.debug("Failed record due to invalid smiles '{}', from record: {}", smiles, next);
+					hasLoggedFailedSMILES = true;
+				}
 				if (smiles == null || smiles.trim().isEmpty()) {
 					failedRecords.add(new FailedRecord(recordIndex).setReason("Missing SMILES"));
 				} else {
