@@ -61,6 +61,7 @@ import com.arosbio.ml.metrics.vap.MeanVAPInterval;
 import com.arosbio.ml.metrics.vap.MedianVAPInterval;
 import com.arosbio.ml.metrics.vap.VAPCalibrationPlotBuilder;
 import com.arosbio.tests.suites.UnitTest;
+import com.arosbio.tests.utils.TestUtils;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Range;
@@ -678,6 +679,16 @@ public class TestMetrics {
 
 		@Test
 		public void ROC_AUC() {
+			// Toy example from scikit-learn roc_curve page
+			List<Integer> trueValues = Arrays.asList(1,1,2,2);
+			List<Double> scores = Arrays.asList(0.1, 0.4, 0.35, 0.8);
+			ROC_AUC.ComputedROC roc = ROC_AUC.calculateCurves(trueValues,scores, 2);
+			Assert.assertEquals(.75, roc.auc(), .00001);
+			TestUtils.assertEquals(Arrays.asList(0. , 0. , 0.5, 0.5, 1.), roc.getROC().getPoints(ROC_AUC.FALSE_POSITIVE_RATE));
+			TestUtils.assertEquals(Arrays.asList(0. , 0.5, 0.5, 1. , 1.), roc.getROC().getPoints(ROC_AUC.TRUE_POSITIVE_RATE));
+			TestUtils.assertEquals(Arrays.asList(1.8 , 0.8 , 0.4 , 0.35, 0.1), roc.getROC().getPoints(ROC_AUC.SCORE));
+
+
 			ROC_AUC m = new ROC_AUC();
 			assertNone(m);
 
