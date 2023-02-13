@@ -234,10 +234,12 @@ public class TestMetrics {
 			static List<Integer> y_pred = Arrays.asList(0, 1, 0, 0, 0, 1);
 
 			final static int n_examples = y_pred.size();
-			final static double f1 = .5;
+			final static double f1_macro = .625;
+			final static double f1_micro = 2./3;
+			final static double f1_weighted = 2./3;
 			final static double precision = .5;
 			final static double recall = .5;
-			final static double npv = 3. / 4;
+			final static double npv = 3./4;
 		}
 
 		/**
@@ -253,6 +255,24 @@ public class TestMetrics {
 			static List<Integer> y_pred = Arrays.asList(0, 2, 1, 3);
 
 			final static int n_examples = y_pred.size();
+			final static double f1_macro = .5;
+			final static double f1_micro = .5;
+			final static double f1_weighted = .5;
+			
+		}
+
+		static class Case2 {
+
+			// y_true = [0, 1, 2, 0, 1, 2]
+			static List<Integer> y_true = Arrays.asList(0, 1, 2, 0, 1, 2);
+			// y_pred = [0, 2, 1, 0, 0, 1]
+			static List<Integer> y_pred = Arrays.asList(0, 2, 1, 0, 0, 1);
+
+			final static int n_examples = y_pred.size();
+			final static double f1_macro = .266666666667;
+			final static double f1_micro = 1d/3;
+			final static double f1_weighted = f1_macro;
+			
 		}
 
 		@Test
@@ -495,14 +515,15 @@ public class TestMetrics {
 			// one added
 			m.addPrediction(Case0.y_true.get(0), Case0.y_pred.get(0));
 			Assert.assertEquals(1, m.getNumExamples());
-			// System.err.println(m.getScore());
 
 			// Add rest
 			for (int i = 1; i < Case0.n_examples; i++) {
 				m.addPrediction(Case0.y_true.get(i), Case0.y_pred.get(i));
 			}
 			Assert.assertEquals(Case0.n_examples, m.getNumExamples());
-			Assert.assertEquals(Case0.f1, m.getScore(), 0.00001);
+			Assert.assertEquals(Case0.f1_macro, m.getMacroF1(), 0.00001);
+			Assert.assertEquals(Case0.f1_micro, m.getMicroF1(), 0.00001);
+			Assert.assertEquals(Case0.f1_weighted, m.getWeightedF1(), 0.00001);
 
 			// Clone
 			F1Score m2 = m.clone();
@@ -511,7 +532,9 @@ public class TestMetrics {
 				m2.addPrediction(Case0.y_true.get(i), Case0.y_pred.get(i));
 			}
 			Assert.assertEquals(Case0.n_examples, m2.getNumExamples());
-			Assert.assertEquals(Case0.f1, m2.getScore(), 0.00001);
+			Assert.assertEquals(Case0.f1_macro, m2.getMacroF1(), 0.00001);
+			Assert.assertEquals(Case0.f1_micro, m2.getMicroF1(), 0.00001);
+			Assert.assertEquals(Case0.f1_weighted, m2.getWeightedF1(), 0.00001);
 
 			// Clear
 			m.clear();
@@ -520,7 +543,20 @@ public class TestMetrics {
 				m.addPrediction(Case0.y_true.get(i), Case0.y_pred.get(i));
 			}
 			Assert.assertEquals(Case0.n_examples, m.getNumExamples());
-			Assert.assertEquals(Case0.f1, m.getScore(), 0.00001);
+			Assert.assertEquals(Case0.f1_macro, m.getMacroF1(), 0.00001);
+			Assert.assertEquals(Case0.f1_micro, m.getMicroF1(), 0.00001);
+			Assert.assertEquals(Case0.f1_weighted, m.getWeightedF1(), 0.00001);
+
+			// 3 class
+			m.clear();
+			assertNone(m);
+			for (int i = 0; i < Case2.n_examples; i++) {
+				m.addPrediction(Case2.y_true.get(i), Case2.y_pred.get(i));
+			}
+			Assert.assertEquals(Case2.n_examples, m.getNumExamples());
+			Assert.assertEquals(Case2.f1_macro, m.getMacroF1(), 0.00001);
+			Assert.assertEquals(Case2.f1_micro, m.getMicroF1(), 0.00001);
+			Assert.assertEquals(Case2.f1_weighted, m.getWeightedF1(), 0.00001);
 
 		}
 

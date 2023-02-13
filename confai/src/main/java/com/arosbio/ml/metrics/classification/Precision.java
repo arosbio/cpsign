@@ -24,7 +24,7 @@ public class Precision implements SingleValuedMetric, PointClassifierMetric, Lab
 
 	// if we know the negative class
 	private int positiveClass = LabelDependent.DEFAULT_POS_LABEL;
-	private int truePos = 0, falsePos = 0, numPredsDone=0;
+	private int truePos = 0, falsePos = 0, numPredictionsDone=0;
 
 
 	// CONSTRUCTORS
@@ -58,13 +58,13 @@ public class Precision implements SingleValuedMetric, PointClassifierMetric, Lab
 		} else if (predictedLabel == positiveClass) {
 			falsePos++;
 		}
-		numPredsDone++;
+		numPredictionsDone++;
 	}
 
 
 	@Override
 	public double getScore() {
-		if (numPredsDone <= 0)
+		if (numPredictionsDone <= 0)
 			return Double.NaN;
 		else if (truePos+falsePos == 0) {
 			// If divisor is 0 - return 0/1 instead (similar to sklearn) - allows to compute for single classes
@@ -77,11 +77,11 @@ public class Precision implements SingleValuedMetric, PointClassifierMetric, Lab
 
 	@Override
 	public int getNumExamples() {
-		return numPredsDone;
+		return numPredictionsDone;
 	}
 
 	public void setPositiveLabel(int positiveLabel) {
-		if (truePos + falsePos > 0) {
+		if (numPredictionsDone > 0) {
 			throw new IllegalStateException("Cannot change the positive class after adding prediction");
 		}
 		this.positiveClass = positiveLabel;
@@ -122,7 +122,7 @@ public class Precision implements SingleValuedMetric, PointClassifierMetric, Lab
 	public void clear() {
 		truePos = 0;
 		falsePos = 0;
-		numPredsDone = 0;
+		numPredictionsDone = 0;
 	}
 
 	@Override

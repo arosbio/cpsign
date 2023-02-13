@@ -9,6 +9,8 @@
  */
 package com.arosbio.ml.metrics.classification;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.arosbio.commons.mixins.Described;
@@ -16,26 +18,32 @@ import com.arosbio.ml.ClassificationUtils;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
-public class F1Score implements SingleValuedMetric, PointClassifierMetric, ProbabilisticMetric, LabelDependent, Described {
+public class F1Score implements SingleValuedMetric, PointClassifierMetric, ProbabilisticMetric, Described {
 
 	public static final String METRIC_NAME = "F1Score";
-	public static final String METRIC_DESCRIPTION = "F1 score, the harmonic mean of Precision and Recall. The optimal value is 1.0. Only available for binary classification.";
+	private static final String MICRO_SUFFIX = "_micro";
+	private static final String MACRO_SUFFIX = "_macro";
+	private static final String WEIGHTED_SUFFIX = "_weighted";
+	public static final String METRIC_DESCRIPTION = "F1 score, when used for optimization the Macro F1 score is used, but calculates both the micro and the weighted F1 score as well.";
 
-	private int positiveClass = LabelDependent.DEFAULT_POS_LABEL;
-	private int truePos = 0, falsePos = 0, falseNeg=0, numPredsDone=0;
+	private int numPredictionsDone=0;
+	boolean setupDone = false;
+	private Map<Integer,Counter> counters = new HashMap<>();
 
-	// CONSTRUCTORS
+	private static class Counter {
+		int tp=0, fp=0, fn=0;
 
-	public F1Score() {}
-
-	public F1Score(int positiveClass) {
-		this.positiveClass = positiveClass;
+		public double calculate(){
+			if (tp==0)
+				return 0;
+			return tp/(tp+ 0.5*(fp+fn));
+		}
 	}
 
 	// GETTERS AND SETTERS
 
 	public boolean supportsMulticlass() {
-		return false;
+		return true;
 	}
 
 	@Override
@@ -43,9 +51,24 @@ public class F1Score implements SingleValuedMetric, PointClassifierMetric, Proba
 		return METRIC_DESCRIPTION;
 	}
 
+	private void setupCounters(Collection<Integer> labels){
+		for (int l : labels){
+			counters.put(l, new Counter());
+		}
+		setupDone = true;
+	}
+	private void checkAdd(int label){
+		if (!counters.containsKey(label)){
+			counters.put(label, new Counter());
+		}
+	}
+
 	// ADD PREDICTIONS
 	@Override
 	public void addPrediction(int observedLabel, Map<Integer, Double> probabilities) {
+		if (!setupDone){
+			setupCounters(probabilities.keySet());
+		}
 		addPrediction(observedLabel, ClassificationUtils.getPredictedClass(probabilities));
 	}
 
@@ -54,43 +77,69 @@ public class F1Score implements SingleValuedMetric, PointClassifierMetric, Proba
 	 */
 	@Override
 	public void addPrediction(int observedLabel, int predictedLabel) {
-		if (observedLabel == positiveClass) {
-			if (observedLabel == predictedLabel)
-				truePos++;
-			else
-				falseNeg++;
-		} else {
-			// obs value is negative
-			if (predictedLabel == positiveClass)
-				falsePos++;
+		if (!setupDone){
+			checkAdd(predictedLabel);
+			checkAdd(observedLabel);
 		}
-		numPredsDone++;
+		
+		for (Map.Entry<Integer,Counter> kv : counters.entrySet()){
+			int l = kv.getKey();
+			if (l == observedLabel){
+				// either true positive or false negative
+				if (observedLabel == predictedLabel)
+					kv.getValue().tp++;
+				else
+					kv.getValue().fn++;
+			} else if (l == predictedLabel){
+				// false positive, otherwise l==observedLabel
+				kv.getValue().fp++;
+			}
+		}
+
+		numPredictionsDone++;
+	}
+
+	public double getMacroF1(){
+		double sum = 0;
+		for (Counter c : counters.values()){
+			sum += c.calculate();
+		}
+		if (sum==0)
+			return sum;
+		return sum/counters.size();
+	}
+
+	public double getMicroF1(){
+		Counter tmp = new Counter();
+		for (Counter c : counters.values()){
+			tmp.fn += c.fn;
+			tmp.fp += c.fp;
+			tmp.tp += c.tp;
+		}
+		return tmp.calculate();
+	}
+
+	public double getWeightedF1(){
+		int denom = 0;
+		double sum = 0;
+		for (Counter c : counters.values()){
+			int num = (c.tp+c.fn);
+			sum += num*c.calculate();
+			denom += num;
+		}
+		return sum/denom;
 	}
 
 	@Override
 	public double getScore() {
-		if (numPredsDone == 0)
+		if (numPredictionsDone == 0)
 			return Double.NaN;
-		if (truePos + 0.5*(falsePos+falseNeg) == 0)
-			return 0;
-		return ((double)truePos)/(truePos+ 0.5*(falsePos+falseNeg));
+		return getMacroF1();
 	}
 
 	@Override
 	public int getNumExamples() {
-		return numPredsDone;
-	}
-
-	public void setPositiveLabel(int positiveLabel) {
-		if (truePos + falsePos > 0) {
-			throw new IllegalStateException("Cannot change the positive class label when added predictions to the metric");
-		}
-		this.positiveClass = positiveLabel;
-	}
-
-	@Override
-	public int getPositiveLabel() {
-		return positiveClass;
+		return numPredictionsDone;
 	}
 
 	public String toString() {
@@ -99,7 +148,9 @@ public class F1Score implements SingleValuedMetric, PointClassifierMetric, Proba
 
 	@Override
 	public Map<String, ? extends Object> asMap() {
-		return ImmutableMap.of(METRIC_NAME, getScore());
+		return ImmutableMap.of(METRIC_NAME+MACRO_SUFFIX, getMacroF1(), 
+			METRIC_NAME+MICRO_SUFFIX, getMicroF1(),
+			METRIC_NAME+WEIGHTED_SUFFIX,getWeightedF1());
 	}
 
 	@Override
@@ -109,17 +160,15 @@ public class F1Score implements SingleValuedMetric, PointClassifierMetric, Proba
 
 	@Override
 	public F1Score clone() {
-		F1Score clone = new F1Score();
-		clone.positiveClass=positiveClass;
-		return clone;
+		return new F1Score();
+		// clone.positiveClass=positiveClass;
+		// return clone;
 	}
 
 	@Override
 	public void clear() {
-		truePos = 0;
-		falsePos = 0;
-		falseNeg = 0;
-		numPredsDone = 0;
+		counters.clear();
+		numPredictionsDone = 0;
 	}
 
 	@Override

@@ -18,11 +18,11 @@ import com.google.common.collect.ImmutableMap;
 public class NPV implements SingleValuedMetric, PointClassifierMetric, LabelDependent, Described { 
 
 	public static final String METRIC_NAME = "NPV";
-	public static final String METRIC_DESCRIPTION = "Negative Predictive Value (NPV) - calculated as TN/(TN+FP), TN=True Negative, FP=False Postive. Note that the 'negative' label is set to be the first label given to the CLI, or the smallest numerical label when using the API.";
+	public static final String METRIC_DESCRIPTION = "Negative Predictive Value (NPV) - calculated as TN/(TN+FP), TN=True Negative, FP=False Positive. Note that the 'negative' label is set to be the first label given to the CLI, or the smallest numerical label when using the API.";
 
 	// if we know the negative class
 	private int positiveLabel=LabelDependent.DEFAULT_POS_LABEL;
-	private int trueNeg = 0, falseNeg = 0, numPredsDone=0;
+	private int trueNeg = 0, falseNeg = 0, numPredictionsDone=0;
 
 	// CONSTRUCTORS
 
@@ -56,12 +56,12 @@ public class NPV implements SingleValuedMetric, PointClassifierMetric, LabelDepe
 			else
 				falseNeg++;
 		}
-		numPredsDone++;
+		numPredictionsDone++;
 	}
 
 	@Override
 	public double getScore() {
-		if (numPredsDone <=0)
+		if (numPredictionsDone <=0)
 			return Double.NaN;
 		if (trueNeg+falseNeg == 0)
 			return 0;
@@ -71,11 +71,13 @@ public class NPV implements SingleValuedMetric, PointClassifierMetric, LabelDepe
 
 	@Override
 	public int getNumExamples() {
-		return numPredsDone;
+		return numPredictionsDone;
 	}
 
 	@Override
-	public void setPositiveLabel(int positive) {
+	public void setPositiveLabel(int positive) throws IllegalStateException {
+		if (numPredictionsDone>0)
+			throw new IllegalStateException("Cannot change settings once predictions have been given");
 		this.positiveLabel = positive;
 	}
 
@@ -109,7 +111,7 @@ public class NPV implements SingleValuedMetric, PointClassifierMetric, LabelDepe
 	public void clear() {
 		trueNeg = 0;
 		falseNeg = 0;
-		numPredsDone = 0;
+		numPredictionsDone = 0;
 	}
 
 	@Override
