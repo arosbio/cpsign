@@ -39,14 +39,8 @@ import com.github.cliftonlabs.json_simple.JsonObject;
 
 @Category(CLITest.class)
 public class TestCV extends CLIBaseTest {
-	// String solubilityDataset = getPath("/resources/datasets/regression/solubility@PKKB_2009-reg.sdf");
-	// String classificationDataset = getPath("/resources/datasets/classification/cox2.smi");
-	// String luciaDataset = getPath("/resources/cleanData_luciaOrig_0.0_2011-01-01.sdf");
-	//	String solubility_dataset = this.getClass().getResource("/resources/datasets/regression/solubility@PKKB_2009-reg.sdf").getFile();
-	//	String amesSmall = AmesBinaryClass.SMALL_FILE_PATH+GZIP_SUFFIX;
-	//	String soluSmall = getPath("/resources/solubility_small.smi");
+	
 	static boolean DISPLAY_PROGRESS = false;
-	//	boolean PRINT_OUTPUT=true;
 
 	@Before
 	public void setup() throws Exception{
