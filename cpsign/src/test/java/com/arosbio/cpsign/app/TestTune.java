@@ -56,7 +56,7 @@ public class TestTune extends CLIBaseTest {
 	@Test
 	public void testWhenHavingMissingValues() throws Exception {
 		expectExit(ExitStatus.USER_ERROR);
-		exit.checkAssertionAfterwards(new AssertSysErrContainsString("missing", "data", "features", "training", "revise"));
+		exit.checkAssertionAfterwards(new AssertSysErrContainsString("missing", "data", "feature", "modeling"));
 
 
 		try {

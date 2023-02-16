@@ -262,6 +262,9 @@ public class Precompute implements RunnableCmd, SupportsProgressBar {
 			timer.endSection();
 		}
 
+		// Do some validation and give useful output if there is NaNs that need to be taken into account
+		CLIProgramUtils.verifyNoMissingDataAndPrintErr(problem, false, console);
+
 	}
 
 	private void saveData(ChemDataset chemData) {

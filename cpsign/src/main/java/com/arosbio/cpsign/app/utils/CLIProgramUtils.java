@@ -20,6 +20,7 @@ import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -68,11 +69,14 @@ import com.arosbio.cpsign.out.OutputNamingSettings.ProgressInfoTexts;
 import com.arosbio.cpsign.out.PredictionResultsWriter;
 import com.arosbio.cpsign.out.SDFResultsWriter;
 import com.arosbio.cpsign.out.SplittedJSONResultsWriter;
+import com.arosbio.data.DataRecord;
 import com.arosbio.data.DataUtils;
 import com.arosbio.data.DataUtils.DataType;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.Dataset.RecordType;
 import com.arosbio.data.Dataset.SubSet;
+import com.arosbio.data.FeatureVector;
+import com.arosbio.data.MissingValueFeature;
 import com.arosbio.data.NamedLabels;
 import com.arosbio.data.transform.ColumnTransformer;
 import com.arosbio.data.transform.Transformer;
@@ -1041,7 +1045,7 @@ public class CLIProgramUtils {
 		console.printlnWrapped(sb.toString(), PrintMode.VERBOSE);
 	}
 
-	public static ChemPredictor getSignaturesPredictor(Predictor predictor, CLIConsole cons) {
+	public static ChemPredictor getChemPredictor(Predictor predictor, CLIConsole cons) {
 		ChemPredictor sp = null;
 
 		if (predictor instanceof ConformalClassifier)
@@ -1058,7 +1062,7 @@ public class CLIProgramUtils {
 
 	public static ChemPredictor getSignaturesPredictor(Predictor predictor, DescriptorsMixin descriptorOpts,
 			CLIConsole cons) {
-		ChemPredictor sp = getSignaturesPredictor(predictor, cons);
+		ChemPredictor sp = getChemPredictor(predictor, cons);
 
 		if (descriptorOpts != null) {
 			ChemDataset prob = sp.getDataset();
@@ -1122,6 +1126,75 @@ public class CLIProgramUtils {
 				PrintMode.NORMAL,sp.getNumRecords(),sp.getNumAttributes());
 
 		pb.stepProgress();
+	}
+
+	/**
+	 * Check if there are missing value features, and list the features with those
+	 * @param data The ChemData to check
+	 * @param failIfPresent if {@code true} the program will exit, {@code false} there will only be error printed
+	 * @param console the console to print in
+	 */
+	public static void verifyNoMissingDataAndPrintErr(ChemDataset data, boolean failIfPresent, CLIConsole console){
+		if (!data.containsMissingFeatures()){
+			LOGGER.debug("No missing features in data - validation performed");
+			return;
+		}
+		LOGGER.debug("Found missing data in precomputed data - compiling info to user");
+
+		// Count the number of NaN/missing features for each feature index
+		// Default data set
+		Map<Integer,Integer> feature2numNan = countNaNFeatures(data.getDataset());
+		// Model exclusive
+		if (! data.getModelingExclusiveDataset().isEmpty()){
+			Map<Integer,Integer> counts = countNaNFeatures(data.getModelingExclusiveDataset());
+			// Merge counts
+			for (Map.Entry<Integer,Integer> kv : counts.entrySet()){
+				feature2numNan.put(kv.getKey(), kv.getValue() + feature2numNan.getOrDefault(kv.getKey(), 0));
+			}
+		}
+		// Calibration exclusive
+		if (! data.getCalibrationExclusiveDataset().isEmpty()){
+			Map<Integer,Integer> counts = countNaNFeatures(data.getCalibrationExclusiveDataset());
+			// Merge counts
+			for (Map.Entry<Integer,Integer> kv : counts.entrySet()){
+				feature2numNan.put(kv.getKey(), kv.getValue() + feature2numNan.getOrDefault(kv.getKey(), 0));
+			}
+		}
+
+		if (feature2numNan.isEmpty()){
+			LOGGER.debug("No features were NaN or missing value features, something went wrong either in CLIProgramUtils or ChemDataset");
+			return;
+		}
+		List<String> featureNames = data.getFeatureNames(false);
+		List<Integer> featIndices = new ArrayList<>(feature2numNan.keySet());
+		Collections.sort(featIndices); // Sort indices so they are in the same order as was given
+
+		StringBuilder sb = new StringBuilder("Found feature").append(featIndices.size()>1 ? "s" : "").append(" with missing values in the data:%n");
+		for (int index : featIndices){
+			sb.append(" - ").append(featureNames.get(index)). append(": ").append(feature2numNan.get(index)).append(" missing value(s)%n");
+		}
+		sb.append("Please remove/impute these before running modeling.");
+
+		if (failIfPresent){
+			console.failWithArgError(sb.toString());
+		} else {
+			console.printStdErr(sb.toString(), PrintMode.SILENT);
+		}
+		
+		
+	}
+
+	private static Map<Integer,Integer> countNaNFeatures(SubSet data){
+		Map<Integer,Integer> f2c = new HashMap<>();
+		for (DataRecord r : data){
+			for (FeatureVector.Feature f : r.getFeatures()){
+				if (f instanceof MissingValueFeature || Double.isNaN(f.getValue())){
+					int index = f.getIndex();
+					f2c.put(index, 1 + f2c.getOrDefault(index,0));
+				}
+			}
+		}
+		return f2c;
 	}
 
 	public static boolean isMultiClassTask(ChemPredictor pred) {

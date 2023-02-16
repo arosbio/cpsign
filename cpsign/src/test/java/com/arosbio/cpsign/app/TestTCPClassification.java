@@ -108,7 +108,7 @@ public class TestTCPClassification extends CLIBaseTest {
 	public void testWhenHavingMissingValues() throws Exception {
 		expectExit(ExitStatus.USER_ERROR);
 //		exit.checkAssertionAfterwards(new PrintSysOutput());
-		exit.checkAssertionAfterwards(new AssertSysErrContainsString("missing", "data", "features", "training", "revise"));
+		exit.checkAssertionAfterwards(new AssertSysErrContainsString("missing", "data", "feature","remove", "modeling"));
 		
 		
 		try {

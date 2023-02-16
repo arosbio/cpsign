@@ -67,7 +67,7 @@ public class TestTuneScorer extends CLIBaseTest {
 	public void testWhenHavingMissingValues() throws Exception {
 		expectExit(ExitStatus.USER_ERROR);
 		exit.checkAssertionAfterwards(
-				new AssertSysErrContainsString("missing", "data", "features", "training", "revise"));
+				new AssertSysErrContainsString("missing", "data", "feature","remove"));
 
 		try {
 			mockMain(new String[] {

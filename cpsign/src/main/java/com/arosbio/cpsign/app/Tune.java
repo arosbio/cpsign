@@ -298,7 +298,7 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 		validateParams();
 
 		try {
-			predictor = CLIProgramUtils.getSignaturesPredictor(
+			predictor = CLIProgramUtils.getChemPredictor(
 					predictorSection.getPredictor(console), console);
 		} catch (Exception e) {
 			LOGGER.debug("Failed init the predictor",e);
@@ -466,10 +466,8 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 		// Do transformations
 		CLIProgramUtils.applyTransformations(predictor.getDataset(),predictor.getPredictor() instanceof ClassificationPredictor, transformerSection.transformers, this, console);
 
-		if (predictor.checkIfDatasetsContainMissingFeatures()) {
-			LOGGER.debug("Missing data encountered before running tune");
-			console.failWithArgError("Training data contains missing data for one or multiple features, please revise your pre-processing prior to training");
-		}
+		// Verify no missing data
+		CLIProgramUtils.verifyNoMissingDataAndPrintErr(predictor.getDataset(), true, console);
 	}
 
 	

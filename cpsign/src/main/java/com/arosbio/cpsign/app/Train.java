@@ -124,7 +124,7 @@ public class Train implements RunnableCmd, SupportsProgressBar {
 	private PercentilesMixin percentilesArgs = new PercentilesMixin();
 
 	@Option(names = {"--splits"},
-			description= "(ACP/VAP) Run only a specific set of training splits. A means of parallelising the training step. "+
+			description= "(ACP/VAP) Run only a specific set of training splits. A means of parallelizing the training step. "+
 					"If a folded sampling strategy is used, the random seed is @|bold required|@! Indexing starts at 1, i.e. allowed "+
 					"indices are [1,#num_models]",
 					split = ParameterUtils.SPLIT_WS_COMMA_REGEXP,
@@ -192,7 +192,7 @@ public class Train implements RunnableCmd, SupportsProgressBar {
 		ChemPredictor predictor = null;
 
 		try {
-			predictor = CLIProgramUtils.getSignaturesPredictor(
+			predictor = CLIProgramUtils.getChemPredictor(
 					predOpts.getPredictor(console), console);
 		} catch (Exception e) {
 			LOGGER.debug("Failed init the predictor",e);
@@ -350,6 +350,9 @@ public class Train implements RunnableCmd, SupportsProgressBar {
 
 		// Do transformations
 		CLIProgramUtils.applyTransformations(predictor.getDataset(), predictor.getPredictor() instanceof ClassificationPredictor,  transformerArgs.transformers, this, console);
+
+		// Verify no missing data
+		CLIProgramUtils.verifyNoMissingDataAndPrintErr(predictor.getDataset(), true, console);
 	}
 
 

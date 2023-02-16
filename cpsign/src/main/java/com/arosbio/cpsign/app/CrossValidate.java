@@ -204,7 +204,7 @@ public class CrossValidate implements RunnableCmd, SupportsProgressBar {
 		ChemPredictor predictor = null;
 
 		try {
-			predictor = CLIProgramUtils.getSignaturesPredictor(
+			predictor = CLIProgramUtils.getChemPredictor(
 					predictorSection.getPredictor(console), console);
 		} catch (Exception e) {
 			LOGGER.debug("Failed init the predictor",e);

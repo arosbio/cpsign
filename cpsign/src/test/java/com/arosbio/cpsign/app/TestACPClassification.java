@@ -206,36 +206,16 @@ public class TestACPClassification extends CLIBaseTest {
 
 	@Test
 	public void testTrainWhenHavingMissingValues() throws Exception {
-		// File preFirst = TestUtils.createTempFile("datafile", ".csr.jar");
 		File modelFile = TestUtils.createTempFile("model", ".jar");
-		
-
-		// //Precompute - should be OK!
-		// try {
-		// 	mockMain(
-		// 			Precompute.CMD_NAME,
-		// 			"-td", PeptideMulticlass.FILE_FORMAT, PeptideMulticlass.DELIM_ARG, PeptideMulticlass.FILE_PATH, // CSVFile.FORMAT_NAME, "delim:,", getURI("/resources/datasets/Peptide_data_v3.csv").toString(),
-		// 			"-pr", PeptideMulticlass.PROPERTY,
-		// 			"--descriptors", "usersupplied:all,-Kp_binary_classification,Papp_class", // will produce many missing values!
-		// 			"--labels", PeptideMulticlass.LABELS_STRING,
-		// 			"-mo", preFirst.getAbsolutePath(),
-		// 			"-mn", "dasf",
-		// 			"--time"
-		// 			);
-
-		// } catch(Exception e){
-		// 	Assert.fail();
-		// }
 		
 		
 		// Train - here it should fail!
-		
 		expectExit(ExitStatus.USER_ERROR);
-		exit.checkAssertionAfterwards(new AssertSysErrContainsString("missing", "data", "features", "training", "Fail"));
+		exit.checkAssertionAfterwards(new AssertSysErrContainsString("missing", "data", "feature"));
 		try {
 			mockMain(new String[] {
 					Train.CMD_NAME,
-					"-ds", PrecomputedDatasets.Classification.getMissingDataDS().toString(), // preFirst.getAbsolutePath(),
+					"-ds", PrecomputedDatasets.Classification.getMissingDataDS().toString(),
 					"-mo", modelFile.getAbsolutePath(),
 					"-mn", "dasf",
 					"--time"

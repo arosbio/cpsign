@@ -356,11 +356,9 @@ public class TuneScorer implements RunnableCmd, SupportsProgressBar {
 		// Do transformations
 		CLIProgramUtils.applyTransformations(data, isClassification, transformerSection.transformers, this, console);
 
-		// Check for missing features - that will fail later in the run
-		if (DataUtils.containsMissingFeatures(data)) {
-			LOGGER.debug("Missing data encountered before running tune");
-			console.failWithArgError("Training data contains missing data for one or multiple features, please revise your pre-processing prior to training/tuning");
-		}
+		// Verify no missing data
+		CLIProgramUtils.verifyNoMissingDataAndPrintErr(data, true, console);
+		
 	}
 
 	@SuppressWarnings("null")

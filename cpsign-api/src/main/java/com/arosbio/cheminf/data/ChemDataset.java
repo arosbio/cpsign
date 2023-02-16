@@ -42,6 +42,7 @@ import com.arosbio.cheminf.descriptors.SignaturesDescriptor;
 import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.TypeUtils;
 import com.arosbio.data.DataRecord;
+import com.arosbio.data.DataUtils;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.FeatureVector;
 import com.arosbio.data.MissingValueFeature;
@@ -558,6 +559,25 @@ public final class ChemDataset extends Dataset {
 	 */
 	public void setProperty(String property) {
 		this.property = property;
+	}
+
+	public boolean containsMissingFeatures(){
+		
+		boolean containsOtherDescriptors = false;
+		for (ChemDescriptor d : descriptors){
+			if (! (d instanceof SignaturesDescriptor)){
+				containsOtherDescriptors = true;
+				break;
+			}
+		}
+		// if only signatures - not possible to have missing features
+		if (! containsOtherDescriptors){
+			return false;
+		}
+
+		// Here go through all data
+		return DataUtils.containsMissingFeatures(this);
+
 	}
 
 	public void setData(Dataset data) throws IllegalArgumentException {

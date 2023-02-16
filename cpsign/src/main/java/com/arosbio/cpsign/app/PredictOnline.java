@@ -261,7 +261,7 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 	private ChemPredictor initAndLoad() {
 		LOGGER.debug("Initializing Predictor");
 		// Initiate ChemPredictor
-		ChemCPClassifier signTCP = initSignaturesCPClassificationTCP();
+		ChemCPClassifier signTCP = initChemCPClassificationTCP();
 
 		// Load data
 		try {
@@ -273,6 +273,9 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 
 		// Do transformations
 		CLIProgramUtils.applyTransformations(signTCP.getDataset(), true, transformerArgs.transformers, this, console);
+
+		// Verify no missing data
+		CLIProgramUtils.verifyNoMissingDataAndPrintErr(signTCP.getDataset(), true, console);
 
 		return signTCP;
 	}
@@ -342,7 +345,7 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 
 		} catch (IOException e) {
 			LOGGER.debug("Failed closing the results outputter",e);
-			console.printlnWrappedStdErr("Could not properly close the result file, not all predictions might have successfully have been writen to file", PrintMode.NORMAL);
+			console.printlnWrappedStdErr("Could not properly close the result file, not all predictions might have successfully have been written to file", PrintMode.NORMAL);
 		}
 
 		// We are done with all predictions
@@ -354,7 +357,7 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 
 	}
 
-	private ChemCPClassifier initSignaturesCPClassificationTCP() {
+	private ChemCPClassifier initChemCPClassificationTCP() {
 
 		Predictor tcp = modelingParams.getPredictor(console);
 		if (! (tcp instanceof TCPClassifier)) {
@@ -389,7 +392,7 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 			try{
 				UriUtils.createParentOfFile(outputSection.outputFile);
 			} catch (IOException e){
-				LOGGER.debug("failed when trying to creat parent of output-file",e);
+				LOGGER.debug("failed when trying to create parent of output-file",e);
 				console.failWithArgError("Could not create parent directory of output file: " + outputSection.outputFile);
 			}
 		}
