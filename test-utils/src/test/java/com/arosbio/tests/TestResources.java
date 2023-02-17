@@ -297,7 +297,7 @@ public class TestResources {
 		
 		public static final String SOLUBILITY_PROPERTY = "solubility";
 		/** 
-		 * Two invalid smilies, one missing activity and one invalid activity (4 invalid records). 6 valid records.
+		 * Two invalid smiles, one missing activity and one invalid activity (4 invalid records). 6 valid records.
 		 * Saved using Excel and has a BOM in the beginning, which might screw up reading from CSV
 		 */
 		public static CSVCmpdData getErroneous(){
