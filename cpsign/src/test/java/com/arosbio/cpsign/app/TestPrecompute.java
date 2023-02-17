@@ -79,13 +79,10 @@ public class TestPrecompute extends CLIBaseTest {
 
 		// Empty files that should give errors
 		emptyFile = TestUtils.createTempFile("solubility.prop", ".smiles");
-		//		File tempCalibExclusive = TestUtils.createTempFile("solubility.calib", ".smiles");
 		CSVCmpdData solu_500 = TestResources.Reg.getSolubility_500();
 
 		try(
-				//				InputStream istream = new FileInputStream(getFile("/resources/solubility_500.smi"));
 				Reader reader = new InputStreamReader(solu_500.url().openStream());
-				// Reader reader = new FileReader(getFile("/resources/solubility_500.smi"));
 				BufferedReader breader = new BufferedReader(reader);
 
 				BufferedWriter bw_calib = new BufferedWriter(new FileWriter(tempCalibExclusive));
@@ -808,7 +805,7 @@ public class TestPrecompute extends CLIBaseTest {
 
 		mockMain(new String[] {
 				Precompute.CMD_NAME,
-				"-td", regDuplicate.format(), regDuplicate.uri().toString(), //CSVFile.FORMAT_NAME, getURI("/resources/smiles_files/duplicates_synt_data.smi").getPath(),
+				"-td", regDuplicate.format(), regDuplicate.uri().toString(),
 				"-mt", PRECOMPUTE_REGRESSION,
 				"--property", regDuplicate.property(),
 				"-mo", outputModel.getAbsolutePath(),
@@ -837,7 +834,7 @@ public class TestPrecompute extends CLIBaseTest {
 
 		mockMain(new String[] {
 				Precompute.CMD_NAME,
-				"-td", classDuplicate.format(), classDuplicate.uri().toString(), //CSVFile.FORMAT_NAME, getURI("/resources/smiles_files/duplicates_synt_data.smi").getPath(),
+				"-td", classDuplicate.format(), classDuplicate.uri().toString(),
 				"-mt", PRECOMPUTE_CLASSIFICATION,
 				"--property", classDuplicate.property(),
 				"--labels", getLabelsArg(classDuplicate.labels(),' '),

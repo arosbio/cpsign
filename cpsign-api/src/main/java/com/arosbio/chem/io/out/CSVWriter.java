@@ -32,7 +32,7 @@ import com.arosbio.commons.CollectionUtils;
 public class CSVWriter implements Closeable {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(CSVWriter.class);
-	private static final CSVFormat DEFAULT_FORMAT = CSVFormat.DEFAULT.withSystemRecordSeparator();
+	private static final CSVFormat DEFAULT_FORMAT = CSVFormat.DEFAULT.builder().setRecordSeparator(System.lineSeparator()).build();
 	public static final String DEFAULT_SMILES_COL_HEADER = "Smiles";
 
 	private CSVPrinter printer;

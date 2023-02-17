@@ -194,7 +194,7 @@ TCP	C_SVC	CP-tuned	0.8	0.5586080586080586	0.1663311987301398
 			.evalPoints(CollectionUtils.listRange(0,1,0.01)).build();
 		List<Metric> metrics = Arrays.asList(new F1Score(), new BalancedAccuracy(), new ObservedFuzziness());
 
-		CSVPrinter resultPrinter = CSVFormat.DEFAULT.withDelimiter('\t').print(System.out);
+		CSVPrinter resultPrinter = CSVFormat.TDF.print(System.out);
 		// Set the header
 		resultPrinter.printRecord("Algorithm/Predictor", "Underlying Model","Parameters", "F1Score", "Balanced Accuracy", "OF");
 		Map<String,List<?>> grid = Map.of("cost", DefaultMLParameterSettings.COST_CONFIG.getDefaultGrid());

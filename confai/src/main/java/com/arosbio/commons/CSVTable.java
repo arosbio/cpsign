@@ -48,7 +48,7 @@ public class CSVTable {
 	}
 
 	public String toCSV(char delim) {
-		return toCSV(CSVFormat.DEFAULT.withDelimiter(delim));
+		return toCSV(CSVFormat.DEFAULT.builder().setDelimiter(delim).build());
 	}
 
 	public String toCSV(CSVFormat format) {

@@ -83,7 +83,7 @@ public class TuneUtils {
 			switch (format) {
 				case CSV:
 					LOGGER.debug("Printing results as CSV");
-					txt = compileResultsAsCSV(gsRes, CSVFormat.DEFAULT.withSystemRecordSeparator(), console,
+					txt = compileResultsAsCSV(gsRes, CSVFormat.DEFAULT.builder().setRecordSeparator(System.lineSeparator()).build(), console,
 							confidence);
 					break;
 				case JSON:
@@ -95,8 +95,8 @@ public class TuneUtils {
 					txt = compileResultsAsText(gsRes);
 					break;
 				case TSV:
-					LOGGER.debug("Pritning results as TSV");
-					txt = compileResultsAsCSV(gsRes, CSVFormat.TDF.withSystemRecordSeparator(), console, confidence);
+					LOGGER.debug("Printing results as TSV");
+					txt = compileResultsAsCSV(gsRes, CSVFormat.TDF.builder().setRecordSeparator(System.lineSeparator()).build(), console, confidence);
 					break;
 				default:
 					LOGGER.debug("Output format not recognized in tune printing: {}", format);
@@ -193,7 +193,7 @@ public class TuneUtils {
 					.confidence((conf != null && usesConfidence ? conf : null))
 					.params(results.getBestParameters().get(0).getParams().keySet())
 					.log(resultsBuilder)
-					.format(format)
+					.format(format.builder())
 					.build();
 				) {
 

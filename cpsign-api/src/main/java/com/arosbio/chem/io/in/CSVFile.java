@@ -185,23 +185,23 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 	}
 	
 	public CSVFormat getFormat() {
-		CSVFormat f = CSVFormat.DEFAULT
-				.withDelimiter(delimiter)
-				.withIgnoreEmptyLines(ignoreEmptyLines)
-				.withRecordSeparator(recordSeparator)
-				.withSkipHeaderRecord()
-				.withHeader();
+		CSVFormat.Builder f = CSVFormat.DEFAULT.builder()
+				.setDelimiter(delimiter)
+				.setIgnoreEmptyLines(ignoreEmptyLines)
+				.setRecordSeparator(recordSeparator)
+				.setSkipHeaderRecord(true)
+				.setHeader();
 		if (commentMarker != null)
-			f = f.withCommentMarker(commentMarker);
+			f = f.setCommentMarker(commentMarker);
 		if (userSpecifiedHeader != null) {
-			f = f.withHeader(userSpecifiedHeader);
+			f = f.setHeader(userSpecifiedHeader);
 			if (skipFirstRow != null) {
-				f = f.withSkipHeaderRecord(skipFirstRow);
+				f = f.setSkipHeaderRecord(skipFirstRow);
 			} else {
-				f = f.withSkipHeaderRecord(false); // Default is to skip it 
+				f = f.setSkipHeaderRecord(false); // Default is to skip it 
 			}
 		}
-		return f;
+		return f.build();
 	}
 
 	@Override

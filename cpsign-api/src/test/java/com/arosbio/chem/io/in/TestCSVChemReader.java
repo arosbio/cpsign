@@ -33,7 +33,7 @@ public class TestCSVChemReader extends UnitTestBase {
 	public void testTABDelim() throws IOException{
 		CSVCmpdData tabFile = TestResources.Cls.getErroneous();
 		try(
-				CSVChemFileReader smilesReader = new CSVChemFileReader(CSVFormat.TDF.withHeader(), new InputStreamReader(tabFile.url().openStream()));){
+				CSVChemFileReader smilesReader = new CSVChemFileReader(CSVFormat.TDF.builder().setHeader().build(), new InputStreamReader(tabFile.url().openStream()));){
 			IAtomContainer mol;
 			int numMols=0, numMolsWithValue=0;
 			while (smilesReader.hasNext()){
@@ -103,7 +103,7 @@ public class TestCSVChemReader extends UnitTestBase {
 			Assert.assertEquals(7, failed.get(1).getIndex());
 		}
 		
-		// Test at the next stage, with the iteratating Mol and activity 
+		// Test at the next stage, with the iterating Mol and activity 
 		try (CSVChemFileReader smilesReader = csvFile.getIterator();
 				MolAndActivityConverter reader = MolAndActivityConverter.regressionConverter(smilesReader, "target");
 				){
@@ -137,7 +137,7 @@ public class TestCSVChemReader extends UnitTestBase {
 	public void testExcelCSV_flipped_order() throws Exception {
 		CSVCmpdData soluExcel = TestResources.Reg.getSolubility_10_excel();
 		try(
-				CSVChemFileReader smilesReader = new CSVChemFileReader(CSVFormat.EXCEL.withHeader().withDelimiter(soluExcel.delim()), 
+				CSVChemFileReader smilesReader = new CSVChemFileReader(CSVFormat.EXCEL.builder().setHeader().setDelimiter(soluExcel.delim()).build(), 
 					new InputStreamReader(soluExcel.url().openStream()));){
 			int numMolecules=0;
 			while(smilesReader.hasNext()){

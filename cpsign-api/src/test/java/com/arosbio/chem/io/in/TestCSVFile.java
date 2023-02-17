@@ -10,18 +10,70 @@
 package com.arosbio.chem.io.in;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Iterator;
+import java.util.Map;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.openscience.cdk.interfaces.IAtomContainer;
 
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.TestUtils;
 
 @Category(UnitTest.class)
 public class TestCSVFile {
+
+	// @Test
+	public void testRawCSVParser() throws Exception {
+		File csvFile = TestUtils.createTempFile("myFile", "csv");
+		FileUtils.write(csvFile, "Cc1ccc(Br)cc1-c1cc(Nc2ccc(Br)cc2)nc(N)n1	1	0.982	# Comment\n#line with comments\n456789	09876	dafads\n\n", StandardCharsets.UTF_8);
+		CSVParser p = CSVFormat.TDF.builder().setCommentMarker('#').setRecordSeparator("\n").setHeader("Header 1", "Header 2", "Header 3").build().parse(new InputStreamReader(new FileInputStream(csvFile)));
+		System.err.println(p.getHeaderMap());
+		System.err.println(p.getHeaderNames());
+		Iterator<CSVRecord> iter = p.iterator();
+		while (iter.hasNext()){
+			CSVRecord r = iter.next();
+			System.err.print(r);
+			System.err.print(", num values: " + r.size());
+			System.err.println(", consistent="+r.isConsistent());
+		}
+	}
+
+	@Test
+	public void testWrongNumberOfHeaders() throws Exception {
+		File csvFile = TestUtils.createTempFile("myFile", "csv");
+		FileUtils.write(csvFile, "Cc1ccc(Br)cc1-c1cc(Nc2ccc(Br)cc2)nc(N)n1	1	0.982	Comment", StandardCharsets.UTF_8);
+
+		// Try with too few headers - this _should_ fail
+		CSVFile f = new CSVFile(csvFile.toURI()).setUserDefinedHeader("SMILES","FLAG");
+		Assert.assertEquals(1, f.countNumRecords());
+		ChemFileIterator it = f.getIterator();
+		Assert.assertFalse("There should be no valid records in this (miss-match of number of columns)",it.hasNext());
+		FailedRecord r = it.getFailedRecords().get(0);
+		String lcReason = r.getReason().toLowerCase();
+		Assert.assertTrue(lcReason.contains("inconsistent"));
+		Assert.assertTrue(lcReason.contains("columns"));
+		Assert.assertTrue(lcReason.contains("fields"));
+		
+		// Try with too many headers (i.e. some records miss some values, this we pass)
+		f = new CSVFile(csvFile.toURI()).setUserDefinedHeader("SMILES","FLAG", "Some property", "comments", "something not there", "another col");
+		Assert.assertEquals(1, f.countNumRecords());
+		it = f.getIterator();
+		Assert.assertTrue(it.hasNext());
+		IAtomContainer mol = it.next();
+		Map<Object,Object> props = mol.getProperties();
+		Assert.assertTrue(props.containsKey("SMILES"));
+		Assert.assertTrue(props.containsKey("FLAG"));
+		
+	}
 
 	@Test
 	public void testFileWithNoHeader() throws Exception {

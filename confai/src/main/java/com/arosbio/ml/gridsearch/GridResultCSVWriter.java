@@ -55,7 +55,7 @@ public class GridResultCSVWriter implements AutoCloseable {
 	public static class Builder {
 		private Double conf = null;
 		private boolean useRanking = false;
-		private CSVFormat format = CSVFormat.DEFAULT.withSystemRecordSeparator();
+		private CSVFormat.Builder format = CSVFormat.DEFAULT.builder().setRecordSeparator(System.lineSeparator());
 		private List<String> params;
 		private Appendable output;
 
@@ -76,8 +76,12 @@ public class GridResultCSVWriter implements AutoCloseable {
 			this.useRanking = on;
 			return this;
 		}
-		public Builder format(CSVFormat format) {
+		public Builder format(CSVFormat.Builder format) {
 			this.format = format;
+			return this;
+		}
+		public Builder format(CSVFormat format){
+			this.format = format.builder();
 			return this;
 		}
 		public Builder params(Collection<String> paramNames) {
@@ -107,8 +111,8 @@ public class GridResultCSVWriter implements AutoCloseable {
 
 	}
 
-	private GridResultCSVWriter(Builder bldr) {
-		this.settings = bldr.getCopy();
+	private GridResultCSVWriter(Builder builder) {
+		this.settings = builder.getCopy();
 	}
 
 
@@ -143,7 +147,7 @@ public class GridResultCSVWriter implements AutoCloseable {
 		headers.add(CSV_STATUS_HEADER);
 		headers.add(CSV_ERROR_MSG_HEADER);
 
-		printer = new CSVPrinter(settings.output, settings.format.withHeader(headers.toArray(new String[0])));
+		printer = new CSVPrinter(settings.output, settings.format.setHeader(headers.toArray(new String[0])).build());
 	}
 
 	public void printRecord(GSResult res) throws IOException {

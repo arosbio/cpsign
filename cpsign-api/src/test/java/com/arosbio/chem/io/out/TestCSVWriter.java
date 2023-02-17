@@ -38,7 +38,7 @@ public class TestCSVWriter extends UnitTestBase {
 		try (
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				CSVWriter writer = new CSVWriter(baos, Arrays.asList("SMILES", "Prediction", "Comments"),
-						CSVFormat.TDF.withRecordSeparator("\n"));) {
+						CSVFormat.TDF.builder().setRecordSeparator("\n").build());) {
 			IAtomContainer mol = getTestMol();
 			writer.writeRecord(mol);
 			writer.flush();
@@ -97,13 +97,13 @@ public class TestCSVWriter extends UnitTestBase {
 	@Test
 	public void testWriterWithActualMols() throws IOException {
 		writeMols(TestResources.Reg.getSolubility_10_no_header_multicol().url().openStream(), 
-				CSVFormat.DEFAULT.withDelimiter('\t').withHeader("smiles", "sol", "comment"));
+			CSVFormat.DEFAULT.builder().setDelimiter('\t').setHeader("smiles", "sol", "comment").build());
 		System.out.println("\n\n");
 		writeMols(TestResources.Reg.getSolubility_10_multicol().url().openStream(), 
-				CSVFormat.DEFAULT.withDelimiter('\t').withHeader());
+			CSVFormat.DEFAULT.builder().setDelimiter('\t').setHeader().build());
 		System.out.println("\n\n");
 		writeMols(TestResources.Reg.getErroneous().url().openStream(), 
-				CSVFormat.DEFAULT.withDelimiter('\t').withHeader());
+			CSVFormat.DEFAULT.builder().setDelimiter(TestResources.Reg.getErroneous().delim()).setHeader().build());
 
 	}
 

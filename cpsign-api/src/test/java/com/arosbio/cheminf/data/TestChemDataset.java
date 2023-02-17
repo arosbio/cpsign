@@ -864,7 +864,7 @@ public class TestChemDataset extends UnitTestBase {
 		try (
 				InputStream in = TestResources.Reg.getSolubility_100().url().openStream();
 				InputStreamReader reader = new InputStreamReader(in);
-				CSVChemFileReader iterator = new CSVChemFileReader(CSVFormat.TDF.withFirstRecordAsHeader(), reader);){
+				CSVChemFileReader iterator = new CSVChemFileReader(CSVFormat.TDF.builder().setHeader().setSkipHeaderRecord(true).build(), reader);){
 			
 //			while (iterator.hasNext()) {
 			Pair<List<FeatureVector>,DescriptorCalcInfo> descriptors = ds.convertToFeatureVector(iterator);
@@ -894,7 +894,7 @@ public class TestChemDataset extends UnitTestBase {
 		try (
 				InputStream in = TestResources.Reg.getSolubility_10().url().openStream();
 				InputStreamReader reader = new InputStreamReader(in);
-				CSVChemFileReader iterator = new CSVChemFileReader(CSVFormat.TDF.withFirstRecordAsHeader(), reader);){
+				CSVChemFileReader iterator = new CSVChemFileReader(CSVFormat.TDF.builder().setHeader().setSkipHeaderRecord(true).build(), reader);){ // withFirstRecordAsHeader()
 			
 //			while (iterator.hasNext()) {
 			Pair<List<FeatureVector>,DescriptorCalcInfo> descriptors = ds.convertToFeatureVector(iterator);

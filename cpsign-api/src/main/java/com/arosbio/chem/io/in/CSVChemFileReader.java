@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
@@ -45,8 +46,8 @@ public class CSVChemFileReader implements ChemFileIterator {
 	private CSVParser parser;
 	private Iterator<CSVRecord> recordIterator;
 	private String smilesHeaderField;
-	private int numRecordsSkipped;
 	private int numRecordsSuccessfullyRead = 0;
+	private int numInconsistentRecords = 0;
 
 	// Next record
 	private IAtomContainer nextMol;
@@ -70,13 +71,11 @@ public class CSVChemFileReader implements ChemFileIterator {
 
 	private void initialize(CSVFormat format, Reader reader) throws IOException {
 		LOGGER.debug("Initializing CSV parser with the following CSVFormat: {}", format.toString());
-		if (format.getHeader() == null) {
-			// Fail as we need a header for the CSV
-			throw new IOException("CSV file must contain a header - so properties can be parsed correctly");
-		} else if (format.getHeader().length > 0) {
-			// Done - header has already been set before
-			LOGGER.debug("CSV parser initialized with header programmatically, no need to read from the file");
-		} 
+		if (format.getHeader() == null){
+			if (!format.getSkipHeaderRecord())
+				format = format.builder().setSkipHeaderRecord(true).build(); 
+
+		}
 
 		this.parser = format.parse(reader);
 		this.recordIterator = parser.iterator();
@@ -94,7 +93,7 @@ public class CSVChemFileReader implements ChemFileIterator {
 	}
 
 	public List<String> getHeaders(){
-		return new ArrayList<>(parser.getHeaderMap().keySet());
+		return parser.getHeaderNames(); 
 	}
 
 	@Override
@@ -146,12 +145,17 @@ public class CSVChemFileReader implements ChemFileIterator {
 				} else {
 					failedRecords.add(new FailedRecord(recordIndex).setReason(String.format("Invalid SMILES \"%s\"",smiles)));
 				}
-				numRecordsSkipped++;
-				LOGGER.debug("Invalid smiles - skipping line");
-				if (numRecordsSuccessfullyRead == 0 && maxAllowedFails >=0 && maxAllowedFails <= numRecordsSkipped) {
-					LOGGER.debug("Failed {}: not reading any more CSV records",numRecordsSkipped);
-					throw new EarlyLoadingStopException(failedRecords);
-				}
+				LOGGER.trace("Invalid smiles - skipping line");
+				checkIfExit();
+				return tryParseNext();
+			}
+
+			// Check that the columns were consistent
+			if (next.size() > parser.getHeaderNames().size()){
+				numInconsistentRecords++;
+				failedRecords.add(new FailedRecord(recordIndex).setReason(
+					String.format(Locale.ENGLISH,"Inconsistent number of columns in CSV record, found %d fields but header has %d fields", next.size(),parser.getHeaderNames().size())));
+				checkIfExit();
 				return tryParseNext();
 			}
 
@@ -175,9 +179,24 @@ public class CSVChemFileReader implements ChemFileIterator {
 			CPSignMolProperties.setSMILES(nextMol, smiles);
 
 			return true;
+		} catch (EarlyStoppingException e){
+			// Pass along
+			throw e;	
 		} catch (Exception e) {
 			LOGGER.debug("Failed parsing line in CSV, continuing to next, err-message: {}", e.getMessage());
 			return tryParseNext();
+		}
+	}
+
+	private void checkIfExit() throws EarlyLoadingStopException {
+		if (numRecordsSuccessfullyRead == 0 && maxAllowedFails >=0 && maxAllowedFails <= failedRecords.size()) {
+			LOGGER.debug("Failed reading {} records from CSV, settings must be wrong",failedRecords.size());
+			throw new EarlyLoadingStopException(failedRecords);
+		}
+		if (numInconsistentRecords>=5){
+			LOGGER.debug("Found 5 inconsistent records (i.e. number of headers in CSV doesn't match columns in csv, header has {} fields) after reading the first {} lines", 
+				parser.getHeaderNames().size(), recordIndex);
+			throw new EarlyLoadingStopException(failedRecords);
 		}
 	}
 
@@ -188,7 +207,7 @@ public class CSVChemFileReader implements ChemFileIterator {
 
 	@Override
 	public int getRecordsSkipped() {
-		return numRecordsSkipped;
+		return failedRecords.size();
 	}
 
 	@Override

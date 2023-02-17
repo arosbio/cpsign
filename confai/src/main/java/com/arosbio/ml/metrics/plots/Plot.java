@@ -224,7 +224,7 @@ public class Plot implements Plot2D {
 	public String getAsCSV(char delim) throws Exception {
 		StringBuilder sb = new StringBuilder();
 		try (
-				CSVPrinter printer = new CSVPrinter(sb, CSVFormat.DEFAULT.withDelimiter(delim).withSystemRecordSeparator())) {
+				CSVPrinter printer = new CSVPrinter(sb, CSVFormat.DEFAULT.builder().setDelimiter(delim).setRecordSeparator(System.lineSeparator()).build())) {
 			printToCSV(printer);
 		} catch (IOException e) {
 			LOGGER.debug("Failed printing to CSV stringbuilder", e);

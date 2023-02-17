@@ -221,7 +221,7 @@ public class TestACPRegressionCV extends TestEnv {
 		int numSearchedCombos = 0;
 		try(
 				CSVParser parser = new CSVParser(new StringReader(baos.toString()), 
-						CSVFormat.DEFAULT.withFirstRecordAsHeader())){
+				CSVFormat.DEFAULT.builder().setSkipHeaderRecord(true).build())){ 
 			numSearchedCombos = parser.getRecords().size();
 		}
 
