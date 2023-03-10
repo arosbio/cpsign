@@ -27,6 +27,7 @@
   </organization>
 
   <modules>
+    <module>fast-ivap</module>
     <module>depict</module>
     <module>encrypt-api</module>
     <module>test-utils</module>
