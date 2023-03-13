@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 
@@ -375,6 +376,59 @@ public class GenerateDepictionsTest extends BaseTestClass {
 			image.setRGB(i, 0, color.getRGB());
 		}
 		return image;
+	}
+
+
+	// @Test
+	public void generateImageForPoster() throws Exception {
+
+		Map<IAtom,Double> coloring = new HashMap<>();
+
+		coloring.put(mol1.getAtom(0), -1.5); 
+		coloring.put(mol1.getAtom(1), -.7);
+
+		Random r = new Random(56789l);
+
+		for (int i=2; i<mol1.getAtomCount(); i++){
+			double c = r.nextGaussian()*.5;
+			if (i >= 28 && i <=33 ){
+				c = Math.abs(c);
+			}
+			coloring.put(mol1.getAtom(i), c); 
+		}
+		
+		
+
+		coloring.put(mol1.getAtom(12), .4); 
+		coloring.put(mol1.getAtom(13), .8); 
+		coloring.put(mol1.getAtom(14), .8);
+		coloring.put(mol1.getAtom(15), .8); 
+		
+		// coloring.put(mol1.getAtom(1), 15d);
+		// coloring.put(mol1.getAtom(0), -1.5); 
+		// coloring.put(mol1.getAtom(1), 15d);
+		
+
+		int height = 1000, width=2000;
+		MoleculeDepictor mp = new MoleculeDepictor.Builder()
+			.color(GradientFactory.getRedBlueRedGradient())
+			// .color(GradientFactory.getRedBlueGradient())
+			.numberColor(Color.BLACK)
+			.showAtomNumbers(true)
+			.font(new Font(Font.SANS_SERIF,Font.PLAIN,15))
+			.w(width)
+			.h(height)
+			.bg(null)
+			.build();
+		
+		BufferedImage fullImg = new BufferedImage(width,height, MoleculeDepictor.getImageType());
+		Graphics2D graphics = fullImg.createGraphics();
+		
+		// Add depiction
+		BufferedImage img = mp.depict(mol1, coloring);
+		graphics.drawImage(img, 0, 0, width, height,null);
+
+        ImageIO.write(fullImg, "png", new File(BaseTestClass.TEST_OUTPUT_DIR, "img_for_poster.png"));
 	}
 
 

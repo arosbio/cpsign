@@ -44,8 +44,6 @@ public class GradientPaletteTest extends BaseTestClass {
 	@Rule public TestName name = new TestName();
 
 	@DataPoint public static ColorGradient rainbow = GradientFactory.getRainbowGradient();
-//	@DataPoint public static ColorGradient twoColorPalette = GradientFactory.get2PointGradient(BLUE, RED);
-//	@DataPoint public static ColorGradient threeColorPalette = GradientFactory.get3PointGradient(RED, BLUE, RED);
 	@DataPoint public static ColorGradient bloomGradient = GradientFactory.getDefaultBloomGradient();
 
 	@DataPoints public static ColorGradient[] gradients = {new DefaultGradient(), new NearNeighborGradient(), new StandardGradient()};

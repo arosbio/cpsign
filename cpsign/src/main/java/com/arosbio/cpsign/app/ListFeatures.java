@@ -182,7 +182,6 @@ public class ListFeatures implements RunnableCmd {
 
 	}
 
-	@SuppressWarnings("null")
 	private void printFeatures(ChemDataset cp) {
 
 		List<String> feats = cp.getFeatureNames(includeSignatures);
@@ -215,12 +214,12 @@ public class ListFeatures implements RunnableCmd {
 				printAsJSON(feats, resultsWriter);
 				break;
 			case CSV:
-				printAsCSV(CSVFormat.DEFAULT.withDelimiter(',').withSystemRecordSeparator(), feats, resultsWriter);
+				printAsCSV(CSVFormat.DEFAULT.builder().setDelimiter(',').setRecordSeparator(System.lineSeparator()).build(), feats, resultsWriter);
 				break;
 			case TEXT:
 			case TSV:
 			default:
-				printAsCSV(CSVFormat.DEFAULT.withDelimiter('\t').withSystemRecordSeparator(), feats, resultsWriter);
+				printAsCSV(CSVFormat.DEFAULT.builder().setDelimiter('\t').setRecordSeparator(System.lineSeparator()).build(), feats, resultsWriter);
 				break;
 			}
 

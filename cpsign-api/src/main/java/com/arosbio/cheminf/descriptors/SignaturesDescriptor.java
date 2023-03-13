@@ -76,7 +76,6 @@ public class SignaturesDescriptor implements ChemDescriptor, Described, Aliased 
 	private static final String PROPERTY_GENERATOR_VECTOR_ID_KEY = "signaturesVectorTypeID";
 	private static final String PROPERTY_GENERATOR_VECTOR_NAME_KEY = "signaturesVectorTypeName";
 
-//	public static final long DESCRIPTOR_ID = 1;
 	public static final String DESCRIPTOR_NAME = "Signatures";
 	public static final String[] DESCRIPTOR_ALIASES = new String[] {"SignaturesDescriptor", "FaulonSignatures"};
 	public static final String DESCRIPTOR_INFO = "The signature molecular descriptor described in Faulon J-L, Collins MJ, Carr RD. The signature molecular descriptor. 4. Canonizing molecules using extended valence sequences. J Chem Inf Comput Sci. 2004;44: 427–436. and implemented in the CDK.";
@@ -162,7 +161,6 @@ public class SignaturesDescriptor implements ChemDescriptor, Described, Aliased 
 				// was not a id 
 			}
 
-//			String lowerCase = text.toLowerCase();
 			for (VectorType e : values()) {
 				for (String n : e.names)
 					if (n.equalsIgnoreCase(text)) return e;
@@ -236,14 +234,14 @@ public class SignaturesDescriptor implements ChemDescriptor, Described, Aliased 
 
 	private void assertChangesAllowedOrFail() throws IllegalStateException {
 		if (descriptorInitialized) {
-			LOGGER.debug("Tried making changes to SignaturesDescriptor after initalized had been called - failing");
+			LOGGER.debug("Tried making changes to SignaturesDescriptor after initialized had been called - failing");
 			throw new IllegalStateException("ChemDescriptor has been initialized - no changes allowed");
 		}
 	}
 
 	private void assertInitialized() throws IllegalStateException {
 		if (!descriptorInitialized) {
-			LOGGER.debug("ChemDescriptor not inialized yet, but called method requiring initialization");
+			LOGGER.debug("ChemDescriptor not initialized yet, but called method requiring initialization");
 			throw new IllegalStateException("ChemDescriptor not initialized");
 		}
 	}
@@ -316,6 +314,7 @@ public class SignaturesDescriptor implements ChemDescriptor, Described, Aliased 
 
 	/**
 	 * Note - this will potentially be a huge list of signatures!
+	 * @return the full list of generated signatures
 	 */
 	@Override
 	public List<String> getFeatureNames(){
@@ -386,10 +385,10 @@ public class SignaturesDescriptor implements ChemDescriptor, Described, Aliased 
 		List<ConfigParameter> params = new ArrayList<>();
 		params.add(new IntegerConfig.Builder(CONFIG_SIGNATURES_START_HEIGHT,DEFAULT_SIGN_START_HEIGHT)
 			.range(Range.closed(0, SIGNATURES_MAX_HEIGHT))
-			.description("Smallest 'height', i.e. number of bonds that should be considered for atom neighbours").build());
+			.description("Smallest 'height', i.e. number of bonds that should be considered for atom neighbors").build());
 		params.add(new IntegerConfig.Builder(CONFIG_SIGNATURES_END_HEIGHT,DEFAULT_SIGN_END_HEIGHT)
 			.range(Range.closed(0, SIGNATURES_MAX_HEIGHT))
-			.description("Largest 'height', i.e. number of bonds that should be considered for atom neighbours").build());
+			.description("Largest 'height', i.e. number of bonds that should be considered for atom neighbors").build());
 		params.add(new EnumConfig.Builder<>(CONFIG_SIGNATURES_TYPE, EnumSet.allOf(SignatureType.class),SignatureType.STANDARD)
 			.description("Whether stereo information should be captured in the signatures")
 			.build());

@@ -189,6 +189,7 @@ public abstract class RendererTemplate <T> {
         }
         /** Set the background - a transparent background is achieved using either passing {@code null} here
          * or setting a color with an transparent alpha value
+         * @param bg the background to use, or {@code null} if no background (transparent)
          * @return the Builder instance
          */
         public B background(Color bg){

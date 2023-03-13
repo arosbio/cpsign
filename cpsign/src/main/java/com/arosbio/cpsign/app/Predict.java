@@ -72,7 +72,7 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
-/**
+/*
  * The sections are the following (3):
  * PB.VALIDATE_PARAMS_PROGRESS 
  * PB.LOADING_FILE_OR_MODEL_PROGRESS

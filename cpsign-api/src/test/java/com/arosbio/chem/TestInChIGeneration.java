@@ -42,17 +42,6 @@ public class TestInChIGeneration extends UnitTestBase{
 			Assert.fail("Inchi generation not available");
 		}
 
-		
-
-		// InChIGeneratorFactory igf = null;
-		// try {
-		// 	igf = InChIGeneratorFactory.getInstance();
-		// } catch (Exception | Error e){
-		// 	SYS_ERR.println("failed setting up the inchi generator factory " +e.getMessage());
-		// 	Assert.fail("Inchi generation is not possible for this hardware");
-		// }
-		
-
 	}
 
 

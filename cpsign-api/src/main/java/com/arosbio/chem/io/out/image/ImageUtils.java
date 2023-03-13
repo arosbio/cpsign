@@ -387,6 +387,7 @@ public class ImageUtils {
 	 * Standardize the AttributedString by adding the default font and setting the text color to black (if not set previously)
 	 * @param str AttributedString with the styled text
 	 * @param defaultFont the fallback font in case not set already
+	 * @param defaultColor The default text color to use
 	 * @return styled text with a font and text color set
 	 */
 	public static AttributedString standardize(final AttributedString str, Font defaultFont, Color defaultColor){

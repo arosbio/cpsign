@@ -77,11 +77,11 @@ public class GenerateEncryptionKey implements RunnableCmd {
 
 	private CLIConsole console = CLIConsole.getInstance();
 
-	/*****************************************
+	/*
+	 *****************************************
 	 * OPTIONS
-	 *****************************************/
-	
-	 //
+	 ****************************************
+	 */
 	
 	@Command(name = "ls", aliases = {"list"}, description = "list available encryption types", helpCommand = true)
 	public static class ListAvailable implements RunnableCmd {
@@ -141,9 +141,11 @@ public class GenerateEncryptionKey implements RunnableCmd {
 		
 	}
 
-	/*****************************************
+	/*
+	 *****************************************
 	 * OPTIONS
-	 *****************************************/
+	 *****************************************
+	 */
 
 	@Option(names = {"--type"},
 		description = "The implementation type to use (can be omitted if only one is available to CPSign)",
@@ -171,9 +173,11 @@ public class GenerateEncryptionKey implements RunnableCmd {
 	@Mixin
 	private EchoMixin echo;
 	
-	/*****************************************
+	/*
+	 *****************************************
 	 * END OF OPTIONS
-	 *****************************************/
+	 *****************************************
+	 */
 
 	@Override
 	public String getName() {

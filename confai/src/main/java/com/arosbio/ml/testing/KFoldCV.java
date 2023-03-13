@@ -118,6 +118,7 @@ public class KFoldCV implements TestingStrategy {
 	/**
 	 * Set the number of folds, must be &ge;2
 	 * @param numFolds num folds, if a value &le;2 is given, it will be set to the default (10)
+	 * @return the same instance
 	 */
 	public KFoldCV withNumFolds(int numFolds) {
 		if (numFolds < 2)

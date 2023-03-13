@@ -46,10 +46,8 @@ public class TestStereoAtomSignature extends UnitTestBase {
 	final public static String smiles4_nonChiral = "N[C](Br)(O)C";
 	final public static String smiles5 = "O=C4[C@@H]5Oc1c2c(ccc1OC)C[C@H]3N(CC[C@]25[C@H]3CC4)C";
 	final public static String smiles6_aromatic="OCc1ccc(cc1)Cl";
-	// final public static SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
 	final public static boolean printSigs=true;
 
-	//	String trainSMILES = this.getClass().getResource("/resources/smiles_files/smiles_classification.smi").getFile();
 
 	@Test
 	public void testGenerateFromFile() throws Exception {
@@ -60,7 +58,6 @@ public class TestStereoAtomSignature extends UnitTestBase {
 		ChemDataset sp = new ChemDataset(desc);
 		sp.initializeDescriptors();
 		sp.add(new CSVFile(data.uri()).getIterator(), data.property());
-//		sp.fromChemFile(getURI("/resources/smiles_files/smiles_classification.smi"), null, Arrays.asList("POS", "NEG"));
 		
 		Set<String> sigs = new HashSet<>(toSet(desc.getSignatures()));
 		if (printSigs){
@@ -78,7 +75,6 @@ public class TestStereoAtomSignature extends UnitTestBase {
 		ChemDataset sp2 = new ChemDataset(desc2);
 		sp2.initializeDescriptors();
 		sp2.add(new CSVFile(data.uri()).getIterator(), data.property());
-		// sp2.add(new CSVFile(getURI("/resources/smiles_files/smiles_classification.smi")).getIterator(), "solubility(fake!)", new NamedLabels(Arrays.asList("POS", "NEG")));
 		Set<String> sigs2 = toSet(desc2.getSignatures());
 		
 		Set<String> difference1_2 = new HashSet<String>(sigs);

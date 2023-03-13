@@ -86,7 +86,7 @@ public class DepictVanillaCDK extends BaseTestClass {
 		// IAtomContainer mol1 = sp.parseSmiles("[C-]CC(C(=O)NC1=CC=C(C=C1)C(F)(F)F)N(C)CC(=O)N2CCN(CC2)CC3=CC=CC=C3");
         fixCoords(mol);
         // new StructureDiagramGenerator().generateCoordinates(mol1);
-        File outputfile = new File("test/imgs/vanilla_cdk_non_vec."+fmt);
+        File outputfile = new File(TEST_OUTPUT_DIR, "vanilla_cdk_non_vec."+fmt);
         int imageWidth = 400, imageHeight = 400;
         
         Rectangle2D drawArea = new Rectangle2D.Double(0,0,imageWidth,imageHeight);
@@ -141,7 +141,7 @@ public class DepictVanillaCDK extends BaseTestClass {
 		// IAtomContainer mol1 = sp.parseSmiles("[C-]CC(C(=O)NC1=CC=C(C=C1)C(F)(F)F)N(C)CC(=O)N2CCN(CC2)CC3=CC=CC=C3");
         fixCoords(mol);
         // new StructureDiagramGenerator().generateCoordinates(mol1);
-        File outputfile = new File("test/imgs/vanilla_cdk.pdf");
+        File outputfile = new File(TEST_OUTPUT_DIR,"vanilla_cdk.pdf");
         int imageWidth = 400, imageHeight = 400;
         
         Rectangle2D drawArea = new Rectangle2D.Double(0,0,imageWidth,imageHeight);
@@ -247,7 +247,7 @@ public class DepictVanillaCDK extends BaseTestClass {
 		// IAtomContainer mol1 = sp.parseSmiles("[C-]CC(C(=O)NC1=CC=C(C=C1)C(F)(F)F)N(C)CC(=O)N2CCN(CC2)CC3=CC=CC=C3");
         fixCoords(mol);
         // new StructureDiagramGenerator().generateCoordinates(mol1);
-        File outputfile = new File("test/imgs/vanilla_cdk.svg");
+        File outputfile = new File(TEST_OUTPUT_DIR,"vanilla_cdk.svg");
         int imageWidth = 400, imageHeight = 400;
         
         Rectangle2D drawArea = new Rectangle2D.Double(0,0,imageWidth,imageHeight);
@@ -318,7 +318,7 @@ public class DepictVanillaCDK extends BaseTestClass {
         SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
 		IAtomContainer mol = sp.parseSmiles("[C-]CC(C(=O)NC1=CC=C(C=C1)C(F)(F)F)N(C)CC(=O)N2CCN(CC2)CC3=CC=CC=C3");
         Depiction dep = gen.withSize(400, 400).depict(mol);
-        dep.writeTo("test/imgs/vanilla_dep_gen.pdf");
+        dep.writeTo(new File(TEST_OUTPUT_DIR,"vanilla_dep_gen.pdf").getAbsolutePath());
 
     }
 
@@ -371,7 +371,7 @@ public class DepictVanillaCDK extends BaseTestClass {
 
     @Test
     public void testSetSeveralRowsRGB() throws Exception{
-        File outputfile = new File("test/imgs/plain_two_rows.png");
+        File outputfile = new File(TEST_OUTPUT_DIR,"plain_two_rows.png");
         int imageHeight=300,imageWidth = 200;
         BufferedImage img = new BufferedImage(imageWidth, imageHeight, BUFFERED_IMAGE_TYPE);
         int[] twoRows = new int[imageWidth*2];
