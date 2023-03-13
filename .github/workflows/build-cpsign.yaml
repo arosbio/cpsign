@@ -41,7 +41,7 @@ jobs:
         run: mvn package -DskipTests=true
 
       - name: Publish to GitHub Packages Apache Maven
-        run: mvn --batch-mode deploy
+        run: mvn --batch-mode -DskipTests=true deploy
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_SECRET }} # GITHUB_TOKEN is the default env for the password
 
