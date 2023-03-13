@@ -396,10 +396,5 @@ CPSign is an Open Source Software that is dual licensed to allow you to choose a
   </build>
 
   <distributionManagement>
-    <repository>
-      <id>internal.repo</id>
-      <name>MyCo Internal Repository</name>
-      <url>Host to Company Repository</url>
-    </repository>
   </distributionManagement>
 </project>
