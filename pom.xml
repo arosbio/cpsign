@@ -396,5 +396,10 @@ CPSign is an Open Source Software that is dual licensed to allow you to choose a
   </build>
 
   <distributionManagement>
+    <repository>
+      <id>github</id>
+      <name>GitHub Packages</name>
+      <url>https://maven.pkg.github.com/morganekmefjord/cpsign</url>
+    </repository>
   </distributionManagement>
 </project>
