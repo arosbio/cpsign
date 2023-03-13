@@ -20,7 +20,7 @@
   </parent>
 
   <artifactId>test-utils</artifactId>
-  <name>test-utils</name>
+  <name>${project.groupId}:${project.artifactId}</name>
   <packaging>jar</packaging>
   <description>Test utility package, indented for simplication of writing tests in other modules and including test-resources in a single location</description>
 

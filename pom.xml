@@ -17,7 +17,7 @@
   <artifactId>parent</artifactId>
   <version>2.0.0-beta17-SNAPSHOT</version>
   <packaging>pom</packaging>
-  <name>CPSign Parent</name>
+  <name>${project.groupId}:${project.artifactId}</name>
   <description>The aggregation project for all cpsign child modules</description> 
   <url>http://arosbio.com</url>
 

@@ -20,7 +20,7 @@
   </parent>
 
   <artifactId>encrypt-api</artifactId>
-  <name>encrypt-api</name>
+  <name>${project.groupId}:${project.artifactId}</name>
   <packaging>jar</packaging>
   <description>The API used for encrypting resources part of the CPSign project</description>
   

@@ -20,7 +20,7 @@
 	</parent>
 
 	<artifactId>cpsign</artifactId>
-	<name>cpsign</name>
+	<name>${project.groupId}:${project.artifactId}</name>
 	<description>CPSign main project, including chemistry and the CLI application</description>
 	<packaging>jar</packaging>
 

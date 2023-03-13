@@ -22,14 +22,14 @@ import org.apache.commons.lang3.tuple.Pair;
 
 /**
  * This project include an implementation of the isotonic regression algorithm described in 
- * Vovk, V., Petej, I., & Fedorova, V. (2015, November). Large-scale probabilistic prediction with and without validity guarantees. In Proceedings of NIPS (Vol. 2015).
+ * Vovk, V., Petej, I., {@literal &} Fedorova, V. (2015, November). Large-scale probabilistic prediction with and without validity guarantees. In Proceedings of NIPS (Vol. 2015).
  * 
  * This algorithm relies on pre-computing the isotonic regression for all possible scores <i>s</i> and for both possible class labels ({@code 0} and {@code 1}). 
  * Those precomputed values are then stored in a binary search tree which give back the {@code p0} and {@code p1} values (i.e. the multi-probability for both 
  * of the possible labels, {@code y=0} and {@code y=1}, of the test-object). For further details we refer to the paper and the algorithms presented in the referenced paper.
  * 
- * @see http://alrw.net/articles/13.pdf
- * @see https://github.com/ptocca/VennABERS
+ * @see <a href="http://alrw.net/articles/13.pdf">Vovk et al. 2015</a> 
+ * @see <a href="https://github.com/ptocca/VennABERS">VennABERS python package</a>
  */
 public class IsotonicRegressionCalibrator {
 
@@ -48,16 +48,16 @@ public class IsotonicRegressionCalibrator {
 
         /**
          * Vector addition, interpreting the points as vectors
-         * @param toAdd
-         * @return
+         * @param toAdd vector to add to current
+         * @return a new Point, interpreted as a vector with the result
          */
         public Point2D add(Point2D toAdd){
             return new Point2D(this.x+toAdd.x, this.y+toAdd.y);
         }
         /**
          * Vector subtraction, interpreting the points as vectors
-         * @param toSub
-         * @return
+         * @param toSub vector to subtract
+         * @return a new Point, interpreted as a vector
          */
         public Point2D subtract(Point2D toSub){
             return new Point2D(this.x-toSub.x, this.y - toSub.y);
@@ -187,7 +187,8 @@ public class IsotonicRegressionCalibrator {
     /**
      * Create an {@code IsotonicRegressionCalibrator} based on sorted and 'cleaned' points,
      * e.g. when fitting from a previously trained model.
-     * @return a fitted {@link IsotonicRegressionCalibrator instance
+     * @param points calibration scores
+     * @return a fitted {@link IsotonicRegressionCalibrator} instance
      */
     public static IsotonicRegressionCalibrator fitFromClean(List<WPoint2D> points){
         return new IsotonicRegressionCalibrator(points);
@@ -198,7 +199,7 @@ public class IsotonicRegressionCalibrator {
      * which does not assume the points are sorted and merged for identical scores
      * @param <P> The type of the input
      * @param points calibration scores
-     * @return a fitted {@link IsotonicRegressionCalibrator instance
+     * @return a fitted {@link IsotonicRegressionCalibrator} instance
      */
     public static <P extends Point2D> IsotonicRegressionCalibrator fitFromRaw(List<P> points){
         // Create a copy and sort the list

@@ -19,7 +19,7 @@
 	</parent>
 
 	<artifactId>depict</artifactId>
-	<name>depict</name>
+	<name>${project.groupId}:${project.artifactId}</name>
 	<description>Project with extensions of CDK rendering of molecules, in order to generate the "blooming" depictions from predictions</description>
 
 	<properties>

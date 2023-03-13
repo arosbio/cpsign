@@ -21,7 +21,7 @@
   	</parent>
 
   	<artifactId>fast-ivap</artifactId>
-  	<name>fast-ivap</name>
+  	<name>${project.groupId}:${project.artifactId}</name>
 	<packaging>jar</packaging>
 	<description>Implementation of the fast IVAP computation, as described in Large-scale probabilistic prediction with and without validity guarantees </description>
 

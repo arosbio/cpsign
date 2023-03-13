@@ -18,3 +18,6 @@ cpsign*.log
 # testoutput directories
 testoutput/
 
+# Some test/benchmarking
+eval_*/*
+

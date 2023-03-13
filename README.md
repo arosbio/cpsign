@@ -13,6 +13,7 @@ In order to minimize memory footprint, the project has been split up into severa
 ## Sub-projects
 This repo is split up into several child-projects:
 * [depict](depict/README.md) - An extension of the CDK depictions code which allows for generating 'blooming' molecules - i.e. visually appealing depictions with highlights that fade of and mix. Intended mainly for displaying which atoms contributed the most in a given prediction.
+* [fast-ivap](fast-ivap/README.md) - An implementation of the algorithms detailed in [Vovk et al. 2015](http://alrw.net/articles/13.pdf) that pre-computes the isotonic regression used in the Venn-ABERS algorithm.
 * [encrypt-api](encrypt-api/README.md) - A single interface for including encryption of saved prediction models or precomputed data sets. Contact [Aros Bio](https://arosbio.com) in case you wish to purchase such an extension that secures models by only allowing predictions when also having the encryption key.
 * [test-utils](test-utils/REAME.md) - Project that include test resources such as SVMLight files and some QSAR datasets used in the tests.
 * [confai](confai/README.md) - Conformal and probabilistic predictors, data, processing etc, excluding CDK and chemistry specific code. Thus provides a software package that allows training CP and Venn-ABERS models for non-chemical data, without the overhead of including the complete CDK package.
