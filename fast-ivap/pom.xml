@@ -95,12 +95,6 @@
 			<artifactId>commons-lang3</artifactId>
 		</dependency>
 
-		<dependency> <!-- TODO remove in future? -->
-			<groupId>com.github.sanity</groupId>
-			<artifactId>pairAdjacentViolators</artifactId>
-            <scope>test</scope>
-		</dependency>
-
 		<dependency>
 			<groupId>com.arosbio</groupId>
 			<artifactId>test-utils</artifactId>

@@ -107,29 +107,11 @@
     <commons-text.version>1.10.0</commons-text.version>
     <commons-lang.version>3.9</commons-lang.version>
     <guava.version>31.0.1-jre</guava.version>
-    <kotlin-stdlib.version>1.6.20</kotlin-stdlib.version> <!-- TODO - hopefully can be removed in future -->
     <filters.version>2.0.235-1</filters.version>
     <libsvm.version>3.24</libsvm.version>
     <liblinear.version>2.44</liblinear.version>
   </properties>
 
-  <repositories>
-    <repository>
-      <id>central</id>
-      <name>Central Repository</name>
-      <url>https://repo.maven.apache.org/maven2</url>
-      <layout>default</layout>
-      <snapshots>
-        <enabled>false</enabled>
-      </snapshots>
-    </repository>
-
-    <!-- Needed for the pairAdjacentViolators dependency - might be excluded in the future -->
-    <repository>
-      <id>jitpack.io</id>
-      <url>https://jitpack.io</url>
-    </repository>
-  </repositories>
 
   <!-- DEPENDENCY MANAGEMENT - SPECIFY SAME VERSIONS AND SIMPLIFY DEPS IN CHILDS -->
   <dependencyManagement>
@@ -241,13 +223,6 @@
         <groupId>org.beryx</groupId>
         <artifactId>awt-color-factory</artifactId>
         <version>1.0.2</version>
-      </dependency>
-
-      <dependency>
-        <!-- TODO remove in future? -->
-        <groupId>com.github.sanity</groupId>
-        <artifactId>pairAdjacentViolators</artifactId>
-        <version>1.4.16</version>
       </dependency>
 
       <dependency>

@@ -42,6 +42,8 @@ import com.arosbio.encryption.EncryptionSpecification;
 import com.arosbio.io.DataSink;
 import com.arosbio.io.DataSource;
 import com.arosbio.ml.TrainingsetValidator;
+import com.arosbio.ml.algorithms.IsotonicRegressionCalibrator;
+import com.arosbio.ml.algorithms.IsotonicRegressionCalibrator.WPoint2D;
 import com.arosbio.ml.algorithms.MLAlgorithm;
 import com.arosbio.ml.algorithms.ScoringClassifier;
 import com.arosbio.ml.algorithms.impl.AlgorithmUtils;
@@ -51,10 +53,6 @@ import com.arosbio.ml.interfaces.ClassificationPredictor;
 import com.arosbio.ml.io.MetaFileUtils;
 import com.arosbio.ml.io.impl.PropertyNameSettings;
 import com.arosbio.ml.sampling.TrainSplit;
-import com.github.sanity.pav.PairAdjacentViolators;
-import com.github.sanity.pav.Point;
-
-import kotlin.jvm.functions.Function1;
 
 public final class IVAPClassifier implements IVAP, ClassificationPredictor {
 
@@ -76,7 +74,8 @@ public final class IVAPClassifier implements IVAP, ClassificationPredictor {
 	 * Calibration points for calibrating the results, having a point with x=score, y={0, 1}
 	 * where y=1 if of the same label as the first label of the ML algorithm, 0 otherwise
 	 */
-	private List<Point> calibrationPoints;
+	private List<WPoint2D> calibrationPoints;
+	private IsotonicRegressionCalibrator calibrator;
 	private int numTrainingObservations;
 
 	/* 
@@ -111,11 +110,11 @@ public final class IVAPClassifier implements IVAP, ClassificationPredictor {
 		return model != null && calibrationPoints !=null && ! calibrationPoints.isEmpty();
 	}
 
-	public List<Point> getCalibrationPoints(){
+	public List<WPoint2D> getCalibrationPoints(){
 		return calibrationPoints;
 	}
 
-	public void setCalibrationPoints(List<Point> points){
+	public void setCalibrationPoints(List<WPoint2D> points){
 		this.calibrationPoints = new ArrayList<>(points);
 	}
 
@@ -211,18 +210,24 @@ public final class IVAPClassifier implements IVAP, ClassificationPredictor {
 		// Predict all scores in the calibration set
 		int labelToPredictFor = model.getLabels().get(0);
 		try {
-			calibrationPoints = new ArrayList<>(dataset.getCalibrationSet().size()+1);
-			for (DataRecord rec: dataset.getCalibrationSet()) {
+			calibrationPoints = new ArrayList<>(dataset.getCalibrationSet().size());
+			for (DataRecord rec : dataset.getCalibrationSet()) {
 				Map<Integer,Double> pred = model.predictScores(rec.getFeatures());
 				// decision value = x, either 0 or 1 for y 
-				calibrationPoints.add(new Point(pred.get(labelToPredictFor), 
+				calibrationPoints.add(new WPoint2D(pred.get(labelToPredictFor), 
 						(labelToPredictFor == (int)rec.getLabel()? 1 : 0)));
 			}
 		} catch (IllegalStateException e){
 			LOGGER.debug("IllegalState when predicting calibration set to build calibration-points for isotonic regression",e);
 			throw new RuntimeException(e.getMessage());
 		}
-		LOGGER.debug("Finished computing scores for all ({}) records in the calibration set - finished fitting full IVAP", calibrationPoints.size());
+		LOGGER.debug("Finished computing scores for all ({}) records in the calibration set", calibrationPoints.size());
+
+		// Fit the isotonic regression
+		calibrator = IsotonicRegressionCalibrator.fitFromRaw(calibrationPoints);
+		// Update the calibration points to the cleaned and sorted ones
+		calibrationPoints = calibrator.getCalibrationPoints();
+		LOGGER.debug("Finished computing the isotonic regression - finished fitting full IVAP");
 
 		numTrainingObservations = dataset.getTotalNumTrainingRecords();
 	}
@@ -233,33 +238,18 @@ public final class IVAPClassifier implements IVAP, ClassificationPredictor {
 			throw new IllegalStateException("The IVAP has not been trained yet");
 		if (example == null)
 			throw new IllegalArgumentException("example to predict was null");
-		int numCalibPoints = calibrationPoints.size();
+
 		Map<Integer,Double> pred = model.predictScores(example);
 
 		List<Integer> labels = model.getLabels();
 		double score = pred.get(labels.get(0));
 
-		// Fit isotonic regression using first hypothetical label
-		calibrationPoints.add(new Point(score, 0d));
-		PairAdjacentViolators pavLabel0 = new PairAdjacentViolators(calibrationPoints);
-		final Function1<Double, Double> interpolatorLabel0 = pavLabel0.interpolator();
-		double p0 = MathUtils.truncate(interpolatorLabel0.invoke(score), 0d, 1d);
-		calibrationPoints.remove(calibrationPoints.size()-1); // remove the added example
-		//			printCalibPoints();
-
-		// Fit isotonic regression using second hypothetical label
-		calibrationPoints.add(new Point(score, 1d)); 
-		PairAdjacentViolators pavLabel1 = new PairAdjacentViolators(calibrationPoints);
-		final Function1<Double, Double> interpolatorLabel1 = pavLabel1.interpolator();
-		double p1 = MathUtils.truncate(interpolatorLabel1.invoke(score), 0d, 1d);
-		calibrationPoints.remove(calibrationPoints.size()-1); // remove the added example
-
-		if (calibrationPoints.size() != numCalibPoints)
-			throw new RuntimeException("Something went wrong in the IVAP algorithm");
+		// Calibrate the scores
+		Pair<Double,Double> p0p1 = calibrator.calibrate(score);
 
 		Map<Integer, Pair<Double,Double>> result = new HashMap<>();
-		result.put(labels.get(0), ImmutablePair.of(p0, p1));
-		result.put(labels.get(1), ImmutablePair.of(1-p1, 1-p0));
+		result.put(labels.get(0), p0p1);
+		result.put(labels.get(1), ImmutablePair.of(1-p0p1.getRight(), 1-p0p1.getLeft()));
 
 		return result;
 
@@ -381,14 +371,8 @@ public final class IVAPClassifier implements IVAP, ClassificationPredictor {
 
 
 	private void writeCalibrationPoints(BufferedWriter writer) throws IOException{
-		for (Point p: calibrationPoints) {
-			writer.write(""+p.getX());
-			writer.write(',');
-			writer.write(""+p.getY());
-			writer.write(',');
-			writer.write(""+p.getWeight());
-			writer.write(',');
-			writer.newLine();
+		for (WPoint2D p : calibrationPoints) {
+			writer.write(""+p.x+','+p.y+','+p.w + '\n');
 		}
 		writer.flush();
 		LOGGER.debug("Saved calibration points to writer");
@@ -451,7 +435,8 @@ public final class IVAPClassifier implements IVAP, ClassificationPredictor {
 					loadCalibrationPoints(istream);
 				}
 			}
-			LOGGER.debug("Loaded calibration points, successully loaded complete IVAP");
+			calibrator = IsotonicRegressionCalibrator.fitFromClean(calibrationPoints);
+			LOGGER.debug("Loaded calibration points, successfully loaded complete IVAP");
 		} else {
 			LOGGER.debug("No location saved for calibration points, IVAP not loaded successfully");
 		}
@@ -464,7 +449,7 @@ public final class IVAPClassifier implements IVAP, ClassificationPredictor {
 			String line =null;
 			while ( (line=reader.readLine())!=null) {
 				String[] splits = line.split(",");
-				calibrationPoints.add(new Point(
+				calibrationPoints.add(new WPoint2D(
 						Double.parseDouble(splits[0]), 
 						Double.parseDouble(splits[1]), 
 						Double.parseDouble(splits[2])));

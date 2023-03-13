@@ -86,64 +86,6 @@ public class TestACPClassification extends TestEnv{
 		printLogs();
 	}
 
-	//	@Test
-	public void generateResultsForEbba() throws Exception{
-		Dataset problem = TestDataLoader.getInstance().getDataset(true, false);
-		SubSet[] testTrainRecs = problem.getDataset().splitRandom(.5);
-		SubSet test = testTrainRecs[0];
-		problem.withDataset(testTrainRecs[1]);
-
-		ACPClassifier acp = new ACPClassifier(new NegativeDistanceToHyperplaneNCM(new LinearSVC()), new RandomSampling(1, .3));
-		acp.train(problem);
-
-		Map<Integer,ICPClassifier> icps = acp.getPredictors();
-		ICPClassifier icp = (ICPClassifier) icps.values().iterator().next();
-		
-
-		// Print nonconf-values
-		// Map<Integer, List<Double>> nonconfs = icp.getNonconfScores();
-		//		File out = new File("/Users/staffan/Desktop/ebba.nonconf");
-		//		CSVPrinter nonconfPrinter = CSVFormat.DEFAULT.print(out,StandardCharsets.UTF_8);
-		//
-		//		nonconfPrinter.printRecord("class","nonconf");
-		//		for (Map.Entry<Integer, List<Double>> ncs : nonconfs.entrySet()) {
-		//			int label = ncs.getKey();
-		//			for (double nc : ncs.getValue()) {
-		//				nonconfPrinter.printRecord(label, nc);
-		//			}
-		//
-		//		}
-		//		nonconfPrinter.flush();
-		//		nonconfPrinter.close();
-
-		// NCMMondrianClassification ncm = icp.getNCM();
-
-		CPClassificationCalibrationPlotBuilder plotBuilder = new CPClassificationCalibrationPlotBuilder();
-		SingleLabelPredictionsPlotBuilder singleBuilder = new SingleLabelPredictionsPlotBuilder();
-		MultiLabelPredictionsPlotBuilder multiBuilder = new MultiLabelPredictionsPlotBuilder();
-		List<CPClassifierMetric> mets = new ArrayList<>();
-		mets.add(plotBuilder);
-		mets.add(singleBuilder);
-		mets.add(multiBuilder);
-		MetricFactory.setEvaluationPoints(mets, CollectionUtils.listRange(0.01, 0.99, .01));
-
-
-		// Predict and get the ncs and p-values for each test-object
-		for (DataRecord r : test) {
-			Map<Integer,Double> pvals = icp.predict(r.getFeatures());
-			plotBuilder.addPrediction((int)r.getLabel(), pvals);
-			singleBuilder.addPrediction((int)r.getLabel(), pvals);
-			multiBuilder.addPrediction((int)r.getLabel(), pvals);
-		}
-
-		List<Plot2D> plots = new ArrayList<>();
-		plots.add(plotBuilder.buildPlot());
-		plots.add(singleBuilder.buildPlot());
-		plots.add(multiBuilder.buildPlot());
-
-		MergedPlot mplot = new MergedPlot(plots);
-		SYS_ERR.println(mplot.getAsCSV());
-	}
 
 	@Test
 	public void testACPClassProbabilityNCM() throws Exception {

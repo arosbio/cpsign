@@ -9,13 +9,9 @@ package com.arosbio.ml.algorithms;
  * 2) CPSign Proprietary License that allows you to use CPSign for commercial activities, such as in a revenue-generating operation or environment, or integrate CPSign in your proprietary software without worrying about disclosing the source code of your proprietary software, which is required if you choose to use the software under GPLv3 license. See arosbio.com/cpsign/commercial-license for details.
  */
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,11 +28,9 @@ import org.junit.experimental.categories.Category;
 import com.arosbio.ml.algorithms.IsotonicRegressionCalibrator.Point2D;
 import com.arosbio.ml.algorithms.IsotonicRegressionCalibrator.WPoint2D;
 import com.arosbio.tests.TestBase;
+import com.arosbio.tests.suites.PerformanceTest;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.utils.Stopwatch;
-import com.github.sanity.pav.PairAdjacentViolators;
-
-import kotlin.jvm.functions.Function1;
 
 @Category(UnitTest.class)
 public class TestIsotonicRegressionCalibrator extends TestBase{
@@ -75,41 +69,8 @@ public class TestIsotonicRegressionCalibrator extends TestBase{
         Assert.assertEquals("The given list should not be modified",7, points.size()); 
     }
 
-    @Test
-    public void testSerializePoints() throws IOException{
-        // Old points from PAV algorithm had x,y,w all in floats 
-        Assert.assertTrue(equals(new com.github.sanity.pav.Point(1.5,7.4,1), new WPoint2D(1.5, 7.4)));
 
-        List<com.github.sanity.pav.Point> original = new ArrayList<>();
-        for (int i=0; i<100; i++){
-            original.add(new com.github.sanity.pav.Point(Math.random(), Math.random()));
-        }
-        Assert.assertEquals(100, original.size());
-        
-        // ByteArrayOutputStream calibStream = null;
-        byte[] written = null;
-
-        try(
-                    ByteArrayOutputStream calibStream = new ByteArrayOutputStream(); 
-					BufferedWriter calibWriter = new BufferedWriter(new OutputStreamWriter(calibStream));
-					){
-				writeCalibrationPoints(calibWriter, original);
-                written = calibStream.toByteArray();
-			}
-        
-        List<WPoint2D> loaded = null;
-        try(InputStream buffStream = new ByteArrayInputStream(written)){
-            loaded = loadCalibrationPoints(buffStream);
-        }
-
-        Assert.assertEquals(original.size(), loaded.size());
-
-        for(int i=0;i<original.size(); i++){
-            Assert.assertTrue(equals(original.get(i),loaded.get(i)));
-        }
-
-    }
-
+    @Category(PerformanceTest.class)
     @Test
     public void testHowToPrint() throws IOException{
         // generate data to save
@@ -180,45 +141,8 @@ public class TestIsotonicRegressionCalibrator extends TestBase{
 			writer.newLine();
 		}
 		writer.flush();
-		// LOGGER.debug("Saved calibration points to writer");
 	}
 
-
-    private void writeCalibrationPoints(BufferedWriter writer, List<com.github.sanity.pav.Point> calibrationPoints) throws IOException{
-		for (com.github.sanity.pav.Point p : calibrationPoints) {
-			writer.write(""+p.getX());
-			writer.write(',');
-			writer.write(""+p.getY());
-			writer.write(',');
-			writer.write(""+p.getWeight());
-			writer.write(',');
-			writer.newLine();
-		}
-		writer.flush();
-		// LOGGER.debug("Saved calibration points to writer");
-	}
-
-    private List<WPoint2D> loadCalibrationPoints(InputStream calibrationStream) throws IOException{
-        List<WPoint2D> calibrationPoints = new ArrayList<>();
-		try (BufferedReader reader = new BufferedReader(new InputStreamReader(calibrationStream))){
-			
-			String line =null;
-			while ( (line=reader.readLine())!=null) {
-				String[] splits = line.split(",");
-				calibrationPoints.add(new WPoint2D(
-						Double.parseDouble(splits[0]), 
-						Double.parseDouble(splits[1]), 
-						Double.parseDouble(splits[2])));
-			}
-		} catch (Exception e){
-			throw e;
-		}
-        return calibrationPoints;
-	}
-
-    public static boolean equals(com.github.sanity.pav.Point p1, WPoint2D p2){
-        return Double.compare(p1.getX(), p2.x) == 0 && Double.compare(p1.getY(), p2.y)==0 && Double.valueOf(p1.getWeight()).intValue() == p2.w;
-    }
 
 
     // @Test
@@ -538,60 +462,60 @@ public class TestIsotonicRegressionCalibrator extends TestBase{
         // PAV implementation
 
         // Create PAV points
-        List<com.github.sanity.pav.Point> calibrationPoints = new ArrayList<>();
-        for (Point2D p : originalPoints){
-            calibrationPoints.add(new com.github.sanity.pav.Point(p.x,p.y));
-        }
-        Assert.assertEquals(440, calibrationPoints.size());
+        // List<com.github.sanity.pav.Point> calibrationPoints = new ArrayList<>();
+        // for (Point2D p : originalPoints){
+        //     calibrationPoints.add(new com.github.sanity.pav.Point(p.x,p.y));
+        // }
+        // Assert.assertEquals(440, calibrationPoints.size());
 
-        // time it
-        sw.start();
-        List<Pair<Double,Double>> p0p1_scoresKnown_PAV = new ArrayList<>();
-        for (double s: testScoresKnown){
-            p0p1_scoresKnown_PAV.add(pavCalibrate(calibrationPoints, s));
-        }
+        // // time it
+        // sw.start();
+        // List<Pair<Double,Double>> p0p1_scoresKnown_PAV = new ArrayList<>();
+        // for (double s: testScoresKnown){
+        //     p0p1_scoresKnown_PAV.add(pavCalibrate(calibrationPoints, s));
+        // }
         
-        List<Pair<Double,Double>> p0p1_scoresNew_PAV = new ArrayList<>();
-        for (double s : testScoresNew){
-            p0p1_scoresNew_PAV.add(pavCalibrate(calibrationPoints, s));
-        }
+        // List<Pair<Double,Double>> p0p1_scoresNew_PAV = new ArrayList<>();
+        // for (double s : testScoresNew){
+        //     p0p1_scoresNew_PAV.add(pavCalibrate(calibrationPoints, s));
+        // }
 
-        sw.stop();
-        System.out.println("Finished PAV in: " + sw);
+        // sw.stop();
+        // System.out.println("Finished PAV in: " + sw);
 
-        // Apparently the PAV algorithm has some issues with the calibration! good that we replaced it
-        System.err.println("num fails: " + countsFails(p0p1_scoresNew_PAV));
-        System.err.println("num fails: " + countsFails(p0p1_scoresKnown_PAV));
+        // // Apparently the PAV algorithm has some issues with the calibration! good that we replaced it
+        // System.err.println("num fails: " + countsFails(p0p1_scoresNew_PAV));
+        // System.err.println("num fails: " + countsFails(p0p1_scoresKnown_PAV));
 
-        // So the old PAV implementation had issues, we cannot check that the result is identical - cause it was wrong!
-        // Assert.assertEquals(p0p1_scoresNew_PAV, p0p1_scoresNew);
-        // Assert.assertEquals(p0p1_scoresKnown_PAV, p0p1_scoresKnown);
+        // // So the old PAV implementation had issues, we cannot check that the result is identical - cause it was wrong!
+        // // Assert.assertEquals(p0p1_scoresNew_PAV, p0p1_scoresNew);
+        // // Assert.assertEquals(p0p1_scoresKnown_PAV, p0p1_scoresKnown);
 
-        // instead look that it is somewhat close
-        assertEquals(p0p1_scoresKnown_PAV, p0p1_scoresKnown);
-        assertEquals(p0p1_scoresNew_PAV, p0p1_scoresNew);
+        // // instead look that it is somewhat close
+        // assertEquals(p0p1_scoresKnown_PAV, p0p1_scoresKnown);
+        // assertEquals(p0p1_scoresNew_PAV, p0p1_scoresNew);
 
         // printLogs();
 
     }
 
-    private static final double ALLOWED_DIFF = 0.03;
-    private static void assertEquals(List<Pair<Double,Double>> pav, List<Pair<Double,Double>> fast){
-        int numOffenders = 0;
-        for (int i = 0; i<pav.size(); i++){
-            // P0
-            if (Math.abs(pav.get(0).getLeft() - fast.get(0).getLeft())> ALLOWED_DIFF){
-                numOffenders ++;
-            }
-            // P1
-            if (Math.abs(pav.get(0).getRight() - fast.get(0).getRight())> ALLOWED_DIFF){
-                numOffenders ++;
-            }
+    // private static final double ALLOWED_DIFF = 0.03;
+    // private static void assertEquals(List<Pair<Double,Double>> pav, List<Pair<Double,Double>> fast){
+    //     int numOffenders = 0;
+    //     for (int i = 0; i<pav.size(); i++){
+    //         // P0
+    //         if (Math.abs(pav.get(0).getLeft() - fast.get(0).getLeft())> ALLOWED_DIFF){
+    //             numOffenders ++;
+    //         }
+    //         // P1
+    //         if (Math.abs(pav.get(0).getRight() - fast.get(0).getRight())> ALLOWED_DIFF){
+    //             numOffenders ++;
+    //         }
 
-        }
-        System.err.println("NUM ERRS: " + numOffenders);
-        Assert.assertTrue(numOffenders < .05*pav.size());
-    }
+    //     }
+    //     System.err.println("NUM ERRS: " + numOffenders);
+    //     Assert.assertTrue(numOffenders < .05*pav.size());
+    // }
 
     private static int countsFails(Collection<Pair<Double,Double>> list){
         int numFails = 0;
@@ -603,23 +527,23 @@ public class TestIsotonicRegressionCalibrator extends TestBase{
     }
 
 
-    private static Pair<Double,Double> pavCalibrate(List<com.github.sanity.pav.Point> calibrationPoints, double s){
-        // Fit isotonic regression using first hypothetical label
-        calibrationPoints.add(new com.github.sanity.pav.Point(s, 0d));
-        PairAdjacentViolators pavLabel0 = new PairAdjacentViolators(calibrationPoints);
-        final Function1<Double, Double> interpolatorLabel0 = pavLabel0.interpolator();
-        double p0 = interpolatorLabel0.invoke(s); //MathUtils.truncate(interpolatorLabel0.invoke(score), 0d, 1d);
-        calibrationPoints.remove(calibrationPoints.size()-1); // remove the added example
-        //			printCalibPoints();
+    // private static Pair<Double,Double> pavCalibrate(List<com.github.sanity.pav.Point> calibrationPoints, double s){
+    //     // Fit isotonic regression using first hypothetical label
+    //     calibrationPoints.add(new com.github.sanity.pav.Point(s, 0d));
+    //     PairAdjacentViolators pavLabel0 = new PairAdjacentViolators(calibrationPoints);
+    //     final Function1<Double, Double> interpolatorLabel0 = pavLabel0.interpolator();
+    //     double p0 = interpolatorLabel0.invoke(s); //MathUtils.truncate(interpolatorLabel0.invoke(score), 0d, 1d);
+    //     calibrationPoints.remove(calibrationPoints.size()-1); // remove the added example
+    //     //			printCalibPoints();
 
-        // Fit isotonic regression using second hypothetical label
-        calibrationPoints.add(new com.github.sanity.pav.Point(s, 1d)); 
-        PairAdjacentViolators pavLabel1 = new PairAdjacentViolators(calibrationPoints);
-        final Function1<Double, Double> interpolatorLabel1 = pavLabel1.interpolator();
-        double p1 = interpolatorLabel1.invoke(s); //MathUtils.truncate(interpolatorLabel1.invoke(score), 0d, 1d);
-        calibrationPoints.remove(calibrationPoints.size()-1); // remove the added example
+    //     // Fit isotonic regression using second hypothetical label
+    //     calibrationPoints.add(new com.github.sanity.pav.Point(s, 1d)); 
+    //     PairAdjacentViolators pavLabel1 = new PairAdjacentViolators(calibrationPoints);
+    //     final Function1<Double, Double> interpolatorLabel1 = pavLabel1.interpolator();
+    //     double p1 = interpolatorLabel1.invoke(s); //MathUtils.truncate(interpolatorLabel1.invoke(score), 0d, 1d);
+    //     calibrationPoints.remove(calibrationPoints.size()-1); // remove the added example
         
-        return Pair.of(p0, p1);
-    }
+    //     return Pair.of(p0, p1);
+    // }
     
 }

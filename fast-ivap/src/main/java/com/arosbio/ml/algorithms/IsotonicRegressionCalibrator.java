@@ -218,6 +218,10 @@ public class IsotonicRegressionCalibrator {
         return new IsotonicRegressionCalibrator(copy);
     }
 
+    /**
+     * Get the cleaned calibration points (i.e. sorted and merged the ones with identical scores)
+     * @return cleaned calibration points
+     */
     public List<WPoint2D> getCalibrationPoints(){
         return calibrationPoints;
     }

@@ -10,7 +10,9 @@
 package com.arosbio.ml.vap;
 
 import java.util.Iterator;
+import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -47,6 +49,15 @@ public class TestIVAPClassification extends TestEnv {
 
 		
 		System.out.println(systemOutRule.getLog());
+
+		int numP0gtP1 = 0;
+		for (DataRecord r : splits[0]){
+			Map<Integer,Pair<Double,Double>> pred = ivap.predict(r.getFeatures());
+			Pair<Double,Double> p0p1 = pred.get(0);
+			if (p0p1.getLeft() > p0p1.getRight())
+				numP0gtP1++;
+		}
+		Assert.assertEquals(0,numP0gtP1);
 	}
 	
 	@Test
@@ -63,5 +74,7 @@ public class TestIVAPClassification extends TestEnv {
 		}
 		
 	}
+
+	
 	
 }

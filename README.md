@@ -56,7 +56,7 @@ This build is triggered by adding the profile `fatjar` by running;
 ```
 mvn package -P fatjar
 ```
-from either the parent or the [cpsign](cpsign/README.md) project. Note that this only applies to the cpsign project - this profile has no effect in any of the other projects. This build also makes the jar an "really executable jar" - i.e. on linux systems you can run the application using `./cpsign-{version}-uber.jar` typ calling.
+from either the parent or the [cpsign](cpsign/README.md) project. Note that this only applies to the cpsign project - this profile has no effect in any of the other projects. This build also makes the jar an "really executable jar" - i.e. on linux systems you can run the application using `./cpsign-{version}-fatjar.jar` typ calling.
 
 __Note:__ As there is a dependence between the projects you may need to use `mvn install` instead of the `package` goal, for the "earlier" projects to be available to latter ones in the hierarchy. 
 
@@ -73,4 +73,4 @@ mvn javadoc:aggregate
 you can also alter the doc title by adding the argument `-Ddoctitle='cpsign bundle javadoc'` (or change the name to your liking) to not get the default "Parent {version} API" title. Note that this command must be executed from the parent "aggregator project".
 
 ## Future work
-- [ ] Implement isotonic regression in a Java project, to replace the [pairAdjacentViolators](https://github.com/sanity/pairAdjacentViolators) dependency which also require bundling in Kotlin standard lib - leading to an increased memory footprint of the jars.
+- [x] Implement isotonic regression in a Java project, to replace the [pairAdjacentViolators](https://github.com/sanity/pairAdjacentViolators) dependency which also require bundling in Kotlin standard lib - leading to an increased memory footprint of the jars.

@@ -10,12 +10,8 @@
 package com.arosbio.ml.vap;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -26,7 +22,6 @@ import com.arosbio.commons.logging.LoggerUtils;
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.Dataset.SubSet;
-import com.arosbio.data.FeatureVector;
 import com.arosbio.data.SparseFeature;
 import com.arosbio.ml.algorithms.svm.C_SVC;
 import com.arosbio.ml.algorithms.svm.LinearSVC;
@@ -38,16 +33,11 @@ import com.arosbio.ml.sampling.RandomSampling;
 import com.arosbio.ml.testing.utils.EvaluationUtils;
 import com.arosbio.ml.vap.avap.AVAPClassifier;
 import com.arosbio.ml.vap.avap.CVAPPrediction;
-import com.arosbio.ml.vap.ivap.IVAPClassifier;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.PerformanceTest;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.testutils.TestDataLoader;
 import com.arosbio.testutils.TestEnv;
-import com.github.sanity.pav.PairAdjacentViolators;
-import com.github.sanity.pav.Point;
-
-import kotlin.jvm.functions.Function1;
 
 @Category(UnitTest.class)
 public class TestCVAPClassification extends TestEnv {
@@ -97,87 +87,6 @@ public class TestCVAPClassification extends TestEnv {
 		
 		CVAPPrediction<?> res = cvap.predict(testRec.getFeatures());
 		System.err.println(res);
-	}
-
-//	@Test
-	public void printCalibrationCurve() throws Exception {
-		AVAPClassifier cvap = new AVAPClassifier(new LinearSVC(), new FoldedSampling(10));
-		Dataset sp = TestDataLoader.getInstance().getDataset(true, false);
-		
-		// sp.initializeDescriptors();
-		// sp.add(new SDFReader(new FileInputStream(AmesBinaryClass.LARGE_FILE_PATH)), AmesBinaryClass.PROPERTY, new NamedLabels(AmesBinaryClass.AMES_LABELS));
-//		sp.fromChemFile(getURIFromFullPath(LARGE_FILE_PATH), PROPERTY, AMES_LABELS);
-
-		FeatureVector testEx = sp.getDataset().remove(0).getFeatures();
-
-		cvap.train(sp);
-
-		IVAPClassifier ivap = cvap.getModels().get(1);
-		List<Point> calibrationPoints = ivap.getCalibrationPoints();
-
-		double score = ivap.getScoringAlgorithm().predictScores(testEx).get(ivap.getScoringAlgorithm().getLabels().get(0)); 
-
-		// Fit isotonic regression using first hypothetical label
-		calibrationPoints.add(new Point(score, 0d)); //(double)labels[0]));
-		PairAdjacentViolators pavLabel0 = new PairAdjacentViolators(calibrationPoints);
-		final Function1<Double, Double> interpolatorLabel0 = pavLabel0.interpolator();
-		//				double p0 = MathUtils.truncate(interpolatorLabel0.invoke(score), 0d, 1d);
-
-		List<Point> scoresF0 = calibrationPoints.stream().map(new Function<Point, Point>() {
-
-			@Override
-			public Point apply(Point t) {
-				return new Point(t.getX(), MathUtils.truncate(interpolatorLabel0.invoke(t.getX()), 0, 1));
-			}
-		}).collect(Collectors.toList());
-		calibrationPoints.remove(calibrationPoints.size()-1); // remove the added example
-
-		Collections.sort(scoresF0, new Comparator<Point>() {
-
-			@Override
-			public int compare(Point o1, Point o2) {
-				if (o1.getX() > o2.getX())
-					return 1;
-				else if (o1.getX() < o2.getX())
-					return -1;
-				return 0;
-			}
-
-		});
-		for (Point p: scoresF0) {
-			SYS_OUT.println(p.getX() + "\t" + p.getY());
-		}
-
-
-		// Fit isotonic regression using second hypothetical label
-		calibrationPoints.add(new Point(score, 1d)); //(double)labels[1]));
-		PairAdjacentViolators pavLabel1 = new PairAdjacentViolators(calibrationPoints);
-		final Function1<Double, Double> interpolatorLabel1 = pavLabel1.interpolator();
-
-		List<Point> scoresF1 = calibrationPoints.stream().map(new Function<Point, Point>() {
-
-			@Override
-			public Point apply(Point t) {
-				return new Point(t.getX(), MathUtils.truncate(interpolatorLabel1.invoke(t.getX()), 0, 1));
-			}
-		}).collect(Collectors.toList());
-
-
-		Collections.sort(scoresF1, new Comparator<Point>() {
-
-			@Override
-			public int compare(Point o1, Point o2) {
-				if (o1.getX() > o2.getX())
-					return 1;
-				else if (o1.getX() < o2.getX())
-					return -1;
-				return 0;
-			}
-
-		});
-		for (Point p: scoresF1) {
-			SYS_ERR.println(p.getX() + "\t" + p.getY());
-		}
 	}
 
 	@Test

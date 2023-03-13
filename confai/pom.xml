@@ -155,11 +155,6 @@
 			<artifactId>json-simple</artifactId>
 		</dependency>
 
-		<dependency> <!-- TODO remove in future? -->
-			<groupId>com.github.sanity</groupId>
-			<artifactId>pairAdjacentViolators</artifactId>
-		</dependency>
-
 		<dependency>
 			<groupId>tw.edu.ntu.csie</groupId>
 			<artifactId>libsvm</artifactId>
@@ -168,6 +163,12 @@
 		<dependency>
 			<groupId>de.bwaldvogel</groupId>
 			<artifactId>liblinear</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>com.arosbio</groupId>
+			<artifactId>fast-ivap</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 
 		<dependency>
