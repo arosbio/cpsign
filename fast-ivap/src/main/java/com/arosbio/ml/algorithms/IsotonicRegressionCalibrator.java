@@ -18,10 +18,26 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang3.tuple.Pair;
+
+/**
+ * This project include an implementation of the isotonic regression algorithm described in 
+ * Vovk, V., Petej, I., & Fedorova, V. (2015, November). Large-scale probabilistic prediction with and without validity guarantees. In Proceedings of NIPS (Vol. 2015).
+ * 
+ * This algorithm relies on pre-computing the isotonic regression for all possible scores <i>s</i> and for both possible class labels ({@code 0} and {@code 1}). 
+ * Those precomputed values are then stored in a binary search tree which give back the {@code p0} and {@code p1} values (i.e. the multi-probability for both 
+ * of the possible labels, {@code y=0} and {@code y=1}, of the test-object). For further details we refer to the paper and the algorithms presented in the referenced paper.
+ * 
+ * @see http://alrw.net/articles/13.pdf
+ * @see https://github.com/ptocca/VennABERS
+ */
 public class IsotonicRegressionCalibrator {
 
     protected static boolean DEBUG_MODE = false;
 
+    /**
+     * A point in 2D, with a x (the score to calibrate) vs the y (i.e. 0 or 1 for binary class labels)
+     */
     public static class Point2D implements Comparable<Point2D> {
         public final double x,y;
         
@@ -68,6 +84,9 @@ public class IsotonicRegressionCalibrator {
         }
     }
 
+    /**
+     * A Point in 2D with a weight, i.e. when merging several points with the same x/score value.
+     */
     public static class WPoint2D extends Point2D {
         public final double w;
 
@@ -108,7 +127,11 @@ public class IsotonicRegressionCalibrator {
         }
     }
 
-    
+    /* 
+     * =======================================================
+     * Utility methods for the algorithms
+     * =======================================================
+     */
 
     private static <E> E nextToTop(Stack<E> s){
         return s.elementAt(s.size()-2);
@@ -136,11 +159,19 @@ public class IsotonicRegressionCalibrator {
         return Point2D.cross(d1, d2) >= 0;
     }
 
+    private static WPoint2D toWeighted(Point2D p ){
+        if (p instanceof WPoint2D){
+            return new WPoint2D((WPoint2D)p);
+        }
+        return new WPoint2D(p);
+    }
 
 
 
     /** Holds the list of unique and sorted calibration values */
     private List<WPoint2D> calibrationPoints;
+    /** Holds the precomputed f0 and f1 values */
+    private BST scores;
 
     // For testing purposes
     protected Stack<Point2D> firstStack, secondStack;
@@ -153,17 +184,22 @@ public class IsotonicRegressionCalibrator {
         fit();
     }
 
+    /**
+     * Create an {@code IsotonicRegressionCalibrator} based on sorted and 'cleaned' points,
+     * e.g. when fitting from a previously trained model.
+     * @return a fitted {@link IsotonicRegressionCalibrator instance
+     */
     public static IsotonicRegressionCalibrator fitFromClean(List<WPoint2D> points){
         return new IsotonicRegressionCalibrator(points);
     }
 
-    private static WPoint2D toWeighted(Point2D p ){
-        if (p instanceof WPoint2D){
-            return new WPoint2D((WPoint2D)p);
-        }
-        return new WPoint2D(p);
-    }
-
+    /**
+     * Create an {@code IsotonicRegressionCalibrator} based on raw calibration points,
+     * which does not assume the points are sorted and merged for identical scores
+     * @param <P> The type of the input
+     * @param points calibration scores
+     * @return a fitted {@link IsotonicRegressionCalibrator instance
+     */
     public static <P extends Point2D> IsotonicRegressionCalibrator fitFromRaw(List<P> points){
         // Create a copy and sort the list
         List<WPoint2D> copy = points.stream().map(p -> toWeighted(p))
@@ -172,8 +208,7 @@ public class IsotonicRegressionCalibrator {
         Collections.sort(copy);
 
         // Merge points with identical scores
-        int i = 0;
-        for (i=0; i<copy.size()-1; i++){
+        for (int i = 0; i<copy.size()-1; i++){
             if (copy.get(i).equalX(copy.get(i+1))){
                 copy.set(i, WPoint2D.merge(copy.get(i),copy.remove(i+1)));
                 i--; // Re-do current index
@@ -219,8 +254,7 @@ public class IsotonicRegressionCalibrator {
         if (DEBUG_MODE)
             F0 = f0.clone();
 
-        // TODO - Set up BST for predictions
-
+        this.scores = BST.build(f0, f1, calibrationPoints, kPrime);
     }
 
     private Map<Integer,Point2D> getCSD(){
@@ -243,7 +277,6 @@ public class IsotonicRegressionCalibrator {
         s.push(csd.get(-1));
         s.push(csd.get(0));
 
-        // Go through all the points in the calibration set
         for (int i = 1; i <= kPrime; i++){
             while (s.size()>1 && nonleftTurn(nextToTop(s), s.peek(),csd.get(i))){
                 s.pop();
@@ -263,7 +296,8 @@ public class IsotonicRegressionCalibrator {
             sPrime.push(s.pop());
         }
 
-        double[] F1 = new double[kPrime+1]; // First index i=0 will not be used
+        double[] F1 = new double[kPrime+2]; // First index i=0 will not be used, k'+1 = 1
+        F1[kPrime+1] = 1; // k'+1 = 1 as defined in the paper
         for (int i=1; i<=kPrime; i++){
             F1[i] = slope(sPrime.peek(), nextToTop(sPrime));
             csd.put(i-1, csd.get(i-2).add(csd.get(i)).subtract(csd.get(i-1)));
@@ -284,14 +318,12 @@ public class IsotonicRegressionCalibrator {
         return F1;
     }
 
-
+    // Algorithm 3
     private Stack<Point2D> computeCornersF0(Map<Integer, Point2D> csd, int kPrime){
         Stack<Point2D> s = new Stack<>();
         s.push(csd.get(kPrime+1));
         s.push(csd.get(kPrime));
 
-        // System.err.println("csd-size: " + csd.size() + " vs kPrime: " + kPrime);
-        // Go through all the points in the calibration set
         for (int i = kPrime-1; i >=0; i--){
             while (s.size()>1 && nonrightTurn(nextToTop(s), s.peek(),csd.get(i))){
                 s.pop();
@@ -301,6 +333,7 @@ public class IsotonicRegressionCalibrator {
         return s;
     }
 
+    // Algorithm 4
     private double[] computeF0(Stack<Point2D> s, Map<Integer,Point2D> csd, int kPrime){
         // Reverse the stack
         Stack<Point2D> sPrime = new Stack<>();
@@ -308,12 +341,11 @@ public class IsotonicRegressionCalibrator {
             sPrime.push(s.pop());
         }
 
-        double[] F0 = new double[kPrime+2]; // First index i=0 will not be used
-        F0[kPrime+1] = 1; // as defined in the paper
+        double[] F0 = new double[kPrime+1]; // First index i=0 will not be used
         for (int i=kPrime; i>0; i--){
-            F0[i] = slope(sPrime.peek(), nextToTop(sPrime));
+            F0[i] = Math.abs(slope(sPrime.peek(), nextToTop(sPrime)));
             
-            csd.put(i, csd.get(i-i).add(csd.get(i+1)).subtract(csd.get(i)));
+            csd.put(i, csd.get(i-1).add(csd.get(i+1)).subtract(csd.get(i)));
             
             if (atOrAbove(csd.get(i), sPrime.peek(),nextToTop(sPrime))){
                 continue;
@@ -328,6 +360,96 @@ public class IsotonicRegressionCalibrator {
             sPrime.push(csd.get(i));
         }
         return F0;
+    }
+
+    public Pair<Double,Double> calibrate(double score){
+        return scores.search(score);
+    }
+
+    protected static class BST {
+
+        static class Node {
+            private Node left, right;
+            public Pair<Double,Double> payload;
+            public double key;
+
+            private Node(){}
+            public Node(double key){
+                this.key = key;
+            }
+
+            public static Node leaf(Pair<Double,Double> payload){
+                return new Node().payload(payload);
+            }
+
+            public static Node leaf(double v1, double v2){
+                return leaf(Pair.of(v1, v2));
+            }
+
+            public Node payload(Pair<Double,Double> payload){
+                this.payload = payload;
+                return this;
+            }
+            public Node left(Node left){
+                this.left = left;
+                return this;
+            }
+            public Node right(Node right){
+                this.right = right;
+                return this;
+            }
+
+            public boolean isLeaf(){
+                return left == null && right == null;
+            }
+        }
+
+        private Node root;
+
+        public Pair<Double,Double> search(double score){
+            Node n = root;
+
+            while (! n.isLeaf()){
+                if ( score < n.key){
+                    n = n.left;
+                } else if (score > n.key){
+                    n = n.right;
+                } else {
+                    return n.payload;
+                }
+            }
+            return n.payload;
+        }
+
+        public static BST build(double[]f0, double[]f1, List<WPoint2D> calibrationScores, int kPrime){
+            BST tree = new BST();
+            tree.root = setupTree(f0, f1, calibrationScores, 1, kPrime);
+            return tree;
+        }
+
+        private static Node setupTree(double[]f0, double[]f1, List<WPoint2D> calibrationScores, int a, int b){
+            if (a == b){
+                return new Node(calibrationScores.get(a-1).x)
+                    .payload(Pair.of(f0[a],f1[a]))
+                    .left(Node.leaf(Pair.of(f0[a-1],f1[a])))
+                    .right(Node.leaf(Pair.of(f0[a],f1[a+1])));
+            } else if (b == a+1){
+                Node r = new Node(calibrationScores.get(a-1).x)
+                    .payload(Pair.of(f0[a],f1[a]))
+                    .left(Node.leaf(Pair.of(f0[a], f1[a])));
+                r.right = setupTree(f0, f1, calibrationScores, b, b);
+                return r;
+            } else {
+                int c = (a+b)/2;
+                Node r = new Node(calibrationScores.get(c-1).x)
+                    .payload(Pair.of(f0[c],f1[c]));
+                r.left = setupTree(f0, f1, calibrationScores, a, c-1);
+                r.right = setupTree(f0, f1, calibrationScores, c+1, b);
+                return r;
+            }
+        }
+
+        
     }
     
 }

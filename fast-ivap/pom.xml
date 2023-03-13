@@ -89,10 +89,10 @@
   	</build>
 
   	<dependencies>
-		<!-- LOGGING -->
+
 		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
 		</dependency>
 
 		<dependency> <!-- TODO remove in future? -->
