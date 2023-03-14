@@ -548,7 +548,7 @@ public class TestACPClassification extends CLIBaseTest {
 		List<String> originalHeaders = null;
 		try(InputStream is = solu_multi_col.url().openStream();
 			InputStreamReader reader = new InputStreamReader(is);
-			CSVParser p = CSVFormat.DEFAULT.withDelimiter(solu_multi_col.delim()).withFirstRecordAsHeader().parse(reader);
+			CSVParser p = CSVFormat.DEFAULT.builder().setDelimiter(solu_multi_col.delim()).setHeader().setSkipHeaderRecord(true).build().parse(reader); 
 			){
 				Iterator<CSVRecord> recs = p.iterator();
 				recs.next(); // read first to get the header
@@ -571,7 +571,8 @@ public class TestACPClassification extends CLIBaseTest {
 		// SYS_ERR.println(FileUtils.readFileToString(predOut, StandardCharsets.UTF_8));
 		try(InputStream is = new FileInputStream(predOut);
 		InputStreamReader reader = new InputStreamReader(is);
-		CSVParser p = CSVFormat.DEFAULT.withDelimiter('\t').withFirstRecordAsHeader().parse(reader);){
+		CSVParser p = CSVFormat.DEFAULT.builder().setDelimiter('\t').setHeader().setSkipHeaderRecord(
+			true).build().parse(reader);){
 			
 			List<String> predHeaders = p.getHeaderNames();
 			// System.err.println("predHeaders: " + predHeaders);

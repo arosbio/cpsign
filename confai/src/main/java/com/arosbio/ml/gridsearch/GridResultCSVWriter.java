@@ -241,29 +241,5 @@ public class GridResultCSVWriter implements AutoCloseable {
 			printer.close(true);
 
 	}
-
-//	TODO - remove
-//	// Here check the map of the optimization metric and the secondary metrics
-//	for (Map.Entry<String, ?> nameScore : res.getOptimizationMetric().asMap().entrySet()) {
-//		if (h.equals(nameScore.getKey())) {
-//			if (nameScore.getValue() instanceof Double || nameScore.getValue() instanceof Float) {
-//				record.add(MathUtils.roundToNSignificantFigures(TypeUtils.asDouble(nameScore.getValue()),NUM_SIGNIFICANT_FIGURES));
-//				continue; // Found it - process next header
-//			}
-//		}
-//	}
-//
-//	//				else if (h.equals(res.getOptimizationMetric().getName())) { 
-//	//					record.add(roundedScore);
-//	//				} 
-//
-//	boolean foundRec = false;
-//	for (SingleValuedMetric m: res.getSecondaryMetrics()) {
-//		if (m.getName().startsWith(h)) { // TODO - this can be error-prone, e.g. if multiple ones with different confidence is supplied..
-//			record.add(MathUtils.roundToNSignificantFigures(m.getScore(), NUM_SIGNIFICANT_FIGURES));
-//			foundRec=true;
-//			break;
-//		}
-//	}
 	
 }

@@ -195,7 +195,7 @@ public class TestAggregate extends CLIBaseTest{
 		sigacp = new ChemCPClassifier(new ACPClassifier(
 				new ICPClassifier(new NegativeDistanceToHyperplaneNCM(DEFAULT_LibLinear? new LinearSVC() : new C_SVC())), 
 				new RandomSampling(NUM_MODELS_TOTAL, CALIBRATION_RATIO)));
-		sigacp.addRecords(new CSVChemFileReader(CSVFormat.TDF.withHeader(), new InputStreamReader(classData_2.url().openStream())), classData_2.property(), new NamedLabels(new ArrayList<>(labelsDiff.values())));
+		sigacp.addRecords(new CSVChemFileReader(CSVFormat.TDF.builder().setHeader().build(), new InputStreamReader(classData_2.url().openStream())), classData_2.property(), new NamedLabels(new ArrayList<>(labelsDiff.values())));
 		sigacp.setLabels(correctMapping); // set "correct labels"
 		ModelSerializer.saveDataset(sigacp, precompClass_diff_sigs, null);
 		sigacp.train(); 
@@ -211,7 +211,7 @@ public class TestAggregate extends CLIBaseTest{
 				new ICPRegressor(new NormalizedNCM((DEFAULT_LibLinear? 
 				new LinearSVR(): new EpsilonSVR()))), 
 				new RandomSampling(NUM_MODELS_TOTAL, CALIBRATION_RATIO)));
-		acpreg.addRecords(new CSVChemFileReader(CSVFormat.TDF.withHeader(), new InputStreamReader(regData_1.url().openStream())), regData_1.property());
+		acpreg.addRecords(new CSVChemFileReader(CSVFormat.TDF.builder().setHeader().build(), new InputStreamReader(regData_1.url().openStream())), regData_1.property());
 		ModelSerializer.saveDataset(acpreg, precompReg1, null); 
 		ModelSerializer.saveDataset(acpreg, precompReg_diff_encr, faultySpec); 
 	
@@ -233,7 +233,7 @@ public class TestAggregate extends CLIBaseTest{
 						new LinearSVR(): new EpsilonSVR()))), 
 				new RandomSampling(NUM_MODELS_TOTAL, CALIBRATION_RATIO)));
 		acpreg2.setDataset(spReg);
-		acpreg2.addRecords(new CSVChemFileReader(CSVFormat.TDF.withHeader(), new InputStreamReader(regData_1.url().openStream())), regData_1.property());
+		acpreg2.addRecords(new CSVChemFileReader(CSVFormat.TDF.builder().setHeader().build(), new InputStreamReader(regData_1.url().openStream())), regData_1.property());
 		ModelSerializer.saveDataset(acpreg2, precompReg2, null); 
 		
 		acpreg2.getDataset().setDescriptors(new SignaturesDescriptor()); 

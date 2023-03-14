@@ -207,8 +207,8 @@ public class TestTuneScorer extends CLIBaseTest {
 			Assert.fail();
 		}
 
-		try (CSVParser p1 = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(new FileReader(resFile1));
-			 CSVParser p2 = CSVFormat.DEFAULT.withFirstRecordAsHeader().parse(new FileReader(resFile1));) {
+		try (CSVParser p1 = CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).build().parse(new FileReader(resFile1));
+			 CSVParser p2 = CSVFormat.DEFAULT.builder().setHeader().setSkipHeaderRecord(true).build().parse(new FileReader(resFile1));) {
 				Assert.assertEquals(p1.getHeaderMap(), p2.getHeaderMap());
 				int lastIndexToCheck = 0;
 				for (String h : p1.getHeaderNames()){

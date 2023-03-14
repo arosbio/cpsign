@@ -56,7 +56,7 @@ public class CSVResultsWriter implements PredictionResultsWriter {
 				inputProperties = CPSignMolProperties.stripInteralProperties(ChemFileParserUtils.findProperties(predictFile));
 				LOGGER.debug("Detected properties {} to put first in CSV output", inputProperties);
 			} catch (IOException e) {
-				LOGGER.debug("Could not parse the predictfile for getting all properties, just using the defaults in output");
+				LOGGER.debug("Could not parse the predict-file for getting all properties, just using the defaults in output");
 				inputProperties = new ArrayList<>();
 			}
 		} else {
@@ -101,7 +101,7 @@ public class CSVResultsWriter implements PredictionResultsWriter {
 		}
 
 		// Set up the CSV Writer
-		csvWriter = new CSVWriter(writer, propNames, CSVFormat.DEFAULT.withDelimiter(delim).withSystemRecordSeparator());
+		csvWriter = new CSVWriter(writer, propNames, CSVFormat.DEFAULT.builder().setDelimiter(delim).setRecordSeparator(System.lineSeparator()).build());
 
 	}
 	

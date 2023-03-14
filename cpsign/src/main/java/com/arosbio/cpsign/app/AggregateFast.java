@@ -341,10 +341,6 @@ public class AggregateFast implements RunnableCmd, SupportsProgressBar {
 				lowPercentiles.add((Double)CollectionUtils.getArbitratyDepth(parametersSection,PropertyNameSettings.LOW_PERCENTILE_KEY));
 				highPercentiles.add((Double)CollectionUtils.getArbitratyDepth(parametersSection,PropertyNameSettings.HIGH_PERCENTILE_KEY));
 
-				// copy plugin.xml
-				//				copyEntryToJar(currentJar, currentJar.getJarEntry(ModelJarProperties.PLUGIN_FILE_NAME));
-				//				logger.debug("copied plugin.xml"); //TODO - update with correct num models later!
-
 				// copy icons
 				copyEverythingInDirectory(currentJar, Directories.ICONS_DIRECTORY+'/');
 				LOGGER.debug("copied icons-directory");

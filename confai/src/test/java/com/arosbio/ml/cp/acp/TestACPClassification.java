@@ -9,7 +9,6 @@
  */
 package com.arosbio.ml.cp.acp;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +17,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.config.Configurable.ConfigParameter;
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.Dataset;
@@ -30,14 +28,8 @@ import com.arosbio.ml.cp.icp.ICPClassifier;
 import com.arosbio.ml.cp.nonconf.classification.InverseProbabilityNCM;
 import com.arosbio.ml.cp.nonconf.classification.NegativeDistanceToHyperplaneNCM;
 import com.arosbio.ml.metrics.Metric;
-import com.arosbio.ml.metrics.MetricFactory;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.metrics.cp.CalibrationPlot;
-import com.arosbio.ml.metrics.cp.classification.CPClassificationCalibrationPlotBuilder;
-import com.arosbio.ml.metrics.cp.classification.CPClassifierMetric;
-import com.arosbio.ml.metrics.cp.classification.MultiLabelPredictionsPlotBuilder;
-import com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder;
-import com.arosbio.ml.metrics.plots.MergedPlot;
 import com.arosbio.ml.metrics.plots.Plot2D;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 import com.arosbio.ml.sampling.RandomSampling;

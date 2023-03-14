@@ -273,7 +273,7 @@ public class TestValidate extends CLIBaseTest{
 		try (
 				InputStream in = regSoluData.url().openStream();
 				InputStreamReader reader = new InputStreamReader(in);
-				CSVChemFileReader iterator = new CSVChemFileReader(CSVFormat.TDF.withFirstRecordAsHeader(), reader);
+				CSVChemFileReader iterator = new CSVChemFileReader(CSVFormat.TDF.builder().setHeader().setSkipHeaderRecord(true).build(), reader);
 						){
 			DescriptorCalcInfo info = ds.add(iterator, regSoluData.property());
 			if (info.getFailedRecords() != null)

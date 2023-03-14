@@ -113,11 +113,12 @@ public class TestDescriptors extends UnitTestBase {
 	@Test
 	public void testUserDefOrder() throws Exception {
 		CSVCmpdData toy_set = TestResources.Reg.getToy_many_cols();
+		CSVFormat format = CSVFormat.DEFAULT.builder().setDelimiter(toy_set.delim()).setHeader().build();
 		// LoggerUtils.setDebugMode(SYS_ERR);
 		UserSuppliedDescriptor desc = new UserSuppliedDescriptor("all", "-#SMILES", "-SAMPLE_ID", "-RESPONSE VALUE");
 		desc.initialize();
 
-		try (CSVChemFileReader smilesReader = new CSVChemFileReader(CSVFormat.DEFAULT.withDelimiter(toy_set.delim()).withHeader(),
+		try (CSVChemFileReader smilesReader = new CSVChemFileReader(format,
 				new InputStreamReader(toy_set.url().openStream()));) {
 			while (smilesReader.hasNext()) {
 				desc.calculateDescriptors(smilesReader.next());
@@ -132,7 +133,9 @@ public class TestDescriptors extends UnitTestBase {
 		desc.setSortingOrder(SortingOrder.ALPHABETICAL);
 		desc.initialize();
 
-		try (CSVChemFileReader smilesReader = new CSVChemFileReader(CSVFormat.DEFAULT.withDelimiter(toy_set.delim()).withHeader(),
+		
+
+		try (CSVChemFileReader smilesReader = new CSVChemFileReader(format,
 				new InputStreamReader(toy_set.url().openStream()));) {
 			while (smilesReader.hasNext()) {
 				desc.calculateDescriptors(smilesReader.next());
@@ -147,7 +150,7 @@ public class TestDescriptors extends UnitTestBase {
 		desc.setSortingOrder(SortingOrder.REVERSE_ALPHABETICAL);
 		desc.initialize();
 
-		try (CSVChemFileReader smilesReader = new CSVChemFileReader(CSVFormat.DEFAULT.withDelimiter(toy_set.delim()).withHeader(),
+		try (CSVChemFileReader smilesReader = new CSVChemFileReader(format,
 				new InputStreamReader(toy_set.url().openStream()));) {
 			while (smilesReader.hasNext()) {
 				desc.calculateDescriptors(smilesReader.next());
