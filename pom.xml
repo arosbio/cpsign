@@ -349,26 +349,13 @@
 
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>${source.plugin.version}</version>
-        <executions>
-          <execution>
-            <id>attach-sources</id>
-            <goals>
-              <goal>jar-no-fork</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <version>${javadoc.plugin.version}</version>
         <configuration>
           <author>false</author>
           <bottom><![CDATA[<i>Copyright &#169; 2022, <a href="https://arosbio.com">Aros Bio AB</a>. All Rights Reserved.</i>]]></bottom>
         </configuration>
+        <!--
         <executions>
           <execution>
             <id>attach-javadocs</id>
@@ -377,34 +364,10 @@
             </goals>
           </execution>
         </executions>
+      -->
       </plugin>
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-gpg-plugin</artifactId>
-        <version>${gpg.plugin.version}</version>
-        <executions>
-          <execution>
-            <id>sign-artifacts</id>
-            <phase>verify</phase>
-            <goals>
-              <goal>sign</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-
-      <plugin>
-        <groupId>org.sonatype.plugins</groupId>
-        <artifactId>nexus-staging-maven-plugin</artifactId>
-        <version>${nexus.staging.plugin.version}</version>
-        <extensions>true</extensions>
-        <configuration>
-           <serverId>ossrh</serverId>
-           <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-           <autoReleaseAfterClose>true</autoReleaseAfterClose>
-        </configuration>
-      </plugin>
+      
 
       <!-- License management: updates the header of source files only 
       Run it using `mvn license:format` -->
@@ -443,5 +406,81 @@ CPSign is an Open Source Software that is dual licensed to allow you to choose a
 
     </plugins>
   </build>
+
+  <profiles>
+    <!-- Profile for deploying to the maven central repo - builds and signs all required artifacts -->
+    <profile>
+      <id>deploy</id>
+      <activation>
+				<activeByDefault>false</activeByDefault>
+			</activation>
+
+      <build>
+				<plugins>
+          <!-- TODO - not sure if we need to specify this again -->
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>${javadoc.plugin.version}</version>
+            <configuration>
+              <author>false</author>
+              <bottom><![CDATA[<i>Copyright &#169; 2022, <a href="https://arosbio.com">Aros Bio AB</a>. All Rights Reserved.</i>]]></bottom>
+            </configuration>
+            <executions>
+              <execution>
+                <id>attach-javadocs</id>
+                <goals>
+                  <goal>jar</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-source-plugin</artifactId>
+            <version>${source.plugin.version}</version>
+            <executions>
+              <execution>
+                <id>attach-sources</id>
+                <goals>
+                  <goal>jar-no-fork</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-gpg-plugin</artifactId>
+            <version>${gpg.plugin.version}</version>
+            <executions>
+              <execution>
+                <id>sign-artifacts</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>sign</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+    
+          <plugin>
+            <groupId>org.sonatype.plugins</groupId>
+            <artifactId>nexus-staging-maven-plugin</artifactId>
+            <version>${nexus.staging.plugin.version}</version>
+            <extensions>true</extensions>
+            <configuration>
+               <serverId>ossrh</serverId>
+               <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+               <autoReleaseAfterClose>true</autoReleaseAfterClose>
+            </configuration>
+          </plugin>
+
+        </plugins>
+      </build>
+
+    </profile>
+  </profiles>
 
 </project>
