@@ -23,8 +23,11 @@
   <name>${project.groupId}:${project.artifactId}</name>
   <packaging>jar</packaging>
   <description>Test utility package, indented for simplication of writing tests in other modules and including test-resources in a single location</description>
+  <properties>
+    <skipNexusStagingDeployMojo>true</skipNexusStagingDeployMojo>
+  </properties>
 
-	<build>
+    <build>
 
         <plugins>
 
