@@ -236,16 +236,17 @@ public class CPSignApp implements IVersionProvider {
 				if (loaded) {
 					cmd.setDefaultValueProvider(new PropertiesDefaultProvider(p));
 				}
-				cmd.setAbbreviatedSubcommandsAllowed(true);
-				cmd.setExitCodeExceptionMapper(new ExitCodeMapper());
-				cmd.setParameterExceptionHandler(new ShortErrorMessageHandler());
-				cmd.setExecutionExceptionHandler(new ExecutionHandler());
-				cmd.setTrimQuotes(true);
+				cmd.setAbbreviatedSubcommandsAllowed(true)
+					.setExitCodeExceptionMapper(new ExitCodeMapper())
+					.setParameterExceptionHandler(new ShortErrorMessageHandler())
+					.setExecutionExceptionHandler(new ExecutionHandler())
+					.setTrimQuotes(true)
+					.setPosixClusteredShortOptionsAllowed(false);
 
-				// Conveters
+				// Converters
 				cmd.registerConverter(URI.class, new URIConverter());
 
-				LOGGER.debug("Running CPSign of version {}",ConfAI.getVersionAsString());
+				LOGGER.debug("Running CPSign of version {}", ConfAI.getVersionAsString());
 				// Execute command
 				status = cmd.execute(args);
 
