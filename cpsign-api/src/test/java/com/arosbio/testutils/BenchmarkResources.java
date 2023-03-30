@@ -21,16 +21,20 @@ public class BenchmarkResources {
 
 
     public static CSVCmpdData getADAM5(){
-        return new CSVCmpdData(getURL(CLF_FOLDER + "ADAMTS5.tsv.gz"), CLF_PROPERTY, '\t', Arrays.asList("active", "inactive")).withGzip(true);
+        return CSVCmpdData.Builder.classification(getURL(CLF_FOLDER + "ADAMTS5.tsv.gz"), CLF_PROPERTY, 268, 0, Arrays.asList("active", "inactive"))
+            .delim('\t').zipped(true).build();
     }
     public static CSVCmpdData getCyclin(){
-        return new CSVCmpdData(getURL(CLF_FOLDER + "Cyclin-dependent_kinase_1.tsv.gz"), CLF_PROPERTY, '\t', Arrays.asList("active", "inactive")).withGzip(true);
+        return CSVCmpdData.Builder.classification(getURL(CLF_FOLDER + "Cyclin-dependent_kinase_1.tsv.gz"), CLF_PROPERTY, 375, 0, Arrays.asList("active", "inactive"))
+            .delim('\t').zipped(true).build();
     }
     public static CSVCmpdData getD_Amino(){
-        return new CSVCmpdData(getURL(CLF_FOLDER + "D-amino-acid_oxidase.tsv.gz"), CLF_PROPERTY, '\t', Arrays.asList("active", "inactive")).withGzip(true);
+        return CSVCmpdData.Builder.classification(getURL(CLF_FOLDER + "D-amino-acid_oxidase.tsv.gz"), CLF_PROPERTY, 398, 0, Arrays.asList("active", "inactive"))
+            .delim('\t').zipped(true).build();
     }
     public static CSVCmpdData getSerine(){
-        return new CSVCmpdData(getURL(CLF_FOLDER + "Serine-threonine-protein_kinase_AKT2.tsv.gz"), CLF_PROPERTY, '\t', Arrays.asList("active", "inactive")).withGzip(true);
+        return CSVCmpdData.Builder.classification(getURL(CLF_FOLDER + "Serine-threonine-protein_kinase_AKT2.tsv.gz"), CLF_PROPERTY,299, 0, Arrays.asList("active", "inactive"))
+            .delim('\t').zipped(true).build();
     }
     
     private static URL getURL(String resourcePath){

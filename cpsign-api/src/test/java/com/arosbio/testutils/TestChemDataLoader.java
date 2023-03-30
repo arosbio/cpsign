@@ -13,10 +13,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
+import org.apache.commons.lang3.tuple.Pair;
+
 import com.arosbio.chem.io.in.CSVFile;
+import com.arosbio.chem.io.in.ChemFileIterator;
 import com.arosbio.chem.io.in.JSONFile;
 import com.arosbio.chem.io.in.SDFile;
 import com.arosbio.cheminf.data.ChemDataset;
+import com.arosbio.cheminf.data.ChemDataset.DescriptorCalcInfo;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.Dataset.SubSet;
 import com.arosbio.data.NamedLabels;
@@ -103,17 +107,34 @@ public class TestChemDataLoader {
 	}
 
 	public static ChemDataset loadDataset(CmpdData data) throws IOException {
+		return loadDatasetWithInfo(data).getLeft();
+	}
+	
+	public static Pair<ChemDataset,DescriptorCalcInfo> loadDatasetWithInfo(CmpdData data)throws IOException {
+		
 		ChemDataset d = new ChemDataset();
 		d.initializeDescriptors();
+		
+		// Get an iterator of the correct type
+		ChemFileIterator molIterator = null;
 		if (data instanceof CSVCmpdData){
-			d.add(new CSVFile(data.uri()).setDelimiter(((CSVCmpdData)data).delim()).getIterator(), data.property(), new NamedLabels(data.labelsStr()));
+			molIterator = new CSVFile(data.uri()).setDelimiter(((CSVCmpdData)data).delim()).getIterator();
 		} else if (data.getFormat() == Format.SDF) {
-			d.add(new SDFile(data.uri()).getIterator(),data.property(), new NamedLabels(data.labelsStr()));
+			molIterator = new SDFile(data.uri()).getIterator();
 		} else {
 			// JSON left
-			d.add(new JSONFile(data.uri()).getIterator(), data.property(), new NamedLabels(data.labelsStr()));
+			molIterator = new JSONFile(data.uri()).getIterator();
 		}
-		return d;
+
+		// Load it
+		DescriptorCalcInfo info = null;
+		if (data.isClassification()){
+			info = d.add(molIterator, data.property(), new NamedLabels(data.labelsStr()));
+		} else {
+			info = d.add(molIterator, data.property());
+		}
+
+		return Pair.of(d,info);
 	}
 	
 	public static interface PreTrainedModels {

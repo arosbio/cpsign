@@ -85,26 +85,72 @@ public class TestResources {
 			}
 		}
 
-		URL url;
-		Format fmt;
-		String property;
-		List<?> labels;
-		boolean isCompressed=false;
-		
-		public CmpdData(URL url, Format format, String property){
-			this.url = url;
-			this.fmt = format;
-			this.property = property;
+		final URL url;
+		final Format fmt;
+		final String property;
+		final List<?> labels;
+		final boolean isCompressed;
+		final int numValidRecords;
+		final int numInvalidRecords;
+		final boolean isRegression;
+		final boolean isClassification;
+
+		public static class Builder<T extends Builder<T>> {
+
+			URL url;
+			Format fmt;
+			String property;
+			List<?> labels = null;
+			boolean isCompressed = false;
+			int numValidRecords;
+			int numInvalidRecords;
+			final boolean isRegression;
+			final boolean isClassification;
+
+			@SuppressWarnings("unchecked")
+			private T getThis(){
+				return (T) this;
+			}
+
+			private Builder(URL url, Format format, String property, int nValid, int nInvalid, List<?> labels, boolean isClassification, boolean isRegression){
+				this.url = url;
+				this.fmt = format;
+				this.property = property;
+				this.labels = labels;
+				this.numValidRecords = nValid;
+				this.numInvalidRecords = nInvalid;
+				this.isClassification = isClassification;
+				this.isRegression = isRegression;
+			}
+
+			public static Builder<?> classification(URL url, Format format, String property, int nValid, int nInvalid, List<?> labels){
+				return new Builder<>(url, format, property, nValid, nInvalid, labels, true, false);
+			}
+
+			public static Builder<?> regression(URL url, Format format, String property, int nValid, int nInvalid){
+				return new Builder<>(url, format, property, nValid, nInvalid, null, false, true);
+			}
+
+			public T zipped(boolean isCompressed){
+				this.isCompressed = isCompressed;
+				return getThis();
+			}
+
+			public CmpdData build(){
+				return new CmpdData(this);
+			}
 		}
 
-		public CmpdData(URL url, Format format, String property, List<?> labels){
-			this(url, format, property);
-			this.labels = labels;
-		}
-
-		public CmpdData withGzip(boolean isCompressed){
-			this.isCompressed=isCompressed;
-			return this;
+		private CmpdData(Builder<?> b){
+            this.url = b.url;
+			this.fmt = b.fmt;
+			this.property = b.property;
+			this.numValidRecords = b.numValidRecords;
+			this.numInvalidRecords = b.numInvalidRecords;
+			this.labels = b.labels;
+			this.isRegression = b.isRegression;
+			this.isClassification = b.isClassification;
+			this.isCompressed = b.isCompressed;
 		}
 
 		public boolean isZipped(){
@@ -144,30 +190,74 @@ public class TestResources {
 		}
 
 		public List<String> labelsStr(){
+			if (labels == null)
+				return null;
 			return labels.stream().map(Object::toString).collect(Collectors.toList());
+		}
+
+		public boolean isClassification(){
+			return isClassification;
+		}
+		public boolean isRegression(){
+			return isRegression;
+		}
+
+		public int numValidRecords(){
+			return numValidRecords;
+		}
+
+		public int numInvalidRecords(){
+			return numInvalidRecords;
+		}
+
+		public String toString(){
+			return String.format("%s: [%s], reg=%b, clf=%b", url.getFile(),fmt.fmt, isRegression,isClassification);
 		}
 
 	}
 
 	public static class CSVCmpdData extends CmpdData {
 
-		char delim;
+		final char delim;
 
-		public CSVCmpdData(URL url, String property, char delim){
-			super(url, Format.CSV, property);
-			this.delim = delim;
+		public static class Builder extends CmpdData.Builder<Builder> {
+
+			private char delim;
+
+			private Builder getThis(){
+				return this;
+			}
+
+			private Builder(URL url, String property, int nValid, int nInvalid, List<?> labels, boolean isClassification, boolean isRegression){
+				super(url,Format.CSV, property, nValid, nInvalid, labels, isClassification, isRegression);
+			}
+
+			public static Builder classification(URL url, String property, int nValid, int nInvalid, List<?> labels){
+				return new Builder(url, property, nValid, nInvalid, labels, true, false);
+			}
+
+			public static Builder regression(URL url, String property, int nValid, int nInvalid){
+				return new Builder(url, property, nValid, nInvalid, null, false, true);
+			}
+
+			public Builder delim(char delim){
+				this.delim = delim;
+				return getThis();
+			}
+
+			public CSVCmpdData build(){
+				return new CSVCmpdData(this);
+			}
+
 		}
-		public CSVCmpdData(URL url, String property, char delim, List<?> labels){
-			super(url, Format.CSV, property,labels);
-			this.delim = delim;
-		}
+
 		public char delim(){
 			return delim;
 		}
 
-		public CSVCmpdData withGzip(boolean isCompressed){
-			this.isCompressed=isCompressed;
-			return this;
+		private CSVCmpdData(Builder b){
+			super(b);
+			delim = b.delim;
 		}
 	}
 
@@ -179,82 +269,104 @@ public class TestResources {
 		public static final List<String> AMES_LABELS = Arrays.asList("mutagen", "nonmutagen");
 
 		public static CmpdData getAMES_10(){
-			return new CmpdData(getURL(CmpdData.CLF_FOLDER+"ames_10.sdf"), Format.SDF, PROPERTY,AMES_LABELS);
+			return CmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_10.sdf"), Format.SDF, PROPERTY, 10, 0, AMES_LABELS)
+			.build();
 		}
 		public static CmpdData getAMES_10_json(){
-			return new CmpdData(getURL(CmpdData.CLF_FOLDER+"ames_10.json"), Format.JSON, PROPERTY, AMES_LABELS);
+			return CmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_10.json"), Format.JSON, PROPERTY,10,0, AMES_LABELS)
+			.build();
 		}
 		public static CmpdData getAMES_10_json_bool(){
-			return new CmpdData(getURL(CmpdData.CLF_FOLDER+"ames_10_boolean.json"), Format.JSON, PROPERTY, Arrays.asList(true,false));
+			return CmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_10_boolean.json"), Format.JSON, PROPERTY, 10, 0, Arrays.asList(true,false)).build();
 		}
 		public static CmpdData getAMES_10_gzip(){
-			return new CmpdData(getURL(CmpdData.CLF_FOLDER+"ames_10.sdf.gz"), Format.SDF, PROPERTY,AMES_LABELS).withGzip(true);
+			return CmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_10.sdf.gz"), Format.SDF, PROPERTY, 10, 0, AMES_LABELS)
+				.zipped(true).build();
 		}
 		public static CmpdData getAMES_126(){
-			return new CmpdData(getURL(CmpdData.CLF_FOLDER+"ames_126.sdf"), Format.SDF, PROPERTY,AMES_LABELS);
+			return CmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_126.sdf"), Format.SDF, PROPERTY,123, 3, AMES_LABELS)
+				.build();
 		}
 		public static CmpdData getAMES_126_gzip(){
-			return new CmpdData(getURL(CmpdData.CLF_FOLDER+"ames_126.sdf.gz"), Format.SDF, PROPERTY,AMES_LABELS).withGzip(true);
+			return CmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_126.sdf.gz"), Format.SDF, PROPERTY, 123, 3, AMES_LABELS)
+				.zipped(true).build();
 		}
 		public static CSVCmpdData getAMES_126_chem_desc(){
-			return new CSVCmpdData(getURL(CmpdData.CLF_FOLDER+"ames_126_36_cdk_descriptors.csv"), PROPERTY,',', AMES_LABELS);
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_126_36_cdk_descriptors.csv"), PROPERTY,123, 3, AMES_LABELS)
+				.delim(',').build();
 		}
 		public static CmpdData getAMES_1337(){
-			return new CmpdData(getURL(CmpdData.CLF_FOLDER+"ames_1337.sdf"), Format.SDF, PROPERTY,AMES_LABELS);
+			return CmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_1337.sdf"), Format.SDF, PROPERTY, 1314, 23, AMES_LABELS)
+			.build();
 		}
 		public static CmpdData getAMES_2497(){
-			return new CmpdData(getURL(CmpdData.CLF_FOLDER+"ames_2497.sdf"), Format.SDF, PROPERTY,AMES_LABELS);
+			return CmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_2497.sdf"), Format.SDF, PROPERTY, 2947, 53, AMES_LABELS)
+				.build();
 		}
 		public static CmpdData getAMES_4337(){
-			return new CmpdData(getURL(CmpdData.CLF_FOLDER+"ames_4337.sdf"), Format.SDF, PROPERTY,AMES_LABELS);
+			return CmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_4337.sdf"), Format.SDF, PROPERTY, 4261, 76, AMES_LABELS)
+			.build();
 		}
 
 		public static CSVCmpdData getBBB(){
-			return new CSVCmpdData(getURL(CmpdData.CLF_FOLDER+"BBB.csv"), "Blood-Brain-Barrier Penetration", ',', Arrays.asList("non-penetrating","penetrating"));
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"BBB.csv"), "Blood-Brain-Barrier Penetration", 407, 8, Arrays.asList("non-penetrating","penetrating"))
+				.delim(',').build();
 		}
 
 		public static CSVCmpdData getCAS_N6512(){
-			return new CSVCmpdData(getURL(CmpdData.CLF_FOLDER+"cas_N6512.csv"), "class", '\t', Arrays.asList(0,1));
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"cas_N6512.csv"), "class", 6399, 113, Arrays.asList(0,1))
+				.delim('\t').build();
 		}
 		
 		public static CSVCmpdData getCox2(){
-			return new CSVCmpdData(getURL(CmpdData.CLF_FOLDER+"cox2.csv"), "class", '\t', Arrays.asList(-1,1));
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"cox2.csv"), "class", 322, 0, Arrays.asList(-1,1))
+				.delim('\t').build();
 		}
 
 		public static CSVCmpdData getCPD(){
-			return new CSVCmpdData(getURL(CmpdData.CLF_FOLDER+"CPD.csv"), "class", '\t', Arrays.asList(0,1));
+
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"CPD.csv"), "class", 8, 2, Arrays.asList(0,1))
+				.delim('\t').build();
 		}
 
 		public static CSVCmpdData getDHFR(){
-			return new CSVCmpdData(getURL(CmpdData.CLF_FOLDER+"dhfr.csv"), "class", '\t', Arrays.asList(-1,1));
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"dhfr.csv"), "class", 397, 0, Arrays.asList(-1,1))
+				.delim('\t').build();
 		}
 
 		public static CSVCmpdData getEPAFHM(){
-			return new CSVCmpdData(getURL(CmpdData.CLF_FOLDER+"EPAFHM.csv"), "class", '\t', Arrays.asList(-1,1));
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"EPAFHM.csv"), "class", 553, 24, Arrays.asList(-1,1))
+				.delim('\t').build();
 		}
 
 		public static CSVCmpdData getFDA(){
-			return new CSVCmpdData(getURL(CmpdData.CLF_FOLDER+"FDA.csv"), "class", '\t', Arrays.asList(-1,1));
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"FDA.csv"), "class", 1212, 4, Arrays.asList(-1,1))
+				.delim('\t').build();
 		}
 
 		public static CSVCmpdData getScreen_U251(){
-			return new CSVCmpdData(getURL(CmpdData.CLF_FOLDER+"screen_U251.csv"), "class", '\t', Arrays.asList(-1,1));
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"screen_U251.csv"), "class", 3733, 10, Arrays.asList(-1,1))
+				.delim('\t').build();
 		}
 
 		public static CmpdData getSingleMOL(){
-			return new CmpdData(getURL(CmpdData.CLF_FOLDER+"testmol.mol"), Format.SDF, PROPERTY, AMES_LABELS);
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"testmol.sdf"), Format.SDF, PROPERTY, 1, 0, AMES_LABELS)
+				.build();
 		}
 
 		public static CSVCmpdData getErroneous(){
-			return new CSVCmpdData(getURL(CmpdData.CLF_FOLDER+"missing_activities.csv"), "solubility(fake!)", '\t', Arrays.asList("POS","NEG"));
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"missing_activities.csv"), "solubility(fake!)", 17, 0, Arrays.asList("POS","NEG"))
+				.delim('\t').build();
 		}
 
 		public static CmpdData getHERG(){
-			return new CmpdData(getURL(CmpdData.CHEM_FOLDER+"hERG@PKKB-reg-class.sdf.gz"), Format.SDF, "class",Arrays.asList(0,1)).withGzip(true);
+			return CmpdData.Builder.classification(getURL(CmpdData.CHEM_FOLDER+"hERG@PKKB-reg-class.sdf.gz"), Format.SDF, "class", 806, 0,Arrays.asList(0,1))
+				.zipped(true).build();
 		}
 
 		public static CSVCmpdData getContradict_labels(){
-			return new CSVCmpdData(getURL(CmpdData.CHEM_FOLDER+"fake_labels_reg-class.csv"), "solubility_class",'\t',Arrays.asList(-1,1));
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.CHEM_FOLDER+"fake_labels_reg-class.csv"), "solubility_class", 13, 0, Arrays.asList(-1,1))
+				.delim('\t').build();
 		}
 
 	}
@@ -262,11 +374,12 @@ public class TestResources {
 	public static interface MultiCls {
 
 		/**
-		 * LTKB three classes. dataset from the OpenRisknet work - about 980 compounds in total
+		 * LTKB three classes. dataset from the OpenRiskNet work - about 980 compounds in total
 		 * @return
 		 */
 		public static CSVCmpdData getLTKB() {
-			return new CSVCmpdData(getURL(CmpdData.MULTI_CLS_FOLDER+"ltkb.csv"),"DILIConcern",',',Arrays.asList("NO-DILI-CONCERN","LESS-DILI-CONCERN","MOST-DILI-CONCERN"));
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.MULTI_CLS_FOLDER+"ltkb.csv"),"DILIConcern", 982, 2,Arrays.asList("NO-DILI-CONCERN","LESS-DILI-CONCERN","MOST-DILI-CONCERN"))
+				.delim(',').build();
 		}
 
 	}
@@ -279,20 +392,25 @@ public class TestResources {
 		 * @return
 		 */
 		public static CmpdData getChang(){
-			return new CmpdData(getURL(CmpdData.REG_FOLDER+"chang.sdf"), Format.SDF, CHANG_PROPERTY);
+			return CmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"chang.sdf"), Format.SDF, CHANG_PROPERTY, 34, 0)
+				.build();
 		}
 		public static CmpdData getChang_gzip(){
-			return new CmpdData(getURL(CmpdData.REG_FOLDER+"chang.sdf.gz"), Format.SDF, CHANG_PROPERTY).withGzip(true);
+			return CmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"chang.sdf.gz"), Format.SDF, CHANG_PROPERTY, 34, 0)
+				.zipped(true).build();
 		}
 		public static CmpdData getChang_json(){
-			return new CmpdData(getURL(CmpdData.REG_FOLDER+"chang.json"), Format.JSON, CHANG_PROPERTY);
+			return CmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"chang.json"), Format.JSON, CHANG_PROPERTY, 34, 0)
+				.build();
 		}
 		/** Same as {@link #getChang_json()} but without any indentation and new lines, with the following failing records; 1 missing activity, 1 invalid activity and 1 invalid smiles */
 		public static CmpdData getChang_json_no_indent(){
-			return new CmpdData(getURL(CmpdData.REG_FOLDER+"chang_single_line.json"), Format.JSON, CHANG_PROPERTY);
+			return CmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"chang_single_line.json"), Format.JSON, CHANG_PROPERTY, 31, 3)
+				.build();
 		}
 		public static CmpdData getGluc(){
-			return new CmpdData(getURL(CmpdData.REG_FOLDER+"glucocorticoid.sdf.gz"), Format.SDF, "target").withGzip(true);
+			return CmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"glucocorticoid.sdf.gz"), Format.SDF, "target", 1124, 0)
+				.zipped(true).build();
 		}
 		
 		public static final String SOLUBILITY_PROPERTY = "solubility";
@@ -301,63 +419,90 @@ public class TestResources {
 		 * Saved using Excel and has a BOM in the beginning, which might screw up reading from CSV
 		 */
 		public static CSVCmpdData getErroneous(){
-			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"invalid_smiles.csv"), SOLUBILITY_PROPERTY,';');
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"invalid_smiles.csv"), SOLUBILITY_PROPERTY, 6, 4)
+				.delim(';').build();
 		}
 		public static CSVCmpdData getSolubility_10_multicol(){
-			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"solubility_10_multi_col.csv"), SOLUBILITY_PROPERTY,'\t');
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"solubility_10_multi_col.csv"), SOLUBILITY_PROPERTY, 10, 0)
+				.delim('\t').build();
 		}
+		/**
+		 * Contains a blank line and then 10 valid records
+		 * @return
+		 */
 		public static CSVCmpdData getSolubility_10_no_header_multicol(){
-			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"solubility_10_no_header_multi_col.csv"), SOLUBILITY_PROPERTY,'\t');
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"solubility_10_no_header_multi_col.csv"), SOLUBILITY_PROPERTY, 10, 0)
+				.delim('\t').build();
+
 		}
 		public static CSVCmpdData getSolubility_10_no_header(){
-			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"solubility_10_no_header.csv"), SOLUBILITY_PROPERTY,'\t');
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"solubility_10_no_header.csv"), SOLUBILITY_PROPERTY, 10, 0)
+				.delim('\t').build();
 		}
 		public static CSVCmpdData getSolubility_10(){
-			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"solubility_10.csv"), SOLUBILITY_PROPERTY,'\t');
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"solubility_10.csv"), SOLUBILITY_PROPERTY, 10, 0)
+				.delim('\t').build();
 		}
 		public static CSVCmpdData getSolubility_10_gzip(){
-			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"solubility_10.csv.gz"), SOLUBILITY_PROPERTY,'\t').withGzip(true);
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"solubility_10.csv.gz"), SOLUBILITY_PROPERTY, 10, 0)
+				.delim('\t').zipped(true).build();
 		}
 		/** Same as {@link #getSolubility_10()} but with semicolon, also other order of columns */
 		public static CSVCmpdData getSolubility_10_excel(){
-			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"solubility_10.csv"), SOLUBILITY_PROPERTY,';');
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"solubility_10_semicolon.csv"), SOLUBILITY_PROPERTY, 10, 0)
+				.delim(';').build();
 		}
 		public static CSVCmpdData getSolubility_100(){
-			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"solubility_100.csv"), SOLUBILITY_PROPERTY,'\t');
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"solubility_100.csv"), SOLUBILITY_PROPERTY, 100, 0)
+				.delim('\t').build();
 		}
 		public static CSVCmpdData getSolubility_500(){
-			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"solubility_500.csv"), SOLUBILITY_PROPERTY,'\t');
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"solubility_500.csv"), SOLUBILITY_PROPERTY, 500, 0)
+				.delim('\t').build();
 		}
 		public static CSVCmpdData getSolubility_1k(){
-			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"solubility_1k.csv.gz"), SOLUBILITY_PROPERTY,'\t').withGzip(true);
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"solubility_1k.csv.gz"), SOLUBILITY_PROPERTY, 1000, 0)
+				.delim('\t').zipped(true).build();
 		}
 		public static CSVCmpdData getSolubility_4k(){
-			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"solubility_4k.csv.gz"), SOLUBILITY_PROPERTY,'\t').withGzip(true);
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"solubility_4k.csv.gz"), SOLUBILITY_PROPERTY, 4000, 0)
+				.delim('\t').zipped(true).build();
 		}
 		public static CSVCmpdData getSolubility_5k(){
-			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"solubility_5k.csv.gz"), SOLUBILITY_PROPERTY,'\t').withGzip(true);
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"solubility_5k.csv.gz"), SOLUBILITY_PROPERTY, 5000, 0)
+				.delim('\t').zipped(true).build();
 		}
 		public static CSVCmpdData getSolubility_10k(){
-			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"solubility_10k.csv.gz"), SOLUBILITY_PROPERTY,'\t').withGzip(true);
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"solubility_10k.csv.gz"), SOLUBILITY_PROPERTY, 9999, 1)
+				.delim('\t').zipped(true).build();
 		}
-		/** Full solubility data set with roughly 57.8k compounds */
+		/** Full solubility data set with 57857 valid compounds and 2 invalid records */
 		public static CSVCmpdData getSolubility(){
-			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"solubility_+57k.csv.gz"), SOLUBILITY_PROPERTY,'\t').withGzip(true);
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"solubility_+57k.csv.gz"), SOLUBILITY_PROPERTY, 57857, 2)
+				.delim('\t').zipped(true).build();
 		}
 
 		public static CmpdData getLogS_1210(){
-			return new CmpdData(getURL(CmpdData.REG_FOLDER+"solubility@PKKB_2009.sdf.gz"), Format.SDF, "LogS (exp)").withGzip(true);
+			return CmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"solubility@PKKB_2009.sdf.gz"), Format.SDF, "LogS (exp)", 1210, 0)
+				.zipped(true).build();
 		}
 
+		/**
+		 * Contains 806 molecules in total
+		 * @return
+		 */
 		public static CmpdData getHERG(){
-			return new CmpdData(getURL(CmpdData.CHEM_FOLDER+"hERG@PKKB-reg-class.sdf.gz"), Format.SDF, "IC50").withGzip(true);
+			return CmpdData.Builder.regression(getURL(CmpdData.CHEM_FOLDER+"hERG@PKKB-reg-class.sdf.gz"), Format.SDF, "IC50", -1, -1)
+				.zipped(true).build(); // TODO - why is this showing the wrong thing??
 		}
 		public static CSVCmpdData getToy_many_cols(){
-			return new CSVCmpdData(getURL(CmpdData.REG_FOLDER+"toy_many_cols.csv"), "Response value",';');
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"toy_many_cols.csv"), "Response value", 3, 0)
+				.delim(';').build();
 		}
 
 		public static CSVCmpdData getContradict_labels_and_outlier(){
-			return new CSVCmpdData(getURL(CmpdData.CHEM_FOLDER+"fake_labels_reg-class.csv"), SOLUBILITY_PROPERTY,'\t');
+			return CSVCmpdData.Builder.regression(getURL(CmpdData.CHEM_FOLDER+"fake_labels_reg-class.csv"), SOLUBILITY_PROPERTY, 13, 0)
+				.delim('\t').build();
 		}
 
 
