@@ -439,16 +439,16 @@ public class Predict implements RunnableCmd, SupportsProgressBar{
 			} catch (InvalidSmilesException e) { 
 				LOGGER.debug("Invalid smiles sent as input: {}", toPredict.toPredict.smilesToPredict);
 				console.failWithArgError("Input to parameter --smiles '"+toPredict.toPredict.smilesToPredict+"' could not be parsed as a valid SMILES");
-				failedRecords.add(new FailedRecord(-1,smilesID).setReason(e.getMessage()));
+				failedRecords.add(new FailedRecord.Builder(-1).withID(smilesID).withReason(e.getMessage()).build());
 			} catch (CDKException e){ 
 				LOGGER.debug("Got a CDKException predicting the --smiles molecule",e);
 				LOGGER.error("Dataset when predicting the --smiles molecule");
-				failedRecords.add(new FailedRecord(-1,smilesID).setReason(e.getMessage()));
+				failedRecords.add(new FailedRecord.Builder(-1).withID(smilesID).withReason(e.getMessage()).build());
 				numMissingDataFails++;
 			} catch (Exception e) {
 				LOGGER.debug("Exception trying to predict SMILES, stacktrace: ", e);
 				LOGGER.error("Error predicting SMILES: {}", e.getMessage());
-				failedRecords.add(new FailedRecord(-1,smilesID).setReason(e.getMessage()));
+				failedRecords.add(new FailedRecord.Builder(-1).withID(smilesID).withReason(e.getMessage()).build());
 			} finally {
 				// Step Progress and print out
 				printPredictionProgressAndStep();
@@ -494,11 +494,11 @@ public class Predict implements RunnableCmd, SupportsProgressBar{
 					console.failWithInternalError("Failed predicting molecule due to: " + e.getMessage());
 				} catch (MissingDataException e) {
 					LOGGER.debug("Got a missing data exception - something wrong i pre-processing?");
-					failedRecords.add(new FailedRecord(index,id).setReason(e.getMessage()));
+					failedRecords.add(new FailedRecord.Builder(index).withID(id).withReason(e.getMessage()).build());
 					numMissingDataFails++;
 				} catch (Exception e) {
 					LOGGER.debug("Failed molecule due to generic exception", e);
-					failedRecords.add(new FailedRecord(index,id).setReason(e.getMessage()));
+					failedRecords.add(new FailedRecord.Builder(index).withID(id).withReason(e.getMessage()).build());
 				} finally {
 					molIterationCounter++;
 					

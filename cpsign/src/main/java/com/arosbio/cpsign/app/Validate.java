@@ -30,6 +30,7 @@ import com.arosbio.chem.io.in.ChemFile;
 import com.arosbio.chem.io.in.ChemFileIterator;
 import com.arosbio.chem.io.in.FailedRecord;
 import com.arosbio.chem.io.in.MolAndActivityConverter;
+import com.arosbio.chem.io.in.ChemFileIterator.EarlyLoadingStopException;
 import com.arosbio.cheminf.ChemCPClassifier;
 import com.arosbio.cheminf.ChemCPRegressor;
 import com.arosbio.cheminf.ChemClassifier;
@@ -394,14 +395,14 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 			ChemFileIterator firstIter = predictFile.getIterator();
 			MolAndActivityConverter molIterator = (labels!=null?
 				// If classification 
-				MolAndActivityConverter.classificationConverter(
+				MolAndActivityConverter.Builder. classificationConverter(
 				predictFile.getIterator(), 
 				validationEndpoint, 
-				labels) :  
+				labels).build() :  
 				// If regression
-				MolAndActivityConverter.regressionConverter(
+				MolAndActivityConverter.Builder.regressionConverter(
 					predictFile.getIterator(), 
-					validationEndpoint))
+					validationEndpoint).build())
 				){
 
 			try {
@@ -432,19 +433,19 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 
 					predictMolecule(predictor, predWriter, mol, trueValue);
 
-					// if (printPredictions)
-					// 	resultsOutputter.flush();
-
 					predictionDone=true;
 					successCount++;
 
-				} catch(MissingDataException e) {
+				} catch (MissingDataException e) {
 					LOGGER.debug("Got a missing data exception - something wrong i pre-processing?");
-					failedRecords.add(new FailedRecord(index,id).setReason(e.getMessage()));
+					failedRecords.add(new FailedRecord.Builder(index).withID(id).withReason(e.getMessage()).build());
 					numMissingDataFails++;
+				} catch (EarlyLoadingStopException e){
+					// This likely means bad parameters was sent - need to give a good error output
+					
 				} catch (Exception e) {
 					LOGGER.debug("Failed molecule due to generic exception", e);
-					failedRecords.add(new FailedRecord(index,id).setReason(e.getMessage()));
+					failedRecords.add(new FailedRecord.Builder(index).withID(id).withReason(e.getMessage()).build());
 				} finally {
 					iterationCount++;
 					if (progressInterval>0 && iterationCount % progressInterval == 0 ){

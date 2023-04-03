@@ -324,7 +324,6 @@ public class Precompute implements RunnableCmd, SupportsProgressBar {
 
 	}
 
-
 	private void validateParams() {
 		
 		if (descriptorSection.descriptors == null || descriptorSection.descriptors.isEmpty()) {
@@ -339,18 +338,18 @@ public class Precompute implements RunnableCmd, SupportsProgressBar {
 					new MissingParam("calibrationExclusiveTrainFile", "EXCLUSIVE_CALIBRATION_DATA", Precompute.class),
 					new MissingParam("properTrainExclusiveFile", "EXCLUSIVE_MODELING_DATA", Precompute.class));
 
-		// Has to check that the labelsMix are set
-		if (modeltype.equals(ClassOrRegType.CLASSIFICATION) && 
-				(labelsMix == null || labelsMix.labels == null || labelsMix.labels.isEmpty()))
-			console.failDueToMissingParameters(new MissingParam("labels", "--labels", ClassificationLabelsMixin.class));
-		
-		if (labelsMix!=null && labelsMix.labels!=null && 
-				labelsMix.labels.size()<2)
-			console.failWithArgError("Parameter --labels must be at least of length 2");
-		// If regression - no labelsMix should be given!
-		if (modeltype.equals(ClassOrRegType.REGRESSION) &&
-				labelsMix != null && labelsMix.labels != null && !labelsMix.labels.isEmpty())
-			console.failWithArgError("Parameter --labels cannot be given in regression mode");
+		// If classification - verify labels set
+		if (modeltype.equals(ClassOrRegType.CLASSIFICATION)) {
+			if ((labelsMix == null || labelsMix.labels == null || labelsMix.labels.isEmpty()))
+				console.failDueToMissingParameters(new MissingParam("labels", "--labels", ClassificationLabelsMixin.class));
+			if (labelsMix.labels.size()<2)
+				console.failWithArgError("Parameter --labels must be at least of length 2");
+		} else {
+			// Regression 
+			if (labelsMix != null && labelsMix.labels != null && !labelsMix.labels.isEmpty()){
+				console.failWithArgError("Parameter --labels cannot be given in regression mode");
+			}
+		}
 
 		/////////
 		// JAR //

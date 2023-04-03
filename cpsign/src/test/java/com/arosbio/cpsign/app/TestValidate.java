@@ -99,7 +99,7 @@ public class TestValidate extends CLIBaseTest{
 		// Replace the property with something else (so it doesn't exist)
 		String chang = null;
 		try(InputStream stream = regChangData.url().openStream();){
-			chang = IOUtils.toString(stream, StandardCharsets.UTF_8); // FileUtils.readFileToString(new File(RegressionChang.CHANG_FILE_PATH), "UTF-8");
+			chang = IOUtils.toString(stream, StandardCharsets.UTF_8);
 		}
 		String changAltered = chang.replace(regChangData.property(), "Property");
 		FileUtils.write(tmpPredFile, changAltered, "UTF-8");
@@ -159,7 +159,7 @@ public class TestValidate extends CLIBaseTest{
 		nl.addLabel(0, "mutagen");
 		nl.addLabel(1, "nonmutagen");
 		try(
-				MolAndActivityConverter imar = MolAndActivityConverter.classificationConverter(sdf.getIterator(), ames10.property(), nl); ){
+				MolAndActivityConverter imar = MolAndActivityConverter.Builder.classificationConverter(sdf.getIterator(), ames10.property(), nl).build(); ){
 			while(imar.hasNext()) {
 				Pair<IAtomContainer, Double> i = imar.next();
 				System.out.println("found mol with activity = " + i.getRight());

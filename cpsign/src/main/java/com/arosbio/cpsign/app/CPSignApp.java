@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import com.arosbio.ConfAI;
 import com.arosbio.chem.logging.Slf4jLoggingTool;
+import com.arosbio.commons.EarlyStoppingException;
 import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.StringUtils;
 import com.arosbio.commons.logging.LoggerUtils;
@@ -331,7 +332,7 @@ public class CPSignApp implements IVersionProvider {
 			if (t instanceof UnmatchedArgumentException)
 				return ExitStatus.USER_ERROR.code;
 			if (t instanceof TypeConversionException || t instanceof IllegalArgumentException
-					|| t instanceof MissingParameterException)
+					|| t instanceof MissingParameterException || t instanceof EarlyStoppingException)
 				return ExitStatus.USER_ERROR.code;
 			if (t instanceof InternalError)
 				return ExitStatus.PROGRAM_ERROR.code;

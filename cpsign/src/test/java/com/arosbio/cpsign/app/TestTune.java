@@ -64,7 +64,7 @@ public class TestTune extends CLIBaseTest {
 					Tune.CMD_NAME,
 					"-ds", Classification.getMissingDataDS().getAbsolutePath(),
 					"--time",
-					"-gC"
+					"-g","C"
 			}
 					);
 			Assert.fail();
@@ -86,7 +86,7 @@ public class TestTune extends CLIBaseTest {
 					Tune.CMD_NAME,
 					"-ds", Classification.getAmes123().getAbsolutePath(),
 					"--time",
-					"-gC=-1,-5,-10"
+					"-g=C=-1,-5,-10"
 			});
 			Assert.fail();
 
@@ -130,7 +130,7 @@ public class TestTune extends CLIBaseTest {
 							"--cv-folds", "10",
 							"-sc", (isLibLinear? LinearSVC.ALG_NAME : C_SVC.ALG_NAME),
 							"-ds", Classification.getAmes123().getAbsolutePath(),
-							"-gGAMMA=0.5, 1.0, 2.0",
+							"-g=GAMMA=0.5, 1.0, 2.0",
 							"--grid=COST=-1:1:1",
 							"--tolerance", ""+tolerance,
 							"-op", "logloss",
@@ -179,8 +179,8 @@ public class TestTune extends CLIBaseTest {
 							"-ss", strategy(RANDOM_SAMPLING, 1),
 							"-sc", C_SVC.ALG_NAME,
 							"-ds", Classification.getAmes123().getAbsolutePath(),
-							"-gGAMMA=\"0.5, 1.0, 2.0\"",
-							"-gCOST=b2:-1:1:1",
+							"-g","GAMMA=\"0.5, 1.0, 2.0\"",
+							"-g","COST=b2:-1:1:1",
 							"--tolerance", ""+tolerance,
 							"-op", "logloss",
 							"-rf", "json",
@@ -273,18 +273,13 @@ public class TestTune extends CLIBaseTest {
 					"-pt", ACP_REGRESSION_TYPE,
 					"--cv-folds", "10",
 					"-ds", Regression.getSolu100().getAbsolutePath(),
-					//					"-td", CSVFile.FORMAT_NAME, trainRegFile,
-					//					"-pr", RegressionSolubility.PROPERTY,
+					
 					"-ss", strategy(RANDOM_SAMPLING, 1),
 					"-sc", (isLibLinear? LinearSVR.ALG_NAME : EpsilonSVR.ALG_NAME),
-					//					"--gamma-values", "-1:1:1",
-					"-gGAMMA=-1:1:1",
-					//					"--cost-values", "-1:1:1",
-					"-gC=-1:1:1",
-					//					"--epsilon-values", "0.0001, 0.001, 0.01",
-					"-gEpsilon=0.0001, 0.001, 0.01",
-					//					"--pvalue-calc-values", "standard", "smooth",
-					"-gPvalueCalc=standard,smooth",
+					"-g=GAMMA=-1:1:1",
+					"-g","C=-1:1:1",
+					"-g=Epsilon=0.0001, 0.001, 0.01",
+					"-g=PvalueCalc=standard,smooth",
 					"--tolerance", ""+tolerance,
 					"--confidence", ""+conf,
 					"--num-results", "-1",
@@ -366,14 +361,10 @@ public class TestTune extends CLIBaseTest {
 					//					"-pr", RegressionSolubility.PROPERTY,
 					"-ss", strategy(RANDOM_SAMPLING, 1),
 					"-sc", (isLibLinear? LinearSVR.ALG_NAME : EpsilonSVR.ALG_NAME),
-					//					"--gamma-values", "-1:1:1",
-					"-gGAMMA=b2:-1:1:1",
-					//					"--cost-values", "-1:1:1",
+					"-g=GAMMA=b2:-1:1:1",
 					"--grid=COST=b2:-1:1:1",
-					//					"--epsilon-values", "0.0001, 0.001, 0.01",
 					"--grid=EPSILON=0.0001, 0.001, 0.01",
-					//					"--pvalue-calc-values", "standard", "smooth",
-					"-gpvaluecalc=standard,smooth",
+					"-g=pvaluecalc=standard,smooth",
 					"--tolerance", ""+tolerance,
 					"--confidence", ""+conf,
 					"--progress-bar",
@@ -396,11 +387,11 @@ public class TestTune extends CLIBaseTest {
 					"--cv-folds", "10",
 					"-ds", Regression.getSolu100().getAbsolutePath(),
 					"-sc", (isLibLinear? LinearSVR.ALG_NAME : EpsilonSVR.ALG_NAME),
-					"-gGAMMA=b2:-1:1:1",
-					"-gCOST=b2:-1:1:1",
+					"-g","GAMMA=b2:-1:1:1",
+					"-g","COST=b2:-1:1:1",
 					"--nonconf-measure", LogNormalizedNCM.IDENTIFIER,
 					"--calc-all",
-					"-gBETA=0 0.3 0.1",
+					"-g=BETA=0 0.3 0.1",
 					"--tolerance", ""+tolerance,
 					"--confidence", ""+conf,
 					"--echo",
@@ -439,10 +430,10 @@ public class TestTune extends CLIBaseTest {
 					"--cv-folds", "10",
 					"-ds", Regression.getSolu100().getAbsolutePath(),
 					"-sc", (isLibLinear? LinearSVR.ALG_NAME : EpsilonSVR.ALG_NAME),
-					"-gGAMMA=-1:1:1:b2",
-					"-gCOST=-1:1:1:b2",
+					"-g","GAMMA=-1:1:1:b2",
+					"-g","COST=-1:1:1:b2",
 					"--nonconf-measure", LogNormalizedNCM.IDENTIFIER,
-					"-gpvalues=2,3,4",
+					"-g","pvalues=2,3,4",
 					"--tolerance", ""+tolerance,
 					"--confidence", ""+conf,
 					"--generate@file", atFile.getAbsolutePath(),
@@ -565,17 +556,14 @@ public class TestTune extends CLIBaseTest {
 							"--cv-folds", "RandomSplit",
 							"-sc", LinearSVC.ALG_NAME,
 							"-ds", Classification.getAmes123().getAbsolutePath(),
-							// "--grid=GAMMA=0.5, 1.0, 2.0", //-1:1:1",
 							"--grid=C=-1:1:1:base=2",
 							"--tolerance", ""+tolerance,
 							"--opt-metric", "Observed Fuzziness",
-							//							"--debug",
 							"-rf","csv",
 							"--progress-bar",
 							"--generate@file", atFile.getAbsolutePath(), 
 							"--confidence", ""+conf,
 							"-v",
-//							"--calc-all"
 					}
 					);
 		} catch (Exception e) {
@@ -614,10 +602,10 @@ public class TestTune extends CLIBaseTest {
 				"--cv-folds", "10",
 				"-ds", Regression.getSolu100().getAbsolutePath(),
 				"-sc", (isLibLinear? LinearSVR.ALG_NAME : EpsilonSVR.ALG_NAME),
-				"-gGAMMA=b2:-1:1:1",
-				"-gCOST=-1:1:1:b2",
+				"-g","GAMMA=b2:-1:1:1",
+				"-g","COST=-1:1:1:b2",
 				"--nonconf-measure", "log-normalized",
-				"-gBETA=0 0.1 0.3",
+				"-g","BETA=0 0.1 0.3",
 				"--tolerance", ""+(-0.1),
 				"--echo"
 		}	
@@ -681,10 +669,10 @@ public class TestTune extends CLIBaseTest {
 				"--cv-folds", "101", // One more than number of records
 				"-ds", Regression.getSolu100().getAbsolutePath(),
 				"--scorer", (isLibLinear? LinearSVR.ALG_NAME : EpsilonSVR.ALG_NAME),
-				"-ggamma=b2:-1:1:1",
-				"-gCOST=-1:1:1:b2",
+				"-g=gamma=b2:-1:1:1",
+				"-g=COST=-1:1:1:b2",
 				"--nonconf-measure", "log-normalized",
-				"-gBETA=0 0.1 0.3"
+				"-g=BETA=0 0.1 0.3"
 		}	
 				);
 
@@ -692,7 +680,7 @@ public class TestTune extends CLIBaseTest {
 
 	static class TuneMock {
 		@Option(names = {"-g", "--grid"},
-				description = "Specify which parameters that should be part of the parameter grid, specified using syntax -g<KEY>=<VALUES>, e.g., -gCOST=1,10,100 or --gridGamma=b2:-8:-1:2. Run "+"explain tune-grid" + " for further details.",
+				description = "Specify which parameters that should be part of the parameter grid, specified using syntax -g <KEY>=<VALUES>, e.g., -g COST=1,10,100 or --grid Gamma=b2:-8:-1:2. Run "+"explain tune-grid" + " for further details.",
 				paramLabel = ArgumentType.TUNE_KEY_VALUE,
 				mapFallbackValue = "default",
 				arity = "1..*",

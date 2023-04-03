@@ -145,7 +145,7 @@ public class TestACPClassification extends CLIBaseTest {
 		// Tune scorer
 		mockMain(TuneScorer.CMD_NAME,
 			"--data-set", preComDS.getAbsolutePath(),
-			"-gC", // only use small grid of Cost-values
+			"-g","C", // only use small grid of Cost-values
 			"--generate@file", bestParamsFile.getAbsolutePath()
 		);
 

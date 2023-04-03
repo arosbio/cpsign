@@ -19,7 +19,10 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
@@ -46,6 +49,7 @@ import com.arosbio.cpsign.app.params.mixins.ClassificationLabelsMixin;
 import com.arosbio.cpsign.app.params.mixins.PredictorMixinClasses;
 import com.arosbio.cpsign.app.params.mixins.TestingStrategyMixin;
 import com.arosbio.cpsign.app.params.mixins.TransformerMixin.TransformerParamConsumer;
+import com.arosbio.cpsign.app.params.mixins.TuneGridMixin;
 import com.arosbio.cpsign.app.utils.MultiArgumentSplitter;
 import com.arosbio.cpsign.app.utils.ParameterUtils;
 import com.arosbio.cpsign.app.utils.ParameterUtils.ArgumentType;
@@ -379,19 +383,8 @@ public class TestConverters extends CLIBaseTest {
 		private String validationEndpoint;
 
 
-		//		@Option(names = {"-g", "--grid"},
-		//				description = "Specify which parameters that should be part of the parameter grid, specified using syntax -g<KEY>=<VALUE> or --grid=<KEY>=<VALUE>, e.g., -g=COST=1,10,100 or --grid=Gamma=b2:-8:-1:2. Run "+
-		//						ParameterUtils.RUN_EXPLAIN_ANSI_ON+"explain " + TuneParamsInfo.SUB_NAME + ParameterUtils.ANSI_OFF+" for further details.",
-		//				paramLabel = ArgumentType.TUNE_KEY_VALUE,
-		//				mapFallbackValue = "default",
-		//				split = ParameterUtils.SPLIT_WS_COMMA_REGEXP,
-		//				arity = "1..*",
-		//				required = false)
-		//		private LinkedHashMap<String,List<String>> paramGrid2;
-
 		@Override
 		public Integer call() throws Exception {
-			// TODO Auto-generated method stub
 			return null;
 		}
 
@@ -673,5 +666,37 @@ public class TestConverters extends CLIBaseTest {
 		}
 	}
 
+	public static class TestGridSyntax implements Callable<Integer> {
+
+		@Mixin
+		public TuneGridMixin gridMixin;
+
+		@Override
+		public Integer call() throws Exception {
+			return null;
+		}
+
+	}
+
+	@Test
+	public void testDifferentGridSyntax() throws Exception {
+		TestGridSyntax test = new TestGridSyntax();
+
+		CommandLine cml = new CommandLine(test);
+		cml.setTrimQuotes(true);
+		cml.parseArgs(
+				"-g","updater=Sgd;0.1,Sgd;0.01",
+				"--grid", "EPSILON=0.01,0.001,0.0001",
+				"COST=base10:-4:7:0.5",
+				"--grid=GAMMA=base=10:-24:-3:2",
+				"some other argument"
+				);
+		System.err.println(test.gridMixin.paramGrid);
+		Map<String,List<?>> grid = TuneUtils.setupParamGrid(new C_SVC(), test.gridMixin.paramGrid);
+		Set<String> lcParamNames = grid.keySet().stream().map(String::toLowerCase).collect(Collectors.toSet());
+		Assert.assertTrue(lcParamNames.contains("epsilon"));
+		Assert.assertTrue(lcParamNames.contains("cost"));
+		Assert.assertTrue(lcParamNames.contains("gamma"));
+	}
 
 }

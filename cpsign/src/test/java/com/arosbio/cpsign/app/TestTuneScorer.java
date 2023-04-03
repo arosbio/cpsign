@@ -74,7 +74,7 @@ public class TestTuneScorer extends CLIBaseTest {
 					TuneScorer.CMD_NAME,
 					"-ds", Classification.getMissingDataDS().getAbsolutePath(),
 					"--time",
-					"-gC"
+					"-g","C"
 			});
 			Assert.fail();
 
@@ -95,7 +95,7 @@ public class TestTuneScorer extends CLIBaseTest {
 					TuneScorer.CMD_NAME,
 					"-ds", Classification.getAmes123().getAbsolutePath(),
 					"--time",
-					"-gC=-1,-5,-10"
+					"-g=C=-1,-5,-10"
 			});
 			Assert.fail();
 
@@ -154,7 +154,7 @@ public class TestTuneScorer extends CLIBaseTest {
 							"--cv-folds", "10",
 							"-sc", (isLibLinear ? LinearSVC.ALG_NAME : C_SVC.ALG_NAME),
 							"-ds", Classification.getAmes123().getAbsolutePath(),
-							"-gGAMMA=0.5, 1.0, 2.0",
+							"-g=GAMMA=0.5, 1.0, 2.0",
 							"--grid=COST=-1:1:1:b=10",
 							"-rf", "csv",
 							"--generate@file", atFile.getAbsolutePath(),
@@ -195,7 +195,7 @@ public class TestTuneScorer extends CLIBaseTest {
 							"--cv-folds", "10",
 							"-sc", (isLibLinear ? LinearSVC.ALG_NAME : C_SVC.ALG_NAME),
 							"-ds", Classification.getAmes123().getAbsolutePath(),
-							"-gGAMMA=0.5, 1.0, 2.0",
+							"-g=GAMMA=0.5, 1.0, 2.0",
 							"--grid=COST=-1:1:1:b=10",
 							"-rf", "csv",
 							"--calc-all-metrics",
@@ -246,8 +246,8 @@ public class TestTuneScorer extends CLIBaseTest {
 							"--cv-folds", "5",
 							"-sc", C_SVC.ALG_NAME,
 							"-ds", Classification.getAmes123().getAbsolutePath(),
-							"-gGAMMA=\"0.5, 1.0, 2.0\"",
-							"-gCOST=\"b2:-1:1:1\"",
+							"-g","GAMMA=\"0.5, 1.0, 2.0\"",
+							"-g","COST=\"b2:-1:1:1\"",
 							"-rf", "json",
 							"--progress-bar",
 							"--generate@file", atFile.getAbsolutePath(),
@@ -313,8 +313,8 @@ public class TestTuneScorer extends CLIBaseTest {
 					"-sc", LinearSVR.ALG_NAME,
 					"-rf", "json", // "csv", //
 					"-g", "GAMMA=-1:1:1:b=2",
-					"-gC=-1:1:1",
-					"-gEpsilon=0.0001, 0.001, 0.01",
+					"-g=C=-1:1:1",
+					"-g=Epsilon=0.0001, 0.001, 0.01",
 					"--num-results", "-1",
 					"--progress-bar",
 					"--time",
@@ -402,7 +402,7 @@ public class TestTuneScorer extends CLIBaseTest {
 
 	static class TuneMock {
 		@Option(names = { "-g",
-				"--grid" }, description = "Specify which parameters that should be part of the parameter grid, specified using syntax -g<KEY>=<VALUES>, e.g., -gCOST=1,10,100 or --gridGamma=b2:-8:-1:2. Run "
+				"--grid" }, description = "Specify which parameters that should be part of the parameter grid, specified using syntax -g <KEY>=<VALUES>, e.g., -g COST=1,10,100 or --grid Gamma=b2:-8:-1:2. Run "
 						+ "explain tune-grid"
 						+ " for further details.", paramLabel = ArgumentType.TUNE_KEY_VALUE, mapFallbackValue = "default", arity = "1..*", required = true)
 		private LinkedHashMap<String, String> paramGrid;
@@ -411,7 +411,7 @@ public class TestTuneScorer extends CLIBaseTest {
 	// @Test
 	public void testPicoCLIParamGrid() {
 		TuneMock mock = new TuneMock();
-		new CommandLine(mock).parseArgs("-gC", "--grid=B", "-gD=abs");
+		new CommandLine(mock).parseArgs("-g","C", "--grid=B", "-g","D=abs");
 		SYS_ERR.println(mock.paramGrid);
 	}
 

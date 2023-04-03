@@ -397,7 +397,7 @@ public class TuneUtils {
 
 		// Write out unused params
 		if (!unUsedParams.isEmpty()) {
-			LOGGER.debug("Unsed params: {}", unUsedParams);
+			LOGGER.debug("Unused params: {}", unUsedParams);
 			console.printlnStdErr("Unused parameter(s) in the evaluation grid: " + StringUtils.join(unUsedParams, ", "),
 					PrintMode.NORMAL);
 		}
