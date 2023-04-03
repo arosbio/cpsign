@@ -49,6 +49,7 @@ import com.arosbio.chem.CDKConfigureAtomContainer;
 import com.arosbio.chem.io.in.CSVChemFileReader;
 import com.arosbio.chem.io.in.CSVFile;
 import com.arosbio.chem.io.in.FailedRecord;
+import com.arosbio.chem.io.in.JSONChemFileReader;
 import com.arosbio.chem.io.in.JSONFile;
 import com.arosbio.chem.io.in.SDFReader;
 import com.arosbio.chem.io.in.SDFile;
@@ -907,6 +908,20 @@ public class TestChemDataset extends UnitTestBase {
 		}
 		
 //		printLogs();
+	}
+
+	@Test
+	public void testJsonOneLineInput() throws Exception {
+		CmpdData json = TestResources.Reg.getChang_json_no_indent();
+		ChemDataset dataset = new ChemDataset();
+		dataset.initializeDescriptors();
+
+		try (InputStream stream = json.url().openStream(); 
+			JSONChemFileReader reader = new JSONChemFileReader(stream);) {
+			DescriptorCalcInfo info = dataset.add(reader, json.property());
+			Assert.assertEquals(json.numValidRecords(), info.getNumSuccessfullyAdded());
+			Assert.assertEquals(json.numInvalidRecords(), info.getFailedRecords().size());
+		}
 	}
 	
 

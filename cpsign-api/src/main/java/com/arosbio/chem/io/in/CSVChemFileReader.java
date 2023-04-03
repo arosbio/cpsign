@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.arosbio.chem.CPSignMolProperties;
+import com.arosbio.chem.io.in.FailedRecord.Cause;
 import com.arosbio.commons.EarlyStoppingException;
 
 public class CSVChemFileReader implements ChemFileIterator {
@@ -140,11 +141,13 @@ public class CSVChemFileReader implements ChemFileIterator {
 					LOGGER.debug("Failed record due to invalid smiles '{}', from record: {}", smiles, next);
 					hasLoggedFailedSMILES = true;
 				}
+				FailedRecord.Builder recordBuilder = new FailedRecord.Builder(recordIndex);
 				if (smiles == null || smiles.trim().isEmpty()) {
-					failedRecords.add(new FailedRecord(recordIndex).setReason("Missing SMILES"));
+					recordBuilder.withCause(Cause.MISSING_STRUCTURE).withReason("Missing SMILES");
 				} else {
-					failedRecords.add(new FailedRecord(recordIndex).setReason(String.format("Invalid SMILES \"%s\"",smiles)));
+					recordBuilder.withCause(Cause.INVALID_STRUCTURE).withReason(String.format("Invalid SMILES \"%s\"",smiles));
 				}
+				failedRecords.add(recordBuilder.build());
 				LOGGER.trace("Invalid smiles - skipping line");
 				checkIfExit();
 				return tryParseNext();
@@ -153,8 +156,12 @@ public class CSVChemFileReader implements ChemFileIterator {
 			// Check that the columns were consistent
 			if (next.size() > parser.getHeaderNames().size()){
 				numInconsistentRecords++;
-				failedRecords.add(new FailedRecord(recordIndex).setReason(
-					String.format(Locale.ENGLISH,"Inconsistent number of columns in CSV record, found %d fields but header has %d fields", next.size(),parser.getHeaderNames().size())));
+				failedRecords.add(
+					new FailedRecord.Builder(recordIndex)
+						.withCause(Cause.INVALID_RECORD)
+						.withReason(
+							String.format(Locale.ENGLISH,"Inconsistent number of columns in CSV record, found %d fields but header has %d fields", next.size(),parser.getHeaderNames().size()))
+					.build());
 				checkIfExit();
 				return tryParseNext();
 			}
@@ -166,7 +173,7 @@ public class CSVChemFileReader implements ChemFileIterator {
 				if (prop.getValue() == null || ((String) prop.getValue()).isEmpty())
 					keysToRemove.add(prop.getKey());
 			}
-			for (Object key: keysToRemove)
+			for (Object key : keysToRemove)
 				properties.remove(key);
 
 			Map<Object,Object> newMap = new LinkedHashMap<>();
@@ -190,13 +197,16 @@ public class CSVChemFileReader implements ChemFileIterator {
 
 	private void checkIfExit() throws EarlyLoadingStopException {
 		if (numRecordsSuccessfullyRead == 0 && maxAllowedFails >=0 && maxAllowedFails <= failedRecords.size()) {
-			LOGGER.debug("Failed reading {} records from CSV, settings must be wrong",failedRecords.size());
-			throw new EarlyLoadingStopException(failedRecords);
+			String errMessage = String.format(Locale.ENGLISH,"Failed reading %d records from CSV, settings must be wrong", failedRecords.size());
+			LOGGER.debug(errMessage);
+			throw new EarlyLoadingStopException(errMessage,failedRecords);
 		}
 		if (numInconsistentRecords>=5){
-			LOGGER.debug("Found 5 inconsistent records (i.e. number of headers in CSV doesn't match columns in csv, header has {} fields) after reading the first {} lines", 
-				parser.getHeaderNames().size(), recordIndex);
-			throw new EarlyLoadingStopException(failedRecords);
+			// TODO - add setting to allow inconsistent records?
+			String errorMessage = String.format(Locale.ENGLISH, "Found 5 inconsistent records (i.e. number of headers in CSV doesn't match columns in csv, header has %d fields) after reading the first %d lines", 
+			parser.getHeaderNames().size(), recordIndex);
+			LOGGER.debug(errorMessage);
+			throw new EarlyLoadingStopException(errorMessage, failedRecords);
 		}
 	}
 

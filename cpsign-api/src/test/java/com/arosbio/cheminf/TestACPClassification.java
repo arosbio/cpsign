@@ -99,7 +99,7 @@ public class TestACPClassification extends UnitTestBase {
 	}
 	
 	private MolAndActivityConverter getClassIter(CmpdData test) throws Exception {
-		return MolAndActivityConverter.classificationConverter(new SDFile(test.uri()).getIterator(), test.property(), new NamedLabels(test.labelsStr()));
+		return MolAndActivityConverter.Builder.classificationConverter(new SDFile(test.uri()).getIterator(), test.property(), new NamedLabels(test.labelsStr())).build();
 	}
 
 	@Test

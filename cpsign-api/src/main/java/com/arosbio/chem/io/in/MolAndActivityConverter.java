@@ -12,7 +12,6 @@ package com.arosbio.chem.io.in;
 
 import java.io.Closeable;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -25,6 +24,8 @@ import org.slf4j.LoggerFactory;
 
 import com.arosbio.chem.CPSignMolProperties;
 import com.arosbio.chem.io.in.ChemFileIterator.EarlyLoadingStopException;
+import com.arosbio.chem.io.in.FailedRecord.Cause;
+import com.arosbio.commons.CollectionUtils;
 import com.arosbio.data.NamedLabels;
 
 /**
@@ -61,14 +62,15 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 	private static final Logger LOGGER = LoggerFactory.getLogger(MolAndActivityConverter.class);
 
 	// Settings
-	private int terminateOnNumFails = 10;
-	private boolean isClassification;
-	private NamedLabels classLabels;
-	private String propertyNameForActivity;
+	private final int terminateOnNumFails;
+	private final boolean isClassification;
+	private final NamedLabels classLabels;
+	private final String propertyNameForActivity;
+	private final Iterator<IAtomContainer> molIterator;
 
 	/** Current "state" - if nextPair != null next() is OK, otherwise try to parse next from molIterator */ 
 	private Pair<IAtomContainer, Double> nextPair;
-	private Iterator<IAtomContainer> molIterator;
+	
 	/** If this is != null, calling the next() method should instead throw this stoppingExcept! */
 	private EarlyLoadingStopException stoppingExcept;
 
@@ -78,58 +80,60 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 	private int numOKmols;
 	private List<FailedRecord> failedRecords = new ArrayList<>();
 	
-	private MolAndActivityConverter(Iterator<IAtomContainer> molecules, String property){
-		if (property== null || property.isEmpty())
+	private MolAndActivityConverter(Iterator<IAtomContainer> molecules, String property, int terminateOnNumFails, NamedLabels nl) throws IllegalArgumentException {
+		if (property== null || property.isBlank())
 			throw new IllegalArgumentException("The property must be set");
-		LOGGER.debug("IteratingMolAndActivity using property={}", property);
-
-		this.propertyNameForActivity = property.trim();
+		
 		this.molIterator = molecules;
-	}
-	
-	/**
-	 * For regression data
-	 * @param molecules An {@link Iterator} with molecules
-	 * @param property the activity property
-	 * @return the calling instance reference, for fluid API type calling
-	 * @throws IllegalArgumentException Invalid arguments
-	 */
-	public static MolAndActivityConverter regressionConverter(Iterator<IAtomContainer> molecules, String property) 
-			throws IllegalArgumentException {
-		LOGGER.debug("Creating MolAndActivityConverter for regression data using property={}", property);
-		return new MolAndActivityConverter(molecules, property);
+		this.propertyNameForActivity = property.trim();
+		LOGGER.debug("init IteratingMolAndActivity using property={} in {} mode", property, nl!=null?"classification" : "regression");
+		this.terminateOnNumFails = terminateOnNumFails;
+		this.classLabels = nl;
+		this.isClassification = nl != null;
 	}
 
-	/**
-	 * For classification
-	 * @param molecules An {@link Iterator} with molecules
-	 * @param property the activity property
-	 * @param classLabels The mapping of textual labels to numeric labels
-	 * @return the calling instance reference, for fluid API type calling
-	 * @throws IllegalArgumentException Invalid arguments
-	 */
-	public static MolAndActivityConverter classificationConverter(Iterator<IAtomContainer> molecules, String property, NamedLabels classLabels) 
-			throws IllegalArgumentException {
-				LOGGER.debug("Creating MolAndActivityConverter for classification data using property={} and labels={}", property,classLabels);
-		if (classLabels==null || classLabels.getNumLabels()==0){
-			throw new IllegalArgumentException("No class labels given");
+	public static class Builder {
+
+		private String property;
+		private Iterator<IAtomContainer> iterator;
+		private NamedLabels classLabels;
+		private int terminateOnNumFails = 10;
+
+		private Builder(){}
+
+		public static Builder regressionConverter(Iterator<IAtomContainer> molecules, String property){
+			Builder b = new Builder();
+			b.property = property;
+			b.iterator = molecules;
+			return b;
 		}
-		// We have a classification problem
-		if (classLabels.getNumLabels() < 2)
-			throw new IllegalArgumentException("Classification labels must be at least 2");
-		MolAndActivityConverter iter = new MolAndActivityConverter(molecules, property);
+		public static Builder classificationConverter(Iterator<IAtomContainer> molecules, String property, NamedLabels classLabels){
+			Builder b = new Builder();
+			b.classLabels = classLabels;
+			b.property = property;
+			b.iterator = molecules;
+			return b;
+		}
 
-		iter.isClassification = true;
-		iter.classLabels = classLabels.clone();
-		return iter;
+		/**
+		 * Sets the maximum number of inconsistent records at the 'property level', i.e. 
+		 * invalid records could occur at an earlier level - i.e. invalid chemical structures etc. 
+		 * Set this to a negative number in order to deactivate early stopping.
+		 * @param max the maximum number, or a negative number to deactivate early stopping
+		 * @return the builder instance
+		 */
+		public Builder maxAllowedInvalidRecords(int max){
+			this.terminateOnNumFails = max;
+			return this;
+		}
+
+		public MolAndActivityConverter build() throws IllegalArgumentException {
+			return new MolAndActivityConverter(iterator, property, terminateOnNumFails, classLabels);
+		}
 	}
 
 	public String getPropertyNameForActivity() {
 		return propertyNameForActivity;
-	}
-
-	public void setPropertyNameForActivity(String property) {
-		this.propertyNameForActivity = property;
 	}
 
 	public boolean isClassification() {
@@ -137,11 +141,7 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 	}
 
 	public NamedLabels getClassLabels() {
-		return classLabels;
-	}
-
-	public void setClassLabels(NamedLabels labels) {
-		this.classLabels = labels;
+		return classLabels!=null ? classLabels.clone() : null;
 	}
 
 	public int getMolsSkippedMissingActivity(){
@@ -160,25 +160,25 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 		return getFailedRecords().size();
 	}
 
-	public List<FailedRecord> getFailedRecords(){
-		if (molIterator instanceof ChemFileIterator) {
-			List<FailedRecord> recs = new ArrayList<>(failedRecords);
-			recs.addAll(((ChemFileIterator) molIterator).getFailedRecords());
-			Collections.sort(recs);
-			return recs;
-		}
-		return failedRecords;
-	}
-
 	/**
-	 * Terminates parsing after <code>failAfterNum</code> number of failures. I.e. <code>failAfterNum</code>=10 will
-	 * stop once the 11th record fails. if <code>failAfterNum &lt; 0</code> there's no stopping at all.
-	 * @param failAfterNum max number of tries
+	 * Getter method for the setting of maximum number of allowed inconsistent records,
+	 * which is set using {@link Builder#maxAllowedInvalidRecords(int)}. If the value is negative,
+	 * there is no early termination - all records will be iterated through.
+	 * @return maximum number of inconsistent records before failure
 	 */
-	public void setStopAfterNumFails(int failAfterNum) {
-		this.terminateOnNumFails = failAfterNum;
+	public int getMaxNumInconsistentRecords(){
+		return terminateOnNumFails;
 	}
 
+	public List<FailedRecord> getFailedRecords(){
+		// Copy of the list, the records themselves are immutable so no need to clone those
+		List<FailedRecord> result = new ArrayList<>(failedRecords);
+		if (molIterator instanceof ChemFileIterator) {
+			result.addAll(((ChemFileIterator) molIterator).getFailedRecords());
+			result = CollectionUtils.getUniqueAndSorted(result);
+		}
+		return result;
+	}
 
 	/**
 	 * Get the underlying iterator of molecules 
@@ -201,22 +201,24 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 			else
 				loadNextRegression();
 		} catch (Exception e) {
-			LOGGER.debug("Failed initializing {}", MolAndActivityConverter.class.getCanonicalName(), e);
+			LOGGER.debug("Failed initializing MolAndActivityConverter", e);
 			throw new IllegalArgumentException("Could not generate any valid records from input data");
 		}
 	}
 
 	@Override
 	public boolean hasNext() {
-		if (nextPair != null) // If called previously
+		// If called previously
+		if (nextPair != null || stoppingExcept != null) 
 			return true;
 
+		// Otherwise try to load the next one
 		if (isClassification)
 			loadNextClassification();
 		else
 			loadNextRegression();
 
-		if (nextPair == null) {
+		if (nextPair == null && stoppingExcept == null) {
 			LOGGER.debug("Finished iterating, numOKmols: {}, molsSkippedMissingActivity: {}, molsSkippedInvalidActivity: {}",
 					numOKmols,molsSkippedMissingActivity,molsSkippedInvalidActivity);
 			try {
@@ -224,7 +226,7 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 			} catch(Exception e) {}
 		}
 
-		return nextPair != null;
+		return nextPair != null || stoppingExcept != null;
 	}
 
 	@Override
@@ -237,9 +239,6 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 			// Try to load next pair
 			if (hasNext()){
 				return returnNext();
-			} else if (stoppingExcept != null) {
-				// The hasNext() method calls the loading-methods and this exception could now be populated
-				throw stoppingExcept;
 			} else {
 				throw new NoSuchElementException();
 			}
@@ -247,10 +246,18 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 	}
 
 	private Pair<IAtomContainer, Double> returnNext(){
-		Pair<IAtomContainer, Double> next = nextPair;
-		nextPair = null;
-		numOKmols++;
-		return next;
+		if (nextPair != null){
+			Pair<IAtomContainer, Double> next = nextPair;
+			nextPair = null;
+			numOKmols++;
+			return next;
+		} else if (stoppingExcept != null){
+			LOGGER.debug("Failing parsing of molecules from MolAndActivityConverter");
+			throw stoppingExcept;
+		} else {
+			LOGGER.debug("in an inconsistent state - terminating");
+			throw new IllegalStateException("Invalid state when loading and converting molecules");
+		}
 	}
 
 	@Override
@@ -267,7 +274,7 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 	 */
 	public void close() {
 		if (molIterator != null) {
-			LOGGER.debug("Calling close on {}", this.getClass().getCanonicalName());
+			LOGGER.debug("Calling close on MolAndActivityConverter");
 
 			try {
 				if (molIterator instanceof Closeable) {
@@ -282,29 +289,59 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 		}
 	}
 
-	private void failMol(IAtomContainer mol, String reason) {
+	private void failMol(IAtomContainer mol, FailedRecord.Cause cause, String reason) {
 		Object ind = CPSignMolProperties.getRecordIndex(mol);
-		if (com.arosbio.commons.TypeUtils.isInt(ind))
-			failedRecords.add(new FailedRecord(com.arosbio.commons.TypeUtils.asInt(ind), CPSignMolProperties.getMolTitle(mol)).setReason(reason));
-		else
-			failedRecords.add(new FailedRecord(-1, CPSignMolProperties.getMolTitle(mol)).setReason(reason));
+		int index = com.arosbio.commons.TypeUtils.isInt(ind) ? com.arosbio.commons.TypeUtils.asInt(ind) : -1;
+
+		failedRecords.add(new FailedRecord.Builder(index)
+			.withCause(cause)
+			.withID(CPSignMolProperties.getMolTitle(mol))
+			.withReason(reason)
+			.build());
+	}
+
+	/**
+	 * Checks in case we've had enough errors in order to stop processing the input, and
+	 * log details relevant for debugging the root cause and potential remedies. Also populates the {@link #stoppingExcept}
+	 * so it can be thrown at the next call to {@link #next()}
+	 * @return {@code true} if we should continue to process records, {@code false} if we should fail
+	 */
+	private boolean checkShouldContinue(){
+		if (terminateOnNumFails>= 0 && failedRecords.size() > terminateOnNumFails) {
+			// we've encountered enough failed records in order to exit
+
+			if (numOKmols == 0) {
+				// Here (almost definitely) have issues with the parameters!
+				LOGGER.debug("No valid records found for the given settings in the first {} records, number of records with missing property={} (for property={}), number with invalid property value={}",
+					failedRecords.size(), molsSkippedMissingActivity, propertyNameForActivity, molsSkippedInvalidActivity);
+			} 
+			LOGGER.debug("Number of allowed invalid records passed - will return an exception in case next() has been called or on the next call to that method");  
+
+			stoppingExcept = new EarlyLoadingStopException("Encountered more invalid records than the allowed (" + terminateOnNumFails+')',failedRecords);
+
+			return false;
+		}
+		return true;
 	}
 
 	private void loadNextClassification(){
 
 		while (nextPair == null && molIterator.hasNext()){
 			// Fail "fast"
-			if (terminateOnNumFails>= 0 && failedRecords.size() > terminateOnNumFails) {
-				if (numOKmols == 0) {
-					// Here we might have issues with the parameters!
-					throw new IllegalArgumentException(String.format("MolAndActivityConverter was called with class-labels: %s but cannot find a match in labels in first %d records",
-							classLabels, terminateOnNumFails));
-				} else {
-					LOGGER.debug("Number of allowed failures passed - will return an exception in case next() has been called or on the next call to that method");  
-					stoppingExcept = new EarlyLoadingStopException(failedRecords);
-					return;
-				}
+			if (!checkShouldContinue()){
+				return;
 			}
+			// if (terminateOnNumFails>= 0 && failedRecords.size() > terminateOnNumFails) {
+			// 	if (numOKmols == 0) {
+			// 		// Here we might have issues with the parameters!
+			// 		throw new IllegalArgumentException(String.format("Was called with class-labels: %s but cannot find a match in labels in first %d records",
+			// 				classLabels.getLabelsSet(), terminateOnNumFails));
+			// 	} else {
+			// 		LOGGER.debug("Number of allowed failures passed - will return an exception in case next() has been called or on the next call to that method");  
+			// 		stoppingExcept = new EarlyLoadingStopException(failedRecords);
+			// 		return;
+			// 	}
+			// }
 
 			// load the next mol and look for the activity value
 			IAtomContainer mol = molIterator.next();
@@ -312,18 +349,18 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 			// skip if property does not exist
 			if (property == null){
 				molsSkippedMissingActivity++;
-				failMol(mol, ERR_EMPTY_ACTIVITY_PROPERTY);
+				failMol(mol, Cause.MISSING_PROPERTY, ERR_EMPTY_ACTIVITY_PROPERTY);
 				continue;
 			}
 			// convert to string
 			String activityString = property.toString().trim();
 			if (activityString.isEmpty()) {
 				molsSkippedMissingActivity++;
-				failMol(mol, ERR_EMPTY_ACTIVITY_PROPERTY);
+				failMol(mol, Cause.MISSING_PROPERTY, ERR_EMPTY_ACTIVITY_PROPERTY);
 				continue;
 			} else if (!classLabels.contain(activityString)){
 				molsSkippedInvalidActivity++;
-				failMol(mol, "Activity \""+activityString +"\" not one of the given labels");
+				failMol(mol, Cause.INVALID_PROPERTY, "Activity \""+activityString +"\" not one of the given labels");
 				continue;
 			}
 
@@ -339,17 +376,19 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 		while (nextPair == null && molIterator.hasNext()){
 
 			// fail early
-			if (terminateOnNumFails>= 0 && failedRecords.size() > terminateOnNumFails) {
-				if (numOKmols == 0) {
-					// Here we might have issues with the parameters!
-					throw new IllegalArgumentException("MolAndActivityConverter was called in Regression-mode, but no molecules were parsed correctly - if this is a classification problem you must give the class labels, or is the property incorrect?");
-				} else {
-					LOGGER.debug("Number of allowed failures passed - will return an exception in case next() has been called or on the next call to that method");  
-					stoppingExcept = new EarlyLoadingStopException(failedRecords);
-					return;
-				}
+			if (!checkShouldContinue()){
+				return;
 			}
-
+			// if (terminateOnNumFails>= 0 && failedRecords.size() > terminateOnNumFails) {
+			// 	if (numOKmols == 0) {
+			// 		// Here we might have issues with the parameters!
+			// 		throw new IllegalArgumentException("MolAndActivityConverter was called in Regression-mode, but no molecules were parsed correctly - if this is a classification problem you must give the class labels, or is the property incorrect?");
+			// 	} else {
+			// 		LOGGER.debug("Number of allowed failures passed - will return an exception in case next() has been called or on the next call to that method");  
+			// 		stoppingExcept = new EarlyLoadingStopException(failedRecords);
+			// 		return;
+			// 	}
+			// }
 
 			// load the next mol and look for the activity value
 			IAtomContainer mol = molIterator.next();
@@ -358,7 +397,7 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 			// skip if property does not exist
 			if (property == null){
 				molsSkippedMissingActivity++;
-				failMol(mol, ERR_EMPTY_ACTIVITY_PROPERTY);
+				failMol(mol, Cause.MISSING_PROPERTY, ERR_EMPTY_ACTIVITY_PROPERTY);
 				continue;
 			}
 			// convert to string
@@ -367,7 +406,7 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 			// If no activity found
 			if (activity.isEmpty()){
 				molsSkippedMissingActivity++;
-				failMol(mol, ERR_EMPTY_ACTIVITY_PROPERTY);
+				failMol(mol, Cause.MISSING_PROPERTY, ERR_EMPTY_ACTIVITY_PROPERTY);
 				continue;
 			}
 
@@ -378,7 +417,7 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 			} catch (NumberFormatException e){
 				//			molsSkippedMissingActivity++;
 				molsSkippedInvalidActivity++;
-				failMol(mol, "Invalid activity \"" + activity + "\"");
+				failMol(mol, Cause.INVALID_PROPERTY, "Invalid activity \"" + activity + "\"");
 				continue;
 			}
 

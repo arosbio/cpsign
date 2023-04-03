@@ -52,6 +52,7 @@ import com.arosbio.ml.metrics.cp.CalibrationPlot;
 import com.arosbio.ml.metrics.cp.EfficiencyPlot;
 import com.arosbio.ml.metrics.plots.Plot2D;
 import com.arosbio.ml.metrics.plots.PlotMetric;
+import com.arosbio.ml.metrics.plots.PlotMetricAggregation;
 import com.arosbio.ml.sampling.FoldedSampling;
 import com.arosbio.ml.sampling.RandomSampling;
 import com.arosbio.ml.vap.avap.AVAPClassifier;
@@ -111,6 +112,21 @@ public abstract class TestEnv extends TestBase {
 				} else if (m instanceof SingleValuedMetric){
 					return ((SingleValuedMetric) m).getScore();
 				} else {
+					throw new IllegalArgumentException("Could not find the correct efficiency metric");
+				}
+			} else if (m instanceof MetricAggregation){
+				// SingleValuedMetric base = ;
+				Class<?> clz = ((MetricAggregation)m).spawnNewMetricInstance().getClass();
+				if (clz == effType.getClass()){
+					return ((MetricAggregation)m).getScore();
+				}
+			} else if (m instanceof PlotMetricAggregation){
+				PlotMetric base = ((PlotMetricAggregation)m).spawnNewMetricInstance();
+				Class<?> clz = base.getClass();
+				if (clz == effType.getClass()){
+					Plot2D p = ((PlotMetricAggregation) m).buildPlot();
+					if (p instanceof EfficiencyPlot)
+						return ((EfficiencyPlot) p).getEfficiency(conf);
 					throw new IllegalArgumentException("Could not find the correct efficiency metric");
 				}
 			}

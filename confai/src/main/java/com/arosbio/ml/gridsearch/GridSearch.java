@@ -1031,9 +1031,7 @@ public class GridSearch {
 		return -1;
 	}
 
-	// @SuppressWarnings("unchecked")
 	private static List<SingleValuedMetric> cloneMetrics(List<SingleValuedMetric> list) {
-		// <M extends Metric> (M)
 		List<SingleValuedMetric> clones = new ArrayList<>(list.size());
 		for (SingleValuedMetric m : list)
 			clones.add(m.clone());

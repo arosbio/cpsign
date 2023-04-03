@@ -22,6 +22,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import com.arosbio.chem.CDKConfigureAtomContainer;
 import com.arosbio.chem.CPSignMolProperties;
 import com.arosbio.chem.io.in.ChemFileIterator.EarlyLoadingStopException;
+import com.arosbio.chem.io.in.ChemFileIterator;
 import com.arosbio.chem.io.in.FailedRecord;
 import com.arosbio.chem.io.in.MolAndActivityConverter;
 import com.arosbio.cheminf.descriptors.ChemDescriptor;
@@ -125,15 +127,17 @@ public final class ChemDataset extends Dataset {
 	 * @author staffan
 	 *
 	 */
-	public class DescriptorCalcInfo {
-		private int numOK, cdkFailed, hacFailed, numDescriptorCalcFail;
+	public static class DescriptorCalcInfo {
+		private final int numOK, cdkFailed, hacFailed, numDescriptorCalcFail, minHACThreshold, fileReaderFailures;
 		private List<FailedRecord> failedRecords = new ArrayList<>();
 
-		private DescriptorCalcInfo(int numOK, int cdkFailed, int hacFailed, int numDescriptorFail) {
+		private DescriptorCalcInfo(int numOK, int numCDKFailed, int numHACFailed, int numDescriptorFail, int hacThreshold, int fileReaderFailed) {
 			this.numOK = numOK;
-			this.cdkFailed = cdkFailed;
-			this.hacFailed = hacFailed;
+			this.cdkFailed = numCDKFailed;
+			this.hacFailed = numHACFailed;
 			this.numDescriptorCalcFail = numDescriptorFail;
+			this.minHACThreshold = hacThreshold;
+			this.fileReaderFailures = fileReaderFailed;
 		}
 		public int getNumSuccessfullyAdded() {
 			return numOK;
@@ -151,7 +155,15 @@ public final class ChemDataset extends Dataset {
 			return numDescriptorCalcFail;
 		}
 
-		public DescriptorCalcInfo setFailedRecords(List<FailedRecord> recs) {
+		public int getMinHACThreshold(){
+			return minHACThreshold;
+		}
+
+		public int getReaderFailures(){
+			return fileReaderFailures;
+		}
+
+		private DescriptorCalcInfo setFailedRecords(List<FailedRecord> recs) {
 			this.failedRecords = recs;
 			return this;
 		}
@@ -179,12 +191,17 @@ public final class ChemDataset extends Dataset {
 				txt.append("Failed ")
 				.append(hacFailed )
 				.append(" molecules due to being too small (min Heavy Atom Count is ")
-				.append(minimumHAC).append(").");
+				.append(minHACThreshold).append(").");
 			}
 			if (numDescriptorCalcFail>0) {
 				if (txt.length()>0)
 					txt.append(' ');
 				txt.append("Failed ").append(numDescriptorCalcFail).append(" during descriptor calculation.");
+			}
+			if (fileReaderFailures > 0){
+				if (txt.length()>0)
+					txt.append(' ');
+				txt.append("Failed ").append(fileReaderFailures).append(" due to invalid records and/or missing activity values.");
 			}
 
 			return txt.toString();
@@ -787,15 +804,15 @@ public final class ChemDataset extends Dataset {
 				LOGGER.debug("Skipped molecule due to less than {} HAC, had {}",
 						minimumHAC, hacExcept.count);
 				hacFail++;
-				failures.add(new FailedRecord(index).setID(mol.getID()).setReason(hacExcept.getMessage()));
+				failures.add(new FailedRecord.Builder(index).withID(mol.getID()).withReason(hacExcept.getMessage()).build());
 			} catch (DescriptorCalcException e) {
 				LOGGER.debug("Failed molecule with index {} while computing descriptors", index, e);
 				descFail++;
-				failures.add(new FailedRecord(index).setReason("Failed computing descriptors: " + getShortErrMsg(e)));
+				failures.add(new FailedRecord.Builder(index).withReason("Failed computing descriptors: " + getShortErrMsg(e)).build());
 			} catch (CDKException e) {
 				LOGGER.debug("Failed record at index {} when configuring using CDK",index, e);
 				cdkFail++;
-				failures.add(new FailedRecord(index).setReason("Could not configure molecule: " + getShortErrMsg(e)));
+				failures.add(new FailedRecord.Builder(index).withReason("Could not configure molecule: " + getShortErrMsg(e)).build());
 			}
 
 			i++;
@@ -803,11 +820,27 @@ public final class ChemDataset extends Dataset {
 
 		LOGGER.debug("Successfully converted {} molecules to FeatureVectors", matrix.size());
 
+		// Check failed records from earlier in the pipeline
+		int nReaderFailures = 0;
+		if (mols instanceof ChemFileIterator){
+			int nFails = failures.size();
+			failures.addAll(((ChemFileIterator)mols).getFailedRecords());
+			if (nFails < failures.size()){
+				// We had failures earlier in the parsing pipeline
+				failures = failures.stream()
+					.distinct()
+					.sorted()
+					.collect(Collectors.toCollection(ArrayList::new));
+				nReaderFailures = failures.size() - nFails;
+			}
+			
+		}
+
 		if (! failures.isEmpty()){
 			LOGGER.debug("Failed converting the following molecules to Features Vectors (starting from index 0): {}", failures);
 		}
 
-		return ImmutablePair.of(matrix,new DescriptorCalcInfo(matrix.size(), cdkFail, hacFail, descFail).setFailedRecords(failures));
+		return ImmutablePair.of(matrix,new DescriptorCalcInfo(matrix.size(), cdkFail, hacFail, descFail, minimumHAC, nReaderFailures).setFailedRecords(failures));
 
 	}
 
@@ -883,7 +916,7 @@ public final class ChemDataset extends Dataset {
 			String property, 
 			NamedLabels labels) 
 					throws IllegalStateException, IllegalArgumentException, EarlyLoadingStopException {
-		DescriptorCalcInfo info = add(MolAndActivityConverter.classificationConverter(data, property, labels));
+		DescriptorCalcInfo info = add(MolAndActivityConverter.Builder.classificationConverter(data, property, labels).build());
 		this.textualLabels = labels.clone();
 		this.property = property;
 		return info;
@@ -892,7 +925,7 @@ public final class ChemDataset extends Dataset {
 	public DescriptorCalcInfo add(Iterator<IAtomContainer> data, 
 			String property) 
 					throws IllegalStateException, IllegalArgumentException, EarlyLoadingStopException {
-		DescriptorCalcInfo info = add(MolAndActivityConverter.regressionConverter(data, property));
+		DescriptorCalcInfo info = add(MolAndActivityConverter.Builder.regressionConverter(data, property).build());
 		this.property = property;
 		return info;
 	}
@@ -902,7 +935,7 @@ public final class ChemDataset extends Dataset {
 			NamedLabels labels, 
 			RecordType type) 
 					throws IllegalStateException, IllegalArgumentException, EarlyLoadingStopException {
-		DescriptorCalcInfo info = add(MolAndActivityConverter.classificationConverter(data, property, labels), type);
+		DescriptorCalcInfo info = add(MolAndActivityConverter.Builder.classificationConverter(data, property, labels).build(), type);
 		this.textualLabels = labels.clone();
 		this.property = property;
 		return info;
@@ -911,7 +944,7 @@ public final class ChemDataset extends Dataset {
 	public DescriptorCalcInfo add(Iterator<IAtomContainer> data, 
 			String property, RecordType type) 
 					throws IllegalStateException, IllegalArgumentException, EarlyLoadingStopException {
-		DescriptorCalcInfo info = add(MolAndActivityConverter.regressionConverter(data, property), type);
+		DescriptorCalcInfo info = add(MolAndActivityConverter.Builder.regressionConverter(data, property).build(), type);
 		this.property = property;
 		return info;
 	}
@@ -968,7 +1001,7 @@ public final class ChemDataset extends Dataset {
 				LOGGER.debug("Early stopping due to encountered too many failed records: cdk-err: {}, HAC: {}, desc-calc: {}",
 						skippedMolsCDKErr,skippedMolsHAC,skippedMolsDescriptorCalc);
 
-				throw new EarlyLoadingStopException(failures);
+				throw new EarlyLoadingStopException("Encountered too many invalid records",failures);
 			}
 
 			recIndex ++;
@@ -992,15 +1025,15 @@ public final class ChemDataset extends Dataset {
 				LOGGER.debug("Skipped molecule due to less than {} HAC, had {}",
 						minimumHAC, hacExcept.count);
 				skippedMolsHAC++;
-				failures.add(new FailedRecord(index).setID(mol.getID()).setReason(hacExcept.getMessage()));
+				failures.add(new FailedRecord.Builder(index).withID(mol.getID()).withReason(hacExcept.getMessage()).build());
 			} catch (DescriptorCalcException e) {
 				LOGGER.debug("Failed molecule with index {} while computing descriptors", index, e);
 				skippedMolsDescriptorCalc++;
-				failures.add(new FailedRecord(index).setReason("Failed computing descriptors: " + getShortErrMsg(e)));
+				failures.add(new FailedRecord.Builder(index).withReason("Failed computing descriptors: " + getShortErrMsg(e)).build());
 			} catch (CDKException e) {
 				LOGGER.debug("Failed record at index {} when configuring using CDK",index, e);
 				skippedMolsCDKErr++;
-				failures.add(new FailedRecord(index).setReason("Could not configure molecule: " + getShortErrMsg(e)));
+				failures.add(new FailedRecord.Builder(index).withReason("Could not configure molecule: " + getShortErrMsg(e)).build());
 			}
 
 		}
@@ -1033,13 +1066,26 @@ public final class ChemDataset extends Dataset {
 		}
 		LOGGER.debug(output.toString());
 
+		int nRecordFails = 0;
 		if (data instanceof MolAndActivityConverter) {
+			MolAndActivityConverter conv = (MolAndActivityConverter) data;
 			if (property == null || property.isEmpty()) {
-				this.property = ((MolAndActivityConverter) data).getPropertyNameForActivity();
+				this.property = conv.getPropertyNameForActivity();
 			}
 			if ( ((MolAndActivityConverter)data).getClassLabels() != null) {
-				this.textualLabels = ((MolAndActivityConverter)data).getClassLabels();
+				this.textualLabels = conv.getClassLabels();
 			}
+
+			// Get any of the underlying failed records
+			List<FailedRecord> recFails = conv.getFailedRecords();
+
+			if (!recFails.isEmpty()){
+				nRecordFails = recFails.size();
+				// Add all, get unique ones and sort them
+				failures.addAll(recFails);
+				failures = CollectionUtils.getUniqueAndSorted(failures);
+			}
+
 		}
 
 		if (data instanceof AutoCloseable) {
@@ -1049,7 +1095,7 @@ public final class ChemDataset extends Dataset {
 				LOGGER.debug("Failed closing molsIterator though instanceof AutoClosable",e);
 			}
 		}
-		return new DescriptorCalcInfo(numAdded, skippedMolsCDKErr, skippedMolsHAC, skippedMolsDescriptorCalc).setFailedRecords(failures);
+		return new DescriptorCalcInfo(numAdded, skippedMolsCDKErr, skippedMolsHAC, skippedMolsDescriptorCalc, minimumHAC,nRecordFails).setFailedRecords(failures);
 	}
 
 	public void add(IAtomContainer molecule, double label) 

@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.arosbio.chem.CPSignMolProperties;
+import com.arosbio.chem.io.in.FailedRecord.Cause;
 import com.github.cliftonlabs.json_simple.JsonArray;
 import com.github.cliftonlabs.json_simple.JsonException;
 import com.github.cliftonlabs.json_simple.JsonObject;
@@ -71,9 +72,9 @@ public class JSONChemFileReader implements ChemFileIterator {
 			recordIndex++;
 			
 			if (!foundValidMol && maxNumFailingRecordsMAX >=0 && numRecordsTried>= maxNumFailingRecordsMAX) {
-				throw new EarlyLoadingStopException("Could not find any valid records in the first " + maxNumFailingRecordsMAX + " array-indecies", failedRecords);
+				throw new EarlyLoadingStopException("Could not find any valid records in the first " + maxNumFailingRecordsMAX + " array-indices", failedRecords);
 			} else if (maxNumFailingRecordsMAX>=0 && failedRecords.size() > maxNumFailingRecordsMAX) {
-				throw new EarlyLoadingStopException(failedRecords);
+				throw new EarlyLoadingStopException("Failed too many records ("+failedRecords.size()+"): please check your parameters",failedRecords);
 			}
 			smiles=null;
 			jsonMolecule = (JsonObject) jsonIterator.next();
@@ -86,9 +87,9 @@ public class JSONChemFileReader implements ChemFileIterator {
 
 			if (smiles == null){
 				failedMoleculeDueToMissingSMILES++;
-				LOGGER.debug("Could not find any molecule(s) in json: " + jsonMolecule.toJson()); //SONString());
+				LOGGER.debug("Could not find any molecule(s) in json: {}", jsonMolecule.toJson());
 				numRecordsTried++;
-				failedRecords.add(new FailedRecord(recordIndex).setReason("Missing SMILES"));
+				failedRecords.add(new FailedRecord.Builder(recordIndex).withCause(Cause.MISSING_STRUCTURE).withReason("Missing SMILES").build());
 				continue;
 			}
 
@@ -97,7 +98,7 @@ public class JSONChemFileReader implements ChemFileIterator {
 				mol = ChemFileParserUtils.parseSMILES(smiles);
 			} catch (Exception e){
 				failedMoleculeDueToInvalidSMILES++;
-				failedRecords.add(new FailedRecord(recordIndex).setReason("Invalid SMILES"));
+				failedRecords.add(new FailedRecord.Builder(recordIndex).withCause(Cause.INVALID_STRUCTURE).withReason("Invalid SMILES").build());
 				continue;
 			}
 

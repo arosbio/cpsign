@@ -277,6 +277,13 @@ public class CollectionUtils {
 		return asList;
 	}
 
+	public static <T extends Comparable<T>> List<T> getUniqueAndSorted(Collection<T> input){
+		return input.stream()
+			.distinct()
+			.sorted()
+			.collect(Collectors.toCollection(ArrayList::new));
+	}
+
 	public static <T extends Comparable<? super T>>
 	boolean isSorted(Iterable<T> iterable) {
 		Iterator<T> iter = iterable.iterator();

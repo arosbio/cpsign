@@ -49,10 +49,6 @@ public interface ChemFileIterator extends Iterator<IAtomContainer>, Closeable {
 			this.recs = recs;
 		}
 		
-		public EarlyLoadingStopException(List<FailedRecord> recs) {
-			this.recs = recs;
-		}
-		
 		public List<FailedRecord> getFailedRecords(){
 			return this.recs;
 		}

@@ -488,12 +488,12 @@ public class TestResources {
 		}
 
 		/**
-		 * Contains 806 molecules in total
-		 * @return
+		 * Contains 806 molecules in total, SDF format, with GZIP 
+		 * @return SDF Data set
 		 */
 		public static CmpdData getHERG(){
-			return CmpdData.Builder.regression(getURL(CmpdData.CHEM_FOLDER+"hERG@PKKB-reg-class.sdf.gz"), Format.SDF, "IC50", -1, -1)
-				.zipped(true).build(); // TODO - why is this showing the wrong thing??
+			return CmpdData.Builder.regression(getURL(CmpdData.CHEM_FOLDER+"hERG@PKKB-reg-class.sdf.gz"), Format.SDF, "IC50", 474, 332)
+				.zipped(true).build();
 		}
 		public static CSVCmpdData getToy_many_cols(){
 			return CSVCmpdData.Builder.regression(getURL(CmpdData.REG_FOLDER+"toy_many_cols.csv"), "Response value", 3, 0)

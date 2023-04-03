@@ -14,7 +14,9 @@ import java.io.IOException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.openscience.cdk.interfaces.IAtomContainer;
 
+import com.arosbio.commons.TypeUtils;
 import com.arosbio.commons.logging.LoggerUtils;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.TestResources.CmpdData;
@@ -50,16 +52,23 @@ public class TestJSONChemFileReader extends UnitTestBase {
 		CmpdData chang_oneline = TestResources.Reg.getChang_json_no_indent();
 		ChemFileIterator iter = new JSONChemFileReader(chang_oneline.url().openStream());
 		iter.setEarlyTerminationAfter(-1);
-		int numOK=0;
+		int numOK=0, numMissingProp = 0, numNumericVal = 0;
 		while (iter.hasNext()){
-			iter.next();
+			IAtomContainer mol = iter.next();
 			numOK++;
+			if (! mol.getProperties().containsKey(chang_oneline.property())){
+				numMissingProp ++;
+			} else if (! TypeUtils.isDouble(mol.getProperties().get(chang_oneline.property()))){
+				numNumericVal++;
+			}
 		}
-		Assert.assertEquals(34-1, numOK);
+		Assert.assertEquals("34 in total, one with invalid smiles = 33 'valid records'",33, numOK); 
 		Assert.assertEquals(1, iter.getRecordsSkipped());
 		Assert.assertEquals(1, iter.getFailedRecords().size());
+		Assert.assertEquals(1, iter.getFailedRecords().get(0).getIndex()); // index starts at 0, second record: index = 1
 
-//		SYS_ERR.println(iter.getRecordsSkipped());
+		Assert.assertEquals(1, numMissingProp);
+		Assert.assertEquals(1, numNumericVal);
 	}
 
 }

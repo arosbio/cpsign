@@ -11,26 +11,79 @@ package com.arosbio.chem.io.in;
 
 public class FailedRecord implements Comparable<FailedRecord>{
 	
-	private int index;
-	private String id;
-	private String reason;
+	private final int index;
+	private final String id;
+	private final String reason;
+	private final Cause cause;
 
-	public FailedRecord(int index) {
-		this.index = index;
+	public static enum Cause {
+		/** If the structure is missing, e.g. in a CSV file with the structure column being empty */
+		MISSING_STRUCTURE("Missing structure"),
+		/** In case a record is valid, but the structure cannot be either parsed into a valid IAtomContainer, or that e.g. perception of aromaticity fails */
+		INVALID_STRUCTURE("Invalid structure"),
+		/** If a record itself is invalid, i.e. wrong number of columns in CSV */
+		INVALID_RECORD("Invalid data record"),
+		/** If the record do not contain the property value of interest */
+		MISSING_PROPERTY("Missing property value"),
+		/** If a record contains the property value, but cannot be converted to a numeric label */
+		INVALID_PROPERTY("Invalid property value"),
+		/** If the record fails by a cause not covered by the other enums */
+		UNKNOWN("Unknown");
+
+		public final String message;
+
+		private Cause(String msg){
+			this.message = msg;
+		}
+
+		public String getMessage(){
+			return message;
+		}
+	}
+
+	public static class Builder {
+
+		private int index;
+		private String id;
+		private String reason;
+		private Cause cause = Cause.UNKNOWN;
+
+		public Builder(int index){
+			this.index = index;
+		}
+
+		public Builder withID(String id){
+			this.id = id;
+			return this;
+		}
+
+		public Builder withReason(String reason){
+			this.reason = reason;
+			return this;
+		}
+
+		public Builder withCause(Cause cause){
+			this.cause = cause;
+			if (reason == null || reason.isBlank()){
+				this.reason = cause.message;
+			}
+			return this;
+		}
+
+		public FailedRecord build(){
+			return new FailedRecord(index,id,reason, cause);
+		}
 	}
 	
-	public FailedRecord(int index, String id) {
-		this(index);
+	public FailedRecord(int index, String id, String reason, Cause cause) {
+		this.index = index;
 		this.id = id;
+		this.reason = reason;
+		this.cause = cause;
 	}
 	
 	public int getIndex() {
 		return index;
-	}
-	
-	public FailedRecord setID(String id) {
-		this.id = id;
-		return this;
 	}
 	
 	public boolean hasID() {
@@ -41,17 +94,16 @@ public class FailedRecord implements Comparable<FailedRecord>{
 		return id;
 	}
 	
-	public FailedRecord setReason(String reason) {
-		this.reason = reason;
-		return this;
-	}
-	
 	public boolean hasReason() {
 		return reason != null;
 	}
 	
 	public String getReason() {
 		return reason;
+	}
+
+	public Cause getCause(){
+		return cause;
 	}
 
 	@Override
@@ -64,8 +116,23 @@ public class FailedRecord implements Comparable<FailedRecord>{
 		if (id!=null)
 			txt += ", ID: "+id;
 		if (reason != null)
-			txt += ", reason: " + getReason();
+			txt += ", reason: " + reason;
 		return txt;
+	}
+
+	public boolean equals(Object o){
+		return o instanceof FailedRecord ? 
+			equals((FailedRecord)o) : false;
+	}
+	public boolean equals(FailedRecord r){
+		if (this == r){
+			// Same ref
+			return true;
+		}
+		return this.index == r.index &&
+			this.id == r.id &&
+			this.reason.equals(r.reason) &&
+			this.cause == r.cause;
 	}
 
 }

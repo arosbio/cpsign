@@ -105,7 +105,7 @@ public class TestCSVChemReader extends UnitTestBase {
 		
 		// Test at the next stage, with the iterating Mol and activity 
 		try (CSVChemFileReader smilesReader = csvFile.getIterator();
-				MolAndActivityConverter reader = MolAndActivityConverter.regressionConverter(smilesReader, "target");
+				MolAndActivityConverter reader = MolAndActivityConverter.Builder.regressionConverter(smilesReader, "target").build();
 				){
 			
 			Pair<IAtomContainer,Double> rec;

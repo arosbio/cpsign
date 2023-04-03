@@ -489,7 +489,7 @@ public class TestACPRegression extends UnitTestBase {
 
 		acpReg.addRecords(new SDFile(big_dataset.uri()).getIterator(), big_dataset.property());
 
-		TestRunner cv = new TestRunner.Builder(new KFoldCV(cvFolds)).evalPoints(Arrays.asList(confidence)).build();
+		TestRunner cv = new TestRunner.Builder(new KFoldCV(cvFolds)).calcMeanAndStd(false).evalPoints(Arrays.asList(confidence)).build();
 
 		List<Metric> normCV = cv.evaluate(acpReg.getDataset(),acpReg.getPredictor()); 
 		System.out.println("Normal CV: " + normCV);

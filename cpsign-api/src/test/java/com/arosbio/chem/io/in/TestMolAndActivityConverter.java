@@ -9,14 +9,18 @@
  */
 package com.arosbio.chem.io.in;
 
+import java.io.InputStream;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.openscience.cdk.interfaces.IAtomContainer;
 
+import com.arosbio.chem.io.in.ChemFileIterator.EarlyLoadingStopException;
 import com.arosbio.commons.logging.LoggerUtils;
 import com.arosbio.data.NamedLabels;
+import com.arosbio.io.StreamUtils;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.TestResources.CSVCmpdData;
 import com.arosbio.tests.TestResources.CmpdData;
@@ -31,9 +35,9 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 	public void Test_CSV_Classification() throws Exception{
 		// 19 lines of records, 1 not OK at all, 1 line with missing value
 		CSVCmpdData data = TestResources.Cls.getErroneous();
-		try(MolAndActivityConverter molAct = MolAndActivityConverter.classificationConverter(new CSVFile(data.uri()).getIterator(), 
+		try(MolAndActivityConverter molAct = MolAndActivityConverter.Builder.classificationConverter(new CSVFile(data.uri()).getIterator(), 
 			data.property(), 
-			new NamedLabels(data.labelsStr()));){
+			new NamedLabels(data.labelsStr())).build();){
 
 			int numMolecules=0;
 			while(molAct.hasNext()){
@@ -59,10 +63,9 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 
 		try(
 			CSVChemFileReader reader = new CSVFile(bigCSV.uri()).setDelimiter(bigCSV.delim()).getIterator();
-			MolAndActivityConverter conv = MolAndActivityConverter.regressionConverter(reader, "wrong");
+			MolAndActivityConverter conv = MolAndActivityConverter.Builder.regressionConverter(reader, "wrong").maxAllowedInvalidRecords(-1).build();
 		){
 			int numSuccess = 0;
-			conv.setStopAfterNumFails(-1);
 			
 			while (conv.hasNext()){
 				conv.next();
@@ -74,11 +77,11 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 		// CLASSIFICATION
 		try(
 			CSVChemFileReader reader = new CSVFile(bigCSV.uri()).setDelimiter(bigCSV.delim()).getIterator();
-			MolAndActivityConverter conv = MolAndActivityConverter.classificationConverter(reader, "wrong", new NamedLabels("label0","label1"));
+			MolAndActivityConverter conv = MolAndActivityConverter.Builder.classificationConverter(reader, "wrong", new NamedLabels("label0","label1"))
+				.maxAllowedInvalidRecords(-1).build();
 		){
 			int numSuccess = 0;
-			conv.setStopAfterNumFails(-1);
-			
+
 			while (conv.hasNext()){
 				conv.next();
 				numSuccess ++;
@@ -99,7 +102,7 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 		
 		try (
 			CSVChemFileReader reader = new CSVFile(data.uri()).setDelimiter(data.delim()).setHasBOM(true).getIterator();	
-			MolAndActivityConverter molAct = MolAndActivityConverter.regressionConverter(reader, data.property());
+			MolAndActivityConverter molAct = MolAndActivityConverter.Builder.regressionConverter(reader, data.property()).build();
 			
 			){
 			int numMolecules=0;
@@ -120,7 +123,7 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 
 	@Test
 	public void testErr_SDF_NoPropertyGiven() throws Exception {
-		try (MolAndActivityConverter m = MolAndActivityConverter.classificationConverter(new SDFile(TestResources.Cls.getAMES_10().uri()).getIterator(),null, new NamedLabels(TestResources.Cls.AMES_LABELS));){
+		try (MolAndActivityConverter m = MolAndActivityConverter.Builder.classificationConverter(new SDFile(TestResources.Cls.getAMES_10().uri()).getIterator(),null, new NamedLabels(TestResources.Cls.AMES_LABELS)).build();){
 			Assert.fail("Should fail without giving a propertyName");
 		} catch (IllegalArgumentException e){
 			System.out.println(e.getMessage());
@@ -134,8 +137,8 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 		CmpdData ames = TestResources.Cls.getAMES_10();
 		ChemFile sdf = new SDFile(ames.uri());
 
-		try(MolAndActivityConverter molAct = MolAndActivityConverter.classificationConverter(
-				sdf.getIterator(), ames.property(), new NamedLabels(ames.labelsStr())); ){
+		try(MolAndActivityConverter molAct = MolAndActivityConverter.Builder.classificationConverter(
+				sdf.getIterator(), ames.property(), new NamedLabels(ames.labelsStr())).build(); ){
 
 			while( molAct.hasNext()){
 				Pair<IAtomContainer, Double> instance = molAct.next();
@@ -152,8 +155,8 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 	@Test
 	public void TestSDFRegression() throws Exception {
 		CmpdData chang = TestResources.Reg.getChang();
-		try (MolAndActivityConverter molAct = MolAndActivityConverter.regressionConverter(
-				new SDFile(chang.uri()).getIterator(), chang.property());){
+		try (MolAndActivityConverter molAct = MolAndActivityConverter.Builder.regressionConverter(
+				new SDFile(chang.uri()).getIterator(), chang.property()).build();){
 
 			int numMolecules=0;
 			while( molAct.hasNext()){
@@ -172,8 +175,8 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 	public void testJSONClassification() throws Exception{
 		CmpdData amesJSON = TestResources.Cls.getAMES_10_json();
 		LoggerUtils.setDebugMode();
-		try (MolAndActivityConverter molsIterator = MolAndActivityConverter.classificationConverter(
-				new JSONFile(amesJSON.uri()).getIterator(), amesJSON.property(), new NamedLabels(amesJSON.labelsStr()));){
+		try (MolAndActivityConverter molsIterator = MolAndActivityConverter.Builder.classificationConverter(
+				new JSONFile(amesJSON.uri()).getIterator(), amesJSON.property(), new NamedLabels(amesJSON.labelsStr())).build();){
 			//		Assert.assertTrue(molsIterator instanceof );
 
 			int numMolecules=0;
@@ -197,10 +200,11 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 		CmpdData amesJSON = TestResources.Cls.getAMES_10_json_bool();
 		LoggerUtils.setDebugMode();
 		try(MolAndActivityConverter molsIterator = 
-				MolAndActivityConverter.classificationConverter(
+				MolAndActivityConverter.Builder.classificationConverter(
 						new JSONFile(amesJSON.uri()).getIterator(), 
 						amesJSON.property(), 
-						new NamedLabels(amesJSON.labelsStr())); ){
+						new NamedLabels(amesJSON.labelsStr()))
+						.build(); ){
 			//		Assert.assertTrue(molsIterator instanceof );
 
 			int numMolecules=0;
@@ -225,9 +229,9 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 		CmpdData changJSON = TestResources.Reg.getChang_json();
 		LoggerUtils.setDebugMode();
 		try(MolAndActivityConverter molsIterator = 
-				MolAndActivityConverter.regressionConverter(
+				MolAndActivityConverter.Builder.regressionConverter(
 						new JSONFile(changJSON.uri()).getIterator(), 
-						changJSON.property()); ){
+						changJSON.property()).build(); ){
 
 			int numMolecules=0;
 			Pair<IAtomContainer, Double> record;
@@ -241,6 +245,48 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 			//		System.out.println(((MolAndActivityConverter) molsIterator).getMolsSkippedDueToMissingActivity());
 			Assert.assertEquals(34, numMolecules);
 		}
+	}
+
+	@Test
+	public void testWithInvalidProperty() throws Exception {
+		// the hERG regression data set has several properties "IC50" set to N/A or some "greater/less than" properties
+		// These will fail
+		CmpdData herg = TestResources.Reg.getHERG();
+		// LoggerUtils.setDebugMode(SYS_ERR);
+        
+        try(InputStream in = herg.url().openStream();
+            InputStream unzipped = StreamUtils.unZIP(in);
+            SDFReader reader = new SDFReader(unzipped); 
+            MolAndActivityConverter conv = MolAndActivityConverter.Builder.regressionConverter(reader, herg.property()).build()){
+
+			try{
+				while(conv.hasNext()){
+					conv.next();
+				}
+				Assert.fail("should fail early with the default settings");
+			} catch (EarlyLoadingStopException stopExcept){
+				System.err.println(stopExcept.getMessage());	
+			}
+			Assert.assertEquals("Number of fails should be the allowed +1",conv.getMaxNumInconsistentRecords()+1, conv.getNumFailedMols());
+
+		}
+
+		// Try again - but setting it to not stop early 
+		try(InputStream in = herg.url().openStream();
+            InputStream unzipped = StreamUtils.unZIP(in);
+            SDFReader reader = new SDFReader(unzipped); 
+            MolAndActivityConverter conv = MolAndActivityConverter.Builder.regressionConverter(reader, herg.property()).maxAllowedInvalidRecords(-1).build()){
+
+			while(conv.hasNext()){
+				conv.next();
+			}
+			
+			Assert.assertEquals("there should be in total 806 records",806,conv.getNumFailedMols()+conv.getNumOKMols());
+
+		}
+
+
+        // printLogs();
 	}
 
 

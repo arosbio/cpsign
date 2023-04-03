@@ -175,7 +175,7 @@ public class PrecomputedDatasets {
 			CmpdData file = TestResources.Cls.getAMES_126();
 			NamedLabels labels = new NamedLabels(file.labelsStr());
 			try (SDFReader is = new SDFile(file.uri()).getIterator();
-				MolAndActivityConverter conv = MolAndActivityConverter.classificationConverter(is, file.property(),labels)){
+				MolAndActivityConverter conv = MolAndActivityConverter.Builder.classificationConverter(is, file.property(),labels).build()){
 					
 					for (int i=0; i<5; i++){
 						Pair<IAtomContainer,Double> inst = conv.next();
@@ -200,7 +200,7 @@ public class PrecomputedDatasets {
 			ds.initializeDescriptors();
 			CmpdData file = TestResources.Cls.getAMES_126();
 			try (SDFReader is = new SDFile(file.uri()).getIterator();
-				MolAndActivityConverter conv = MolAndActivityConverter.classificationConverter(is, file.property(), new NamedLabels(file.labelsStr()))){
+				MolAndActivityConverter conv = MolAndActivityConverter.Builder.classificationConverter(is, file.property(), new NamedLabels(file.labelsStr())).build()){
 					ds.add(conv);
 			}
 
