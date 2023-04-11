@@ -26,19 +26,19 @@ public class SDFReader extends IteratingSDFReader implements ChemFileIterator {
 	private int recordIndex = 0;
 	
 	public SDFReader(InputStream in, IChemObjectBuilder builder) {
-		super(in, builder);
+		super(in, builder,true);
 	}
 	
 	public SDFReader(InputStream in) {
-		super(in, SilentChemObjectBuilder.getInstance());
+		super(in, SilentChemObjectBuilder.getInstance(),true);
 	}
 	
 	public SDFReader(Reader in, IChemObjectBuilder builder) {
-		super(in, builder);
+		super(in, builder,true);
 	}
 	
 	public SDFReader(Reader in) {
-		super(in, SilentChemObjectBuilder.getInstance());
+		super(in, SilentChemObjectBuilder.getInstance(),true);
 	}
 	
 	@Override

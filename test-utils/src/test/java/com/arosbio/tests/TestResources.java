@@ -349,8 +349,19 @@ public class TestResources {
 				.delim('\t').build();
 		}
 
-		public static CmpdData getSingleMOL(){
+		public static CmpdData getSingleSDF(){
 			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"testmol.sdf"), Format.SDF, PROPERTY, 1, 0, AMES_LABELS)
+				.build();
+		}
+
+		/**
+		 * Contains the AMES 10 data set but with some failed MOL blocks,
+		 * though the SDF reader cannot give those errors back - only set to skip or fail on
+		 * these encounters. 
+		 * @return a dataset with 7 valid records and 3 invalid ones
+		 */
+		public static CmpdData getAmes10WithInvalidRecords(){
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_10.invalid.sdf"), Format.SDF, PROPERTY, 7, 3, AMES_LABELS)
 				.build();
 		}
 
