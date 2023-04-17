@@ -21,6 +21,7 @@
 
   <artifactId>encrypt-api</artifactId>
   <name>${project.groupId}:${project.artifactId}</name>
+  <version>2.0.0</version>
   <packaging>jar</packaging>
   <description>The API used for encrypting resources part of the CPSign project</description>
   
