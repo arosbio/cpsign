@@ -701,7 +701,6 @@ public class CLIProgramUtils {
 
 	}
 
-	@SuppressWarnings("null")
 	private static void loadData(ChemDataset problem, ChemFile file, String endpoint, List<String> labels,
 			RecordType type, CLIConsole console, boolean listFailed, int maxAllowedFails) {
 
@@ -715,12 +714,10 @@ public class CLIProgramUtils {
 			iterator.setEarlyTerminationAfter(maxAllowedFails);
 			
 			if (labels != null && ! labels.isEmpty()){
-				reader = MolAndActivityConverter.classificationConverter(iterator, endpoint, new NamedLabels(labels));
+				reader = MolAndActivityConverter.Builder.classificationConverter(iterator, endpoint, new NamedLabels(labels)).maxAllowedInvalidRecords(maxAllowedFails).build();
 			} else {
-				reader = MolAndActivityConverter.regressionConverter(iterator, endpoint);
+				reader = MolAndActivityConverter.Builder.regressionConverter(iterator, endpoint).maxAllowedInvalidRecords(maxAllowedFails).build();
 			}
-
-			reader.setStopAfterNumFails(maxAllowedFails);
 
 		} catch (IllegalArgumentException e) {
 			LOGGER.debug("Could not initiate the MolAndActivityConverter", e);
@@ -1565,6 +1562,11 @@ public class CLIProgramUtils {
 			return "sparse predictor model";
 		} else
 			return "not recognized model type";
+	}
+
+	public static void failWithBadUserInputFile(CLIConsole console){
+		// TODO 
+		console.failWithArgError("TODO - compile a good error message for this");
 	}
 
 }
