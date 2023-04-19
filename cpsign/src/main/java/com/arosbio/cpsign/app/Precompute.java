@@ -24,8 +24,10 @@ import com.arosbio.cpsign.app.params.converters.MLTypeConverters.ClassRegConvert
 import com.arosbio.cpsign.app.params.mixins.ClassificationLabelsMixin;
 import com.arosbio.cpsign.app.params.mixins.ConsoleVerbosityMixin;
 import com.arosbio.cpsign.app.params.mixins.DescriptorsMixin;
+import com.arosbio.cpsign.app.params.mixins.EarlyTerminationMixin;
 import com.arosbio.cpsign.app.params.mixins.EchoMixin;
 import com.arosbio.cpsign.app.params.mixins.EncryptionMixin;
+import com.arosbio.cpsign.app.params.mixins.ListFailedRecordsMixin;
 import com.arosbio.cpsign.app.params.mixins.LogfileMixin;
 import com.arosbio.cpsign.app.params.mixins.ModelingPropertyMixin;
 import com.arosbio.cpsign.app.params.mixins.OutputJARMixin;
@@ -132,27 +134,17 @@ public class Precompute implements RunnableCmd, SupportsProgressBar {
 	@Mixin
 	private ClassificationLabelsMixin labelsMix;
 
-	@Option(names= {"--early-termination-after"}, 
-			description = "Early termination stops loading records once passing this number of failed records and fails execution of the program. "
-					+ "Specifying a value less than 0 means there is no early termination and loading will continue until finished. "
-					+ "This number of failures are the threshold applied to each of the three levels of processing (i.e. reading molecules from file, "
-					+ "getting the activity property from the records and Heavy Atom Count)%n"+
-					ParameterUtils.DEFAULT_VALUE_LINE,
-					paramLabel = ArgumentType.INTEGER,
-					defaultValue = "-1")
-	private int maxFailuresAllowed = -1;
+	@Mixin
+	private EarlyTerminationMixin earlyTermination = new EarlyTerminationMixin();
 
 	@Option(names = "--min-hac",
-			description="Specify the minimum allowed Heavy Atom Count (HAC) allowed for the records. This serves a s sanity check that parsing from file has been OK.",
+			description="Specify the minimum allowed Heavy Atom Count (HAC) allowed for the records. This serves as a sanity check that parsing from file has been OK.",
 			paramLabel = ArgumentType.INTEGER,
 			defaultValue = "5")
 	private int minHAC = 5;
 
-	@Option(names = {"--list-failed"},
-			description = "List @|bold all|@ failed molecules, such as invalid records, molecules removed due to Heavy Atom Count or failures at descriptor calculation. "+
-			"The default is otherwise to only list the summary of the number of failed records.")
-	private boolean listFailedMolecules = false;
-
+	@Mixin
+	private ListFailedRecordsMixin listFailedRecordsMixin = new ListFailedRecordsMixin();
 
 	// Descriptors Section
 	@Mixin
@@ -252,9 +244,9 @@ public class Precompute implements RunnableCmd, SupportsProgressBar {
 				labelsMix.labels,
 				this, 
 				console,
-				listFailedMolecules,
+				listFailedRecordsMixin.listFailedRecords,
 				minHAC,
-				maxFailuresAllowed);
+				earlyTermination.maxFailuresAllowed);
 		timer.endSection();
 
 		if (transformSection.transformers!=null && !transformSection.transformers.isEmpty()) {
