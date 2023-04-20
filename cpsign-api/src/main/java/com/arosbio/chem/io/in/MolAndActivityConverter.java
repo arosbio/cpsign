@@ -293,8 +293,7 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 		Object ind = CPSignMolProperties.getRecordIndex(mol);
 		int index = com.arosbio.commons.TypeUtils.isInt(ind) ? com.arosbio.commons.TypeUtils.asInt(ind) : -1;
 
-		failedRecords.add(new FailedRecord.Builder(index)
-			.withCause(cause)
+		failedRecords.add(new FailedRecord.Builder(index, cause)
 			.withID(CPSignMolProperties.getMolTitle(mol))
 			.withReason(reason)
 			.build());
@@ -331,17 +330,6 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 			if (!checkShouldContinue()){
 				return;
 			}
-			// if (terminateOnNumFails>= 0 && failedRecords.size() > terminateOnNumFails) {
-			// 	if (numOKmols == 0) {
-			// 		// Here we might have issues with the parameters!
-			// 		throw new IllegalArgumentException(String.format("Was called with class-labels: %s but cannot find a match in labels in first %d records",
-			// 				classLabels.getLabelsSet(), terminateOnNumFails));
-			// 	} else {
-			// 		LOGGER.debug("Number of allowed failures passed - will return an exception in case next() has been called or on the next call to that method");  
-			// 		stoppingExcept = new EarlyLoadingStopException(failedRecords);
-			// 		return;
-			// 	}
-			// }
 
 			// load the next mol and look for the activity value
 			IAtomContainer mol = molIterator.next();
@@ -379,16 +367,6 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 			if (!checkShouldContinue()){
 				return;
 			}
-			// if (terminateOnNumFails>= 0 && failedRecords.size() > terminateOnNumFails) {
-			// 	if (numOKmols == 0) {
-			// 		// Here we might have issues with the parameters!
-			// 		throw new IllegalArgumentException("MolAndActivityConverter was called in Regression-mode, but no molecules were parsed correctly - if this is a classification problem you must give the class labels, or is the property incorrect?");
-			// 	} else {
-			// 		LOGGER.debug("Number of allowed failures passed - will return an exception in case next() has been called or on the next call to that method");  
-			// 		stoppingExcept = new EarlyLoadingStopException(failedRecords);
-			// 		return;
-			// 	}
-			// }
 
 			// load the next mol and look for the activity value
 			IAtomContainer mol = molIterator.next();

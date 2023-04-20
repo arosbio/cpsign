@@ -89,7 +89,7 @@ public class JSONChemFileReader implements ChemFileIterator {
 				failedMoleculeDueToMissingSMILES++;
 				LOGGER.debug("Could not find any molecule(s) in json: {}", jsonMolecule.toJson());
 				numRecordsTried++;
-				failedRecords.add(new FailedRecord.Builder(recordIndex).withCause(Cause.MISSING_STRUCTURE).withReason("Missing SMILES").build());
+				failedRecords.add(new FailedRecord.Builder(recordIndex,Cause.MISSING_STRUCTURE).withReason("Missing SMILES").build());
 				continue;
 			}
 
@@ -98,7 +98,7 @@ public class JSONChemFileReader implements ChemFileIterator {
 				mol = ChemFileParserUtils.parseSMILES(smiles);
 			} catch (Exception e){
 				failedMoleculeDueToInvalidSMILES++;
-				failedRecords.add(new FailedRecord.Builder(recordIndex).withCause(Cause.INVALID_STRUCTURE).withReason("Invalid SMILES").build());
+				failedRecords.add(new FailedRecord.Builder(recordIndex,Cause.INVALID_STRUCTURE).withReason("Invalid SMILES").build());
 				continue;
 			}
 

@@ -17,6 +17,7 @@ public class FailedRecord implements Comparable<FailedRecord>{
 	private final Cause cause;
 
 	public static enum Cause {
+		// File/record issues
 		/** If the structure is missing, e.g. in a CSV file with the structure column being empty */
 		MISSING_STRUCTURE("Missing structure"),
 		/** In case a record is valid, but the structure cannot be either parsed into a valid IAtomContainer, or that e.g. perception of aromaticity fails */
@@ -27,6 +28,13 @@ public class FailedRecord implements Comparable<FailedRecord>{
 		MISSING_PROPERTY("Missing property value"),
 		/** If a record contains the property value, but cannot be converted to a numeric label */
 		INVALID_PROPERTY("Invalid property value"),
+
+		// Structure issues
+		/** Structure filtered out based on heavy atom count threshold */
+		LOW_HAC("Too low Heavy Atom Count (HAC)"),
+		/** Record that failed during descriptor calculation */
+		DESCRIPTOR_CALC_ERROR("Failed computing descriptors"),
+		
 		/** If the record fails by a cause not covered by the other enums */
 		UNKNOWN("Unknown");
 
@@ -48,8 +56,9 @@ public class FailedRecord implements Comparable<FailedRecord>{
 		private String reason;
 		private Cause cause = Cause.UNKNOWN;
 
-		public Builder(int index){
+		public Builder(int index, Cause cause){
 			this.index = index;
+			this.cause = cause;
 		}
 
 		public Builder withID(String id){
@@ -117,6 +126,9 @@ public class FailedRecord implements Comparable<FailedRecord>{
 			txt += ", ID: "+id;
 		if (reason != null)
 			txt += ", reason: " + reason;
+		else if (cause != null){
+			txt += ", cause: " + cause.message;
+		}
 		return txt;
 	}
 

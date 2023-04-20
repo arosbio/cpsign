@@ -141,11 +141,11 @@ public class CSVChemFileReader implements ChemFileIterator {
 					LOGGER.debug("Failed record due to invalid smiles '{}', from record: {}", smiles, next);
 					hasLoggedFailedSMILES = true;
 				}
-				FailedRecord.Builder recordBuilder = new FailedRecord.Builder(recordIndex);
-				if (smiles == null || smiles.trim().isEmpty()) {
-					recordBuilder.withCause(Cause.MISSING_STRUCTURE).withReason("Missing SMILES");
+				FailedRecord.Builder recordBuilder = null; 
+				if (smiles == null || smiles.isBlank()) {
+					recordBuilder = new FailedRecord.Builder(recordIndex, Cause.MISSING_STRUCTURE).withReason("Missing SMILES");
 				} else {
-					recordBuilder.withCause(Cause.INVALID_STRUCTURE).withReason(String.format("Invalid SMILES \"%s\"",smiles));
+					recordBuilder = new FailedRecord.Builder(recordIndex, Cause.INVALID_STRUCTURE).withReason(String.format("Invalid SMILES \"%s\"",smiles));
 				}
 				failedRecords.add(recordBuilder.build());
 				LOGGER.trace("Invalid smiles - skipping line");
@@ -157,8 +157,7 @@ public class CSVChemFileReader implements ChemFileIterator {
 			if (next.size() > parser.getHeaderNames().size()){
 				numInconsistentRecords++;
 				failedRecords.add(
-					new FailedRecord.Builder(recordIndex)
-						.withCause(Cause.INVALID_RECORD)
+					new FailedRecord.Builder(recordIndex, Cause.INVALID_RECORD)
 						.withReason(
 							String.format(Locale.ENGLISH,"Inconsistent number of columns in CSV record, found %d fields but header has %d fields", next.size(),parser.getHeaderNames().size()))
 					.build());

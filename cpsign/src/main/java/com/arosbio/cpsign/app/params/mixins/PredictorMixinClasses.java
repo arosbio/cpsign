@@ -250,7 +250,7 @@ public abstract class PredictorMixinClasses {
 						}
 					}
 				} catch (Exception e) {
-					console.failWithArgError("NCM " + nonconf.getName() + " does not support erorr model of ML Algorithm type " + impl.getName());
+					console.failWithArgError("NCM " + nonconf.getName() + " does not support error model of ML Algorithm type " + impl.getName());
 				}
 
 				return ncmReg;
@@ -317,7 +317,7 @@ public abstract class PredictorMixinClasses {
 	static class ErrorModelParams {
 
 		@Option(names = { "-es", "--error-scorer" }, 
-				description = "Error model algorithm (only available for the NCMs that use an error-model for normalizing the nonformity based on difficulty of the examples)."
+				description = "Error model algorithm (only available for the NCMs that use an error-model for normalizing the nonconformity based on difficulty of the examples)."
 						+ " The same algorithms are available as per the "+ParameterUtils.PARAM_FLAG_ANSI_ON+ "--scorer"+ParameterUtils.ANSI_OFF+" flag.",
 						converter = MLAlgorithmConverter.class,
 						paramLabel = ArgumentType.ID_OR_TEXT
@@ -424,13 +424,6 @@ public abstract class PredictorMixinClasses {
 			}
 
 			return ss;
-			//			} catch (IllegalArgumentException e) {
-			//				LOGGER.debug("Failed configuring sampling strategy with input: " + text);
-			//				throw new TypeConversionException("Sampling strategy "+(ss!=null? ss.getName()+" " : "") + "could not be configured with given parameters: " + e.getMessage());
-			//			} catch (Exception e) {
-			//				LOGGER.debug("Failed configuring sampling strategy with input: " + text);
-			//				throw new TypeConversionException("Invalid arguments for sampling strategy: " + e.getMessage());
-			//			}
 
 		}
 
