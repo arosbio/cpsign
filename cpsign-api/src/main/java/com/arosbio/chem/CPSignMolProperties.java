@@ -42,7 +42,7 @@ public class CPSignMolProperties {
 	 * ========================================================================
 	 */
 
-	public class Constants {
+	public static class Constants {
 		/**
 		 * Prefix always added to keys in {@code IAtomContainer} properties
 		 */
