@@ -17,7 +17,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.openscience.cdk.interfaces.IAtomContainer;
 
-import com.arosbio.chem.io.in.ChemFileIterator.EarlyLoadingStopException;
 import com.arosbio.commons.logging.LoggerUtils;
 import com.arosbio.data.NamedLabels;
 import com.arosbio.io.StreamUtils;
@@ -49,7 +48,7 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 
 			Assert.assertEquals(17, numMolecules);
 			Assert.assertEquals(1, molAct.getMolsSkippedMissingActivity());
-			Assert.assertEquals(2, molAct.getFailedRecords().size());
+			Assert.assertEquals(2, molAct.getProgressTracker().getFailures().size());
 			// Assert.assertEquals(1, molAct.getMols);
 		}
 
@@ -63,7 +62,7 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 
 		try(
 			CSVChemFileReader reader = new CSVFile(bigCSV.uri()).setDelimiter(bigCSV.delim()).getIterator();
-			MolAndActivityConverter conv = MolAndActivityConverter.Builder.regressionConverter(reader, "wrong").maxAllowedInvalidRecords(-1).build();
+			MolAndActivityConverter conv = MolAndActivityConverter.Builder.regressionConverter(reader, "wrong").progressTracker(ProgressTracker.createNoEarlyStopping()).build();
 		){
 			int numSuccess = 0;
 			
@@ -78,7 +77,7 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 		try(
 			CSVChemFileReader reader = new CSVFile(bigCSV.uri()).setDelimiter(bigCSV.delim()).getIterator();
 			MolAndActivityConverter conv = MolAndActivityConverter.Builder.classificationConverter(reader, "wrong", new NamedLabels("label0","label1"))
-				.maxAllowedInvalidRecords(-1).build();
+				.progressTracker(ProgressTracker.createNoEarlyStopping()).build();
 		){
 			int numSuccess = 0;
 
@@ -112,12 +111,12 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 				Assert.assertNotNull(instance.getRight());
 				numMolecules++;
 			}
-			System.err.println(molAct.getFailedRecords());
+			System.err.println(molAct.getProgressTracker().getFailures());
 			Assert.assertEquals(6, numMolecules);
 			Assert.assertEquals(1, molAct.getMolsSkippedMissingActivity());
 			Assert.assertEquals(1, molAct.getMolsSkippedInvalidActivity());
-			Assert.assertEquals(4,molAct.getNumFailedMols());
-			Assert.assertEquals(4, molAct.getFailedRecords().size());
+			Assert.assertEquals(4, molAct.getProgressTracker().getNumFailures());
+			Assert.assertEquals(4, molAct.getProgressTracker().getFailures().size());
 		}
 	}
 
@@ -267,7 +266,7 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 			} catch (EarlyLoadingStopException stopExcept){
 				System.err.println(stopExcept.getMessage());	
 			}
-			Assert.assertEquals("Number of fails should be the allowed +1",conv.getMaxNumInconsistentRecords()+1, conv.getNumFailedMols());
+			Assert.assertEquals("Number of fails should be the allowed +1",conv.getProgressTracker().getMaxAllowedFailures()+1, conv.getProgressTracker().getNumFailures());
 
 		}
 
@@ -275,13 +274,13 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 		try(InputStream in = herg.url().openStream();
             InputStream unzipped = StreamUtils.unZIP(in);
             SDFReader reader = new SDFReader(unzipped); 
-            MolAndActivityConverter conv = MolAndActivityConverter.Builder.regressionConverter(reader, herg.property()).maxAllowedInvalidRecords(-1).build()){
+            MolAndActivityConverter conv = MolAndActivityConverter.Builder.regressionConverter(reader, herg.property()).progressTracker(ProgressTracker.createNoEarlyStopping()).build()){
 
 			while(conv.hasNext()){
 				conv.next();
 			}
 			
-			Assert.assertEquals("there should be in total 806 records",806,conv.getNumFailedMols()+conv.getNumOKMols());
+			Assert.assertEquals("there should be in total 806 records",806,conv.getProgressTracker().getNumFailures()+conv.getNumOKMols());
 
 		}
 

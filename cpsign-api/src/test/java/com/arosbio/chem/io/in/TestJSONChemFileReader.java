@@ -33,7 +33,7 @@ public class TestJSONChemFileReader extends UnitTestBase {
 		CmpdData chang = TestResources.Reg.getChang_json();
 		LoggerUtils.setDebugMode();
 		JSONChemFileReader reader = new JSONChemFileReader(chang.url().openStream());
-		reader.setEarlyTerminationAfter(-1);
+		reader.setProgressTracker(ProgressTracker.createNoEarlyStopping());
 		Assert.assertTrue(reader.hasNext());
 		int numMols = 0;
 		while(reader.hasNext()){
@@ -51,7 +51,7 @@ public class TestJSONChemFileReader extends UnitTestBase {
 		// 34 records, 1 missing activity and 1 with invalid activity and 1 invalid smiles
 		CmpdData chang_oneline = TestResources.Reg.getChang_json_no_indent();
 		ChemFileIterator iter = new JSONChemFileReader(chang_oneline.url().openStream());
-		iter.setEarlyTerminationAfter(-1);
+		iter.setProgressTracker(ProgressTracker.createNoEarlyStopping());
 		int numOK=0, numMissingProp = 0, numNumericVal = 0;
 		while (iter.hasNext()){
 			IAtomContainer mol = iter.next();
@@ -63,9 +63,8 @@ public class TestJSONChemFileReader extends UnitTestBase {
 			}
 		}
 		Assert.assertEquals("34 in total, one with invalid smiles = 33 'valid records'",33, numOK); 
-		Assert.assertEquals(1, iter.getRecordsSkipped());
-		Assert.assertEquals(1, iter.getFailedRecords().size());
-		Assert.assertEquals(1, iter.getFailedRecords().get(0).getIndex()); // index starts at 0, second record: index = 1
+		Assert.assertEquals(1, iter.getProgressTracker().getFailures().size());
+		Assert.assertEquals(1, iter.getProgressTracker().getFailures().get(0).getIndex()); // index starts at 0, second record: index = 1
 
 		Assert.assertEquals(1, numMissingProp);
 		Assert.assertEquals(1, numNumericVal);

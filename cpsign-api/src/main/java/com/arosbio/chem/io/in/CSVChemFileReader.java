@@ -39,7 +39,6 @@ public class CSVChemFileReader implements ChemFileIterator {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(CSVChemFileReader.class);
 	private static IChemObjectBuilder DEFAULT_BUILDER = SilentChemObjectBuilder.getInstance();
-	private int maxAllowedFails = 10;
 	private boolean hasLoggedFailedSMILES = false;
 
 
@@ -48,13 +47,12 @@ public class CSVChemFileReader implements ChemFileIterator {
 	private Iterator<CSVRecord> recordIterator;
 	private String smilesHeaderField;
 	private int numRecordsSuccessfullyRead = 0;
-	private int numInconsistentRecords = 0;
 
 	// Next record
 	private IAtomContainer nextMol;
 
 	// Failed records 
-	private List<FailedRecord> failedRecords = new ArrayList<>();
+	private ProgressTracker tracker = ProgressTracker.createDefault();
 
 	// The next record index
 	private int recordIndex = -1;
@@ -68,6 +66,19 @@ public class CSVChemFileReader implements ChemFileIterator {
 		this.smilesHeaderField = smilesHeaderName;
 
 		initialize(format,reader);
+	}
+
+	public void setProgressTracker(ProgressTracker tracker){
+		this.tracker = tracker;
+	}
+	
+	public ProgressTracker getProgressTracker(){
+		return tracker;
+	}
+
+	public CSVChemFileReader withProgressTracker(ProgressTracker tracker){
+		this.tracker = tracker;
+		return this;
 	}
 
 	private void initialize(CSVFormat format, Reader reader) throws IOException {
@@ -123,7 +134,7 @@ public class CSVChemFileReader implements ChemFileIterator {
 	private boolean tryParseNext() throws EarlyLoadingStopException {
 
 		if (!recordIterator.hasNext()) {
-			LOGGER.debug("No more records in CSV File, found {} records",numRecordsSuccessfullyRead );
+			LOGGER.debug("No more records in CSV File, found {} records", numRecordsSuccessfullyRead);
 			return false;
 		}
 
@@ -147,7 +158,7 @@ public class CSVChemFileReader implements ChemFileIterator {
 				} else {
 					recordBuilder = new FailedRecord.Builder(recordIndex, Cause.INVALID_STRUCTURE).withReason(String.format("Invalid SMILES \"%s\"",smiles));
 				}
-				failedRecords.add(recordBuilder.build());
+				tracker.register(recordBuilder.build());
 				LOGGER.trace("Invalid smiles - skipping line");
 				checkIfExit();
 				return tryParseNext();
@@ -155,8 +166,8 @@ public class CSVChemFileReader implements ChemFileIterator {
 
 			// Check that the columns were consistent
 			if (next.size() > parser.getHeaderNames().size()){
-				numInconsistentRecords++;
-				failedRecords.add(
+				// numInconsistentRecords++;
+				tracker.register(
 					new FailedRecord.Builder(recordIndex, Cause.INVALID_RECORD)
 						.withReason(
 							String.format(Locale.ENGLISH,"Inconsistent number of columns in CSV record, found %d fields but header has %d fields", next.size(),parser.getHeaderNames().size()))
@@ -195,38 +206,12 @@ public class CSVChemFileReader implements ChemFileIterator {
 	}
 
 	private void checkIfExit() throws EarlyLoadingStopException {
-		if (numRecordsSuccessfullyRead == 0 && maxAllowedFails >=0 && maxAllowedFails <= failedRecords.size()) {
-			String errMessage = String.format(Locale.ENGLISH,"Failed reading %d records from CSV, settings must be wrong", failedRecords.size());
-			LOGGER.debug(errMessage);
-			throw new EarlyLoadingStopException(errMessage,failedRecords);
-		}
-		if (numInconsistentRecords>=5){
-			// TODO - add setting to allow inconsistent records?
-			String errorMessage = String.format(Locale.ENGLISH, "Found 5 inconsistent records (i.e. number of headers in CSV doesn't match columns in csv, header has %d fields) after reading the first %d lines", 
-			parser.getHeaderNames().size(), recordIndex);
-			LOGGER.debug(errorMessage);
-			throw new EarlyLoadingStopException(errorMessage, failedRecords);
-		}
+		tracker.assertCanContinueParsing();
 	}
 
 	@Override
 	public void close() throws IOException {
 		parser.close();
-	}
-
-	@Override
-	public int getRecordsSkipped() {
-		return failedRecords.size();
-	}
-
-	@Override
-	public List<FailedRecord> getFailedRecords() {
-		return failedRecords;
-	}
-
-	@Override
-	public void setEarlyTerminationAfter(int numAllowedFails) {
-		this.maxAllowedFails = numAllowedFails;
 	}
 
 }

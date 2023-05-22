@@ -57,7 +57,7 @@ public class TestCSVFile {
 		Assert.assertEquals(1, f.countNumRecords());
 		ChemFileIterator it = f.getIterator();
 		Assert.assertFalse("There should be no valid records in this (miss-match of number of columns)",it.hasNext());
-		FailedRecord r = it.getFailedRecords().get(0);
+		FailedRecord r = it.getProgressTracker().getFailures().get(0);
 		String lcReason = r.getReason().toLowerCase();
 		Assert.assertTrue(lcReason.contains("inconsistent"));
 		Assert.assertTrue(lcReason.contains("columns"));

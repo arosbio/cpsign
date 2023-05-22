@@ -11,8 +11,6 @@ package com.arosbio.chem.io.in;
 
 import java.io.InputStream;
 import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.openscience.cdk.interfaces.IAtomContainer;
 import org.openscience.cdk.interfaces.IChemObjectBuilder;
@@ -55,22 +53,28 @@ public class SDFReader extends IteratingSDFReader implements ChemFileIterator {
 	}
 	
 	/**
-	 * No records can fail, without the full executing halting
-	 * @return an empty list
+	 * Has no effect - this class do not register any failures due to
+	 * underlying CDK implementation doesn't expose those errors
+	 * @param tracker ignored
 	 */
-	public List<FailedRecord> getFailedRecords(){
-		return new ArrayList<FailedRecord>();
+	public void setProgressTracker(ProgressTracker tracker){
+		// Do nothing 
 	}
 
-	@Override
-	public int getRecordsSkipped() {
-		// SDF will read all records and fail otherwise
-		return 0;
+	/**
+	 * Returns the default tracker, which has no failed records
+	 */
+	public ProgressTracker getProgressTracker(){
+		return ProgressTracker.createDefault();
 	}
 
-	@Override
-	public void setEarlyTerminationAfter(int numAllowedFails) {
-		// Do nothing.. cannot set this in the SDFIterator instance
+	/**
+	 * Has no effect - this class do not register any failures due to
+	 * underlying CDK implementation doesn't expose those errors
+	 * @param tracker ignored
+	 */
+	public SDFReader withProgressTracker(ProgressTracker tracker) {
+		return this;
 	}
 
 }

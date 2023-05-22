@@ -39,12 +39,8 @@ public class JSONChemFileReader implements ChemFileIterator {
 	private JsonArray json; // To be read once next/hasNext is called the first time
 
 	private List<IAtomContainer> molecules; // we would like to create a iterating one in the future
-	private int maxNumFailingRecordsMAX = 5;
-	
-	private List<FailedRecord> failedRecords = new ArrayList<>();
 
-	private int failedMoleculeDueToMissingSMILES;
-	private int failedMoleculeDueToInvalidSMILES;
+	private ProgressTracker tracker = ProgressTracker.createDefault();
 
 
 	public JSONChemFileReader(InputStream jsonStream) throws IOException {
@@ -55,6 +51,19 @@ public class JSONChemFileReader implements ChemFileIterator {
 			throw new IOException("Could not read file as JSON");
 		}
 	}
+
+	public void setProgressTracker(ProgressTracker tracker) {
+		this.tracker = tracker;
+	}
+
+	public ProgressTracker getProgressTracker(){
+		return tracker;
+	}
+
+	public JSONChemFileReader withProgressTracker(ProgressTracker tracker) {
+		this.tracker = tracker;
+		return this;
+	}
 	
 	private void parseJSON() throws EarlyLoadingStopException {
 		molecules = new ArrayList<>();
@@ -62,8 +71,6 @@ public class JSONChemFileReader implements ChemFileIterator {
 		Iterator<Object> jsonIterator = json.iterator();
 		JsonObject jsonMolecule;
 		String smiles = null;
-		int numRecordsTried=0;
-		boolean foundValidMol=false;
 		
 		//Record index serves as the identifier to notify which records are failed in parsing/filtered out etc
 		int recordIndex = -1; // starts at 0
@@ -71,11 +78,7 @@ public class JSONChemFileReader implements ChemFileIterator {
 		while (jsonIterator.hasNext()){
 			recordIndex++;
 			
-			if (!foundValidMol && maxNumFailingRecordsMAX >=0 && numRecordsTried>= maxNumFailingRecordsMAX) {
-				throw new EarlyLoadingStopException("Could not find any valid records in the first " + maxNumFailingRecordsMAX + " array-indices", failedRecords);
-			} else if (maxNumFailingRecordsMAX>=0 && failedRecords.size() > maxNumFailingRecordsMAX) {
-				throw new EarlyLoadingStopException("Failed too many records ("+failedRecords.size()+"): please check your parameters",failedRecords);
-			}
+			tracker.assertCanContinueParsing();
 			smiles=null;
 			jsonMolecule = (JsonObject) jsonIterator.next();
 			
@@ -86,10 +89,10 @@ public class JSONChemFileReader implements ChemFileIterator {
 			}
 
 			if (smiles == null){
-				failedMoleculeDueToMissingSMILES++;
 				LOGGER.debug("Could not find any molecule(s) in json: {}", jsonMolecule.toJson());
-				numRecordsTried++;
-				failedRecords.add(new FailedRecord.Builder(recordIndex,Cause.MISSING_STRUCTURE).withReason("Missing SMILES").build());
+				tracker.register(
+					new FailedRecord.Builder(recordIndex,Cause.MISSING_STRUCTURE).withReason("Missing SMILES").build()
+					);
 				continue;
 			}
 
@@ -97,8 +100,8 @@ public class JSONChemFileReader implements ChemFileIterator {
 			try {
 				mol = ChemFileParserUtils.parseSMILES(smiles);
 			} catch (Exception e){
-				failedMoleculeDueToInvalidSMILES++;
-				failedRecords.add(new FailedRecord.Builder(recordIndex,Cause.INVALID_STRUCTURE).withReason(String.format("Invalid SMILES \"%s\"",smiles)).build());
+				tracker.register(
+					new FailedRecord.Builder(recordIndex,Cause.INVALID_STRUCTURE).withReason(String.format("Invalid SMILES \"%s\"",smiles)).build());
 				continue;
 			}
 
@@ -118,7 +121,6 @@ public class JSONChemFileReader implements ChemFileIterator {
 			CPSignMolProperties.setRecordIndex(mol, recordIndex);
 
 			molecules.add(mol);
-			foundValidMol=true;
 
 		}
 	}
@@ -151,21 +153,6 @@ public class JSONChemFileReader implements ChemFileIterator {
 	@Override
 	public void close() {
 		// Do nothing, we're reading the full stream so not having any resource allocations open
-	}
-
-	@Override
-	public int getRecordsSkipped() {
-		return failedMoleculeDueToInvalidSMILES+failedMoleculeDueToMissingSMILES;
-	}
-
-	@Override
-	public List<FailedRecord> getFailedRecords() {
-		return failedRecords;
-	}
-
-	@Override
-	public void setEarlyTerminationAfter(int numAllowedFails) {
-		maxNumFailingRecordsMAX = numAllowedFails;
 	}
 
 }

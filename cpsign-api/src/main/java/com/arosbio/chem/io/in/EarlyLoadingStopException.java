@@ -9,30 +9,25 @@
  */
 package com.arosbio.chem.io.in;
 
-import java.io.Closeable;
-import java.util.Iterator;
+import java.util.List;
 
-import org.openscience.cdk.interfaces.IAtomContainer;
+import com.arosbio.commons.EarlyStoppingException;
 
-public interface ChemFileIterator extends Iterator<IAtomContainer>, Closeable {
+public class EarlyLoadingStopException extends EarlyStoppingException {
 
-	/**
-	 * Set a {@link ProgressTracker} to monitor early stopping
-	 * @param tracker the tracker to use
-	 */
-	public void setProgressTracker(ProgressTracker tracker);
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 3760158731846495710L;
 
-	/**
-	 * Get the currently used {@link ProgressTracker} instance
-	 * @return the {@link ProgressTracker} that is used
-	 */
-	public ProgressTracker getProgressTracker();
-
-	/**
-	 * Set a {@link ProgressTracker} to monitor early stopping
-	 * @param tracker the tracker to use
-	 * @return The same instance
-	 */
-	public ChemFileIterator withProgressTracker(ProgressTracker tracker);
-
+    private List<FailedRecord> recs = null;
+    
+    public EarlyLoadingStopException(String msg, List<FailedRecord> recs) {
+        super(msg);
+        this.recs = recs;
+    }
+    
+    public List<FailedRecord> getFailedRecords(){
+        return this.recs;
+    }
 }

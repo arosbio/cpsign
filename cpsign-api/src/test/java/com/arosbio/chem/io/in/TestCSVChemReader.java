@@ -20,6 +20,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.openscience.cdk.interfaces.IAtomContainer;
 
+import com.arosbio.chem.io.in.FailedRecord.Cause;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.TestResources.CSVCmpdData;
 import com.arosbio.tests.suites.UnitTest;
@@ -78,7 +79,7 @@ public class TestCSVChemReader extends UnitTestBase {
 				System.out.println(mol.getProperties());
 			}
 			
-			List<FailedRecord> failed = smilesReader.getFailedRecords();
+			List<FailedRecord> failed = smilesReader.getProgressTracker().getFailures();
 			Assert.assertEquals(2, failed.size());
 			Assert.assertEquals(0, failed.get(0).getIndex());
 			Assert.assertEquals(7, failed.get(1).getIndex());
@@ -97,7 +98,7 @@ public class TestCSVChemReader extends UnitTestBase {
 				System.out.println(mol.getProperties());
 			}
 			
-			List<FailedRecord> failed = smilesReader.getFailedRecords();
+			List<FailedRecord> failed = smilesReader.getProgressTracker().getFailures();
 			Assert.assertEquals(2, failed.size());
 			Assert.assertEquals(0, failed.get(0).getIndex());
 			Assert.assertEquals(7, failed.get(1).getIndex());
@@ -117,13 +118,14 @@ public class TestCSVChemReader extends UnitTestBase {
 			}
 			
 //			SYS_ERR.println("top-level: " + topLevel);
-			List<FailedRecord> failed = smilesReader.getFailedRecords();
+			List<FailedRecord> failed = smilesReader.getProgressTracker().getFailures();
 //			SYS_ERR.println("lower-level: " + failed);
-			Assert.assertEquals(2, failed.size());
+			Assert.assertEquals(containsInvalidSMILES.numInvalidRecords(), failed.size());
 			Assert.assertEquals(0, failed.get(0).getIndex());
-			Assert.assertEquals(7, failed.get(1).getIndex());
+			Assert.assertEquals(1, failed.get(1).getIndex());
+			Assert.assertTrue(failed.get(1).getCause() == Cause.INVALID_PROPERTY || failed.get(1).getCause() == Cause.MISSING_PROPERTY);
 			
-			List<FailedRecord> topLevel = reader.getFailedRecords();
+			List<FailedRecord> topLevel = reader.getProgressTracker().getFailures();
 			// The top-level mol-and-activity iterator contains all lower-level iterator fails
 			Assert.assertTrue(topLevel.containsAll(failed));
 			Assert.assertEquals(1, topLevel.get(1).getIndex());

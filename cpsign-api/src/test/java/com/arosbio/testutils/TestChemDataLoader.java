@@ -19,6 +19,7 @@ import com.arosbio.chem.io.in.CSVFile;
 import com.arosbio.chem.io.in.ChemFileIterator;
 import com.arosbio.chem.io.in.JSONFile;
 import com.arosbio.chem.io.in.MolAndActivityConverter;
+import com.arosbio.chem.io.in.ProgressTracker;
 import com.arosbio.chem.io.in.SDFile;
 import com.arosbio.cheminf.data.ChemDataset;
 import com.arosbio.cheminf.data.ChemDataset.DescriptorCalcInfo;
@@ -130,9 +131,9 @@ public class TestChemDataLoader {
 		// Load it
 		DescriptorCalcInfo info = null;
 		if (data.isClassification()){
-			info = d.add(MolAndActivityConverter.Builder.classificationConverter(molIterator, data.property(), new NamedLabels(data.labelsStr())).maxAllowedInvalidRecords(-1).build());
+			info = d.add(MolAndActivityConverter.Builder.classificationConverter(molIterator, data.property(), new NamedLabels(data.labelsStr())).progressTracker(ProgressTracker.createNoEarlyStopping()).build());
 		} else {
-			info = d.add(MolAndActivityConverter.Builder.regressionConverter(molIterator, data.property()).maxAllowedInvalidRecords(-1).build());
+			info = d.add(MolAndActivityConverter.Builder.regressionConverter(molIterator, data.property()).progressTracker(ProgressTracker.createNoEarlyStopping()).build());
 		}
 
 		return Pair.of(d,info);

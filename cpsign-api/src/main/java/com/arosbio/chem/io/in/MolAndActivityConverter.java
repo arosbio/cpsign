@@ -11,9 +11,7 @@ package com.arosbio.chem.io.in;
 
 
 import java.io.Closeable;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.NoSuchElementException;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -23,9 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.arosbio.chem.CPSignMolProperties;
-import com.arosbio.chem.io.in.ChemFileIterator.EarlyLoadingStopException;
 import com.arosbio.chem.io.in.FailedRecord.Cause;
-import com.arosbio.commons.CollectionUtils;
 import com.arosbio.data.NamedLabels;
 
 /**
@@ -62,7 +58,6 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 	private static final Logger LOGGER = LoggerFactory.getLogger(MolAndActivityConverter.class);
 
 	// Settings
-	private final int terminateOnNumFails;
 	private final boolean isClassification;
 	private final NamedLabels classLabels;
 	private final String propertyNameForActivity;
@@ -75,19 +70,22 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 	private EarlyLoadingStopException stoppingExcept;
 
 	// Stats about loading
+	private ProgressTracker tracker;
 	private int molsSkippedMissingActivity;
 	private int molsSkippedInvalidActivity;
 	private int numOKmols;
-	private List<FailedRecord> failedRecords = new ArrayList<>();
 	
-	private MolAndActivityConverter(Iterator<IAtomContainer> molecules, String property, int terminateOnNumFails, NamedLabels nl) throws IllegalArgumentException {
+	private MolAndActivityConverter(Iterator<IAtomContainer> molecules, String property, ProgressTracker tracker, NamedLabels nl) throws IllegalArgumentException {
 		if (property== null || property.isBlank())
 			throw new IllegalArgumentException("The property must be set");
 		
 		this.molIterator = molecules;
 		this.propertyNameForActivity = property.trim();
 		LOGGER.debug("init IteratingMolAndActivity using property={} in {} mode", property, nl!=null?"classification" : "regression");
-		this.terminateOnNumFails = terminateOnNumFails;
+		this.tracker = tracker;
+		if (molecules instanceof ChemFileIterator){
+			((ChemFileIterator) molecules).setProgressTracker(tracker);
+		}
 		this.classLabels = nl;
 		this.isClassification = nl != null;
 	}
@@ -97,7 +95,7 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 		private String property;
 		private Iterator<IAtomContainer> iterator;
 		private NamedLabels classLabels;
-		private int terminateOnNumFails = 10;
+		private ProgressTracker tracker = ProgressTracker.createDefault();
 
 		private Builder(){}
 
@@ -116,20 +114,39 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 		}
 
 		/**
-		 * Sets the maximum number of inconsistent records at the 'property level', i.e. 
-		 * invalid records could occur at an earlier level - i.e. invalid chemical structures etc. 
-		 * Set this to a negative number in order to deactivate early stopping.
-		 * @param max the maximum number, or a negative number to deactivate early stopping
+		 * Set the {@link ProgressTracker} to use, which should be the same as for any other
+		 * readers in the loading pipeline
+		 * @param tracker The tracker instance
 		 * @return the builder instance
 		 */
-		public Builder maxAllowedInvalidRecords(int max){
-			this.terminateOnNumFails = max;
+		public Builder progressTracker(ProgressTracker tracker){
+			if (tracker == null)
+				this.tracker = ProgressTracker.createDefault();
+			else
+				this.tracker = tracker;
 			return this;
 		}
 
 		public MolAndActivityConverter build() throws IllegalArgumentException {
-			return new MolAndActivityConverter(iterator, property, terminateOnNumFails, classLabels);
+			return new MolAndActivityConverter(iterator, property, tracker, classLabels);
 		}
+	}
+
+	public void setProgressTracker(ProgressTracker tracker){
+		this.tracker = tracker;
+		if (molIterator instanceof ChemFileIterator){
+			// Forward the tracker to next level in the pipeline
+			((ChemFileIterator) molIterator).setProgressTracker(tracker);
+		}
+	}
+
+	public ProgressTracker getProgressTracker(){
+		return tracker;
+	}
+
+	public MolAndActivityConverter withProgressTracker(ProgressTracker tracker){
+		setProgressTracker(tracker);
+		return this;
 	}
 
 	public String getPropertyNameForActivity() {
@@ -154,30 +171,6 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 
 	public int getNumOKMols(){
 		return numOKmols;
-	}
-
-	public int getNumFailedMols() {
-		return getFailedRecords().size();
-	}
-
-	/**
-	 * Getter method for the setting of maximum number of allowed inconsistent records,
-	 * which is set using {@link Builder#maxAllowedInvalidRecords(int)}. If the value is negative,
-	 * there is no early termination - all records will be iterated through.
-	 * @return maximum number of inconsistent records before failure
-	 */
-	public int getMaxNumInconsistentRecords(){
-		return terminateOnNumFails;
-	}
-
-	public List<FailedRecord> getFailedRecords(){
-		// Copy of the list, the records themselves are immutable so no need to clone those
-		List<FailedRecord> result = new ArrayList<>(failedRecords);
-		if (molIterator instanceof ChemFileIterator) {
-			result.addAll(((ChemFileIterator) molIterator).getFailedRecords());
-			result = CollectionUtils.getUniqueAndSorted(result);
-		}
-		return result;
 	}
 
 	/**
@@ -293,7 +286,7 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 		Object ind = CPSignMolProperties.getRecordIndex(mol);
 		int index = com.arosbio.commons.TypeUtils.isInt(ind) ? com.arosbio.commons.TypeUtils.asInt(ind) : -1;
 
-		failedRecords.add(new FailedRecord.Builder(index, cause)
+		tracker.register(new FailedRecord.Builder(index, cause)
 			.withID(CPSignMolProperties.getMolTitle(mol))
 			.withReason(reason)
 			.build());
@@ -306,18 +299,10 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 	 * @return {@code true} if we should continue to process records, {@code false} if we should fail
 	 */
 	private boolean checkShouldContinue(){
-		if (terminateOnNumFails>= 0 && failedRecords.size() > terminateOnNumFails) {
-			// we've encountered enough failed records in order to exit
-
-			if (numOKmols == 0) {
-				// Here (almost definitely) have issues with the parameters!
-				LOGGER.debug("No valid records found for the given settings in the first {} records, number of records with missing property={} (for property={}), number with invalid property value={}",
-					failedRecords.size(), molsSkippedMissingActivity, propertyNameForActivity, molsSkippedInvalidActivity);
-			} 
-			LOGGER.debug("Number of allowed invalid records passed - will return an exception in case next() has been called or on the next call to that method");  
-
-			stoppingExcept = new EarlyLoadingStopException("Encountered more invalid records than the allowed (" + terminateOnNumFails+')',failedRecords);
-
+		try{
+			tracker.assertCanContinueParsing();
+		} catch (EarlyLoadingStopException e){
+			this.stoppingExcept = e;
 			return false;
 		}
 		return true;
