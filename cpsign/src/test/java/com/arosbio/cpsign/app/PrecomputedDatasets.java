@@ -30,6 +30,7 @@ import com.arosbio.tests.TestResources.CSVCmpdData;
 import com.arosbio.tests.TestResources.CmpdData;
 import com.arosbio.tests.utils.TestUtils;
 import com.arosbio.testutils.MockFailingDescriptor;
+import com.arosbio.testutils.TestChemDataLoader;
 
 public class PrecomputedDatasets {
 
@@ -211,5 +212,21 @@ public class PrecomputedDatasets {
 
 
 	}
+
+	/**
+	 * Create a precomputed JAR file for usage in other tests
+	 * @param data the dataset to use
+	 * @return the precomputed dataset File 
+	 * @throws Exception Any issues encountered during processing
+	 */
+	public static File getPrecomputed(CmpdData data) throws Exception {
+		
+		File tmpFile = TestUtils.createTempFile("missing-data-DS", ".jar");
+		ChemDataset ds = TestChemDataLoader.loadDataset(data); 
+		ModelSerializer.saveDataset(ds, new ModelInfo("missing data"), tmpFile, null);
+		
+		return tmpFile;
+	}
+
 
 }

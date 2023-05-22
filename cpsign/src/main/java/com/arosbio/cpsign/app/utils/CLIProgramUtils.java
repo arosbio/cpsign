@@ -18,6 +18,7 @@ import java.lang.reflect.Field;
 import java.net.URI;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -32,9 +33,10 @@ import org.slf4j.LoggerFactory;
 
 import com.arosbio.chem.io.in.ChemFile;
 import com.arosbio.chem.io.in.ChemFileIterator;
-import com.arosbio.chem.io.in.ChemFileIterator.EarlyLoadingStopException;
+import com.arosbio.chem.io.in.EarlyLoadingStopException;
 import com.arosbio.chem.io.in.FailedRecord;
 import com.arosbio.chem.io.in.MolAndActivityConverter;
+import com.arosbio.chem.io.in.ProgressTracker;
 import com.arosbio.cheminf.ChemCPClassifier;
 import com.arosbio.cheminf.ChemCPRegressor;
 import com.arosbio.cheminf.ChemClassifier;
@@ -45,6 +47,7 @@ import com.arosbio.cheminf.data.ChemDataset.DescriptorCalcInfo;
 import com.arosbio.cheminf.descriptors.ChemDescriptor;
 import com.arosbio.cheminf.descriptors.SignaturesDescriptor;
 import com.arosbio.cheminf.io.ModelSerializer;
+import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.StringUtils;
 import com.arosbio.commons.mixins.Named;
 import com.arosbio.cpsign.app.RunnableCmd;
@@ -615,32 +618,41 @@ public class CLIProgramUtils {
 		int numDatasetsUsed = 0;
 
 		if (endpoint == null || endpoint.isEmpty()) {
-			LOGGER.debug("No endpoint given though tranining data file was given - failing execution");
+			LOGGER.debug("No endpoint given though training data file was given - failing execution");
 			console.failWithArgError(
 					"Missing required parameter " + getParamName(new ModelingPropertyMixin(), "endpoint", "PROPERTY")
 					+ ": needs to be specified with chemical data");
 		}
 
 		if (isClassification && (labels == null || labels.isEmpty())) {
-			LOGGER.debug("No labels supplied even though training data was given - failing");
+			LOGGER.debug("No labels supplied even though classification training data was given - failing");
 			console.failWithArgError(
 					"Missing required parameter " + getParamName(new ClassificationLabelsMixin(), "labels", "LABELS")
 					+ ": needed when running classification");
 		}
 
 		sp.setMinHAC(minHAC);
-		sp.setNumLoadingFailuresAllowed(maxNumAllowedFailures);
+		boolean usingEarlyStopping = maxNumAllowedFailures >= 0;
+		
 
 		// Initialize the descriptors
 		sp.initializeDescriptors();
 		LOGGER.debug("Initialized descriptors");
+		Set<FailedRecord> allFailedRecords = new HashSet<>();
 
 		// Parse molecules
 		if (trainFile != null) {
 			console.println("Reading train file and calculating descriptors...", PrintMode.NORMAL);
 			pb.addAdditionalStep();
-			loadData(sp, trainFile, endpoint, labels, RecordType.NORMAL, console, listFailed, maxNumAllowedFailures);
+
+			sp.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(maxNumAllowedFailures) : ProgressTracker.createNoEarlyStopping());
+			loadData(sp, trainFile, endpoint, labels, RecordType.NORMAL, console, listFailed);
+			// update the remaining number of allowed failures
+			maxNumAllowedFailures -= Math.max(0,sp.getProgressTracker().getNumFailures());
 			numDatasetsUsed++;
+			if (sp.getProgressTracker().getNumFailures()>0){
+				allFailedRecords.addAll(sp.getProgressTracker().getFailures());
+			}
 			pb.stepProgress();
 		}
 
@@ -648,22 +660,31 @@ public class CLIProgramUtils {
 		if (calibExclusiveTrainFile != null) {
 			pb.addAdditionalStep();
 			console.println("Reading calibration exclusive train file and calculating descriptors...",
-					PrintMode.NORMAL);
-
+				PrintMode.NORMAL);
+			sp.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(maxNumAllowedFailures) : ProgressTracker.createNoEarlyStopping());
 			loadData(sp, calibExclusiveTrainFile, endpoint, labels, RecordType.CALIBRATION_EXCLUSIVE, console,
-					listFailed, maxNumAllowedFailures);
-			pb.stepProgress();
+				listFailed);
+			// update the remaining number of allowed failures
+			maxNumAllowedFailures -= Math.max(0,sp.getProgressTracker().getNumFailures());
 			numDatasetsUsed++;
+			if (sp.getProgressTracker().getNumFailures()>0){
+				allFailedRecords.addAll(sp.getProgressTracker().getFailures());
+			}
+			pb.stepProgress();
 		}
 
 		// Modeling Exclusive dataset
 		if (modelExclusiveTrainFile != null) {
 			pb.addAdditionalStep();
 			console.println("Reading modeling exclusive train file and calculating descriptors...", PrintMode.NORMAL);
-			loadData(sp, modelExclusiveTrainFile, endpoint, labels, RecordType.MODELING_EXCLUSIVE, console, listFailed,
-					maxNumAllowedFailures);
-			pb.stepProgress();
+			sp.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(maxNumAllowedFailures) : ProgressTracker.createNoEarlyStopping());
+			loadData(sp, modelExclusiveTrainFile, endpoint, labels, RecordType.MODELING_EXCLUSIVE, console, listFailed);
+			
 			numDatasetsUsed++;
+			if (sp.getProgressTracker().getNumFailures()>0){
+				allFailedRecords.addAll(sp.getProgressTracker().getFailures());
+			}
+			pb.stepProgress();
 		}
 
 		if (labels != null && !labels.isEmpty()) {
@@ -675,9 +696,11 @@ public class CLIProgramUtils {
 					nonFoundLabels.add(label);
 				}
 			}
-			if (!nonFoundLabels.isEmpty())
-				console.failWithArgError("Could not detect molecules with label(s): " + nonFoundLabels
-						+ "%nwas the correct labels given?");
+			// Fail in case some labels were not found in the input data (invalid input argument from user)
+			if (!nonFoundLabels.isEmpty()) {
+				console.failWithArgError("Could not detect molecules with label(s): %s%nwas the correct labels given?", 
+				String.join(", ", nonFoundLabels));
+			}
 		}
 
 		// If more than one dataset used - write total information
@@ -702,109 +725,69 @@ public class CLIProgramUtils {
 	}
 
 	private static void loadData(ChemDataset problem, ChemFile file, String endpoint, List<String> labels,
-			RecordType type, CLIConsole console, boolean listFailed, int maxAllowedFails) {
+			RecordType type, CLIConsole console, boolean listFailed) throws EarlyLoadingStopException {
 
 		ChemFileIterator iterator = null;
 		MolAndActivityConverter reader = null;
 		int currentNumSignatures = getNumSignaturesPreTransformations(problem);
 
+		// Set up file reader
 		try {
-
 			iterator = file.getIterator();
-			iterator.setEarlyTerminationAfter(maxAllowedFails);
-			
-			if (labels != null && ! labels.isEmpty()){
-				reader = MolAndActivityConverter.Builder.classificationConverter(iterator, endpoint, new NamedLabels(labels)).maxAllowedInvalidRecords(maxAllowedFails).build();
-			} else {
-				reader = MolAndActivityConverter.Builder.regressionConverter(iterator, endpoint).maxAllowedInvalidRecords(maxAllowedFails).build();
-			}
-
-		} catch (IllegalArgumentException e) {
-			LOGGER.debug("Could not initiate the MolAndActivityConverter", e);
-			console.failWithArgError("Could not parse chemical file properly: " + e.getMessage());
-		} catch (Exception e) {
-			LOGGER.debug("Exception when parsing/computing descriptors for file", e);
-			String dsName = "training";
-			switch (type) {
-			case CALIBRATION_EXCLUSIVE:
-				dsName = "calibration exclusive";
-				break;
-			case MODELING_EXCLUSIVE:
-				dsName = "modeling exclusive";
-				break;
-
-			default:
-				break;
-			}
-			console.failWithArgError("Failed parsing " + dsName + " data: " + e.getMessage());
+		} catch (Exception e){
+			// This is then likely to be issues with the file itself
+			LOGGER.debug("failed reading from file, probably incorrectly given",e);
+			console.failWithArgError("Could not parse input file: " + e.getMessage());
 		}
 
+		// Set up the converter
+		try {
+			
+			if (labels != null && ! labels.isEmpty()){
+				reader = MolAndActivityConverter.Builder.classificationConverter(iterator, endpoint, new NamedLabels(labels)).build();
+			} else {
+				reader = MolAndActivityConverter.Builder.regressionConverter(iterator, endpoint).build();
+			}
+			// pre-fetch first record to check that parameters are OK
+			reader.initialize();
+
+		} catch(EarlyLoadingStopException e){
+			// Pass along
+			throw e;
+		} catch (Exception e) {
+			LOGGER.debug("Could not initiate the MolAndActivityConverter for data type {}",type);
+			LOGGER.error("failed with exception", e);
+			// Wrap in early loading except
+			throw new EarlyLoadingStopException("failed loading chemical file: " + e.getMessage(), problem.getProgressTracker().getFailures());
+		} 
+
+		// Do the descriptor calculations 
 		DescriptorCalcInfo info = null;
 		try {
 			info = problem.add(reader, type);
-		} catch (EarlyLoadingStopException e) {
-			LOGGER.debug("Stopped due to early loading stop, printing status and then exiting "
-					+ (listFailed ? "listing all fails" : ""));
-
-			StringBuilder sb = new StringBuilder();
-
-			// Get the overall statistics
-			List<FailedRecord> fileErr = iterator.getFailedRecords();
-			List<FailedRecord> labelErr = reader.getFailedRecords();
-			List<FailedRecord> descrCDKErr = (info != null ? info.getFailedRecords() : e.getFailedRecords());
-
-			sb.append("Failed record(s) at file-level: ");
-			sb.append(fileErr.size());
-			sb.append("%nFailed record(s) missing/faulty property: ");
-			sb.append(labelErr.size());
-			sb.append("%nFailed record(s) during molecule configuration / min HAC check / ChemDescriptor generation: ");
-			sb.append(descrCDKErr.size());
-			sb.append("%n");
-
-			if (listFailed) {
-				sb.append("%n");
-				appendFailedMolsInfo(fileErr, labelErr, descrCDKErr, sb);
-				sb.append("%n");
-			}
-
-			console.failWithArgError(sb.toString());
-
-		} catch (Exception e) {
-			LOGGER.debug("Exception when parsing training file", e);
-
-			if (reader.getMolsSkippedMissingActivity() > 0) {
-				LOGGER.debug("Failed loading data, with records missing endpoint activities: {}", 
-					reader.getMolsSkippedMissingActivity());
-				console.failWithArgError(
-						"Failed loading molecules from URI/path: " + file.getURI() + ", skipped "
-								+ reader.getMolsSkippedMissingActivity()
-								+ " due to missing endpoint activity. Are all parameters configured properly?");
-			}
-
-			console.failWithNoMoleculesCouldBeLoaded(file);
+		} catch (EarlyLoadingStopException e){
+			LOGGER.debug("Stopped due to early loading stop",e);
+			throw e;
+		} catch (Exception e){
+			LOGGER.debug("Stopped due to generic exception",e);
+			throw new EarlyLoadingStopException(e.getMessage(), problem.getProgressTracker().getFailures());
 		}
 
 		// Write out info in the end
-		String extraInfo = "";
+		StringBuilder extraInfoBuilder = new StringBuilder();
 
 		if (listFailed) {
-			StringBuilder sb = new StringBuilder();
 
-			appendFailedMolsInfo(iterator.getFailedRecords(), reader.getFailedRecords(), info.getFailedRecords(), sb);
+			appendFailedMolsInfo(extraInfoBuilder, info.getFailedRecords());
 
-			if (sb.length() > 0)
-				sb.append("%n");
-
-			// convert to 'extraInfo' string
-			extraInfo = sb.toString();
+			if (extraInfoBuilder.length() > 0)
+				extraInfoBuilder.append("%n");
 
 		} else {
-			int numFailed = info.getNumCDKFailedCompounds() + info.getNumHeavyAtomCountFailed()
-			+ ((ChemFileIterator) reader.getIterator()).getRecordsSkipped()
-			+ reader.getMolsSkippedMissingActivity() + reader.getMolsSkippedInvalidActivity();
+			// Count the number of failures
+			int numFailed = info.getFailedRecords().size(); 
 			if (numFailed > 0) {
-				extraInfo = " Skipped " + numFailed
-						+ " molecule(s) due to parsing issues/Heavy Atom Count/ChemDescriptor calculation.";
+				summarizeFailedRecords(extraInfoBuilder, info.getFailedRecords());
 			}
 		}
 
@@ -813,57 +796,71 @@ public class CLIProgramUtils {
 
 		// Write data about the signatures generation
 		console.printlnWrapped(
-				getLoadedMoleculesInfo(problem.getDataset(type), problem, currentNumSignatures) + extraInfo,
+				getLoadedMoleculesInfo(problem.getDataset(type), problem, currentNumSignatures) + extraInfoBuilder.toString(),
 				PrintMode.NORMAL);
+			
 	}
 
-	private static void appendFailedMolsInfo(List<FailedRecord> iterFails, List<FailedRecord> readerFails,
-			List<FailedRecord> descCDKErr, StringBuilder sb) {
-		// Get the full list of early failures
-		Set<FailedRecord> fs = new HashSet<>();
-		fs.addAll(iterFails);
-		fs.addAll(readerFails);
-		List<FailedRecord> earlyFailes = getUniqueSorted(fs);
-		if (!earlyFailes.isEmpty()) {
-			sb.append("%nFailed the following records due to file formatting issues (indices starts at 0):");
-			appendFailedMolsInfo(earlyFailes, sb);
+	private static void summarizeFailedRecords(StringBuilder sb, Collection<FailedRecord> records){
+		List<FailedRecord> sortedUnique = CollectionUtils.getUniqueAndSorted(records);
+
+		int numInvalidRec=0, numLowHAC=0, numMissingOrInvalidProperty=0, numUnknown=0, numDescriptorCalcError=0;
+		for (FailedRecord r : sortedUnique){
+			switch (r.getCause()){
+				case DESCRIPTOR_CALC_ERROR:
+					numDescriptorCalcError++;
+					break;
+					case LOW_HAC:
+					numLowHAC++;
+					break;
+					case INVALID_PROPERTY:
+					case MISSING_PROPERTY:
+					numMissingOrInvalidProperty++;
+					break;
+					case INVALID_RECORD:
+					case INVALID_STRUCTURE:
+					case MISSING_STRUCTURE:
+					numInvalidRec++;
+					break;
+					default:
+					numUnknown++;
+					break;
+			}
 		}
 
-		// ChemDescriptor calculation failures
-		Set<FailedRecord> descriptorFailures = new HashSet<>(descCDKErr);
-		descriptorFailures.removeAll(earlyFailes);
-		List<FailedRecord> descFailes = getUniqueSorted(descriptorFailures);
-		if (!descriptorFailures.isEmpty()) {
-			sb.append(
-					"%nFailed the following records during molecule configuration / min HAC check / descriptor generation (indices starts at 0):");
-			appendFailedMolsInfo(descFailes, sb);
+		if (numInvalidRec >0){
+			sb.append("Failed ").append(numInvalidRec).append(" record(s) due to being invalid%n");
 		}
+		if (numMissingOrInvalidProperty>0){
+			sb.append("Failed ").append(numInvalidRec).append(" record(s) due to missing/invalid endpoint activity%n");
+		}
+		if (numDescriptorCalcError>0){
+			sb.append("Failed ").append(numInvalidRec).append(" record(s) during descriptor calculation%n");
+		}
+		if (numLowHAC>0){
+			sb.append("Failed ").append(numInvalidRec).append(" record(s) due to Heavy Atom Count threshold%n");
+		}
+		if (numUnknown>0){
+			sb.append("Failed ").append(numInvalidRec).append(" record(s) due to unknown error%n");
+		}
+
 	}
 
-	private static void appendFailedMolsInfo(List<FailedRecord> records, StringBuilder sb) {
-		for (FailedRecord r : records) {
-			sb.append("%nRecord: ");
+	public static void appendFailedMolsInfo(StringBuilder sb, Collection<FailedRecord> records) {
+		List<FailedRecord> sortedUnique = CollectionUtils.getUniqueAndSorted(records);
+		for (FailedRecord r : sortedUnique) {
+			sb.append("%nRecord ");
 			sb.append(r.getIndex());
 			if (r.hasID()) {
-				sb.append(" {");
-				sb.append(r.getID());
-				sb.append("}");
+				sb.append(" {").append(r.getID()).append('}');
 			}
+			// the reason (or cause)
 			if (r.hasReason()) {
-				sb.append(": ");
-				sb.append(r.getReason());
+				sb.append(": ").append(r.getReason());
+			} else {
+				sb.append(": ").append(r.getCause().getMessage());
 			}
 		}
-	}
-
-	private static List<FailedRecord> getUniqueSorted(Set<FailedRecord> records) {
-		if (records.isEmpty()) {
-			return new ArrayList<>();
-		}
-
-		List<FailedRecord> failedList = new ArrayList<>(records);
-		Collections.sort(failedList);
-		return failedList;
 	}
 
 	protected static String getLoadedMoleculesInfo(SubSet ds, ChemDataset sp, int prevNumSigs) {
@@ -1012,7 +1009,7 @@ public class CLIProgramUtils {
 		}
 
 		// Endpoint
-		String predEndpoint = sp.getProperty(); // SignPredHelper.getProblem(predictor)SignPredHelper.getProblem(sp).getEndpoint();
+		String predEndpoint = sp.getProperty(); 
 		if (predEndpoint != null) {
 			sb.append(" The model endpoint is \'");
 			sb.append(predEndpoint);
@@ -1564,7 +1561,7 @@ public class CLIProgramUtils {
 			return "not recognized model type";
 	}
 
-	public static void failWithBadUserInputFile(CLIConsole console){
+	public static void failWithBadUserInputFile(CLIConsole console, int numOK, ChemFile inputFile, List<FailedRecord> failedRecords, String property, List<String> givenLabels, int numMaxAllowedFailures){
 		// TODO 
 		console.failWithArgError("TODO - compile a good error message for this");
 	}

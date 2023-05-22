@@ -983,6 +983,24 @@ public class TestPrecompute extends CLIBaseTest {
 	}
 
 	@Test
+	public void testExcelInput() throws Exception {
+		CSVCmpdData excel = TestResources.Reg.getSolubility_10_excel();
+		File precompModelFile = TestUtils.createTempFile("pre", ".jar");
+		mockMain(new String[] {
+				Precompute.CMD_NAME,
+				"-mt", PRECOMPUTE_REGRESSION,
+				"-td", excel.format() +":bom=t:delim="+excel.delim(), excel.uri().toString(),
+				"-pr", excel.property(),
+				"-d", "signatures",
+				"-mo", precompModelFile.getAbsolutePath(),
+				"-mn", "sdagas",
+				"--time",
+				"--echo"
+		});
+		// printLogs();
+	}
+
+	@Test
 	public void testBadDescriptorInput() throws Exception {
 		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
 		exit.checkAssertionAfterwards(new AssertSysErrContainsString("signatures", "strange_param"));
@@ -1016,8 +1034,31 @@ public class TestPrecompute extends CLIBaseTest {
 				// "--labels",getLabelsArg(noHeader.labels()),
 				"-mt", PRECOMPUTE_REGRESSION,
 				"--property", "FLAG",
-				"-mo",precompModelFile.getAbsolutePath(),
+				"-mo", precompModelFile.getAbsolutePath(),
 				"-v");
-//		printLogs();
+		
+		ChemDataset data = ModelSerializer.loadDataset(precompModelFile.toURI(), null);
+		Assert.assertEquals(10, data.size());
 	}
+
+	@Test
+	public void testUserDefOverwriteExistingHeader() throws Exception {
+		File precompModelFile = TestUtils.createTempFile("pre", ".jar");
+		CSVCmpdData input = TestResources.Reg.getSolubility_10();
+				
+				mockMain(Precompute.CMD_NAME,
+						"--train-data", input.format()+":header=SMILES,VALUE:skipFirstRow=true", input.uri().toString(),
+						"-mt", PRECOMPUTE_REGRESSION,
+						"--property", "VALUE", // Use the given one
+						"-mo", precompModelFile.getAbsolutePath(),
+						"--early-termination-after", "0",
+						"--list-failed",
+						"-v");
+				
+		ChemDataset data = ModelSerializer.loadDataset(precompModelFile.toURI(), null);
+		Assert.assertEquals(input.numValidRecords(), data.size());
+
+		// printLogs();
+ 	}
+
 }

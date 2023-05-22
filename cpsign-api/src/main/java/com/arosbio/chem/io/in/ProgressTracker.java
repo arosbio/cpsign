@@ -37,14 +37,14 @@ public final class ProgressTracker {
         return new ProgressTracker(false, -1);
     }
     /**
-     * Create a progress tracker that allows at most {@code maxAllowedFails} failures
-     * @param maxAllowedFails should be &gt;=0
+     * Create a progress tracker that allows at most {@code maxAllowedFails} failures,
+     * if {@code maxAllowedFails} is negative there will be no early stopping 
+     * @param maxAllowedFails allowed failures, or negative if no early stopping
      * @return A progress tracker that fails after {@code maxAllowedFails} have been encountered
-     * @throws IllegalArgumentException if {@code maxAllowedFails} is less than 0
      */
-    public static ProgressTracker createStopAfter(int maxAllowedFails) throws IllegalArgumentException {
+    public static ProgressTracker createStopAfter(int maxAllowedFails) {
         if (maxAllowedFails<0){
-            throw new IllegalArgumentException("If early stopping should be performed the maxAllowedFails must be >=0");
+            return new ProgressTracker(true, -1);
         }
         return new ProgressTracker(true, maxAllowedFails);
     }
@@ -98,5 +98,9 @@ public final class ProgressTracker {
     public void assertCanContinueParsing() throws EarlyLoadingStopException {
         if (shouldStop())
             throw new EarlyLoadingStopException("Encountered " + failures.size() + " failed records during reading/processing of input", failures);
+    }
+
+    public ProgressTracker clone(){
+        return new ProgressTracker(usesEarlyStopping, maxAllowedFails);
     }
 }

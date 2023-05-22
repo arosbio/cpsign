@@ -26,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import com.arosbio.chem.CPSignMolProperties;
 import com.arosbio.chem.io.in.ChemFileParserUtils;
 import com.arosbio.chem.io.in.FailedRecord;
+import com.arosbio.chem.io.in.FailedRecord.Cause;
 import com.arosbio.cheminf.ChemCPClassifier;
 import com.arosbio.cheminf.ChemCPRegressor;
 import com.arosbio.cheminf.ChemPredictor;
@@ -36,8 +37,10 @@ import com.arosbio.commons.TypeUtils;
 import com.arosbio.cpsign.app.params.mixins.CompoundsToPredictMixin;
 import com.arosbio.cpsign.app.params.mixins.ConfidencesListMixin;
 import com.arosbio.cpsign.app.params.mixins.ConsoleVerbosityMixin;
+import com.arosbio.cpsign.app.params.mixins.EarlyTerminationMixin;
 import com.arosbio.cpsign.app.params.mixins.EchoMixin;
 import com.arosbio.cpsign.app.params.mixins.EncryptionMixin;
+import com.arosbio.cpsign.app.params.mixins.ListFailedRecordsMixin;
 import com.arosbio.cpsign.app.params.mixins.LogfileMixin;
 import com.arosbio.cpsign.app.params.mixins.OutputChemMixin;
 import com.arosbio.cpsign.app.params.mixins.ProgramProgressMixin;
@@ -123,10 +126,11 @@ public class Predict implements RunnableCmd, SupportsProgressBar{
 	@Mixin
 	private CompoundsToPredictMixin toPredict;
 	
-	@Option(names = {"--list-failed"},
-			description = "List @|bold all|@ failed molecules, such as invalid records, molecules removed due to Heavy Atom Count or failures at descriptor calculation. "+
-			"The default is otherwise to only list the summary of the number of failed records.")
-	private boolean listFailedMolecules = false;
+	@Mixin
+	private EarlyTerminationMixin earlyTermination = new EarlyTerminationMixin();
+	
+	@Mixin
+	private ListFailedRecordsMixin listFailedRecordsMixin = new ListFailedRecordsMixin();
 
 	// Input data to predict
 	@Mixin
@@ -290,7 +294,7 @@ public class Predict implements RunnableCmd, SupportsProgressBar{
 				console.failWithArgError("Model is encrypted, must supply the key that can decrypt it!");
 			}
 			
-		} catch(IllegalArgumentException | IOException e) {
+		} catch (Exception e) {
 			LOGGER.debug("Failed loading model",e);
 			console.failWithArgError("Could not load model from: "+modelFile + "%nMessage: " + e.getMessage());
 		}
@@ -347,7 +351,7 @@ public class Predict implements RunnableCmd, SupportsProgressBar{
 						PrintMode.VERBOSE, numMissingDataFails);
 			}
 			
-			if (listFailedMolecules) {
+			if (listFailedRecordsMixin.listFailedRecords) {
 				StringBuilder failedStr = new StringBuilder("Failed the following record(s):%n");
 				for (int i=0; i< failedRecords.size()-1; i++) {
 					failedStr.append(failedRecords.get(i));
@@ -439,16 +443,16 @@ public class Predict implements RunnableCmd, SupportsProgressBar{
 			} catch (InvalidSmilesException e) { 
 				LOGGER.debug("Invalid smiles sent as input: {}", toPredict.toPredict.smilesToPredict);
 				console.failWithArgError("Input to parameter --smiles '"+toPredict.toPredict.smilesToPredict+"' could not be parsed as a valid SMILES");
-				failedRecords.add(new FailedRecord.Builder(-1).withID(smilesID).withReason(e.getMessage()).build());
+				failedRecords.add(new FailedRecord.Builder(-1, Cause.INVALID_STRUCTURE).withID(smilesID).withReason(e.getMessage()).build());
 			} catch (CDKException e){ 
 				LOGGER.debug("Got a CDKException predicting the --smiles molecule",e);
 				LOGGER.error("Dataset when predicting the --smiles molecule");
-				failedRecords.add(new FailedRecord.Builder(-1).withID(smilesID).withReason(e.getMessage()).build());
+				failedRecords.add(new FailedRecord.Builder(-1, Cause.INVALID_STRUCTURE).withID(smilesID).withReason(e.getMessage()).build());
 				numMissingDataFails++;
 			} catch (Exception e) {
 				LOGGER.debug("Exception trying to predict SMILES, stacktrace: ", e);
 				LOGGER.error("Error predicting SMILES: {}", e.getMessage());
-				failedRecords.add(new FailedRecord.Builder(-1).withID(smilesID).withReason(e.getMessage()).build());
+				failedRecords.add(new FailedRecord.Builder(-1, Cause.UNKNOWN).withID(smilesID).withReason(e.getMessage()).build());
 			} finally {
 				// Step Progress and print out
 				printPredictionProgressAndStep();
@@ -494,11 +498,11 @@ public class Predict implements RunnableCmd, SupportsProgressBar{
 					console.failWithInternalError("Failed predicting molecule due to: " + e.getMessage());
 				} catch (MissingDataException e) {
 					LOGGER.debug("Got a missing data exception - something wrong i pre-processing?");
-					failedRecords.add(new FailedRecord.Builder(index).withID(id).withReason(e.getMessage()).build());
+					failedRecords.add(new FailedRecord.Builder(index, Cause.DESCRIPTOR_CALC_ERROR).withID(id).withReason(e.getMessage()).build());
 					numMissingDataFails++;
 				} catch (Exception e) {
 					LOGGER.debug("Failed molecule due to generic exception", e);
-					failedRecords.add(new FailedRecord.Builder(index).withID(id).withReason(e.getMessage()).build());
+					failedRecords.add(new FailedRecord.Builder(index, Cause.UNKNOWN).withID(id).withReason(e.getMessage()).build());
 				} finally {
 					molIterationCounter++;
 					

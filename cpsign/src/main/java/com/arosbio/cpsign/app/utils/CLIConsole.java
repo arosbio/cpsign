@@ -287,7 +287,6 @@ public class CLIConsole {
 
 		LOGGER.debug("exiting due to missing required parameters");
 		failWithArgError(sb.toString());
-//		failWithErrorText(sb.toString(), ExitStatus.FAULTY_ARGS);
 	}
 
 	@SafeVarargs
@@ -325,7 +324,6 @@ public class CLIConsole {
 
 		LOGGER.debug("exiting due to non-combinable parameters given");
 		failWithArgError(sb.toString());
-//		failWithErrorText(sb.toString(), ExitStatus.FAULTY_ARGS);
 	}
 
 	public void writeHowToGetHelpText(){
@@ -337,20 +335,5 @@ public class CLIConsole {
 	}
 
 
-//	public String addRunCMDDecor(String runCMD){
-//		if (ansi == Ansi.OFF) {
-//			return '\'' +runCMD +'\''; 
-//		} else {
-//			return "@|bold,red "+runCMD + "|@";
-//		}
-//	}
-//
-//	public String addParamDecor(String paramFlag) {
-//		return "@|yellow "+paramFlag + "|@";
-//	}
-//
-//	public String addProgramNameDecor(String name) {
-//		return "@|bold " + name + "|@";
-//	}
 
 }

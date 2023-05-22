@@ -28,9 +28,10 @@ import org.slf4j.LoggerFactory;
 import com.arosbio.chem.CPSignMolProperties;
 import com.arosbio.chem.io.in.ChemFile;
 import com.arosbio.chem.io.in.ChemFileIterator;
+import com.arosbio.chem.io.in.EarlyLoadingStopException;
 import com.arosbio.chem.io.in.FailedRecord;
+import com.arosbio.chem.io.in.FailedRecord.Cause;
 import com.arosbio.chem.io.in.MolAndActivityConverter;
-import com.arosbio.chem.io.in.ChemFileIterator.EarlyLoadingStopException;
 import com.arosbio.cheminf.ChemCPClassifier;
 import com.arosbio.cheminf.ChemCPRegressor;
 import com.arosbio.cheminf.ChemClassifier;
@@ -41,8 +42,10 @@ import com.arosbio.commons.MathUtils;
 import com.arosbio.commons.TypeUtils;
 import com.arosbio.cpsign.app.params.converters.ChemFileConverter;
 import com.arosbio.cpsign.app.params.mixins.ConsoleVerbosityMixin;
+import com.arosbio.cpsign.app.params.mixins.EarlyTerminationMixin;
 import com.arosbio.cpsign.app.params.mixins.EchoMixin;
 import com.arosbio.cpsign.app.params.mixins.EncryptionMixin;
+import com.arosbio.cpsign.app.params.mixins.ListFailedRecordsMixin;
 import com.arosbio.cpsign.app.params.mixins.LogfileMixin;
 import com.arosbio.cpsign.app.params.mixins.OutputChemMixin;
 import com.arosbio.cpsign.app.params.mixins.OverallStatsMixinClasses;
@@ -147,10 +150,11 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 					paramLabel = ArgumentType.TEXT)
 	private String validationEndpoint;
 
-	@Option(names = {"--list-failed"},
-			description = "List @|bold all|@ failed molecules, such as invalid records, molecules removed due to Heavy Atom Count or failures at descriptor calculation. "+
-			"The default is otherwise to only list the summary of the number of failed records.")
-	private boolean listFailedMolecules = false;
+	@Mixin
+	private EarlyTerminationMixin earlyTermination = new EarlyTerminationMixin();
+	
+	@Mixin
+	private ListFailedRecordsMixin listFailedRecordsMixin = new ListFailedRecordsMixin();
 
 	// Validation opts
 	@Mixin
@@ -337,7 +341,7 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 						PrintMode.VERBOSE, numMissingDataFails);
 			}
 
-			if (listFailedMolecules) {
+			if (listFailedRecordsMixin.listFailedRecords) {
 				StringBuilder failedStr = new StringBuilder("Failed the following record(s):%n");
 				for (int i=0; i< failedRecords.size()-1; i++) {
 					failedStr.append(failedRecords.get(i));
@@ -408,7 +412,7 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 			try {
 				molIterator.initialize();
 			} catch (Exception e) {
-				if (molIterator.getNumOKMols() == 0 && molIterator.getNumFailedMols()>0) {
+				if (molIterator.getNumOKMols() == 0 && molIterator.getProgressTracker().getNumFailures()>0) {
 					LOGGER.debug("Invalid arguments for reading the prediction file",e);
 				}
 				console.failWithArgError("No valid molecules could be read from%n%s%nusing property '%s'", 
@@ -438,14 +442,14 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 
 				} catch (MissingDataException e) {
 					LOGGER.debug("Got a missing data exception - something wrong i pre-processing?");
-					failedRecords.add(new FailedRecord.Builder(index).withID(id).withReason(e.getMessage()).build());
+					failedRecords.add(new FailedRecord.Builder(index, Cause.DESCRIPTOR_CALC_ERROR).withID(id).withReason(e.getMessage()).build());
 					numMissingDataFails++;
 				} catch (EarlyLoadingStopException e){
 					// This likely means bad parameters was sent - need to give a good error output
 					
 				} catch (Exception e) {
 					LOGGER.debug("Failed molecule due to generic exception", e);
-					failedRecords.add(new FailedRecord.Builder(index).withID(id).withReason(e.getMessage()).build());
+					failedRecords.add(new FailedRecord.Builder(index,Cause.UNKNOWN).withID(id).withReason(e.getMessage()).build());
 				} finally {
 					iterationCount++;
 					if (progressInterval>0 && iterationCount % progressInterval == 0 ){

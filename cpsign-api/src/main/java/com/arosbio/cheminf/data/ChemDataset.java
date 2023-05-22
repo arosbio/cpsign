@@ -93,8 +93,7 @@ public final class ChemDataset extends Dataset {
 	// ---------------------------------------------------------------------
 	/** The minimum heavy atom count*/
 	private int minimumHAC = 5;
-	/** The maximum number of parsing failures that is allowed, before failing (applies for each call to add(..) methods) */
-	private int numParsingFailuresAllowed=-1;
+	private ProgressTracker tracker = ProgressTracker.createNoEarlyStopping();
 
 	private List<ChemDescriptor> descriptors = new ArrayList<>();
 	private List<String> featureNamesExcludingSignatures;
@@ -290,7 +289,7 @@ public final class ChemDataset extends Dataset {
 
 		// Copy settings
 		clone.minimumHAC = minimumHAC;
-		clone.numParsingFailuresAllowed = numParsingFailuresAllowed;
+		clone.tracker = tracker.clone();
 		clone.keepMolRef = keepMolRef;
 		if (textualLabels != null)
 			clone.textualLabels = textualLabels.clone();
@@ -427,6 +426,21 @@ public final class ChemDataset extends Dataset {
 		return index;
 	}
 
+	public ProgressTracker getProgressTracker(){
+		return tracker;
+	}
+
+	public void setProgressTracker(ProgressTracker tracker){
+		if (tracker!=null)
+			this.tracker = tracker;
+		else
+			this.tracker = ProgressTracker.createNoEarlyStopping();
+	}
+
+	public ChemDataset withProgressTracker(ProgressTracker tracker){
+		setProgressTracker(tracker);
+		return this;
+	}
 
 
 	public List<ChemDescriptor> getDescriptors(){
@@ -494,18 +508,18 @@ public final class ChemDataset extends Dataset {
 		this.keepMolRef = keep;
 		return this;
 	}
-	/**
-	 * Controls the number of allowed failures when loading data using any of the <code>add(..)</code> methods. 
-	 * These failures can be due to CDK configuration issues, {@link #setMinHAC(int) HAC} or descriptor calculation issues.
-	 * Note that this only applies to the current level of processing, any up-stream processing (i.e. reading molecules from
-	 * storage) needs to be handled up-stream. The parsing will stop with an {@link EarlyLoadingStopException} once passed the 
-	 * <code>numAllowed</code> numbers of failures. If a number less than 0 is given,
-	 * there is no early termination and the loading will continue until completion. 
-	 * @param numAllowed The maximum allowed number of failures before terminating parsing of new molecules. Or <code>-1</code> for no early stopping
-	 */
-	public void setNumLoadingFailuresAllowed(int numAllowed) {
-		this.numParsingFailuresAllowed = numAllowed;
-	}
+	// /**
+	//  * Controls the number of allowed failures when loading data using any of the <code>add(..)</code> methods. 
+	//  * These failures can be due to CDK configuration issues, {@link #setMinHAC(int) HAC} or descriptor calculation issues.
+	//  * Note that this only applies to the current level of processing, any up-stream processing (i.e. reading molecules from
+	//  * storage) needs to be handled up-stream. The parsing will stop with an {@link EarlyLoadingStopException} once passed the 
+	//  * <code>numAllowed</code> numbers of failures. If a number less than 0 is given,
+	//  * there is no early termination and the loading will continue until completion. 
+	//  * @param numAllowed The maximum allowed number of failures before terminating parsing of new molecules. Or <code>-1</code> for no early stopping
+	//  */
+	// public void setNumLoadingFailuresAllowed(int numAllowed) {
+	// 	this.numParsingFailuresAllowed = numAllowed;
+	// }
 
 
 	public boolean isReady() {
@@ -998,7 +1012,6 @@ public final class ChemDataset extends Dataset {
 		DescriptorCalcInfo.Builder state = new DescriptorCalcInfo.Builder();
 		int recIndex = recordStartIndex-1; // -1 to start at 0 in the while-loop
 
-		ProgressTracker tracker = numParsingFailuresAllowed>=0 ? ProgressTracker.createStopAfter(numParsingFailuresAllowed) : ProgressTracker.createNoEarlyStopping();
 		if (data instanceof MolAndActivityConverter){
 			((MolAndActivityConverter)data).setProgressTracker(tracker);
 		}
@@ -1287,7 +1300,7 @@ public final class ChemDataset extends Dataset {
 		Map<String,Object> metaProps = new HashMap<>();
 		metaProps.put(MetaDataProps.MIN_HAC_PROP, minimumHAC);
 		metaProps.put(MetaDataProps.MODEL_PROPERTY_PROP, property);
-		metaProps.put(MetaDataProps.NUM_PARSE_FAIL_ALLOWED_PROP, numParsingFailuresAllowed);
+		metaProps.put(MetaDataProps.NUM_PARSE_FAIL_ALLOWED_PROP, tracker.getMaxAllowedFailures());
 		metaProps.put(MetaDataProps.KEEP_REFS_PROP, keepMolRef);
 		metaProps.put(MetaDataProps.LABELS_PROP, (textualLabels!=null? textualLabels.getReverseLabels() : null));
 		if (requires3D != null)
@@ -1413,7 +1426,7 @@ public final class ChemDataset extends Dataset {
 				LOGGER.debug("Loaded ChemDataset properties from stream: {}",props);
 				minimumHAC = getOrDefault(props, MetaDataProps.MIN_HAC_PROP, minimumHAC); //key, defaultValue).asInt(props.getOrDefault(MetaDataProps.MIN_HAC_PROP, minimumHAC));
 				property = getOrDefault(props, MetaDataProps.MODEL_PROPERTY_PROP, property); //props.getOrDefault(MetaDataProps.MODEL_PROPERTY_PROP, minimumHAC).toString();
-				numParsingFailuresAllowed = getOrDefault(props, MetaDataProps.NUM_PARSE_FAIL_ALLOWED_PROP, numParsingFailuresAllowed); //TypeUtils.asInt(props.getOrDefault(MetaDataProps.NUM_PARSE_FAIL_ALLOWED_PROP, numParsingFailuresAllowed));
+				tracker = ProgressTracker.createStopAfter(getOrDefault(props, MetaDataProps.NUM_PARSE_FAIL_ALLOWED_PROP, -1)); //TypeUtils.asInt(props.getOrDefault(MetaDataProps.NUM_PARSE_FAIL_ALLOWED_PROP, numParsingFailuresAllowed));
 				keepMolRef = getOrDefault(props, MetaDataProps.KEEP_REFS_PROP, keepMolRef);
 				if (textualLabels == null){
 					Map<String,Integer> storedLabels = getOrDefault(props, MetaDataProps.LABELS_PROP, (Map<String,Integer>) null);
