@@ -22,6 +22,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.arosbio.commons.FuzzyMatcher.NoMatchException;
 import com.arosbio.ml.algorithms.MLAlgorithm;
 import com.arosbio.ml.algorithms.svm.PlattScaledC_SVC;
 import com.arosbio.ml.cp.nonconf.calc.LinearInterpolationPValue;
@@ -38,6 +39,23 @@ public class TestFuzzyStuff {
 		Assert.assertTrue(FuzzyServiceLoader.load(PValueCalculator.class, "Spline_interpola") instanceof SplineInterpolatedPValue);
 		Assert.assertTrue(FuzzyServiceLoader.load(PValueCalculator.class, "linearInterpol") instanceof LinearInterpolationPValue);
 	}
+
+	 @Test
+	 public void testFuzzyWithCaseSensitive() {
+	 	FuzzyMatcher matcher = new FuzzyMatcher().withIgnoreCase(false);
+	 	try {
+	 		matcher.match(Arrays.asList("some-text", "some-other-text"), "SOME_TEXT");
+	 		Assert.fail("Should be no match if case-sensitive");
+	 	} catch (NoMatchException e) {}
+	 	
+	 	// Some case is the same:
+	 	Assert.assertEquals("Some-Text", matcher.withIgnoreCase(true).match(Arrays.asList("Some-Text", "some-other-text"), "SOME_TEXT"));
+	 	
+	 	
+	 	// Case insensitive - we should match 
+	 	Assert.assertEquals("some-text", matcher.withIgnoreCase(true).match(Arrays.asList("some-text", "some-other-text"), "SOME_TEXT"));
+	 	
+	 }
 
 	
 	@Test
@@ -66,7 +84,7 @@ public class TestFuzzyStuff {
 		vals.add(ImmutablePair.of(Arrays.asList("C_SVC"), "C_SVC"));
 		vals.add(ImmutablePair.of(Arrays.asList("NuSVC"), "NuSVC"));
 		
-		String match = new FuzzyMatcher().match(vals, "c-svc");
+		String match = new FuzzyMatcher().matchPairs(vals, "c-svc");
 		Assert.assertEquals("C_SVC", match);
 //		System.err.println(match);
 		

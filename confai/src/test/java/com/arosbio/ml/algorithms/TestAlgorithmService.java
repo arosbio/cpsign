@@ -37,7 +37,7 @@ public class TestAlgorithmService extends TestEnv {
 	@Test
 	public void testLinearSVR() {
 		doFuzzyMatch("LinearSVR", new LinearSVR(), false);
-		doFuzzyMatch("lin_SVr", new LinearSVR(), false);
+		doFuzzyMatch("linear_SVr", new LinearSVR(), false);
 	}
 	
 	@Test
@@ -62,9 +62,14 @@ public class TestAlgorithmService extends TestEnv {
 
 	@Test
 	public void testLR() {
+		try {
 		doFuzzyMatch("LogisticRegr", new LogisticRegression(), false);
 		doFuzzyMatch("LogisticReg", new LogisticRegression(), false);
 		doFuzzyMatch("log_regression", new LogisticRegression(), false);
+		} catch (Exception e) {
+			printLogs();
+			Assert.fail();
+		}
 	}
 
 //	@Test
@@ -91,9 +96,8 @@ public class TestAlgorithmService extends TestEnv {
 //	}
 
 	private void doFuzzyMatch(String name, Object c, boolean shouldFail) {
-//		AlgorithmService s = AlgorithmService.getInstance();
 		try {
-			MLAlgorithm loaded = FuzzyServiceLoader.load(MLAlgorithm.class, name); //s.getAlgorithmFuzzyMatch(name);
+			MLAlgorithm loaded = FuzzyServiceLoader.load(MLAlgorithm.class, name);
 			Assert.assertTrue(loaded.getClass().equals(c.getClass()));
 			if (shouldFail)
 				Assert.fail();

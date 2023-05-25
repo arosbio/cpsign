@@ -9,6 +9,9 @@
 # All target folders (i.e. all generated output from maven)
 target/
 
+# Bin output
+bin/
+
 # Explicit class paths
 .classpath
 

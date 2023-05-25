@@ -206,7 +206,7 @@ public class ConfigUtils {
 			possibleMatches.add(ImmutablePair.of(p.getNames(),p.getNames().get(0)));
 		}
 
-		return new FuzzyMatcher().match(possibleMatches, inputArg);
+		return new FuzzyMatcher().matchPairs(possibleMatches, inputArg);
 	}
 
 	private static ConfigParameter getConfig(List<ConfigParameter> params, String inputKey) {
@@ -215,7 +215,7 @@ public class ConfigUtils {
 			possibleMatches.add(ImmutablePair.of(p.getNames(),p));
 		}
 		try {
-			return new FuzzyMatcher().match(possibleMatches, inputKey);
+			return new FuzzyMatcher().matchPairs(possibleMatches, inputKey);
 		} catch (IllegalArgumentException e) {
 			throw new TypeConversionException("Invalid sub-parameter '"+inputKey+'\'');
 		}

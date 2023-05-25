@@ -142,7 +142,7 @@ public class GlobalConfig {
 				for (PredictorType s : values()) {
 					values.add(ImmutablePair.of(Arrays.asList(s.name), s));
 				}
-				return new FuzzyMatcher().match(values, text);
+				return new FuzzyMatcher().matchPairs(values, text);
 			}
 			
 			public static PredictorType getPredictorType(Predictor predictor) throws IllegalArgumentException {

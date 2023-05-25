@@ -95,7 +95,7 @@ public class CLIParameters {
 			for (PredictorType s : values()) {
 				values.add(ImmutablePair.of(Arrays.asList(s.name), s));
 			}
-			return new FuzzyMatcher().match(values, text);
+			return new FuzzyMatcher().matchPairs(values, text);
 		}
 		
 		public static PredictorType getPredictorType(Predictor predictor) throws IllegalArgumentException {
@@ -157,7 +157,7 @@ public class CLIParameters {
 			for (ClassOrRegType s : values()) {
 				values.add(ImmutablePair.of(Arrays.asList(s.name), s));
 			}
-			return new FuzzyMatcher().match(values, text);
+			return new FuzzyMatcher().matchPairs(values, text);
 		}
 	}
 
@@ -197,7 +197,7 @@ public class CLIParameters {
 			for (TextOutputType s : values()) {
 				values.add(ImmutablePair.of(Arrays.asList(s.names), s));
 			}
-			return new FuzzyMatcher().match(values, text);
+			return new FuzzyMatcher().matchPairs(values, text);
 		}
 	}
 	
@@ -239,7 +239,7 @@ public class CLIParameters {
 			for (ChemOutputType s : values()) {
 				values.add(ImmutablePair.of(Arrays.asList(s.names), s));
 			}
-			return new FuzzyMatcher().match(values, text);
+			return new FuzzyMatcher().matchPairs(values, text);
 
 		}
 

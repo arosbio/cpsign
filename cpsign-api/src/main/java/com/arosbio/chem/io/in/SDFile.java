@@ -59,6 +59,11 @@ public class SDFile implements ChemFile, Described, Named {
 		}
 	}
 
+	public SDFReader getIterator(ProgressTracker tracker) throws IOException {
+		return getIterator(); // No tracker used
+	}
+
+
 	@Override
 	public int countNumRecords() throws IOException {
 		int records = 0;

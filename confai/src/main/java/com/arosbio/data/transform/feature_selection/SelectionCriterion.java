@@ -68,7 +68,7 @@ public class SelectionCriterion implements Configurable {
 			}
 
 			try {
-				return new FuzzyMatcher().match(possibleOnes, txt);
+				return new FuzzyMatcher().matchPairs(possibleOnes, txt);
 			} catch (IllegalArgumentException e) {
 				throw new IllegalArgumentException("No criterion found for argument " + txt ); 
 			}

@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.input.BOMInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -215,6 +216,12 @@ public class UriUtils {
 		return true;
 	}
 
+	/**
+	 * Checks both if the URI is valid and if it is empty, returns false for both cases, true
+	 * if it is non-empty
+	 * @param uri
+	 * @return {@code false} both if we cannot read from the given URI and if it is empty
+	 */
 	public static boolean verifyURINonEmpty(URI uri) {
 		try(
 				InputStream is = uri.toURL().openStream()
@@ -375,4 +382,15 @@ public class UriUtils {
 		}
 	}
 
+	public static boolean hasBOM(URI uri) throws IOException {
+		try (InputStream rawStream = uri.toURL().openStream();
+			BOMInputStream bomStream = new BOMInputStream(rawStream);)
+			{
+				return bomStream.hasBOM();
+			} catch (IOException e){
+				LOGGER.debug("Could not read from URI to deduce if it has a BOM or not",e);
+				throw e;
+			}
+		
+	}
 }

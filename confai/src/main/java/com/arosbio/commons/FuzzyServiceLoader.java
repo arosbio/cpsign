@@ -130,7 +130,7 @@ public class FuzzyServiceLoader<S> implements Iterable<S>{
 		}
 
 		try {
-			S service = new FuzzyMatcher().match(available, name);
+			S service = new FuzzyMatcher().matchPairs(available, name);
 			LOGGER.debug("Loaded implementation of type: {}", ((Named)service).getName());
 			return service; 
 		} catch (IllegalArgumentException e) {

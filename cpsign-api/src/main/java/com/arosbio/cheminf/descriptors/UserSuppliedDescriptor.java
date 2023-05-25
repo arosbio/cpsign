@@ -272,7 +272,7 @@ public class UserSuppliedDescriptor implements ChemDescriptor, Described, Aliase
 						possibleValues.add(ImmutablePair.of(Arrays.asList(so.name), so));
 					}
 					
-					sorting = new FuzzyMatcher().match(possibleValues, ""+kv.getValue());
+					sorting = new FuzzyMatcher().matchPairs(possibleValues, ""+kv.getValue());
 				} catch (Exception e) {
 					throw new IllegalArgumentException("ChemDescriptor "+ DESCRIPTOR_NAME + " could not set a valid sorting order for input: " + kv.getValue());
 				}

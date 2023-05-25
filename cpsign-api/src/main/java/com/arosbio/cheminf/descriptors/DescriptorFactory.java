@@ -102,7 +102,7 @@ public final class DescriptorFactory {
 			availableDescriptors.add(ImmutablePair.of(TypeUtils.getNames(d), d));
 		}
 		try {
-			return new FuzzyMatcher().match(availableDescriptors, name).clone();
+			return new FuzzyMatcher().matchPairs(availableDescriptors, name).clone();
 		} catch (IllegalArgumentException e) {
 			throw new ProviderNotFoundException("ChemDescriptor not found: " + e.getMessage());
 		}
