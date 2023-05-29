@@ -108,6 +108,10 @@ public class CSVChemFileReader implements ChemFileIterator {
 		return parser.getHeaderNames(); 
 	}
 
+	public String getSmilesColumnHeader(){
+		return smilesHeaderField;
+	}
+
 	@Override
 	public boolean hasNext() throws EarlyStoppingException {
 		if (nextMol != null)

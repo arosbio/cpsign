@@ -64,6 +64,10 @@ public class JSONFile implements ChemFile, Described, Named {
 		
 	}
 
+	public JSONChemFileReader getIterator(ProgressTracker tracker) throws IOException {
+		return getIterator().withProgressTracker(tracker); 
+	}
+
 	@Override
 	public int countNumRecords() throws IOException {
 		return CollectionUtils.count(getIterator());

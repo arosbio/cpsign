@@ -22,6 +22,8 @@ public interface ChemFile {
 	public Map<String,Object> getProperties();
 	
 	public ChemFileIterator getIterator() throws IOException;
+
+	public ChemFileIterator getIterator(ProgressTracker tracker) throws IOException;
 	
 	public int countNumRecords() throws IOException;
 	

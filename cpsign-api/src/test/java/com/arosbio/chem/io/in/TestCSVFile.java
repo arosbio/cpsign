@@ -11,6 +11,7 @@ package com.arosbio.chem.io.in;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
@@ -25,6 +26,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.openscience.cdk.interfaces.IAtomContainer;
 
+import com.arosbio.cheminf.data.ChemDataset;
+import com.arosbio.tests.TestResources;
+import com.arosbio.tests.TestResources.CSVCmpdData;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.TestUtils;
 
@@ -110,6 +114,38 @@ public class TestCSVFile {
 		Assert.assertTrue(it.hasNext());
 		it.next();
 		Assert.assertFalse(it.hasNext());
+	}
+
+	@Test
+	public void testExcelInput_and_BOM_behavior() throws IOException {
+		CSVCmpdData csv = TestResources.Reg.getSolubility_10_excel();
+
+		ChemDataset dataset = new ChemDataset();
+		dataset.initializeDescriptors();
+
+		// Try with an excel file (containing a BOM) but not reading the BOM separately
+		CSVFile csvFile = new CSVFile(csv.uri()).setDelimiter(csv.delim()).setSkipFirstRow(true);
+		try (
+			ChemFileIterator iter = csvFile.getIterator();
+			MolAndActivityConverter molConv = MolAndActivityConverter.Builder.regressionConverter(iter,csv.property()).build();
+		) {
+			dataset.add(molConv);
+			Assert.fail("should not work without having read the BOM");
+		} catch (IllegalArgumentException e){
+		}
+		// System.err.println(dataset);
+
+		// now set to read the BOM
+		csvFile.setHasBOM(true);
+		try (
+			ChemFileIterator iter = csvFile.getIterator();
+			MolAndActivityConverter molConv = MolAndActivityConverter.Builder.regressionConverter(iter,csv.property()).build();
+		) {
+			dataset.add(molConv);
+		} catch (IllegalArgumentException e){
+		}
+		System.err.println(dataset);
+
 	}
 
 }

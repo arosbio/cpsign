@@ -295,4 +295,24 @@ public class TestACPClassification extends UnitTestBase {
 		System.out.println(sb.toString());
 	}
 
+	// @Test
+	// public void testProsilicoModel() throws Exception {
+	// 	SmilesParser parser = new SmilesParser(SilentChemObjectBuilder.getInstance());
+	// 	IAtomContainer mol = parser.parseSmiles("CCO");
+	// 	ChemCPClassifier model = (ChemCPClassifier) ModelSerializer.loadChemPredictor(new File("/Users/star/Downloads/models/2C9.jar").toURI(), null);
+	// 	ACPClassifier cp = (ACPClassifier) model.getPredictor();
+	// 	for (Map.Entry<Integer,ICPClassifier> icp : cp.getPredictors().entrySet()){
+	// 		SYS_ERR.println("configuring icp:" + icp.getKey());
+	// 		icp.getValue().setPValueCalculator(new LinearInterpolationPValue());
+	// 	}
+
+	// 	model.getDataset().setMinHAC(0);
+	// 	for (int i = 0;i<5; i++){
+	// 		SYS_ERR.println(""+i+": " + model.predict(mol));
+	// 	}
+		
+	// 	SYS_ERR.println(model.getProperties());
+		
+	// }
+
 }

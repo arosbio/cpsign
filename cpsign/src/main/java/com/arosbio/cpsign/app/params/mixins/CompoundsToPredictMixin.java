@@ -11,6 +11,7 @@ package com.arosbio.cpsign.app.params.mixins;
 
 import com.arosbio.chem.io.in.ChemFile;
 import com.arosbio.cpsign.app.params.converters.ChemFileConverter;
+import com.arosbio.cpsign.app.utils.ParameterUtils;
 import com.arosbio.cpsign.app.utils.ParameterUtils.ArgumentType;
 
 import picocli.CommandLine.ArgGroup;
@@ -31,7 +32,7 @@ public class CompoundsToPredictMixin {
 
 		@Option(
 				names = { "-p", "--predict-file" }, 
-				description = "File to predict. Accepted formats are CSV, SDF or JSON. Run @|bold,fg(red) explain chem-formats|@ to get further info.",
+				description = "File to predict. Accepted formats are CSV, SDF or JSON. Run "+ParameterUtils.RUN_EXPLAIN_ANSI_ON+"explain chem-formats"+ParameterUtils.ANSI_OFF+" to get further info.",
 				parameterConsumer = ChemFileConverter.class,
 				paramLabel = ArgumentType.CHEM_FILE_ARGS
 				)

@@ -121,6 +121,9 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 		this.includesBOM = hasBOM;
 		return this;
 	}
+	public boolean getHasBOM(){
+		return this.includesBOM;
+	}
 
 	/**
 	 * Explicitly set if the first row should be skipped. By default,
@@ -182,6 +185,11 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 		} catch (MalformedURLException e) {
 			throw new IOException(e.getMessage());
 		}
+	}
+
+	@Override
+	public CSVChemFileReader getIterator(ProgressTracker tracker) throws IOException {
+		return getIterator().withProgressTracker(tracker);
 	}
 	
 	public CSVFormat getFormat() {
