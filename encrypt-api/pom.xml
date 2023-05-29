@@ -32,7 +32,7 @@
   <build>
     <resources>
 			<resource>
-				<directory>${parent.basedir}/license/</directory>
+				<directory>${parent.basedir}/license</directory>
 				<filtering>false</filtering>
 			</resource>
 		</resources>
