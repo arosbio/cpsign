@@ -144,7 +144,7 @@ public class TestCSVFile {
 			dataset.add(molConv);
 		} catch (IllegalArgumentException e){
 		}
-		System.err.println(dataset);
+		// System.err.println(dataset);
 
 	}
 

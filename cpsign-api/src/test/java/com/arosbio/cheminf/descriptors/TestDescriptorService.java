@@ -43,5 +43,12 @@ public class TestDescriptorService extends UnitTestBase {
 		Assert.assertTrue(numDescriptors > 3);
 //		printLogs();
 	}
+
+	@Test
+	public void testLoadUserSupplied(){
+		DescriptorFactory loader = DescriptorFactory.getInstance();
+		ChemDescriptor desc = loader.getDescriptorFuzzyMatch("UserSupplied");
+		Assert.assertTrue(desc instanceof UserSuppliedDescriptor);
+	}
 	
 }

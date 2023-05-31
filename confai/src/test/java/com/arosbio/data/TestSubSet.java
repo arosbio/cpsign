@@ -200,8 +200,6 @@ public class TestSubSet extends TestEnv {
 
 	@Test
 	public void testEncryptAndDecryptProblem() throws IOException, IllegalAccessException, InvalidKeyException{
-		// IvParameterSpec IV = new IvParameterSpec(new byte[]{(byte)0xEB, 41, (byte) 0x9C, 36, 73, (byte) 0xAA, 73, (byte) 0xC1, (byte) 0xE7, (byte) 0xD8, 87, (byte)0x3b, (byte) 0x6C, (byte) 0x6D, (byte) 0x1F, 64});
-
 
 		// Load in a real dataset
 		SubSet orig = TestDataLoader.loadSubset(TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS_100);
@@ -213,19 +211,12 @@ public class TestSubSet extends TestEnv {
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		orig.writeRecords(baos, enc);
-		//		enc.encryptProblem(orig, baos);
 		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		//		Dataset fromEncrypted = enc.decryptProblem(bais);
 		SubSet fromEncrypted = new SubSet();
 		fromEncrypted.readRecords(bais, enc);
 		Assert.assertEquals(orig .size(), fromEncrypted .size());
-		//		Assert.assertEquals(orig .size(), fromEncrypted .size());
-		//		Assert.assertEquals(orig.getY(), fromEncrypted.getY());
 		for(int i=0; i<orig .size(); i++){
 			Assert.assertTrue(orig .get(i).equals(fromEncrypted .get(i)));
-			//			for(int j=0; j<orig .get(i).length;j++){
-			//				Assert.assertEquals(orig .get(i)[j].toString(), fromEncrypted .get(i)[j].toString());
-			//			}
 		}
 	}
 

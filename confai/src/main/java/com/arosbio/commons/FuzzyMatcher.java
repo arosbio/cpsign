@@ -18,19 +18,29 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
-import com.arosbio.commons.mixins.Aliased;
-import com.arosbio.commons.mixins.Named;
-
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.similarity.LevenshteinDistance;
+
+import com.arosbio.commons.mixins.Aliased;
+import com.arosbio.commons.mixins.Named;
 
 public class FuzzyMatcher {
 
 	private ScoreThreshold threshold = new ScoreThreshold();
 	private boolean ignoreCase = true;
+
+	public static class NoMatchException extends IllegalArgumentException {
+		
+		private static final long serialVersionUID = -1524442219231614457L;
+
+		public NoMatchException(String message){
+			super(message);
+		}
+		
+	}
 	
-	private static class ScoreThreshold{
+	private static class ScoreThreshold {
 		private Integer maxDistance;
 		private Double maxRatio;
 		
@@ -56,13 +66,30 @@ public class FuzzyMatcher {
 		
 		public int getAllowedChanges(String template, String query) {
 			if (maxRatio != null) {
-				return (int) Math.ceil(template.length()*maxRatio);
+				return (int) (template.length()*maxRatio + .5);
 			} else if (maxDistance != null) {
 				return maxDistance;
 			}
 			throw new RuntimeException("Coding error in fuzzy matcher code"); 
 				
 		}
+	}
+
+	private static <T> List<String> getNames(T value){
+		List<String> names = new ArrayList<>();
+		if (value instanceof Named) {
+			names.add(((Named) value).getName());
+		}
+		if (value instanceof Aliased) {
+			names.addAll(Arrays.asList(((Aliased) value).getAliases()));
+		}
+		if (value instanceof String){
+			names.add((String)value);
+		}
+		if (names.isEmpty() & value instanceof Enum){
+			names.add(((Enum<?>)value).name());
+		}
+		return names;
 	}
 	
 
@@ -85,10 +112,82 @@ public class FuzzyMatcher {
 		return this;
 	}
 
-	private String standardize(String input){
+	String standardize(String input){
 		return ignoreCase ? 
 			StringUtils.standardizeTextSplits(input).toLowerCase(Locale.ENGLISH) :
 			StringUtils.standardizeTextSplits(input);
+	}
+
+	static class MatchScore implements Comparable<MatchScore> {
+
+		private final int startMatch;
+		private final int editDistance;
+		private final boolean exactMatch;
+
+		private MatchScore(int start, int edit, boolean isExactMatch){
+			this.startMatch = start;
+			this.editDistance = edit;
+			this.exactMatch = isExactMatch;
+		}
+		
+		static MatchScore startMatch(int numMatch, int editDistance){
+			return new MatchScore(numMatch, editDistance, false);
+		}
+		static MatchScore editMatch(int editDistance){
+			return new MatchScore(-1, editDistance, false);
+		}
+		static MatchScore noMatch(){
+			return new MatchScore(-1000,-1, false);
+		}
+		static MatchScore exactMatch(){
+			return new MatchScore(-1, -1, true);
+		}
+
+		public String toString(){
+			if (exactMatch){
+				return "FuzzyMatchScore: Exact Match";
+			} else if (startMatch >0){
+				return "FuzzyMatchScore: startMatch="+startMatch; 
+			} else if (editDistance>0){
+				return "FuzzyMatchScore: editMatch="+editDistance; 
+			} else {
+				return "FuzzyMatchScore: No Match";
+			}
+		}
+
+		public boolean foundMatch(){
+			return startMatch>0 || editDistance>0;
+		}
+
+		public boolean isExactMatch(){
+			return exactMatch;
+		}
+
+		public boolean isBetterThan(MatchScore o){
+			return compareTo(o) < 0;
+		}
+
+		public boolean equals(Object o){
+			if (!(o instanceof MatchScore))
+				return false;
+			MatchScore ms = (MatchScore)o;
+			return startMatch == ms.startMatch && editDistance == ms.editDistance && exactMatch == ms.exactMatch;
+		}
+		
+
+		@Override
+		public int compareTo(MatchScore o) {
+			// special treat of exact matches
+			if (exactMatch && o.exactMatch)
+				return 0;
+			if (exactMatch)
+				return -1;
+			if (o.exactMatch)
+				return 1;
+			// startMatch is "positive" (longer is better) and editDistance is "negative" (larger is worse match)
+			return (o.startMatch - o.editDistance) - (startMatch - editDistance);
+		}
+
 	}
 
 	public <T> T match(Collection<T> values, final String query) throws NoMatchException {
@@ -97,50 +196,66 @@ public class FuzzyMatcher {
 
 		// Standardize the query (i.e. use lower case or the given case)
 		final String stdQuery = standardize(query);
+		final String stdQueryNoSpace = stdQuery.replaceAll("\\s", "");
 
-		int lowestFoundDistance = Integer.MAX_VALUE;
+		MatchScore overallBestScore = MatchScore.noMatch();
 		List<T> bestMatches = new ArrayList<>();
 		List<String> bestMatchesNames = new ArrayList<>();
 		
 		for (T value : values) {
 
-			int lowestDistanceForObject = Integer.MAX_VALUE;
+			MatchScore bestForThisObject = MatchScore.noMatch();
 			String bestObjectNameMatch = "";
 
 			for (String s : getNames(value)) {
-				final String stdTemplate = standardize(s);
 
-				int d = getDistance(stdTemplate, stdQuery);
-				if (d == 0)
-					return value; // Exactly the same, return it!
-				
-				if (d>0 && d < lowestDistanceForObject) {
-					lowestDistanceForObject = d;
+				// Perform using spaces in standardized text
+				final String stdTemplate = standardize(s);
+				MatchScore score = score(stdTemplate, stdQuery);
+				if (score.isExactMatch()){
+					// Short circuit exact match
+					return value;
+				}
+				if (score.isBetterThan(bestForThisObject)){
+					bestForThisObject = score;
+					bestObjectNameMatch = s;
+				}
+
+				// Perform using no spaces in standardized text
+				final String stdTemplateNoSpace = stdTemplate.replaceAll("\\s", "");
+				MatchScore scoreNoSpace = score(stdTemplateNoSpace, stdQueryNoSpace);
+				if (scoreNoSpace.isExactMatch()){
+					// Short circuit exact match
+					return value;
+				}
+				if (scoreNoSpace.isBetterThan(bestForThisObject)){
+					bestForThisObject = scoreNoSpace;
 					bestObjectNameMatch = s;
 				}
 
 			}
 
-			// If there was a valid match for the current value
-			if (lowestDistanceForObject < Integer.MAX_VALUE) {
+			// If there was a valid match
+			if (bestForThisObject.foundMatch()){
 
-				if (lowestDistanceForObject < lowestFoundDistance) {
+				if (bestForThisObject.isBetterThan(overallBestScore)) {
 					// New best match
-					lowestFoundDistance = lowestDistanceForObject;
+					overallBestScore = bestForThisObject;
 					bestMatches.clear();
 					bestMatches.add(value);
 
 					bestMatchesNames.clear();
 					bestMatchesNames.add(bestObjectNameMatch);
-				} else if (lowestDistanceForObject == lowestFoundDistance) {
+				} else if (bestForThisObject.equals(overallBestScore)) {
 					// Tied score-wise
 					bestMatches.add(value);
 					bestMatchesNames.add(bestObjectNameMatch);
 				}
 			}
+			
 		}
 		
-		if (lowestFoundDistance >= Integer.MAX_VALUE) {
+		if (!overallBestScore.foundMatch()) {
 			throw new NoMatchException('"' + query + "\" not matching any of the possible values");
 		}
 
@@ -150,23 +265,6 @@ public class FuzzyMatcher {
 
 		return bestMatches.get(0);
 		
-	}
-
-	private static <T> List<String> getNames(T value){
-		List<String> names = new ArrayList<>();
-		if (value instanceof Named) {
-			names.add(((Named) value).getName());
-		}
-		if (value instanceof Aliased) {
-			names.addAll(Arrays.asList(((Aliased) value).getAliases()));
-		}
-		if (value instanceof String){
-			names.add((String)value);
-		}
-		if (names.isEmpty() & value instanceof Enum){
-			names.add(((Enum<?>)value).name());
-		}
-		return names;
 	}
 	
 	public <T extends Enum<T>> T match(EnumSet<T> clz, final String query) throws NoMatchException{
@@ -179,55 +277,71 @@ public class FuzzyMatcher {
 		return matchPairs(mapping, query);
 	}
 
-	public <T> T matchPairs(Collection<Pair<List<String>,T>> objects, final String query) 
+	public <C extends Collection<String>, T> T matchPairs(Collection<Pair<C,T>> objects, final String query) 
 			throws NoMatchException {
 
 		if (query == null || query.length()<1)
 			throw new IllegalArgumentException("Query argument cannot be an empty text");
 
 		final String stdQuery = standardize(query);
+		final String stdQueryNoSpace = stdQuery.replaceAll("\\s", "");
 
-		int lowestFoundDistance = Integer.MAX_VALUE;
-		List<T> bestMatches =new ArrayList<>();
+		MatchScore overallBestScore = MatchScore.noMatch();
+		List<T> bestMatches = new ArrayList<>();
 		List<String> bestMatchesNames = new ArrayList<>();
 
-		for (Pair<List<String>,T> obj : objects) {
+		for (Pair<C,T> obj : objects) {
 
-			int lowestDistanceForObject = Integer.MAX_VALUE;
+			MatchScore bestForThisObject = MatchScore.noMatch();
 			String bestObjectNameMatch = "";
 
 			for (String s : obj.getLeft()) {
-				String stdTemplate = standardize(s);
-				int d = getDistance(stdTemplate, stdQuery);
-				if (d == 0)
+
+				// Perform using spaces in standardized text
+				final String stdTemplate = standardize(s);
+				MatchScore score = score(stdTemplate, stdQuery);
+				if (score.isExactMatch()){
+					// Short circuit exact match
 					return obj.getRight();
-				
-				if (d>0 && d < lowestDistanceForObject) {
-					lowestDistanceForObject = d;
+				}
+				if (score.isBetterThan(bestForThisObject)){
+					bestForThisObject = score;
+					bestObjectNameMatch = s;
+				}
+
+				// Perform using no spaces in standardized text
+				final String stdTemplateNoSpace = stdTemplate.replaceAll("\\s", "");
+				MatchScore scoreNoSpace = score(stdTemplateNoSpace, stdQueryNoSpace);
+				if (scoreNoSpace.isExactMatch()){
+					// Short circuit exact match
+					return obj.getRight();
+				}
+				if (scoreNoSpace.isBetterThan(bestForThisObject)){
+					bestForThisObject = scoreNoSpace;
 					bestObjectNameMatch = s;
 				}
 
 			}
 			// If there was a valid match
-			if (lowestDistanceForObject < Integer.MAX_VALUE) {
+			if (bestForThisObject.foundMatch()){
 
-				if (lowestDistanceForObject < lowestFoundDistance) {
+				if (bestForThisObject.isBetterThan(overallBestScore)) {
 					// New best match
-					lowestFoundDistance = lowestDistanceForObject;
+					overallBestScore = bestForThisObject;
 					bestMatches.clear();
 					bestMatches.add(obj.getRight());
 
 					bestMatchesNames.clear();
 					bestMatchesNames.add(bestObjectNameMatch);
-				} else if (lowestDistanceForObject == lowestFoundDistance) {
+				} else if (bestForThisObject.equals(overallBestScore)) {
 					// Tied score-wise
 					bestMatches.add(obj.getRight());
 					bestMatchesNames.add(bestObjectNameMatch);
 				}
 			}
 		}
-		
-		if (lowestFoundDistance >= Integer.MAX_VALUE) {
+
+		if (!overallBestScore.foundMatch()) {
 			throw new NoMatchException('"' + query + "\" not matching any of the possible values");
 		}
 
@@ -238,31 +352,25 @@ public class FuzzyMatcher {
 		return bestMatches.get(0);
 	}
 	
-	private int getDistance(String template, String query) {
-		int d = new LevenshteinDistance(threshold.getAllowedChanges(template, query))
+	
+
+	MatchScore score(String template, String query){
+		// Prefer a start match
+		if (template.startsWith(query)) {
+			// Special treat if identical match
+			if (template.length() == query.length())
+				return MatchScore.exactMatch();
+			return MatchScore.startMatch(query.length(), template.length()-query.length());
+		}
+
+		// otherwise calculate the edit distance
+		int editDistance = new LevenshteinDistance(threshold.getAllowedChanges(template, query))
 				.apply(template, query);
-		if (d==0)
-			return 0;
-		
-		// If the query is a substring of the template, we penalize the miss-match less
-		// Instead give it half the edit distance
-		if (template.contains(query)) {
-			if (d < 0)
-				d = (int)Math.ceil(0.5*(template.length()-query.length()));
-			else
-				d = Math.min(d, (int)Math.ceil(0.5*(template.length()-query.length())));
+		if (editDistance < 0){
+			return MatchScore.noMatch();
 		}
-		return d;
+		return MatchScore.editMatch(editDistance);
 	}
 
-	public static class NoMatchException extends IllegalArgumentException {
-		
-		private static final long serialVersionUID = -1524442219231614457L;
-
-		public NoMatchException(String message){
-			super(message);
-		}
-		
-	}
 	
 }

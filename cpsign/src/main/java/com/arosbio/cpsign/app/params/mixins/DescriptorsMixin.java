@@ -102,7 +102,6 @@ public class DescriptorsMixin {
 			
 			String lc = text.trim().toLowerCase();
 			if (lc.equals("all-cdk")) {
-				DescriptorFactory.getInstance();
 				return DescriptorFactory.getCDKDescriptorsNo3D();
 			} else if (lc.equals("all-cdk-3d")) {
 				return DescriptorFactory.getCDKDescriptorsRequire3D();

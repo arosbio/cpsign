@@ -90,7 +90,22 @@ public class ChemIOUtils {
     }
     
     public static boolean isCSV(BufferedInputStream in) throws IOException {
-        char[] commonDelimiters = new char[]{',',';','\t'};
+        try{
+            deduceDelimiter(in);
+            return true;
+        } catch (IOException e){
+            return false;
+        }
+    }
+
+    public static char deduceDelimiter(URI in) throws IOException {
+        try(BufferedInputStream stream = new BufferedInputStream(in.toURL().openStream())){
+            return deduceDelimiter(stream);
+        }
+    }
+    public static char deduceDelimiter(BufferedInputStream in) throws IOException {
+        
+        char[] commonDelimiters = new char[]{',',';','\t', ' ', '|'};
 
         try {
             in.mark(READ_LIMIT_CSV_BYTES);
@@ -137,7 +152,7 @@ public class ChemIOUtils {
                                 if (kv.getValue()>= (2./3)*i){
                                     // Splitted the lines in the same way in at least 2/3 of the checked rows
                                 	
-                                    return true;
+                                    return d;
                                 }
                                     
                             }
@@ -156,7 +171,7 @@ public class ChemIOUtils {
 
             }
         }
-        return false;
+        throw new IOException("No commonly used delimiter works for input data in CSV");
     }
     
     /**

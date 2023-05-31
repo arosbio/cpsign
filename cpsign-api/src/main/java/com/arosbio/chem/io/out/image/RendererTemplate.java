@@ -395,7 +395,10 @@ public abstract class RendererTemplate <T> {
             default:
                 return 0;
         }
+    }
 
+    public Rectangle2D getMolArea(){
+        return molArea.getBounds2D();
     }
 
 

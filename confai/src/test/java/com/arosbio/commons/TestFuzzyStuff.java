@@ -9,8 +9,10 @@
  */
 package com.arosbio.commons;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -22,13 +24,18 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.arosbio.commons.FuzzyMatcher.MatchScore;
 import com.arosbio.commons.FuzzyMatcher.NoMatchException;
+import com.arosbio.data.transform.Transformer;
 import com.arosbio.ml.algorithms.MLAlgorithm;
 import com.arosbio.ml.algorithms.svm.PlattScaledC_SVC;
 import com.arosbio.ml.cp.nonconf.calc.LinearInterpolationPValue;
 import com.arosbio.ml.cp.nonconf.calc.PValueCalculator;
 import com.arosbio.ml.cp.nonconf.calc.SplineInterpolatedPValue;
+import com.arosbio.ml.sampling.RandomSampling;
+import com.arosbio.ml.sampling.SamplingStrategy;
 import com.arosbio.tests.suites.UnitTest;
+import com.google.common.collect.Sets;
 
 @Category(UnitTest.class)
 public class TestFuzzyStuff {
@@ -76,12 +83,43 @@ public class TestFuzzyStuff {
 	public void testFuzzyMatcher2() {
 		Assert.assertTrue(FuzzyServiceLoader.load(MLAlgorithm.class, "platt-scaled-c-svc") instanceof PlattScaledC_SVC);
 	}
+
+	@Test
+	public void testFilterLabelFuzz() {
+		try {
+			FuzzyServiceLoader.load(Transformer.class, "range");
+			Assert.fail("range should not match any of the implementations (too bad score)");
+		} catch (IllegalArgumentException e){
+
+		}
+	}
+
+	@Test
+	public void testFuzzyMatcher(){
+		FuzzyMatcher m = new FuzzyMatcher();
+		// System.err.println("Std temlpate: " + m.standardize("UserSuppliedDescriptor"));
+		// System.err.println("Std query: " + m.standardize("usersupplied"));
+		String result = m.match(Arrays.asList("UserSuppliedDescriptor"), "usersupplied");
+		Assert.assertEquals("UserSuppliedDescriptor", result);
+		MatchScore score = new FuzzyMatcher().score("UserSuppliedDescriptor","usersupplied");
+		Assert.assertTrue(!score.foundMatch());
+		// System.err.println(score);
+	}
+
+	@Test
+	public void testSameBeginnings(){
+		SamplingStrategy strat = FuzzyServiceLoader.load(SamplingStrategy.class,"random");
+		Assert.assertTrue(strat instanceof RandomSampling);
+		MatchScore score = new FuzzyMatcher().score(RandomSampling.NAME, "Random");
+		Assert.assertTrue(score.isExactMatch());
+	}
 	
 	
 	@Test
 	public void testC_SVC() {
-		Collection<Pair<List<String>,String>> vals = new HashSet<>();
+		Collection<Pair<Collection<String>,String>> vals = new HashSet<>();
 		vals.add(ImmutablePair.of(Arrays.asList("C_SVC"), "C_SVC"));
+		vals.add(ImmutablePair.of(Sets.newHashSet("EpsilonSVC"), "C_SVC"));
 		vals.add(ImmutablePair.of(Arrays.asList("NuSVC"), "NuSVC"));
 		
 		String match = new FuzzyMatcher().matchPairs(vals, "c-svc");
@@ -96,6 +134,40 @@ public class TestFuzzyStuff {
 //		System.err.println(s);
 	}
 	
+
+	@Test
+	public void testMatchScore(){
+		MatchScore edit5 = MatchScore.editMatch(5);
+		MatchScore edit10 = MatchScore.editMatch(10);
+		MatchScore same5 = MatchScore.startMatch(5,6);
+		MatchScore same10 = MatchScore.startMatch(10,1);
+
+		List<MatchScore> scoreList = new ArrayList<>();
+		scoreList.add(same10);
+		scoreList.add(same5);
+		scoreList.add(edit10);
+		scoreList.add(MatchScore.exactMatch());
+		scoreList.add(MatchScore.noMatch());
+		scoreList.add(edit5);
+		scoreList.add(MatchScore.startMatch(7,3));
+		scoreList.add(MatchScore.editMatch(7));
+		Collections.sort(scoreList);
+		Assert.assertEquals(MatchScore.exactMatch(), scoreList.get(0)); // should be the exact match in the top
+		// Then the comes the start-matches (were longer matches is prefered)
+		Assert.assertEquals(same10, scoreList.get(1));
+		Assert.assertEquals(MatchScore.startMatch(7,3), scoreList.get(2));
+		// In the end there are the edit distances
+		Assert.assertEquals(same10, scoreList.get(1));
+		Assert.assertEquals(edit10, scoreList.get(scoreList.size()-2));
+		Assert.assertEquals(MatchScore.noMatch(), scoreList.get(scoreList.size()-1)); // should be no-match in the end
+
+
+		Assert.assertTrue(edit5.isBetterThan(edit10));
+		Assert.assertTrue(! edit10.isBetterThan(edit5));
+		Assert.assertTrue(edit5.equals(MatchScore.editMatch(5)));
+		Assert.assertTrue(edit5.isBetterThan(MatchScore.noMatch()));
+		Assert.assertTrue(MatchScore.exactMatch().isBetterThan(MatchScore.noMatch()));
+	}
 	
 	
 }
