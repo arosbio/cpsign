@@ -44,7 +44,7 @@ public class ParameterUtils {
 	public static final String SPLIT_WS_REGEXP = "\\s";
 	public static final String LIST_TYPE_ARITY = "1..*";
 	
-	public static final String RUN_EXPLAIN_ANSI_ON = "@|bold,fg(red) ";
+	public static final String RUN_EXPLAIN_ANSI_ON = "@|bold,red ";
 	public static final String PARAM_FLAG_ANSI_ON = "@|yellow ";
 	public static final String ANSI_OFF = "|@";
 	

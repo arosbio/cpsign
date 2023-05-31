@@ -48,6 +48,7 @@ import com.arosbio.ml.io.impl.PropertyFileStructure;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.TestResources.CSVCmpdData;
 import com.arosbio.tests.TestResources.CmpdData;
+import com.arosbio.tests.TestResources.Reg;
 import com.arosbio.tests.suites.CLITest;
 import com.arosbio.tests.utils.TestUtils;
 import com.google.common.collect.Comparators;
@@ -232,7 +233,6 @@ public class TestPrecompute extends CLIBaseTest {
 			}
 					);
 		} catch(Exception e){
-			e.printStackTrace();
 			Assert.fail();
 		}
 
@@ -255,7 +255,6 @@ public class TestPrecompute extends CLIBaseTest {
 			}
 					);
 		} catch(Exception e){
-			e.printStackTrace();
 			Assert.fail();
 		}
 
@@ -550,6 +549,22 @@ public class TestPrecompute extends CLIBaseTest {
 
 	}
 
+	@Test
+	public void testHergWithMissing() throws Exception {
+		File outputModel = TestUtils.createTempFile("precomp-data", ".jar");
+		CmpdData herg = Reg.getHERG();
+		mockMain(
+			Precompute.CMD_NAME,
+			"-td" , herg.format(), herg.uri().toString(),
+			"-pr", herg.property(), 
+			"-mt", PRECOMPUTE_REGRESSION,
+			"-mo", outputModel.getAbsolutePath(),
+			"-mn", "dasf"
+		);
+		ChemDataset data = ModelSerializer.loadDataset(outputModel.toURI(), null);
+		Assert.assertEquals(herg.numValidRecords(), data.getNumRecords());
+	}
+
 
 
 	@Test
@@ -637,7 +652,8 @@ public class TestPrecompute extends CLIBaseTest {
 		// NORMAL TRAIN-FILE AND PROPER-TRAIN-EXCLUSIVE (which is empty!)
 		// =====================================
 		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
-		exit.checkAssertionAfterwards(new AssertSysErrContainsString("No", "molecule", "parsed", "format"));
+		exit.checkAssertionAfterwards(new AssertSysErrContainsString("invalid"));
+		exit.checkAssertionAfterwards(new AssertSysOutContainsString(emptyFile.getAbsolutePath(), "empty"));
 		mockMain(new String[] {
 				Precompute.CMD_NAME,
 				"-td" , CSVFile.FORMAT_NAME, solu10.uri().toString(),
@@ -656,7 +672,8 @@ public class TestPrecompute extends CLIBaseTest {
 
 		File outputModel = TestUtils.createTempFile("datafile", ".csr.jar");
 		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
-		exit.checkAssertionAfterwards(new AssertSysErrContainsString("format", "No", "molecule"));
+		exit.checkAssertionAfterwards(new AssertSysErrContainsString("invalid"));
+		exit.checkAssertionAfterwards(new AssertSysOutContainsString(emptyFile.getAbsolutePath(), "empty"));
 
 		// =====================================
 		// NORMAL TRAIN-FILE AND CALIB-TRAIN-EXCLUSIVE (empty!)
@@ -679,7 +696,8 @@ public class TestPrecompute extends CLIBaseTest {
 
 		File outputModel = TestUtils.createTempFile("datafile", ".csr.jar");
 		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
-		exit.checkAssertionAfterwards(new AssertSysErrContainsString("Failed", "parsing", "data"));
+		exit.checkAssertionAfterwards(new AssertSysErrContainsString("invalid"));
+		exit.checkAssertionAfterwards(new AssertSysOutContainsString(emptyFile.getAbsolutePath(), "empty"));
 
 		// =====================================
 		// NORMAL TRAIN-FILE IS EMPTY
@@ -790,7 +808,7 @@ public class TestPrecompute extends CLIBaseTest {
 
 		mockMain(new String[] {
 				Precompute.CMD_NAME,
-				"-td", regDuplicate.format(), regDuplicate.uri().toString(), //getURI("/resources/smiles_files/duplicates_synt_data.smi").getPath(),
+				"-td", regDuplicate.format(), regDuplicate.uri().toString(), 
 				"-mt", PRECOMPUTE_REGRESSION,
 				"--property", regDuplicate.property(),
 				"-mo", outputModel.getAbsolutePath(),
@@ -881,7 +899,11 @@ public class TestPrecompute extends CLIBaseTest {
 		File modelFileSMILES = TestUtils.createTempFile("data", ".jar");
 		final String labelsSMILES ="NEG,POS";
 		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
-		exit.checkAssertionAfterwards(new AssertSysErrContainsString("CSV", "parsing"));
+		exit.checkAssertionAfterwards(new AssertSysErrContainsString("invalid"));
+		// exit.checkAssertionAfterwards(new PrintSysOutput(true));
+		exit.checkAssertionAfterwards(new AssertSysOutContainsString("SDF", "CSV",ames10.uri().toString(), "file format"));
+
+
 
 		mockMain(new String[] {
 				Precompute.CMD_NAME,
@@ -892,6 +914,7 @@ public class TestPrecompute extends CLIBaseTest {
 				"-mo", modelFileSMILES.getAbsolutePath(),
 				"-mn", "model-name",
 		});
+
 	}
 
 	@Test

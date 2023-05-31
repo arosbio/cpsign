@@ -293,7 +293,7 @@ public class TestMoleculeDepiction extends UnitTestBase {
 		
 		
 		ColorGradient grad = GradientFactory.getDefaultBloomGradient();
-		new AtomContributionRenderer.Builder()
+		AtomContributionRenderer.Builder bldr = new AtomContributionRenderer.Builder()
 			.colorScheme(grad)
 			.width(1000)
 			.height(1000)
@@ -307,7 +307,7 @@ public class TestMoleculeDepiction extends UnitTestBase {
 			.addFieldOverMol(new TitleField.Builder().alignment(Vertical.LEFT_ADJUSTED).underline(true).build())
 			
 			.addFieldOverMol(new ColoredBoxField.Builder(Color.MAGENTA, "This is a very long long <b>looooong</b> text lorem ipsum ipsum dsagadgalkn sdad sdf")
-			.boxShape(BoxShape.CIRCLE).boxSize(200).build())
+			.boxShape(BoxShape.CIRCLE).boxSize(50).build())
 			.addFieldOverMol(new HighlightExplanationField.Builder(Color.CYAN,"nonmutagen").boxShape(BoxShape.CIRCLE).boxSize(6).build())
 			.addFieldUnderMol(new PValuesField.Builder(modelLabels)
 				.alignment(Vertical.CENTERED)
@@ -320,9 +320,9 @@ public class TestMoleculeDepiction extends UnitTestBase {
 						.build())
 					.build())
 				.build()
-			)
+			);
 
-		.addFieldUnderMol(new PredictionIntervalField.Builder(0.8)
+		bldr.addFieldUnderMol(new PredictionIntervalField.Builder(0.8)
 			.property("Activity")
 			.alignment(Vertical.RIGHT_ADJUSTED).build())
 		.addFieldUnderMol(new PredictionIntervalField.Builder(0.8).layout(
@@ -330,8 +330,9 @@ public class TestMoleculeDepiction extends UnitTestBase {
 			)
 		.addFieldUnderMol(new HighlightExplanationField.Builder(Color.BLUE).build())
 		.addFieldUnderMol(new HighlightExplanationField.Builder(Color.CYAN,"mutagen").boxLocation(BoxLocation.RIGHT).alignment(Vertical.RIGHT_ADJUSTED).boxShape(BoxShape.TRIANGLE).build())
-		.addFieldUnderMol(new ColorGradientField.Builder(grad).build())
-		.build().render(info).saveToFile(new File(imageOutputFolder, "gradientDepiction.png"));
+		.addFieldUnderMol(new ColorGradientField.Builder(grad).build());
+		AtomContributionRenderer renderer = bldr.build();
+		renderer.render(info).saveToFile(new File(imageOutputFolder, "gradientDepiction.png"));
 	}
 
 	@Test

@@ -189,6 +189,25 @@ public abstract class CLIBaseTest extends TestEnv {
 		}
 
 	}
+
+	public class AssertSysOutContainsString implements Assertion {
+		private String[] toLookFor;
+		public AssertSysOutContainsString(String lookFor) {
+			this.toLookFor = new String[] {lookFor};
+		}
+
+		public AssertSysOutContainsString(String... toLookFor) {
+			this.toLookFor = toLookFor.clone();
+		}
+
+		@Override
+		public void checkAssertion() throws Exception {
+			String log = Help.Ansi.OFF.string(systemOutRule.getLog().toLowerCase());
+			for(String text: toLookFor)
+				Assert.assertTrue(log.contains(text.toLowerCase()));
+		}
+
+	}
 	
 	public class SetTestEnv implements Assertion {
 

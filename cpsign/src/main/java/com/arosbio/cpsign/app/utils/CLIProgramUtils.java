@@ -39,7 +39,7 @@ import com.arosbio.chem.io.in.CSVFile;
 import com.arosbio.chem.io.in.ChemFile;
 import com.arosbio.chem.io.in.ChemFileIterator;
 import com.arosbio.chem.io.in.ChemIOUtils;
-import com.arosbio.chem.io.in.ChemIOUtils.ChemFormat;
+import com.arosbio.chem.io.in.ChemIOUtils.ChemIOFormat;
 import com.arosbio.chem.io.in.EarlyLoadingStopException;
 import com.arosbio.chem.io.in.FailedRecord;
 import com.arosbio.chem.io.in.FailedRecord.Cause;
@@ -864,6 +864,7 @@ public class CLIProgramUtils {
 	
 	private static void summarizeFailedRecords(StringBuilder sb, Collection<FailedRecord> records){
 		List<FailedRecord> sortedUnique = CollectionUtils.getUniqueAndSorted(records);
+		int initialLen = sb.length();
 		
 		int numInvalidRec=0, numLowHAC=0, numMissingOrInvalidProperty=0, numUnknown=0, numDescriptorCalcError=0;
 		for (FailedRecord r : sortedUnique){
@@ -890,21 +891,23 @@ public class CLIProgramUtils {
 		}
 		
 		if (numInvalidRec>0){
-			sb.append("Failed ").append(numInvalidRec).append(" record(s) due to being invalid%n");
+			sb.append("%n - Failed ").append(numInvalidRec).append(" record(s) due to being invalid");
 		}
 		if (numMissingOrInvalidProperty>0){
-			sb.append("Failed ").append(numInvalidRec).append(" record(s) due to missing/invalid endpoint activity%n");
+			sb.append("%n - Failed ").append(numMissingOrInvalidProperty).append(" record(s) due to missing/invalid endpoint activity");
 		}
 		if (numDescriptorCalcError>0){
-			sb.append("Failed ").append(numInvalidRec).append(" record(s) during descriptor calculation%n");
+			sb.append("%n - Failed ").append(numDescriptorCalcError).append(" record(s) during descriptor calculation");
 		}
 		if (numLowHAC>0){
-			sb.append("Failed ").append(numInvalidRec).append(" record(s) due to Heavy Atom Count threshold%n");
+			sb.append("%n - Failed ").append(numLowHAC).append(" record(s) due to Heavy Atom Count threshold");
 		}
 		if (numUnknown>0){
-			sb.append("Failed ").append(numInvalidRec).append(" record(s) due to unknown error%n");
+			sb.append("%n - Failed ").append(numUnknown).append(" record(s) due to unknown error");
 		}
-		
+		if (sb.length() > initialLen){
+			sb.append("%n");
+		}
 	}
 	
 	public static void appendFailedMolsInfo(StringBuilder sb, Collection<FailedRecord> records) {
@@ -1627,28 +1630,33 @@ public class CLIProgramUtils {
 		StringBuilder errMessage = new StringBuilder();
 
 		// If no valid molecules were found - this means something is definitely incorrect in the parameters
-		if (numOK <= 0){
+		if (numOK <= 0 || failedRecords.isEmpty()){
 			// 1. Cannot read from the file itself
 			if (!UriUtils.canReadFromURI(inputFile.getURI())){
 				errMessage
-					.append("Cannot read from file: ")
-					.append(inputFile.getURI());
-				console.failWithArgError(errMessage.toString());
+					.append("%nCannot read from file:%n")
+					.append(inputFile.getURI())
+					.append("%n");
+				failInCaseErrMessageBeenGenerated(console,errMessage);
 			}
 
 			// 2. Input file is empty
 			if (!UriUtils.verifyURINonEmpty(inputFile.getURI())){
 				LOGGER.debug("Found input file {} to be empty", inputFile.getURI());
-				errMessage.append("Input file is empty: ").append(inputFile.getURI());
-				console.failWithArgError(errMessage.toString());
+				errMessage
+					.append("%nInput file is empty:%n")
+					.append(inputFile.getURI())
+					.append("%n");
+				failInCaseErrMessageBeenGenerated(console,errMessage);
 			}
 
 			// 3. Wrong chem-format given
+			ChemIOFormat actualFormat = null;
+			boolean correctFormat = false;
 			try {
-				ChemFormat actualFormat = ChemIOUtils.deduceFormat(inputFile.getURI());
+				actualFormat = ChemIOUtils.deduceFormat(inputFile.getURI());
 				LOGGER.debug("Tried to deduce the file format and found it to be {}, let's check if the given argument {} matches",
 					actualFormat, inputFile.getClass().getSimpleName());
-				boolean correctFormat = false;
 				switch (actualFormat){
 					case CSV:
 						correctFormat = inputFile instanceof CSVFile;
@@ -1661,28 +1669,69 @@ public class CLIProgramUtils {
 						break;
 					case UNKNOWN:
 					default:
-						actualFormat = ChemFormat.UNKNOWN;
+						actualFormat = ChemIOFormat.UNKNOWN;
 						correctFormat = false; // we do not actually know the format, 
 						break;
 				}
 
 				if (!correctFormat){
 					errMessage
-						.append("The given input file: ")
+						.append("%nThe given input file:%n")
 						.append(inputFile.getURI())
-						.append(" seems to be of type ")
+						.append("%nseems to be of type ")
 						.append(actualFormat.toString())
 						.append(" while given type was ")
 						.append(inputFile.getFileFormat())
 						.append(" please make sure you specify the correct file format and any extra sub-arguments, for more information please run ");
 					appendExplainChemFormat(errMessage);
-					console.failWithArgError(errMessage.toString());
+					errMessage.append("%n");
+					failInCaseErrMessageBeenGenerated(console, errMessage);
 				}
 			} catch (Exception e){
 				LOGGER.debug("Failed to deduce the file format",e);
 			}
 
 			// 4. Invalid argument for the given type
+			if (correctFormat){
+				LOGGER.debug("Found that the specified format seems to match what we deduce it to be: {}",actualFormat);
+				if (actualFormat == ChemIOFormat.CSV){
+					// Only the CSV fomrat that have settings that makes sense
+					// 4.1 - do we have the correct delimiter?
+					try{
+						char delim = ChemIOUtils.deduceDelimiter(inputFile.getURI());
+						CSVFile file = (CSVFile) inputFile;
+						if (delim != file.getDelimiter()){
+							errMessage
+								.append("%For input CSV file:%n")
+								.append(inputFile.getURI())
+								.append("%nThe delimiter was set to \"")
+								.append(file.getDelimiter())
+								.append("\" but it seems that it uses delimiter \"").append(delim).append("\"");
+							appendExplainChemFormat(errMessage);
+							errMessage.append("%n");
+							failInCaseErrMessageBeenGenerated(console, errMessage);
+						}
+					} catch (Exception e){
+						LOGGER.debug("Failed to find delimiter for input CSV", e);
+						errMessage
+							.append("%Attempted to find the delimiter for input CSV file:%n")
+							.append(inputFile.getURI())
+							.append("%nbut failed trying to deduce the correct one. Please verify your parameters and run ");
+						appendExplainChemFormat(errMessage);
+						errMessage.append(" for further information%n");
+						failInCaseErrMessageBeenGenerated(console, errMessage);
+					}
+
+				} else if (actualFormat == ChemIOFormat.JSON){
+					// Our JSON format is very strict, so possibly the input was not formatted so we could read it properly?
+					errMessage.append("%Input file:%n")
+						.append(inputFile.getURI())
+						.append("%nwas JSON, please verify that your JSON is following the required branching by e.g. running ");
+					appendExplainChemFormat(errMessage);
+					errMessage.append("%n");
+					failInCaseErrMessageBeenGenerated(console, errMessage);
+				}
+			}
 
 			// 5. There is a BOM (byte order mark) in the file, but not configured to having one
 			try {
@@ -1690,11 +1739,12 @@ public class CLIProgramUtils {
 				if (hasBOM & inputFile instanceof CSVFile){
 					if (! ((CSVFile)inputFile).getHasBOM()){
 						LOGGER.debug("The file has a BOM and CSV-file not configured to parse the BOM");
-						errMessage.append("The input file: ")
+						errMessage.append("The input file:%n")
 							.append(inputFile.getURI())
-							.append(" has a Byte Order Mark (BOM) while the parameter for BOM was not set to true, see ");
+							.append("%nhas a Byte Order Mark (BOM) while the parameter for BOM was not set to true, see ");
 						appendExplainChemFormat(errMessage);
-						errMessage.append(" for further details on the available parameters.");
+
+						errMessage.append(" for further details on the available parameters.%n");
 					}
 				}
 			} catch (IOException e){
@@ -1706,13 +1756,13 @@ public class CLIProgramUtils {
 			
 		}
 
-
+		System.err.println("Passed the first major thing, with failed records: " + failedRecords);
 
 
 		Map<Cause,Integer> failureCounts = getCounts(failedRecords);
 		// Sort the Map by values
         List<Map.Entry<Cause, Integer>> entries = new ArrayList<>(failureCounts.entrySet());
-        entries.sort(Map.Entry.<Cause, Integer>comparingByValue()); //.reversed()
+        entries.sort(Map.Entry.<Cause, Integer>comparingByValue());
 
 		// Check the most common issue
 		Map.Entry<Cause,Integer> first = entries.get(0);
@@ -1800,7 +1850,8 @@ public class CLIProgramUtils {
 								.append(", please verify that you specify the correct property to model to the flag ")
 								.append(ParameterUtils.PARAM_FLAG_ANSI_ON)
 								.append("--property")
-								.append(ParameterUtils.ANSI_OFF).append(" including correct font case.");
+								.append(ParameterUtils.ANSI_OFF)
+								.append(" including correct font case.");
 						}
 					} catch (Exception e){
 						// Failed - not sure why, give a more generic answer then
@@ -1873,12 +1924,14 @@ public class CLIProgramUtils {
 				.append(" to either '-1' (to turn of early termination) or to a higher value than currently set to");
 		}
 
-		console.failWithArgError(errMessage.toString());
+		console.println(errMessage.toString(), PrintMode.SILENT);
+		console.failWithArgError("Invalid arguments");
 	}
 
 	private static void failInCaseErrMessageBeenGenerated(CLIConsole console, StringBuilder errorMessageBuilder){
 		if (errorMessageBuilder.length()>0){
-			console.failWithArgError(errorMessageBuilder.toString());
+			console.print(errorMessageBuilder.toString(), PrintMode.SILENT);
+			console.failWithArgError("Invalid arguments");
 		}
 	}
 

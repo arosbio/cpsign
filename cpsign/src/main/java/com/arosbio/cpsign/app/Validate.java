@@ -399,7 +399,7 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 			ChemFileIterator firstIter = predictFile.getIterator();
 			MolAndActivityConverter molIterator = (labels!=null?
 				// If classification 
-				MolAndActivityConverter.Builder. classificationConverter(
+				MolAndActivityConverter.Builder.classificationConverter(
 				predictFile.getIterator(), 
 				validationEndpoint, 
 				labels).build() :  

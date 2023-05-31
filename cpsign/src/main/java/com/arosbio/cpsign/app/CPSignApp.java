@@ -498,6 +498,9 @@ public class CPSignApp implements IVersionProvider {
 			try {
 				String wrapped = StringUtils.wrap(errMsg, CLIConsole.getInstance().getTextWidth());
 				err.printf(AnsiRenderer.render(String.format("%n@|bold,red %s|@%n%n", wrapped)));
+			} catch (IllegalArgumentException e) {
+				// Possibly due to AnsiRenderer exception
+				err.printf(AnsiRenderer.render(String.format("%n%sn%n", errMsg)));
 			} catch (Exception | Error e) {
 				err.printf(AnsiRenderer.render(String.format("%n@|bold,red %s|@%n%n", errMsg)));
 			}
