@@ -17,6 +17,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.openscience.cdk.interfaces.IAtomContainer;
 
+import com.arosbio.chem.io.in.FailedRecord.Cause;
 import com.arosbio.commons.logging.LoggerUtils;
 import com.arosbio.data.NamedLabels;
 import com.arosbio.io.StreamUtils;
@@ -32,11 +33,12 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 
 	@Test
 	public void Test_CSV_Classification() throws Exception{
+		ProgressTracker tracker = ProgressTracker.createStopAfter(5);
 		// 19 lines of records, 1 not OK at all, 1 line with missing value
 		CSVCmpdData data = TestResources.Cls.getErroneous();
 		try(MolAndActivityConverter molAct = MolAndActivityConverter.Builder.classificationConverter(new CSVFile(data.uri()).getIterator(), 
 			data.property(), 
-			new NamedLabels(data.labelsStr())).build();){
+			new NamedLabels(data.labelsStr())).progressTracker(tracker).build();){
 
 			int numMolecules=0;
 			while(molAct.hasNext()){
@@ -50,8 +52,11 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 			Assert.assertEquals(1, molAct.getMolsSkippedMissingActivity());
 			Assert.assertEquals(2, molAct.getProgressTracker().getFailures().size());
 			// Assert.assertEquals(1, molAct.getMols);
+			Assert.assertEquals(tracker, molAct.getProgressTracker());
+			Assert.assertEquals(tracker, ((ChemFileIterator) molAct.getIterator()).getProgressTracker());
 		}
 
+		
 	}
 
 	@Test
@@ -251,12 +256,12 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 		// the hERG regression data set has several properties "IC50" set to N/A or some "greater/less than" properties
 		// These will fail
 		CmpdData herg = TestResources.Reg.getHERG();
-		// LoggerUtils.setDebugMode(SYS_ERR);
+		ProgressTracker tracker = ProgressTracker.createDefault();
         
         try(InputStream in = herg.url().openStream();
             InputStream unzipped = StreamUtils.unZIP(in);
             SDFReader reader = new SDFReader(unzipped); 
-            MolAndActivityConverter conv = MolAndActivityConverter.Builder.regressionConverter(reader, herg.property()).build()){
+            MolAndActivityConverter conv = MolAndActivityConverter.Builder.regressionConverter(reader, herg.property()).progressTracker(tracker).build()){
 
 			try{
 				while(conv.hasNext()){
@@ -267,14 +272,43 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 				System.err.println(stopExcept.getMessage());	
 			}
 			Assert.assertEquals("Number of fails should be the allowed +1",conv.getProgressTracker().getMaxAllowedFailures()+1, conv.getProgressTracker().getNumFailures());
-
+			// Then failed records should be of type "INVALID PROPERTY" cause
+			for (FailedRecord r : tracker.getFailures()){
+				Assert.assertEquals(""+ r.getCause(), Cause.INVALID_PROPERTY,r.getCause());
+			}
 		}
+		
+		// INVALID PROPERTY (THAT DOES NOT EXIST)
+		tracker.clear();
+		try(InputStream in = herg.url().openStream();
+			InputStream unzipped = StreamUtils.unZIP(in);
+			SDFReader reader = new SDFReader(unzipped); 
+			MolAndActivityConverter conv = MolAndActivityConverter.Builder.regressionConverter(reader, "Non existent").progressTracker(tracker).build()){
+
+			try{
+				while(conv.hasNext()){
+					conv.next();
+				}
+				Assert.fail("should fail early with the default settings");
+			} catch (EarlyLoadingStopException stopExcept){
+				System.err.println(stopExcept.getMessage());	
+			}
+			Assert.assertEquals("Number of fails should be the allowed +1",conv.getProgressTracker().getMaxAllowedFailures()+1, conv.getProgressTracker().getNumFailures());
+			// Then all should have "MISSING PROPERTY" cause
+			for (FailedRecord r : tracker.getFailures()){
+				Assert.assertEquals(""+ r.getCause(), Cause.MISSING_PROPERTY,r.getCause());
+			}
+		}
+		
+
+		// NO EARLY STOPPING
+		tracker = ProgressTracker.createNoEarlyStopping();
 
 		// Try again - but setting it to not stop early 
 		try(InputStream in = herg.url().openStream();
             InputStream unzipped = StreamUtils.unZIP(in);
             SDFReader reader = new SDFReader(unzipped); 
-            MolAndActivityConverter conv = MolAndActivityConverter.Builder.regressionConverter(reader, herg.property()).progressTracker(ProgressTracker.createNoEarlyStopping()).build()){
+            MolAndActivityConverter conv = MolAndActivityConverter.Builder.regressionConverter(reader, herg.property()).progressTracker(tracker).build()){
 
 			while(conv.hasNext()){
 				conv.next();
@@ -284,8 +318,6 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 
 		}
 
-
-        // printLogs();
 	}
 
 

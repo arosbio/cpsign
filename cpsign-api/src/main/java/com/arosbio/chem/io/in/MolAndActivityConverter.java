@@ -76,14 +76,14 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 	private int numOKmols;
 	
 	private MolAndActivityConverter(Iterator<IAtomContainer> molecules, String property, ProgressTracker tracker, NamedLabels nl) throws IllegalArgumentException {
-		if (property== null || property.isBlank())
+		if (property == null || property.isBlank())
 			throw new IllegalArgumentException("The property must be set");
 		
 		this.molIterator = molecules;
 		this.propertyNameForActivity = property.trim();
 		LOGGER.debug("init IteratingMolAndActivity using property={} in {} mode", property, nl!=null?"classification" : "regression");
 		this.tracker = tracker;
-		if (molecules instanceof ChemFileIterator){
+		if (molecules instanceof ChemFileIterator && tracker != null){
 			((ChemFileIterator) molecules).setProgressTracker(tracker);
 		}
 		this.classLabels = nl;
@@ -133,7 +133,11 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 	}
 
 	public void setProgressTracker(ProgressTracker tracker){
-		this.tracker = tracker;
+		if (tracker == null){
+			this.tracker = ProgressTracker.createDefault();
+		} else {
+			this.tracker = tracker;
+		}
 		if (molIterator instanceof ChemFileIterator){
 			// Forward the tracker to next level in the pipeline
 			((ChemFileIterator) molIterator).setProgressTracker(tracker);
@@ -286,10 +290,12 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 		Object ind = CPSignMolProperties.getRecordIndex(mol);
 		int index = com.arosbio.commons.TypeUtils.isInt(ind) ? com.arosbio.commons.TypeUtils.asInt(ind) : -1;
 
-		tracker.register(new FailedRecord.Builder(index, cause)
+		FailedRecord r = new FailedRecord.Builder(index, cause)
 			.withID(CPSignMolProperties.getMolTitle(mol))
 			.withReason(reason)
-			.build());
+			.build();
+		tracker.register(r);
+		LOGGER.trace("failed record {}",r);
 	}
 
 	/**
@@ -302,6 +308,7 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 		try{
 			tracker.assertCanContinueParsing();
 		} catch (EarlyLoadingStopException e){
+			LOGGER.debug("early loading stop, exiting after {} failures", tracker.getNumFailures());
 			this.stoppingExcept = e;
 			return false;
 		}
@@ -313,6 +320,7 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 		while (nextPair == null && molIterator.hasNext()){
 			// Fail "fast"
 			if (!checkShouldContinue()){
+				LOGGER.trace("too many failed records encountered - stopping loading new ones and will fail at next call to next()");
 				return;
 			}
 
@@ -378,7 +386,6 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 			try {
 				activityValue = Double.valueOf(activity);
 			} catch (NumberFormatException e){
-				//			molsSkippedMissingActivity++;
 				molsSkippedInvalidActivity++;
 				failMol(mol, Cause.INVALID_PROPERTY, "Invalid activity \"" + activity + "\"");
 				continue;
