@@ -44,7 +44,7 @@ public final class ProgressTracker {
      */
     public static ProgressTracker createStopAfter(int maxAllowedFails) {
         if (maxAllowedFails<0){
-            return new ProgressTracker(true, -1);
+            return new ProgressTracker(false, -1);
         }
         return new ProgressTracker(true, maxAllowedFails);
     }
@@ -82,6 +82,10 @@ public final class ProgressTracker {
         return failures.size();
     }
     
+    public void clear(){
+        failures.clear();
+    }
+
     /**
      * Check for early stopping, if this returns {@code true} then the
      * next call to {@link #assertCanContinueParsing()} will cause an 

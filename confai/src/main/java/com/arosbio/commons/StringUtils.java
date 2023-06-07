@@ -9,6 +9,8 @@
  */
 package com.arosbio.commons;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.text.CaseUtils;
@@ -167,6 +169,14 @@ public class StringUtils {
 		if (num>0)
 			return txt+"s";
 		return txt;
+	}
+
+	public static String joinCollection(String delimiter, Collection<? extends Object> args) {
+		List<Object> lst = new ArrayList<>(args.size());
+		for (Object o : args){
+			lst.add(o);
+		}
+		return join(delimiter,lst);
 	}
 
 	public static String join(String delimiter, List<? extends Object> args) {

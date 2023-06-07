@@ -455,7 +455,7 @@ public class Aggregate implements RunnableCmd, SupportsProgressBar {
 				failModel("Could not aggreagate model: " + models.getLastLoadedURI() + ", Reason: " + e.getMessage());
 				continue;
 			} catch(Exception e){
-				LOGGER.debug("Encountered Exception trying to join SignaturesProblems",e);
+				LOGGER.debug("Encountered Exception trying to join ChemDatasets",e);
 				failModel("Failed aggregating model: " + models.getLastLoadedURI() +", Reason: "+e.getMessage());
 				continue;
 			}
