@@ -27,11 +27,11 @@ import org.slf4j.LoggerFactory;
 
 import com.arosbio.chem.CPSignMolProperties;
 import com.arosbio.chem.io.in.ChemFile;
-import com.arosbio.chem.io.in.ChemFileIterator;
 import com.arosbio.chem.io.in.EarlyLoadingStopException;
 import com.arosbio.chem.io.in.FailedRecord;
 import com.arosbio.chem.io.in.FailedRecord.Cause;
 import com.arosbio.chem.io.in.MolAndActivityConverter;
+import com.arosbio.chem.io.in.ProgressTracker;
 import com.arosbio.cheminf.ChemCPClassifier;
 import com.arosbio.cheminf.ChemCPRegressor;
 import com.arosbio.cheminf.ChemClassifier;
@@ -67,6 +67,7 @@ import com.arosbio.cpsign.out.PredictionResultsWriter;
 import com.arosbio.cpsign.out.ResultsHandler;
 import com.arosbio.data.MissingDataException;
 import com.arosbio.data.NamedLabels;
+import com.arosbio.io.IOUtils;
 import com.arosbio.ml.ClassificationUtils;
 import com.arosbio.ml.cp.CPRegressionPrediction;
 import com.arosbio.ml.metrics.Metric;
@@ -179,8 +180,6 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 			description = "Output the ROC curve (VAP only), the ROC curve has many points and lead to verbose output. Default is to only print the AUC score")
 	private boolean outputROC = false;
 
-	
-
 
 	// Encrypted model
 	@Mixin
@@ -203,7 +202,7 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 	 * END OF OPTIONS
 	 *****************************************/
 
-	private List<FailedRecord> failedRecords = new ArrayList<>();
+	private ProgressTracker progressTracker = null;
 	private int numMissingDataFails=0;
 
 	@Override
@@ -332,9 +331,10 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 		console.println("%nSuccessfully predicted %s %s", PrintMode.NORMAL, successCount, moleculesSingularOrPlural);
 
 		// If we had some failing records
-		if (!failedRecords.isEmpty()) {
+		int numFailedRecords = progressTracker.getNumFailures();
+		if (numFailedRecords > 0) {
 			console.println("Failed predicting %s molecule%s", PrintMode.NORMAL,
-					failedRecords.size(),(failedRecords.size()>1 ? "s":""));
+				numFailedRecords,(numFailedRecords>1 ? "s":""));
 			
 			if (numMissingDataFails >0) {
 				console.println("%s record(s) failed due to missing features - please make sure your data pre-processing is correct, consider using e.g. removal of poor descriptors (DropMissingDataFeatures) or impute missing features (SingleFeatImputer)", 
@@ -343,6 +343,7 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 
 			if (listFailedRecordsMixin.listFailedRecords) {
 				StringBuilder failedStr = new StringBuilder("Failed the following record(s):%n");
+				List<FailedRecord> failedRecords = progressTracker.getFailures();
 				for (int i=0; i< failedRecords.size()-1; i++) {
 					failedStr.append(failedRecords.get(i));
 					failedStr.append("%n");
@@ -364,6 +365,9 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 
 	private void validateParams(){
 		CLIProgramUtils.setupOverallStatsFile(statsOutputFile.overallStatsFile, console);
+
+		// Set up the failures tracker
+		progressTracker = ProgressTracker.createStopAfter(earlyTermination.maxFailuresAllowed);
 	}
 
 	private int doValidate(ChemPredictor predictor, PredictionResultsWriter predWriter)
@@ -375,7 +379,7 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 			totalNumMolsToPredict = predictFile.countNumRecords();
 			LOGGER.debug("Found {} molecules in the predictFile (to be predicted)",
 					totalNumMolsToPredict);
-		} catch(IllegalArgumentException | IOException e){
+		} catch (IllegalArgumentException | IOException e){
 			LOGGER.debug("Could not parse the predictFile", e);
 			console.failWithArgError("Could not read from "+CLIProgramUtils.getParamName(this, "predictFile", "PREDICT_FILE"));
 		}
@@ -396,44 +400,48 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 		boolean predictionDone = false;
 
 		try (
-			ChemFileIterator firstIter = predictFile.getIterator();
 			MolAndActivityConverter molIterator = (labels!=null?
 				// If classification 
 				MolAndActivityConverter.Builder.classificationConverter(
-				predictFile.getIterator(), 
-				validationEndpoint, 
-				labels).build() :  
+					predictFile.getIterator(progressTracker), 
+					validationEndpoint, 
+					labels).progressTracker(progressTracker).build() :  
 				// If regression
 				MolAndActivityConverter.Builder.regressionConverter(
-					predictFile.getIterator(), 
-					validationEndpoint).build())
+					predictFile.getIterator(progressTracker), 
+					validationEndpoint).progressTracker(progressTracker).build())
 				){
 
 			try {
 				molIterator.initialize();
+				 // pre-fetch first one in order to check parameters are OK
+				LOGGER.debug("Initialized MolAndAcivityConv, result of hasNext(): {}",molIterator.hasNext());
 			} catch (Exception e) {
-				if (molIterator.getNumOKMols() == 0 && molIterator.getProgressTracker().getNumFailures()>0) {
+				if (molIterator.getNumOKMols() == 0 || progressTracker.getNumFailures()>0) {
 					LOGGER.debug("Invalid arguments for reading the prediction file",e);
 				}
-				console.failWithArgError("No valid molecules could be read from%n%s%nusing property '%s'", 
-						predictFile.getURI(), validationEndpoint);
+				IOUtils.closeQuietly(predWriter); // have to close it (in case Sys-out is controlled)
+				CLIProgramUtils.failWithBadUserInputFile(console, molIterator.getNumOKMols(), 
+					predictFile, progressTracker.getFailures(), predictor.getDataset(), validationEndpoint, 
+					labels, earlyTermination.maxFailuresAllowed);
 			}
 
 			Pair<IAtomContainer, Double> molRecord=null;
 			IAtomContainer mol=null;
 			double trueValue;
-
+			int index=-1;
+			String id="";
 
 			while (molIterator.hasNext()) {
-				molRecord = molIterator.next();
-				mol = molRecord.getLeft();
-				trueValue = molRecord.getRight();
-				if (mol.getProperty(CDKConstants.REMARK) == null)
-					mol.removeProperty(CDKConstants.REMARK);
-				int index = TypeUtils.asInt(CPSignMolProperties.getRecordIndex(mol));
-				String id = (CPSignMolProperties.hasMolTitle(mol)? CPSignMolProperties.getMolTitle(mol) : null);
-
 				try {
+					molRecord = molIterator.next();
+					
+					mol = molRecord.getLeft();
+					trueValue = molRecord.getRight();
+					if (mol.getProperty(CDKConstants.REMARK) == null)
+						mol.removeProperty(CDKConstants.REMARK);
+					index = TypeUtils.asInt(CPSignMolProperties.getRecordIndex(mol));
+					id = (CPSignMolProperties.hasMolTitle(mol)? CPSignMolProperties.getMolTitle(mol) : null);
 
 					predictMolecule(predictor, predWriter, mol, trueValue);
 
@@ -442,14 +450,16 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 
 				} catch (MissingDataException e) {
 					LOGGER.debug("Got a missing data exception - something wrong i pre-processing?");
-					failedRecords.add(new FailedRecord.Builder(index, Cause.DESCRIPTOR_CALC_ERROR).withID(id).withReason(e.getMessage()).build());
+					progressTracker.register(new FailedRecord.Builder(index, Cause.DESCRIPTOR_CALC_ERROR).withID(id).withReason(e.getMessage()).build());
 					numMissingDataFails++;
 				} catch (EarlyLoadingStopException e){
 					// This likely means bad parameters was sent - need to give a good error output
-					
+					LOGGER.error("Failed with earlyLoadingStopException will try to generate a better error message",e);
+					IOUtils.closeQuietly(predWriter); // have to close it (in case Sys-out is controlled)
+					CLIProgramUtils.failWithBadUserInputFile(console, successCount, predictFile, progressTracker.getFailures(), predictor.getDataset(), validationEndpoint, null, earlyTermination.maxFailuresAllowed);
 				} catch (Exception e) {
 					LOGGER.debug("Failed molecule due to generic exception", e);
-					failedRecords.add(new FailedRecord.Builder(index,Cause.UNKNOWN).withID(id).withReason(e.getMessage()).build());
+					progressTracker.register(new FailedRecord.Builder(index,Cause.UNKNOWN).withID(id).withReason(e.getMessage()).build());
 				} finally {
 					iterationCount++;
 					if (progressInterval>0 && iterationCount % progressInterval == 0 ){
@@ -460,25 +470,35 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 				}
 			}
 
+		} catch (EarlyLoadingStopException e){
+			// This likely means bad parameters was sent - need to give a good error output
+			LOGGER.error("Failed with earlyLoadingStopException will try to generate a better error message",e);
+			IOUtils.closeQuietly(predWriter); // have to close it (in case Sys-out is controlled)
+			CLIProgramUtils.failWithBadUserInputFile(console, successCount, predictFile, progressTracker.getFailures(), 
+				predictor.getDataset(), validationEndpoint, null, earlyTermination.maxFailuresAllowed);
 		}
 
-		if (!predictionDone)
-			console.failWithArgError("No valid molecules could be detected in the file given to %s using property '%s'", 
-					CLIProgramUtils.getParamName(this, "predictFile", "PREDICT_FILE"), validationEndpoint);
+		if (!predictionDone){
+			LOGGER.debug("No molecules were predicted, with {} record failures: {}", progressTracker.getNumFailures(), progressTracker.getFailures());
+			IOUtils.closeQuietly(predWriter); // have to close it (in case Sys-out is controlled)
+			CLIProgramUtils.failWithBadUserInputFile(console, 0, predictFile, progressTracker.getFailures(), 
+				predictor.getDataset(), validationEndpoint, labels, earlyTermination.maxFailuresAllowed);
+		}
+			
 
 		return successCount;
 	}
 
-	private void predictMolecule(ChemPredictor signpred, PredictionResultsWriter predictionWriter, IAtomContainer mol, double trueLabel) 
+	private void predictMolecule(ChemPredictor chemPredictor, PredictionResultsWriter predictionWriter, IAtomContainer mol, double trueLabel) 
 			throws IOException {
-		if(signpred instanceof ChemCPRegressor)
-			predictMolecule((ChemCPRegressor)signpred, predictionWriter, mol, trueLabel);
-		else if (signpred instanceof ChemCPClassifier)
-			predictMolecule((ChemCPClassifier)signpred, predictionWriter, mol, (int)trueLabel);
-		else if (signpred instanceof ChemVAPClassifier) 
-			predictMolecule((ChemVAPClassifier)signpred, predictionWriter, mol, (int) trueLabel);
+		if(chemPredictor instanceof ChemCPRegressor)
+			predictMolecule((ChemCPRegressor)chemPredictor, predictionWriter, mol, trueLabel);
+		else if (chemPredictor instanceof ChemCPClassifier)
+			predictMolecule((ChemCPClassifier)chemPredictor, predictionWriter, mol, (int)trueLabel);
+		else if (chemPredictor instanceof ChemVAPClassifier) 
+			predictMolecule((ChemVAPClassifier)chemPredictor, predictionWriter, mol, (int) trueLabel);
 		else {
-			LOGGER.debug("ChemPredictor of a non-supported class: {}", signpred.getClass());
+			LOGGER.debug("ChemPredictor of a non-supported class: {}", chemPredictor.getClass());
 			console.failWithInternalError("Internal problem predicting molecules, please contact Aros Bio and kindly send us the cpsign logfile");
 		}
 	}

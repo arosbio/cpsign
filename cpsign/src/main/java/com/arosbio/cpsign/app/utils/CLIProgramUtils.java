@@ -647,13 +647,14 @@ public class CLIProgramUtils {
 	* @param maxNumAllowedFailures
 	*
 	*/
-	public static void loadData(ChemDataset sp, boolean isClassification, ChemFile trainFile,
-	ChemFile modelExclusiveTrainFile, ChemFile calibExclusiveTrainFile, String endpoint, List<String> labels,
-	Object program, 
-	CLIConsole console, boolean listFailed, int minHAC, final int maxNumAllowedFailures) {
+	public static void loadData(final ChemDataset sp, final boolean isClassification, final ChemFile trainFile,
+	final ChemFile modelExclusiveTrainFile, final ChemFile calibExclusiveTrainFile, final String endpoint, final List<String> labels,
+	final Object program, 
+	final CLIConsole console, final boolean listFailed, final int minHAC, final int maxNumAllowedFailures) {
 		
 		CLIProgressBar pb = getPB(program);
 		int numDatasetsUsed = 0;
+		NamedLabels nl = null;
 		
 		if (endpoint == null || endpoint.isEmpty()) {
 			LOGGER.debug("No endpoint given though training data file was given - failing execution");
@@ -662,34 +663,38 @@ public class CLIProgramUtils {
 			+ ": needs to be specified with chemical data");
 		}
 		
-		if (isClassification && (labels == null || labels.isEmpty())) {
-			LOGGER.debug("No labels supplied even though classification training data was given - failing");
-			console.failWithArgError(
-			"Missing required parameter " + getParamName(new ClassificationLabelsMixin(), "labels", "LABELS")
-			+ ": needed when running classification");
+		if (isClassification) {
+			// Make sure we have labels
+			if (labels == null || labels.isEmpty()) {
+				LOGGER.debug("No labels supplied even though classification training data was given - failing");
+				console.failWithArgError(
+				"Missing required parameter " + getParamName(new ClassificationLabelsMixin(), "labels", "LABELS")
+				+ ": needed when running classification");
+			} 
+			nl = new NamedLabels(labels);
 		}
 		
 		sp.setMinHAC(minHAC);
 		boolean usingEarlyStopping = maxNumAllowedFailures >= 0;
-		int numAllowedFailsUpdated = maxNumAllowedFailures;
+		int numAllowedFailsLeft = maxNumAllowedFailures;
 		
 		
 		// Initialize the descriptors
 		sp.initializeDescriptors();
 		LOGGER.debug("Initialized descriptors");
 		List<FailedRecord> allFailedRecords = new ArrayList<>();
-		ChemFile currentFile = null;
-		
+		ChemFile currentFile = null; // ref to the input file currently processing (for generating error message)
+
 		try {
 			// Parse molecules
 			if (trainFile != null) {
 				currentFile = trainFile;
 				console.println("Reading train file and calculating descriptors...", PrintMode.NORMAL);
 				pb.addAdditionalStep();
-				sp.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(numAllowedFailsUpdated) : ProgressTracker.createNoEarlyStopping());
-				loadData(sp, trainFile, endpoint, labels, RecordType.NORMAL, console, listFailed);
+				sp.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(numAllowedFailsLeft) : ProgressTracker.createNoEarlyStopping());
+				loadData(sp, trainFile, endpoint, nl, RecordType.NORMAL, console, listFailed);
 				// update the remaining number of allowed failures
-				numAllowedFailsUpdated -= Math.max(0,sp.getProgressTracker().getNumFailures());
+				numAllowedFailsLeft -= sp.getProgressTracker().getNumFailures();
 				numDatasetsUsed++;
 				if (sp.getProgressTracker().getNumFailures()>0){
 					allFailedRecords.addAll(sp.getProgressTracker().getFailures());
@@ -703,11 +708,11 @@ public class CLIProgramUtils {
 				pb.addAdditionalStep();
 				console.println("Reading calibration exclusive train file and calculating descriptors...",
 				PrintMode.NORMAL);
-				sp.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(numAllowedFailsUpdated) : ProgressTracker.createNoEarlyStopping());
-				loadData(sp, calibExclusiveTrainFile, endpoint, labels, RecordType.CALIBRATION_EXCLUSIVE, console,
+				sp.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(numAllowedFailsLeft) : ProgressTracker.createNoEarlyStopping());
+				loadData(sp, calibExclusiveTrainFile, endpoint, nl, RecordType.CALIBRATION_EXCLUSIVE, console,
 				listFailed);
 				// update the remaining number of allowed failures
-				numAllowedFailsUpdated -= Math.max(0,sp.getProgressTracker().getNumFailures());
+				numAllowedFailsLeft -= sp.getProgressTracker().getNumFailures();
 				numDatasetsUsed++;
 				if (sp.getProgressTracker().getNumFailures()>0){
 					allFailedRecords.addAll(sp.getProgressTracker().getFailures());
@@ -720,8 +725,8 @@ public class CLIProgramUtils {
 				currentFile = modelExclusiveTrainFile;
 				pb.addAdditionalStep();
 				console.println("Reading modeling exclusive train file and calculating descriptors...", PrintMode.NORMAL);
-				sp.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(numAllowedFailsUpdated) : ProgressTracker.createNoEarlyStopping());
-				loadData(sp, modelExclusiveTrainFile, endpoint, labels, RecordType.MODELING_EXCLUSIVE, console, listFailed);
+				sp.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(numAllowedFailsLeft) : ProgressTracker.createNoEarlyStopping());
+				loadData(sp, modelExclusiveTrainFile, endpoint, nl, RecordType.MODELING_EXCLUSIVE, console, listFailed);
 				
 				numDatasetsUsed++;
 				if (sp.getProgressTracker().getNumFailures()>0){
@@ -732,10 +737,10 @@ public class CLIProgramUtils {
 		} catch (Exception e){
 			allFailedRecords.addAll(sp.getProgressTracker().getFailures()); // Add failures from the current file
 			LOGGER.debug("Failed parsing in chemical input data, will try to compile a good error message");
-			failWithBadUserInputFile(console, sp.getNumRecords(), currentFile, allFailedRecords, sp, endpoint, labels, maxNumAllowedFailures);
+			failWithBadUserInputFile(console, sp.getNumRecords(), currentFile, allFailedRecords, sp, endpoint, nl, maxNumAllowedFailures);
 		}
 		
-		if (labels != null && !labels.isEmpty()) {
+		if (nl != null) {
 			Map<Double, Integer> labelFreq = sp.getLabelFrequencies();
 			List<String> nonFoundLabels = new ArrayList<>();
 			for (String label : labels) {
@@ -772,7 +777,7 @@ public class CLIProgramUtils {
 		
 	}
 	
-	private static void loadData(ChemDataset problem, ChemFile file, String endpoint, List<String> labels,
+	private static void loadData(ChemDataset problem, ChemFile file, String endpoint, NamedLabels labels,
 	RecordType type, CLIConsole console, boolean listFailed) throws EarlyLoadingStopException {
 		
 		ChemFileIterator iterator = null;
@@ -786,15 +791,13 @@ public class CLIProgramUtils {
 			// This is then likely to be issues with the file itself
 			LOGGER.debug("failed reading from file, probably incorrectly given",e);
 			throw new EarlyLoadingStopException("Could not parse input file: " + e.getMessage(), problem.getProgressTracker().getFailures());
-			// failWithBadUserInputFile(console, problem.getNumRecords(), file, problem.getProgressTracker().getFailures(), endpoint, labels, problem.getProgressTracker().getMaxAllowedFailures());
-			// console.failWithArgError("Could not parse input file: " + e.getMessage());
 		}
 		
 		// Set up the converter
 		try {
 			
-			if (labels != null && ! labels.isEmpty()){
-				reader = MolAndActivityConverter.Builder.classificationConverter(iterator, endpoint, new NamedLabels(labels)).progressTracker(problem.getProgressTracker()).build();
+			if (labels != null){
+				reader = MolAndActivityConverter.Builder.classificationConverter(iterator, endpoint, labels).progressTracker(problem.getProgressTracker()).build();
 			} else {
 				reader = MolAndActivityConverter.Builder.regressionConverter(iterator, endpoint).progressTracker(problem.getProgressTracker()).build();
 			}
@@ -1626,139 +1629,14 @@ public class CLIProgramUtils {
 	}
 	
 	public static void failWithBadUserInputFile(CLIConsole console, int numOK, ChemFile inputFile, 
-	List<FailedRecord> failedRecords, ChemDataset dataset, String property, List<String> givenLabels, int numMaxAllowedFailures) {
-		StringBuilder errMessage = new StringBuilder();
+	List<FailedRecord> failedRecords, ChemDataset dataset, String property, NamedLabels givenLabels, int numMaxAllowedFailures) {
 
-		// If no valid molecules were found - this means something is definitely incorrect in the parameters
-		if (numOK <= 0 || failedRecords.isEmpty()){
-			// 1. Cannot read from the file itself
-			if (!UriUtils.canReadFromURI(inputFile.getURI())){
-				errMessage
-					.append("%nCannot read from file:%n")
-					.append(inputFile.getURI())
-					.append("%n");
-				failInCaseErrMessageBeenGenerated(console,errMessage);
-			}
-
-			// 2. Input file is empty
-			if (!UriUtils.verifyURINonEmpty(inputFile.getURI())){
-				LOGGER.debug("Found input file {} to be empty", inputFile.getURI());
-				errMessage
-					.append("%nInput file is empty:%n")
-					.append(inputFile.getURI())
-					.append("%n");
-				failInCaseErrMessageBeenGenerated(console,errMessage);
-			}
-
-			// 3. Wrong chem-format given
-			ChemIOFormat actualFormat = null;
-			boolean correctFormat = false;
-			try {
-				actualFormat = ChemIOUtils.deduceFormat(inputFile.getURI());
-				LOGGER.debug("Tried to deduce the file format and found it to be {}, let's check if the given argument {} matches",
-					actualFormat, inputFile.getClass().getSimpleName());
-				switch (actualFormat){
-					case CSV:
-						correctFormat = inputFile instanceof CSVFile;
-						break;
-					case JSON:
-						correctFormat = inputFile instanceof JSONFile;
-						break;
-					case SDF:
-						correctFormat = inputFile instanceof SDFile;
-						break;
-					case UNKNOWN:
-					default:
-						actualFormat = ChemIOFormat.UNKNOWN;
-						correctFormat = false; // we do not actually know the format, 
-						break;
-				}
-
-				if (!correctFormat){
-					errMessage
-						.append("%nThe given input file:%n")
-						.append(inputFile.getURI())
-						.append("%nseems to be of type ")
-						.append(actualFormat.toString())
-						.append(" while given type was ")
-						.append(inputFile.getFileFormat())
-						.append(" please make sure you specify the correct file format and any extra sub-arguments, for more information please run ");
-					appendExplainChemFormat(errMessage);
-					errMessage.append("%n");
-					failInCaseErrMessageBeenGenerated(console, errMessage);
-				}
-			} catch (Exception e){
-				LOGGER.debug("Failed to deduce the file format",e);
-			}
-
-			// 4. Invalid argument for the given type
-			if (correctFormat){
-				LOGGER.debug("Found that the specified format seems to match what we deduce it to be: {}",actualFormat);
-				if (actualFormat == ChemIOFormat.CSV){
-					// Only the CSV fomrat that have settings that makes sense
-					// 4.1 - do we have the correct delimiter?
-					try{
-						char delim = ChemIOUtils.deduceDelimiter(inputFile.getURI());
-						CSVFile file = (CSVFile) inputFile;
-						if (delim != file.getDelimiter()){
-							errMessage
-								.append("%For input CSV file:%n")
-								.append(inputFile.getURI())
-								.append("%nThe delimiter was set to \"")
-								.append(file.getDelimiter())
-								.append("\" but it seems that it uses delimiter \"").append(delim).append("\"");
-							appendExplainChemFormat(errMessage);
-							errMessage.append("%n");
-							failInCaseErrMessageBeenGenerated(console, errMessage);
-						}
-					} catch (Exception e){
-						LOGGER.debug("Failed to find delimiter for input CSV", e);
-						errMessage
-							.append("%Attempted to find the delimiter for input CSV file:%n")
-							.append(inputFile.getURI())
-							.append("%nbut failed trying to deduce the correct one. Please verify your parameters and run ");
-						appendExplainChemFormat(errMessage);
-						errMessage.append(" for further information%n");
-						failInCaseErrMessageBeenGenerated(console, errMessage);
-					}
-
-				} else if (actualFormat == ChemIOFormat.JSON){
-					// Our JSON format is very strict, so possibly the input was not formatted so we could read it properly?
-					errMessage.append("%Input file:%n")
-						.append(inputFile.getURI())
-						.append("%nwas JSON, please verify that your JSON is following the required branching by e.g. running ");
-					appendExplainChemFormat(errMessage);
-					errMessage.append("%n");
-					failInCaseErrMessageBeenGenerated(console, errMessage);
-				}
-			}
-
-			// 5. There is a BOM (byte order mark) in the file, but not configured to having one
-			try {
-				boolean hasBOM = UriUtils.hasBOM(inputFile.getURI());
-				if (hasBOM & inputFile instanceof CSVFile){
-					if (! ((CSVFile)inputFile).getHasBOM()){
-						LOGGER.debug("The file has a BOM and CSV-file not configured to parse the BOM");
-						errMessage.append("The input file:%n")
-							.append(inputFile.getURI())
-							.append("%nhas a Byte Order Mark (BOM) while the parameter for BOM was not set to true, see ");
-						appendExplainChemFormat(errMessage);
-
-						errMessage.append(" for further details on the available parameters.%n");
-					}
-				}
-			} catch (IOException e){
-				LOGGER.debug("Failed to check if the input file had a BOM, this means there's like likely something wrong with the file itself",e);
-				errMessage.append("Could not read from the given input file:%n")
-					.append(inputFile.getURI()).append("%nPlease verify that the file itself is valid");
-			}
-			failInCaseErrMessageBeenGenerated(console, errMessage);
-			
+		if (failedRecords== null || failedRecords.isEmpty()){
+			failWithBadUserInputFileNoFailedRecords(console, numOK, inputFile, dataset, property, givenLabels, numMaxAllowedFailures);
 		}
 
-		System.err.println("Passed the first major thing, with failed records: " + failedRecords);
-
-
+		StringBuilder errMessage = new StringBuilder("ERROR: ");
+		
 		Map<Cause,Integer> failureCounts = getCounts(failedRecords);
 		// Sort the Map by values
         List<Map.Entry<Cause, Integer>> entries = new ArrayList<>(failureCounts.entrySet());
@@ -1782,7 +1660,11 @@ public class CLIProgramUtils {
 			case DESCRIPTOR_CALC_ERROR:
 				errMessage
 					.append(first.getValue())
-					.append(" records were discarded due to descriptor calculation failures, perhaps there is a bug in one or several of the descriptors that was specified.");
+					.append(" records were discarded due to descriptor calculation failures, perhaps there is a bug in one of the descriptors. If you have missing data for some features this can be resolved by using a data transformation, run ")
+					.append(ParameterUtils.RUN_EXPLAIN_ANSI_ON)
+					.append("explain transformations")
+					.append(ParameterUtils.ANSI_OFF)
+					.append(" for further information");
 				break;
 			case INVALID_PROPERTY:
 				if (givenLabels == null){
@@ -1797,7 +1679,7 @@ public class CLIProgramUtils {
 						.append("Running in classification mode, but ")
 						.append(first.getValue())
 						.append(" records had property values which did not match any of the given class labels (")
-						.append(StringUtils.join(", ", givenLabels))
+						.append(StringUtils.joinCollection(", ", givenLabels.getLabelsSet()))
 						.append("), where the correct class labels given to ")
 						.append(ParameterUtils.PARAM_FLAG_ANSI_ON)
 						.append("--labels")
@@ -1856,7 +1738,7 @@ public class CLIProgramUtils {
 					} catch (Exception e){
 						// Failed - not sure why, give a more generic answer then
 						LOGGER.debug("Tried to deduce all properties from the first 10 molecules - failed",e);
-						errMessage.append(" did you specify it correctly, using the correct font case?");
+						errMessage.append(" did you specify it correctly, using the correct letter case?");
 					}
 
 				}
@@ -1925,7 +1807,147 @@ public class CLIProgramUtils {
 		}
 
 		console.println(errMessage.toString(), PrintMode.SILENT);
-		console.failWithArgError("Invalid arguments");
+		console.failWithArgError("Invalid arguments"); // fail with generic message, error message written to std-out to support ANSI coloring
+	}
+
+	public static void failWithBadUserInputFileNoFailedRecords(CLIConsole console, int numOK, ChemFile inputFile, 
+	ChemDataset dataset, String property, NamedLabels givenLabels, int numMaxAllowedFailures) {
+		LOGGER.debug("We have no failed records to help with deducing the possible argument error");
+		
+		StringBuilder errMessage = new StringBuilder();
+		// 1. Cannot read from the file itself
+		if (!UriUtils.canReadFromURI(inputFile.getURI())){
+			errMessage
+				.append("%nCannot read from file:%n")
+				.append(inputFile.getURI())
+				.append("%n");
+			failInCaseErrMessageBeenGenerated(console,errMessage);
+		}
+
+		// 2. Input file is empty
+		if (!UriUtils.verifyURINonEmpty(inputFile.getURI())){
+			LOGGER.debug("Found input file {} to be empty", inputFile.getURI());
+			errMessage
+				.append("%nInput file is empty:%n")
+				.append(inputFile.getURI())
+				.append("%n");
+			failInCaseErrMessageBeenGenerated(console,errMessage);
+		}
+
+		// 3. Wrong chem-format given
+		ChemIOFormat actualFormat = null;
+		boolean correctFormat = false;
+		try {
+			actualFormat = ChemIOUtils.deduceFormat(inputFile.getURI());
+			LOGGER.debug("Tried to deduce the file format and found it to be {}, let's check if the given argument {} matches",
+				actualFormat, inputFile.getClass().getSimpleName());
+			switch (actualFormat){
+				case CSV:
+					correctFormat = inputFile instanceof CSVFile;
+					break;
+				case JSON:
+					correctFormat = inputFile instanceof JSONFile;
+					break;
+				case SDF:
+					correctFormat = inputFile instanceof SDFile;
+					break;
+				case UNKNOWN:
+				default:
+					actualFormat = ChemIOFormat.UNKNOWN;
+					correctFormat = false; // we do not actually know the format, 
+					break;
+			}
+
+			if (!correctFormat){
+				errMessage
+					.append("%nThe given input file:%n")
+					.append(inputFile.getURI())
+					.append("%nseems to be of type ")
+					.append(actualFormat.toString())
+					.append(" while given type was ")
+					.append(inputFile.getFileFormat())
+					.append(" please make sure you specify the correct file format and any extra sub-arguments, for more information please run ");
+				appendExplainChemFormat(errMessage);
+				errMessage.append("%n");
+				failInCaseErrMessageBeenGenerated(console, errMessage);
+			}
+		} catch (Exception e){
+			LOGGER.debug("Failed to deduce the file format",e);
+		}
+
+		// 4. Invalid argument for the given type
+		if (correctFormat){
+			LOGGER.debug("Found that the specified format seems to match what we deduce it to be: {}",actualFormat);
+			if (actualFormat == ChemIOFormat.CSV){
+				// Only the CSV fomrat that have settings that makes sense
+				// 4.1 - do we have the correct delimiter?
+				try{
+					char delim = ChemIOUtils.deduceDelimiter(inputFile.getURI());
+					CSVFile file = (CSVFile) inputFile;
+					if (delim != file.getDelimiter()){
+						errMessage
+							.append("%For input CSV file:%n")
+							.append(inputFile.getURI())
+							.append("%nThe delimiter was set to \"")
+							.append(file.getDelimiter())
+							.append("\" but it seems that it uses delimiter \"").append(delim).append("\"");
+						appendExplainChemFormat(errMessage);
+						errMessage.append("%n");
+						failInCaseErrMessageBeenGenerated(console, errMessage);
+					}
+				} catch (Exception e){
+					LOGGER.debug("Failed to find delimiter for input CSV", e);
+					errMessage
+						.append("%Attempted to find the delimiter for input CSV file:%n")
+						.append(inputFile.getURI())
+						.append("%nbut failed trying to deduce the correct one. Please verify your parameters and run ");
+					appendExplainChemFormat(errMessage);
+					errMessage.append(" for further information%n");
+					failInCaseErrMessageBeenGenerated(console, errMessage);
+				}
+
+			} else if (actualFormat == ChemIOFormat.JSON){
+				// Our JSON format is very strict, so possibly the input was not formatted so we could read it properly?
+				errMessage.append("%Input file:%n")
+					.append(inputFile.getURI())
+					.append("%nwas JSON, please verify that your JSON is following the required branching by e.g. running ");
+				appendExplainChemFormat(errMessage);
+				errMessage.append("%n");
+				failInCaseErrMessageBeenGenerated(console, errMessage);
+			}
+		}
+
+		// 5. Invalid property (in case ChemDataset already have a property and records loaded)
+		if (dataset.getProperty()!=null && !dataset.getProperty().equals(property)) {
+			// This is in validate/predict 
+			errMessage.append("The given property '").append(property).append("' does not match the one used by the model '").append(dataset.getProperty()).append("'%n");
+			failInCaseErrMessageBeenGenerated(console, errMessage);
+		}
+
+		// 6. There is a BOM (byte order mark) in the file, but not configured to having one
+		try {
+			boolean hasBOM = UriUtils.hasBOM(inputFile.getURI());
+			if (hasBOM & inputFile instanceof CSVFile){
+				if (! ((CSVFile)inputFile).getHasBOM()){
+					LOGGER.debug("The file has a BOM and CSV-file not configured to parse the BOM");
+					errMessage.append("The input file:%n")
+						.append(inputFile.getURI())
+						.append("%nhas a Byte Order Mark (BOM) while the parameter for BOM was not set to true, see ");
+					appendExplainChemFormat(errMessage);
+
+					errMessage.append(" for further details on the available parameters.%n");
+				}
+			}
+		} catch (IOException e){
+			LOGGER.debug("Failed to check if the input file had a BOM, this means there's like likely something wrong with the file itself",e);
+			errMessage.append("Could not read from the given input file:%n")
+				.append(inputFile.getURI()).append("%nPlease verify that the file itself is valid");
+		}
+		failInCaseErrMessageBeenGenerated(console, errMessage);
+
+
+		LOGGER.debug("Failed to deduce what was wrong with the user argument, will instead give a generic error");
+		console.failWithArgError("Invalid user arguments, please verify that you have specified all parameters correctly");
 	}
 
 	private static void failInCaseErrMessageBeenGenerated(CLIConsole console, StringBuilder errorMessageBuilder){

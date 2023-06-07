@@ -105,7 +105,8 @@ public class TestValidate extends CLIBaseTest{
 		FileUtils.write(tmpPredFile, changAltered, "UTF-8");
 
 		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
-		exit.checkAssertionAfterwards(new AssertSysErrContainsString(regChangData.property(), "no", "valid", tmpPredFile.getAbsolutePath(), "property"));
+		exit.checkAssertionAfterwards(new AssertSysErrContainsString("invalid","argument"));
+		exit.checkAssertionAfterwards(new AssertSysOutContainsString(tmpPredFile.getAbsolutePath(),regChangData.property(), "propert", "Error"));
 
 		mockMain(new String[]{
 				Validate.CMD_NAME,
@@ -115,6 +116,7 @@ public class TestValidate extends CLIBaseTest{
 				"-rf", "csv",
 				"--print-predictions",
 				"-of", "csv",
+				"--list-failed",
 				"--echo"
 		});
 	}
@@ -140,8 +142,8 @@ public class TestValidate extends CLIBaseTest{
 				Validate.CMD_NAME,
 				"-cp", "0.5 ", "0.7", "0.9",
 				"-m",PreTrainedModels.TCP_CLF_SMALL_LIBLINEAR.toString(),
-				"-p", clsData.format(), clsData.uri().toString(), // SDFile.FORMAT_NAME, AmesBinaryClass.MINI_FILE_PATH, //getURI("/resources/datasets/classification/cox2.smi").toString(), //testFileClass, //testFileClass,
-				"-vp", clsData.property(), // AmesBinaryClass.PROPERTY, //"class", //
+				"-p", clsData.format(), clsData.uri().toString(), 
+				"-vp", clsData.property(),
 				"--echo",
 				"--print-predictions",
 				//				"--progress-bar",
