@@ -572,6 +572,22 @@ public class CollectionUtils {
 		}
 	}
 
+	public static <T> List<T> toList(Iterable<T> iter){
+		List<T> result = new ArrayList<>();
+		for(T i : iter){
+			result.add(i);
+		}
+		return result;
+	}
+
+	public static <T> List<T> toList(Iterator<T> iter){
+		List<T> result = new ArrayList<>();
+		while(iter.hasNext()){
+			result.add(iter.next());
+		}
+		return result;
+	}
+
 	/**
 	 * Performs a shallow replication, the same object in all 
 	 * @param obj object to replicate
