@@ -10,27 +10,15 @@
 package com.arosbio.cpsign.app;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
-import org.openscience.cdk.CDKConstants;
-import org.openscience.cdk.exception.CDKException;
-import org.openscience.cdk.exception.InvalidSmilesException;
-import org.openscience.cdk.interfaces.IAtomContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.arosbio.chem.CPSignMolProperties;
-import com.arosbio.chem.io.in.ChemFileParserUtils;
-import com.arosbio.chem.io.in.FailedRecord;
-import com.arosbio.chem.io.in.FailedRecord.Cause;
+import com.arosbio.chem.io.in.ProgressTracker;
 import com.arosbio.cheminf.ChemCPClassifier;
 import com.arosbio.cheminf.ChemPredictor;
-import com.arosbio.cheminf.descriptors.DescriptorCalcException;
-import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.GlobalConfig;
-import com.arosbio.commons.MathUtils;
 import com.arosbio.cpsign.app.params.mixins.CompoundsToPredictMixin;
 import com.arosbio.cpsign.app.params.mixins.ConfidencesListMixin;
 import com.arosbio.cpsign.app.params.mixins.ConsoleVerbosityMixin;
@@ -53,18 +41,15 @@ import com.arosbio.cpsign.app.utils.CLIProgramUtils;
 import com.arosbio.cpsign.app.utils.CLIProgressBar;
 import com.arosbio.cpsign.app.utils.CLIProgressBar.SupportsProgressBar;
 import com.arosbio.cpsign.app.utils.NullProgress;
+import com.arosbio.cpsign.app.utils.PredictRunner;
 import com.arosbio.cpsign.app.utils.ProgramTimer;
 import com.arosbio.cpsign.out.OutputNamingSettings;
 import com.arosbio.cpsign.out.OutputNamingSettings.PB;
 import com.arosbio.cpsign.out.OutputNamingSettings.ProgressInfoTexts;
-import com.arosbio.cpsign.out.PredictionImageHandler;
 import com.arosbio.cpsign.out.PredictionImageHandler.GradientImageOpts;
 import com.arosbio.cpsign.out.PredictionImageHandler.SignificantSignatureImageOpts;
-import com.arosbio.cpsign.out.PredictionResultsWriter;
-import com.arosbio.cpsign.out.ResultsHandler;
 import com.arosbio.data.MissingDataException;
 import com.arosbio.io.UriUtils;
-import com.arosbio.ml.ClassificationUtils;
 import com.arosbio.ml.cp.ConformalClassifier;
 import com.arosbio.ml.cp.tcp.TCPClassifier;
 import com.arosbio.ml.interfaces.Predictor;
@@ -106,7 +91,6 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 	private CLIConsole console = CLIConsole.getInstance();
 	private CLIProgressBar pb = new NullProgress();
 	private ProgramTimer timer = new ProgramTimer(false, console);
-	private PredictionImageHandler imageHandler;
 
 	/*****************************************
 	 * OPTIONS
@@ -202,47 +186,15 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 		verifyGeneralParams();
 		LOGGER.debug("Validated arguments");
 
-		// if Predict from a CSV- or SDF-file - count total number of molecules
-		int totalNumMolsToPredict = 0, progressInterval = 0; 
-		if (toPredict.toPredict.predictFile != null){
-
-			try {
-				totalNumMolsToPredict = CollectionUtils.count(toPredict.toPredict.predictFile.getIterator());
-			} catch (IllegalArgumentException | IOException e){
-				LOGGER.debug("Could not parse the predictFile", e);
-				console.failWithArgError("Could not read molecules from "+
-						toPredict.toPredict.predictFile.getURI());
-			}
-
-			if (totalNumMolsToPredict < 1) {
-				LOGGER.debug("No valid records found in file: "+toPredict.toPredict.predictFile.getURI());
-				console.failWithArgError("Could not read molecules from "+
-						toPredict.toPredict.predictFile.getURI());
-			}
-
-			progressInterval = CLIProgramUtils.getProgressInterval(totalNumMolsToPredict, 10);
-			int numSteps = totalNumMolsToPredict/progressInterval;
-			pb.addAdditionalSteps(numSteps); // add the additional steps 
-		}
-
 		// FINISHED SETUP
 		console.println(ProgressInfoTexts.DONE_TAG, PrintMode.NORMAL);
-		console.println("Using RNG seed: "+ GlobalConfig.getInstance().getRNGSeed(), PrintMode.VERBOSE);
+		console.println("Using RNG seed: %d", PrintMode.VERBOSE, GlobalConfig.getInstance().getRNGSeed());
 		pb.stepProgress();
 		timer.endSection();
 
 		// LOAD DATA
 		pb.setCurrentTask(PB.LOADING_FILE_OR_MODEL_PROGRESS);
 		ChemCPClassifier predictor = initAndLoad();
-		// Set up prediction depictions
-		imageHandler = new PredictionImageHandler(
-				gradientImageSection, 
-				signatureImageSection,
-				predictor);
-		if (imageHandler.isUsed() && !predictor.usesSignaturesDescriptor()) {
-			LOGGER.debug("Loaded model without signatures descriptor and got argument for generating prediction images - failing!");
-			console.failWithArgError("Generating prediction images is only available when using the signatures descriptor");
-		}
 		pb.stepProgress();
 		timer.endSection();
 
@@ -259,7 +211,8 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 		// PREDICT
 		pb.setCurrentTask(PB.PREDICTING_PROGRESS);
 		console.println(OutputNamingSettings.ProgressInfoTexts.COMPUTING_PREDICTIONS, PrintMode.NORMAL);
-		predict(predictor, totalNumMolsToPredict, progressInterval);
+		new PredictRunner(this, console, pb, predictor, toPredict, ProgressTracker.createStopAfter(earlyTermination.maxFailuresAllowed), 
+			confs, null, outputSection, gradientImageSection, signatureImageSection, calcGradient, listFailedRecordsMixin.listFailedRecords).runPredict();
 		pb.stepProgress();
 		timer.endSection();
 
@@ -275,23 +228,23 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 	private ChemCPClassifier initAndLoad() {
 		LOGGER.debug("Initializing Predictor");
 		// Initiate ChemPredictor
-		ChemCPClassifier signTCP = initChemCPClassificationTCP();
+		ChemCPClassifier chemPredictor = initChemCPClassificationTCP();
 
 		// Load data
 		try {
-			CLIProgramUtils.loadPrecomputedData(signTCP, inputSection, encryptSection.exclusive.encryptSpec, console);
+			CLIProgramUtils.loadPrecomputedData(chemPredictor, inputSection, encryptSection.exclusive.encryptSpec, console);
 		} catch (Exception e) {
 			LOGGER.debug("Failed loading data to 'train' online predictor",e);
 			throw e;
 		}
 
 		// Do transformations
-		CLIProgramUtils.applyTransformations(signTCP.getDataset(), true, transformerArgs.transformers, this, console);
+		CLIProgramUtils.applyTransformations(chemPredictor.getDataset(), true, transformerArgs.transformers, this, console);
 
 		// Verify no missing data
-		CLIProgramUtils.verifyNoMissingDataAndPrintErr(signTCP.getDataset(), true, console);
+		CLIProgramUtils.verifyNoMissingDataAndPrintErr(chemPredictor.getDataset(), true, console);
 
-		return signTCP;
+		return chemPredictor;
 	}
 
 	private void train(ChemPredictor predictor) {
@@ -380,7 +333,7 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 				UriUtils.createParentOfFile(outputSection.outputFile);
 			} catch (IOException e){
 				LOGGER.debug("failed when trying to create parent of output-file",e);
-				console.failWithArgError("Could not create parent directory of output file: " + outputSection.outputFile);
+				console.failWithArgError("Could not create parent directory of output file:%n" + outputSection.outputFile);
 			}
 		}
 
@@ -391,181 +344,6 @@ public class PredictOnline implements RunnableCmd, SupportsProgressBar {
 			} catch(Exception e){
 				console.failWithArgError("InChI cannot be generated, please contact Aros Bio or run without the " + 
 						CLIProgramUtils.getParamName(this, "printInChI", "PRINT_INCHI") + " flag");
-			}
-		}
-
-	}
-
-	
-
-	private void predict(ChemCPClassifier predictor, int molsInPredFile, int progressInterval) {
-
-		// Some state
-		int numSuccessFulPredictions = 0;
-		// int numPredictedCount = 0; // for images/output text
-		List<FailedRecord> failedRecords = new ArrayList<>();
-
-		// Set up the ResultsOutputter
-		try(
-			PredictionResultsWriter predictionWriter = CLIProgramUtils.setupResultsOutputter(this,
-				outputSection.outputFormat, 
-				outputSection.outputFile,
-				toPredict.toPredict.predictFile,
-				outputSection.printInChI, 
-				outputSection.compress);){
-
-			// Predict single SMILES
-			if (toPredict.toPredict.smilesToPredict != null) {
-
-				IAtomContainer mol;
-				try {
-					mol = ChemFileParserUtils.parseSMILES(toPredict.toPredict.smilesToPredict); 
-					CPSignMolProperties.setRecordIndex(mol, "cmd-line-input");
-
-					predictMolecule(predictor, predictionWriter, mol);
-
-					numSuccessFulPredictions++;
-
-				} catch (InvalidSmilesException e){
-					LOGGER.error("Invalid smiles: {}", toPredict.toPredict.smilesToPredict);
-					failedRecords.add(new FailedRecord.Builder(-1, FailedRecord.Cause.INVALID_STRUCTURE)
-						.withReason("invalid SMILES: " + toPredict.toPredict.smilesToPredict).build());
-				} catch (CDKException e){ 
-					LOGGER.error("CDKException when predicting the --smiles molecule",e);
-
-				} catch (Exception e) {
-					LOGGER.error("Error predicting SMILES: {}", e.getMessage(),e);
-
-				}
-			}
-
-			// Predict from a chemical-file
-			if (molsInPredFile > 0){
-
-				int currentMoleculeIndex = 0;
-				Iterator<IAtomContainer> molIterator=null;
-				try {
-					molIterator = toPredict.toPredict.predictFile.getIterator();
-				} catch (IOException e) {
-					LOGGER.debug("Failed reading from predictFile",e);
-					console.failWithArgError("Could not read any molecules from parameter " + 
-							CLIProgramUtils.getParamName(this, "predictFile", "PREDICT_FILE"));
-				}
-
-				// DO THE PREDICTIONS
-
-				boolean predictionDone = false;
-				IAtomContainer mol=null;
-
-				while (molIterator.hasNext()) {
-					mol = molIterator.next();
-					if (mol.getProperty(CDKConstants.REMARK) == null)
-						mol.removeProperty(CDKConstants.REMARK);
-					try {
-
-						predictMolecule(predictor, predictionWriter, mol);
-
-						predictionDone=true;
-						numSuccessFulPredictions++;
-
-					} catch (DescriptorCalcException e){
-						LOGGER.debug("Failed calculating descriptors for molecule", e);
-						failedRecords.add(new FailedRecord.Builder(currentMoleculeIndex, Cause.DESCRIPTOR_CALC_ERROR).build());
-					} catch (CDKException e) {
-						LOGGER.debug("CDKException",e);
-						LOGGER.info("Error predicting molecule: {}", e.getMessage());
-						failedRecords.add(new FailedRecord.Builder(currentMoleculeIndex, Cause.INVALID_STRUCTURE).build());
-					} catch (IOException e) {
-						LOGGER.debug("Failed writing to output", e);
-					} finally {
-						currentMoleculeIndex++;
-						// Step Progress and print out
-						if ((1+currentMoleculeIndex) % progressInterval == 0) {
-							pb.stepProgress();
-							// Print progress to stdout
-							console.println(" - Predicted %d/%d molecules", PrintMode.NORMAL,
-								currentMoleculeIndex,molsInPredFile);
-						}
-					}
-				}
-
-				if (!predictionDone)
-					console.failWithArgError("No valid molecules in "+
-							CLIProgramUtils.getParamName(this, "predictFile", "PREDICT_FILE"));
-
-			}
-
-		} catch (IOException e) {
-			LOGGER.debug("Failed closing the results outputter",e);
-			console.printlnWrappedStdErr("Could not properly close the result file, not all predictions might have successfully have been written to file", PrintMode.NORMAL);
-		}
-
-		// ===================================
-		// We are done with all predictions
-
-		// Summarize how many was successfully and failed predictions
-
-		console.println("%nSuccessfully predicted %d molecule%s", PrintMode.NORMAL,
-				numSuccessFulPredictions,(numSuccessFulPredictions>1 || numSuccessFulPredictions==0?"s":""));
-		// Only write failed ones if there were any
-		if (!failedRecords.isEmpty()) {
-			console.println("Failed predicting %s molecule(s)%s", PrintMode.NORMAL,
-				failedRecords.size(), (failedRecords.size()>1 ? "s" :""));
-			// If detailed info should be written per record
-			if (listFailedRecordsMixin.listFailedRecords){
-				StringBuilder sb = new StringBuilder("List of failed records and their causes:%n");
-				CLIProgramUtils.appendFailedMolsInfo(sb,failedRecords);
-				console.println(sb.toString(), PrintMode.NORMAL);
-			}
-		}
-
-	}
-
-	private void predictMolecule(ChemCPClassifier predictor, PredictionResultsWriter predWriter, IAtomContainer mol) 
-		throws IOException, CDKException {
-
-		// Perform prediction 
-		ResultsHandler resHandler = new ResultsHandler();
-		try {
-			resHandler.pValues = MathUtils.roundAll(predictor.predict(mol));
-
-			LOGGER.debug("Pvalues from predict={}", resHandler.pValues);
-
-			if (confs.confidences!=null){
-				for (Double conf: confs.confidences)
-					resHandler.addPredictedLabels(conf, ClassificationUtils.getPredictedLabels(resHandler.pValues, conf));
-			}
-
-		} catch (IllegalStateException e){
-			LOGGER.debug("Exception running predict", e);
-			console.failWithInternalError("Could not predict p-values for molecule due to: " + e.getMessage());
-		}
-
-		// Find Significant Signature 
-		if (calcGradient){
-			try{
-				resHandler.signSign = predictor.predictSignificantSignature(mol);
-			} catch (IllegalStateException | CDKException e){
-				LOGGER.debug("Exception running predictSignificantSignature", e);
-			}
-		}
-
-		// Print results
-		predWriter.write(mol, resHandler); 
-		predWriter.flush();
-
-		if (imageHandler.isPrintingSignatureImgs()){
-			try {
-				imageHandler.writeSignificantSignatureImage(resHandler.toRenderInfo(mol)); 
-			} catch (Exception e) {
-				LOGGER.debug("Exception writing significant signature depiction", e);
-			}
-		}
-		if (imageHandler.isPrintingGradientImgs()) {
-			try {
-				imageHandler.writeGradientImage(resHandler.toRenderInfo(mol));
-			} catch (Exception e) {
-				LOGGER.debug("Exception writing gradient depiction", e);
 			}
 		}
 

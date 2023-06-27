@@ -464,7 +464,7 @@ public class TestACPClassification extends CLIBaseTest {
 				"-mo", outputFile.getAbsolutePath(),
 				"-mn", "sdagas",
 				"--seed", ""+seed,
-				"--sampling-strategy", strategy((strat? RANDOM_STRATIFIED_SAMPLING: RANDOM_SAMPLING), nrModels) // (strat?  strategy(RANDOM_STRATIFIED_SAMPLING, nrModels)RANDOM_STRATIFIED_SAMPLING : RANDOM_SAMPLING),
+				"--sampling-strategy", strategy((strat? RANDOM_STRATIFIED_SAMPLING: RANDOM_SAMPLING), nrModels) 
 		);
 	}
 
@@ -603,7 +603,7 @@ public class TestACPClassification extends CLIBaseTest {
 				"-mo", modelFile.getAbsolutePath(),
 				"-mn", "sdagas sdfa",
 				"--verbose",
-				"--percentiles-data", percentilesData.format(), percentilesData.uri().toString(), // AmesBinaryClass.FILE_FORMAT, AmesBinaryClass.MINI_FILE_PATH,
+				"--percentiles-data", percentilesData.format(), percentilesData.uri().toString(),
 				"--percentiles", "3",
 				"--model-category", modelCat
 		);
@@ -719,8 +719,8 @@ public class TestACPClassification extends CLIBaseTest {
 	@Test
 	public void testCompressAndEncrypt() throws Exception{
 		// setup output files
-		File plainModels = TestUtils.createTempFile("plainModel.svm", ".cpsign"); //new File("/Users/staffan/Desktop/testCPSign/models"); //
-		File encModels = TestUtils.createTempFile("encModels", ".cpsign"); //new File("/Users/staffan/Desktop/testCPSignEnc/models"); //
+		File plainModels = TestUtils.createTempFile("plainModel.svm", ".cpsign");
+		File encModels = TestUtils.createTempFile("encModels", ".cpsign");
 
 		int numPercentiles = 50;
 
