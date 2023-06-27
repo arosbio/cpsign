@@ -921,10 +921,6 @@ public class TestPrecompute extends CLIBaseTest {
 	public void testCompressedInputFiles() throws Exception{
 
 		File modelFile = TestUtils.createTempFile("acpmodel", ".svm.jar");
-		//				File modelFile = new File("/Users/staffan/Desktop/acpmodel.jar");
-
-		//		File modelFileSMILES = TestUtils.createTempFile("acpmodel_smiles", ".svm.jar");
-
 
 		// Train with GZIPPED SDF-file
 		systemOutRule.clearLog();
@@ -935,8 +931,6 @@ public class TestPrecompute extends CLIBaseTest {
 				"-pr", ames10.property(),
 				"-l", LABELS_STRING,
 				"-mt", PRECOMPUTE_CLASSIFICATION,
-				//				"--scorer", C_SVC.ALG_NAME,
-				//				"-ss",strategy(RANDOM_SAMPLING, nrModels),
 				"-mo", modelFile.getAbsolutePath(),
 				"-mn", "dsf",
 		});
@@ -973,11 +967,9 @@ public class TestPrecompute extends CLIBaseTest {
 				"-mt", PRECOMPUTE_CLASSIFICATION,
 				"-td", bbb.format(), "delim="+bbb.delim(), bbb.uri().toString(),
 				"-pr", bbb.property(),
-				"--labels", getLabelsArg(bbb.labels(), ' '),//"penetrating non-penetrating",
+				"--labels", getLabelsArg(bbb.labels(), ' '),
 				"-mo", precompModelFile.getAbsolutePath(),
 				"-mn", "sdagas",
-				//				"--percentiles", "0",
-				//				"--progress-bar",
 				"--time"
 		});
 	}

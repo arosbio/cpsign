@@ -51,6 +51,7 @@ import com.arosbio.cpsign.out.OutputNamingSettings.ProgressInfoTexts;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.MissingDataException;
 import com.arosbio.ml.algorithms.MLAlgorithm;
+import com.arosbio.ml.cp.ConformalPredictor;
 import com.arosbio.ml.cp.acp.ACPClassifier;
 import com.arosbio.ml.cp.acp.ACPRegressor;
 import com.arosbio.ml.cp.nonconf.classification.NCMMondrianClassification;
@@ -379,8 +380,8 @@ public class Train implements RunnableCmd, SupportsProgressBar {
 		} else if (predictor instanceof ACPClassifier) {
 			NCMMondrianClassification ncm = (NCMMondrianClassification) ((ACPClassifier) predictor).getICPImplementation().getNCM();
 			trainPredictor((AggregatedPredictor)predictor, 
-					problem, 
-					"ACP Classification", 
+					problem,
+					"ACP Classification",
 					" using NCM " + ncm.getName() + " with scorer " + formatAlgInfo(ncm.getModel()));
 		} else if (predictor instanceof ACPRegressor) {
 			NCMRegression ncm = ((ACPRegressor)predictor).getICPImplementation().getNCM();
@@ -391,14 +392,14 @@ public class Train implements RunnableCmd, SupportsProgressBar {
 			}
 
 			trainPredictor((AggregatedPredictor)predictor, 
-					problem, 
+					problem,
 					"ACP Regression",
 					verboseInfo);
 
 		} else if (predictor instanceof AVAPClassifier) {
-			trainPredictor((AggregatedPredictor)predictor, 
-					problem, 
-					"Venn-ABERS Predictor", 
+			trainPredictor((AggregatedPredictor)predictor,
+					problem,
+					"Venn-ABERS Predictor",
 					" using scoring algorithm " + formatAlgInfo(((AVAPClassifier)predictor).getScoringAlgorithm()));
 		} else {
 			LOGGER.debug("predictor of non-supported class: {}", predictor.getClass());
@@ -459,6 +460,23 @@ public class Train implements RunnableCmd, SupportsProgressBar {
 				console.println(ProgressInfoTexts.DONE_TAG, PrintMode.NORMAL);
 				pb.stepProgress();
 			}
+		} else if (nrModels == 1 && predictor instanceof ConformalPredictor){
+			// ICP
+			String icpPredName = predictorName.replace("ACP", "ICP");
+			// Normal info
+			console.println("Training %s predictor:", 
+					PrintMode.NORMAL_ON_MATCH, icpPredName);
+			// Verbose info
+			console.printlnWrapped("Training %s predictor%s:", 
+					PrintMode.VERBOSE_ON_MATCH,icpPredName,verboseExtra);
+			LOGGER.debug("Training ICP model (a single) split");
+			for (int i=0; i<nrModels; i++) {
+				console.print(" - Training model... ", PrintMode.NORMAL);
+				predictor.train(problem, i);
+				console.println(ProgressInfoTexts.DONE_TAG, PrintMode.NORMAL);
+				pb.stepProgress();
+			}
+
 		} else {
 			// Normal info
 			console.println("Training %s predictor with %d%s:", 

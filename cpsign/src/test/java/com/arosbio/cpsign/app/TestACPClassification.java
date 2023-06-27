@@ -169,28 +169,14 @@ public class TestACPClassification extends CLIBaseTest {
 
 	@Test
 	public void testUserSuppliedDescriptorsALL_EXCEPT_missing_vals() throws Exception {
-		// File preComDS = TestUtils.createTempFile("datafile", ".csr.jar");
-		File modelFile = TestUtils.createTempFile("model", "jar");
-		
-		// mockMain(
-		// 	Precompute.CMD_NAME,
-		// 	"-td", PeptideMulticlass.FILE_FORMAT, PeptideMulticlass.DELIM_ARG, PeptideMulticlass.FILE_PATH, 
-		// 	"-pr", PeptideMulticlass.PROPERTY,
-		// 	"--descriptors", "usersupplied:all,-Kp_binary_classification,Papp_class","signatures-descriptor", //
-		// 	"--transformations", "drop-missing-feats", "standardizer:col_max_index=20",
-		// 	"--labels",PeptideMulticlass.LABELS_STRING,
-		// 	"-mo", preComDS.getAbsolutePath(),
-		// 	"-mn", "dasf",
-		// 	"--time");
-		// TODO - is this ok?
-		
+		File modelFile = TestUtils.createTempFile("model", ".jar");
 
 		mockMain(
 				Train.CMD_NAME,
-				"--data-set", PrecomputedDatasets.Classification.getMissingDataDS().toString(), // preComDS.getAbsolutePath(),
-//					"-pr", "Kp_binary_classification",
+				"--data-set", PrecomputedDatasets.Classification.getMissingDataDS().toString(), 
 				"--transformations", "drop-missing-feats", "standardizer:col_max_index=20",
 				"-mo", modelFile.getAbsolutePath(),
+				"--verbose",
 				"--time"
 		);
 		
@@ -201,7 +187,7 @@ public class TestACPClassification extends CLIBaseTest {
 		//		Assert.assertTrue(descriptorsList.get(0) instanceof UserSuppliedDescriptor);
 		//		Assert.assertTrue(((UserSuppliedDescriptor) descriptorsList.get(0)).getPropertyNames().contains("PSA"));
 		//		Assert.assertTrue(((UserSuppliedDescriptor) descriptorsList.get(0)).getPropertyNames().size()>20); // A bunch of them in there!
-		//				printLogs();
+						// printLogs();
 	}
 
 	@Test
@@ -211,6 +197,7 @@ public class TestACPClassification extends CLIBaseTest {
 		
 		// Train - here it should fail!
 		expectExit(ExitStatus.USER_ERROR);
+		// exit.checkAssertionAfterwards(new PrintSysOutput(true));
 		exit.checkAssertionAfterwards(new AssertSysErrContainsString("missing", "data", "feature"));
 		try {
 			mockMain(new String[] {
@@ -310,11 +297,9 @@ public class TestACPClassification extends CLIBaseTest {
 				Precompute.CMD_NAME,
 				"-mt", PRECOMPUTE_CLASSIFICATION,
 				"-cd", calib.format(), calib.uri().toString(), 
-				//  AmesBinaryClass.FILE_FORMAT, AmesBinaryClass.MINI_FILE_PATH,
 				"-md", proper.format(), proper.uri().toString(), 
-				// AmesBinaryClass.FILE_FORMAT, AmesBinaryClass.SMALL_FILE_PATH,
-				"--labels", getLabelsArg(proper.labels()), // AmesBinaryClass.LABELS_STRING,
-				"-pr", proper.property(), // AmesBinaryClass.PROPERTY,
+				"--labels", getLabelsArg(proper.labels()),
+				"-pr", proper.property(),
 				"-mo", precompFile.getAbsolutePath(),
 				"--time"
 		);
@@ -758,7 +743,7 @@ public class TestACPClassification extends CLIBaseTest {
 				"-mn", "model-name",
 				"--seed", "42",
 				"--percentiles", ""+numPercentiles,
-				"--percentiles-data", percentilesData.format(), percentilesData.uri().toString() // AmesBinaryClass.FILE_FORMAT, AmesBinaryClass.MINI_FILE_PATH
+				"--percentiles-data", percentilesData.format(), percentilesData.uri().toString()
 				);
 
 
@@ -845,9 +830,9 @@ public class TestACPClassification extends CLIBaseTest {
 				"--echo",
 				"-mt", PRECOMPUTE_CLASSIFICATION,
 				"-mo",dataFile.getAbsolutePath(),
-				"-td", ames.format(), ames.uri().toString(), // TRAIN_FORMAT, TRAIN_FILE,
-				"-pr", ames.property(), // AmesBinaryClass.PROPERTY,
-				"--labels", getLabelsArg(ames.labels()), //AmesBinaryClass.LABELS_STRING,
+				"-td", ames.format(), ames.uri().toString(),
+				"-pr", ames.property(),
+				"--labels", getLabelsArg(ames.labels()),
 				"-mn", "sdagas",
 				"--descriptors", "ALOGPDescriptor","VABCDescriptor","XLogPDescriptor","TPSADescriptor", "signatures-descriptor:1:1"
 		);
@@ -865,7 +850,7 @@ public class TestACPClassification extends CLIBaseTest {
 				"-sc", LinearSVC.ALG_NAME, 
 				"-mn", "sdagas",
 				"--percentiles", "25",
-				"--percentiles-data", percentilesData.format(), percentilesData.uri().toString() //TRAIN_FORMAT, TRAIN_FILE
+				"--percentiles-data", percentilesData.format(), percentilesData.uri().toString()
 		);
 
 		systemOutRule.clearLog();
@@ -877,7 +862,6 @@ public class TestACPClassification extends CLIBaseTest {
 				"-co", TestUtils.toString(confs, ' '), 
 				"-cg",
 				"-of", "json",
-				//					"-p", "tsv", SOLUBILITY_10_FILE_PATH,
 		});
 
 		//			printLogs();

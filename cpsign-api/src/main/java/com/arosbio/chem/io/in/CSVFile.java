@@ -159,7 +159,7 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 	public Map<String, Object> getProperties() {
 		Map<String,Object> prop = new HashMap<>();
 		prop.put("uri", uri.toString());
-		prop.put("fileFormat", getFileFormat());
+		prop.put("fileFormat", FORMAT_NAME);
 		prop.put("delimiter", delimiter);
 		prop.put("recordSeparator", recordSeparator);
 		prop.put("ignoreEmptyLines", ignoreEmptyLines);

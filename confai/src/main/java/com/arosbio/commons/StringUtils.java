@@ -166,7 +166,7 @@ public class StringUtils {
 	}
 
 	public static String handlePlural(String txt,int num) {
-		if (num>0)
+		if (num>1)
 			return txt+"s";
 		return txt;
 	}

@@ -11,7 +11,6 @@ package com.arosbio.cpsign.app;
 
 import java.io.IOException;
 
-import org.apache.commons.text.WordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,16 +33,16 @@ import com.arosbio.cpsign.app.params.mixins.OutputJARMixin;
 import com.arosbio.cpsign.app.params.mixins.ProgramProgressMixin;
 import com.arosbio.cpsign.app.params.mixins.TransformerMixin;
 import com.arosbio.cpsign.app.utils.CLIConsole;
+import com.arosbio.cpsign.app.utils.CLIConsole.ParamComb;
+import com.arosbio.cpsign.app.utils.CLIConsole.PrintMode;
 import com.arosbio.cpsign.app.utils.CLIProgramUtils;
 import com.arosbio.cpsign.app.utils.CLIProgressBar;
+import com.arosbio.cpsign.app.utils.CLIProgressBar.SupportsProgressBar;
 import com.arosbio.cpsign.app.utils.MissingParam;
 import com.arosbio.cpsign.app.utils.NullProgress;
 import com.arosbio.cpsign.app.utils.ParameterUtils;
-import com.arosbio.cpsign.app.utils.ProgramTimer;
-import com.arosbio.cpsign.app.utils.CLIConsole.ParamComb;
-import com.arosbio.cpsign.app.utils.CLIConsole.PrintMode;
-import com.arosbio.cpsign.app.utils.CLIProgressBar.SupportsProgressBar;
 import com.arosbio.cpsign.app.utils.ParameterUtils.ArgumentType;
+import com.arosbio.cpsign.app.utils.ProgramTimer;
 import com.arosbio.cpsign.out.OutputNamingSettings;
 import com.arosbio.cpsign.out.OutputNamingSettings.PB;
 import com.arosbio.cpsign.out.OutputNamingSettings.ProgressInfoTexts;
@@ -261,7 +260,7 @@ public class Precompute implements RunnableCmd, SupportsProgressBar {
 
 	private void saveData(ChemDataset chemData) {
 		
-		console.print(WordUtils.wrap("Saving precomputed data set to file:%n" + outputSection.modelFile + ProgressInfoTexts.SPACE_ELLIPSES, console.getTextWidth()).trim(), 
+		console.print(("Saving precomputed data set to file:%n" + outputSection.modelFile + ProgressInfoTexts.SPACE_ELLIPSES).trim(), 
 				PrintMode.NORMAL);
 
 		// Write precomputed data to file

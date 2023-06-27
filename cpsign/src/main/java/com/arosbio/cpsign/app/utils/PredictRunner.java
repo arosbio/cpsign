@@ -172,7 +172,7 @@ public class PredictRunner {
 			numSuccessfulPreds = doPredict(predictionsWriter);
 
 		} catch (IOException e) {
-			LOGGER.debug("Failed closing the results outputter",e);
+			LOGGER.debug("Failed closing the results outputter",e); 
 			console.printlnWrappedStdErr("Could not properly close the result file, not all predictions might have successfully have been writen to file", 
 					PrintMode.NORMAL);
 		}
@@ -221,7 +221,8 @@ public class PredictRunner {
 				mol = ChemFileParserUtils.parseSMILES(toPredict.toPredict.smilesToPredict); // we do CDKConfigureAtomContainer.applyAromaticitySuppressHydrogens within this method
 				CPSignMolProperties.setRecordIndex(mol,smilesID);
 			} catch (InvalidSmilesException e){
-				console.failWithArgError("Input to parameter --smiles '"+toPredict.toPredict.smilesToPredict+"' could not be parsed as a valid SMILES");
+				trackError(-1, smilesID, e, toPredict.toPredict.smilesToPredict);
+				console.failWithArgError("Input to parameter --smiles: '"+toPredict.toPredict.smilesToPredict+"' could not be parsed as a valid SMILES");
 			}
 
 			// Predict it
@@ -269,7 +270,7 @@ public class PredictRunner {
 					
 					predictionFromFileDone=true;
 					numSuccessfulPreds++;
-				} catch(Exception e){
+				} catch (Exception e){
 					trackError(index, id, e, id);
 				} finally {
 					molIterationCounter++;
