@@ -606,8 +606,8 @@ public class CLIProgramUtils {
 				LOGGER.debug("Failed with Exception", e);
 				console.failWithArgError(e.getMessage());
 			}
-			console.printlnWrapped("Loaded precomputed data set with " + predictor.getDataset().getNumRecords()
-			+ " records and " + predictor.getDataset().getNumAttributes() + " features.", PrintMode.NORMAL);
+			console.printlnWrapped("Loaded precomputed data set with %d records and %d features.", PrintMode.NORMAL, 
+				predictor.getDataset().getNumRecords(),predictor.getDataset().getNumAttributes());
 			
 			pb.stepProgress();
 		}

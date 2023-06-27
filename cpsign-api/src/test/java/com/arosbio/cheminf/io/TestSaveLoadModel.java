@@ -251,6 +251,9 @@ public class TestSaveLoadModel extends UnitTestBase {
 		Assert.assertEquals("random_name", loadedInfo.getName());
 		Assert.assertEquals(inf, loadedInfo);
 
+		// Check model-io
+		Map<String,String> info = ModelIO.getModelInfo(modelFile.toURI(), true);
+		System.err.println(info);
 	}
 
 	@Test
@@ -275,6 +278,9 @@ public class TestSaveLoadModel extends UnitTestBase {
 		Assert.assertEquals(start, d.getStartHeight());
 		Assert.assertEquals(stop, d.getEndHeight());
 
+		// Check model-io
+		Map<String,String> info = ModelIO.getModelInfo(tmpPrecom.toURI(), true);
+		System.err.println(info);
 	}
 
 	@Test

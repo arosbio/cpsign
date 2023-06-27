@@ -455,6 +455,13 @@ public class ModelIO {
             info.put("Observations used", CollectionUtils
                     .getArbitratyDepth(parametersSection, PropertyNameSettings.NUM_OBSERVATIONS_KEY, UNKNOWN_PARAMETER)
                     .toString());
+            info.put("Number of features", CollectionUtils
+                    .getArbitratyDepth(parametersSection, PropertyNameSettings.NUM_FEATURES_KEY, UNKNOWN_PARAMETER)
+                    .toString());
+            if (mt == ModelType.CHEM_PREDICTOR){
+                // Percentiles only set in chem predictors, not data sets or sparse predictors
+                info.put("Supports prediction images", supportPredictionImages(parametersSection));
+            }
             if (mt != ModelIO.ModelType.PRECOMPUTED_DATA) {
                 // Seed only set if predictor (i.e. not precomputed data)
                 info.put("Seed used", CollectionUtils
@@ -464,6 +471,14 @@ public class ModelIO {
         }
 
         return info;
+    }
+
+    private static String supportPredictionImages(Map<String, Object> props){
+        if (CollectionUtils.getArbitratyDepth(props, PropertyNameSettings.LOW_PERCENTILE_KEY, null) != null && 
+            CollectionUtils.getArbitratyDepth(props, PropertyNameSettings.HIGH_PERCENTILE_KEY, null) != null){
+            return "Yes";
+        }
+        return "No";
     }
 
     public static Map<String, Object> getCPSignProperties(URI modelUri) throws IOException {

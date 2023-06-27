@@ -26,15 +26,12 @@ public class MetaFileUtils {
 	
 	public static void writePropertiesToStream(OutputStream ostream, Map<String,Object> properties) throws IOException {
 		IOUtils.write(new JsonObject(properties).toJson(), ostream, IOSettings.CHARSET);
-//		IOUtils.write(JSONObject.toJSONString(properties), ostream, IOSettings.CHARSET);
 	}
 	
-//	@SuppressWarnings("unchecked")
 	public static Map<String,Object> readPropertiesFromStream(InputStream istream) throws IOException {
 		String rawData = IOUtils.toString(istream,IOSettings.CHARSET);
 		try {
 			return (JsonObject) Jsoner.deserialize(rawData);
-//			return (Map<Object, Object>) new JSONParser().parse(rawData);
 		} catch (JsonException | ClassCastException e){
 			throw new IOException("Could not parse input as a property-file, read: " + rawData);
 		}
