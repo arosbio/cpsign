@@ -423,7 +423,7 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 				IOUtils.closeQuietly(predWriter); // have to close it (in case Sys-out is controlled)
 				CLIProgramUtils.failWithBadUserInputFile(console, molIterator.getNumOKMols(), 
 					predictFile, progressTracker.getFailures(), predictor.getDataset(), validationEndpoint, 
-					labels, earlyTermination.maxFailuresAllowed);
+					labels, earlyTermination.maxFailuresAllowed, listFailedRecordsMixin.listFailedRecords);
 			}
 
 			Pair<IAtomContainer, Double> molRecord=null;
@@ -456,7 +456,8 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 					// This likely means bad parameters was sent - need to give a good error output
 					LOGGER.error("Failed with earlyLoadingStopException will try to generate a better error message",e);
 					IOUtils.closeQuietly(predWriter); // have to close it (in case Sys-out is controlled)
-					CLIProgramUtils.failWithBadUserInputFile(console, successCount, predictFile, progressTracker.getFailures(), predictor.getDataset(), validationEndpoint, null, earlyTermination.maxFailuresAllowed);
+					CLIProgramUtils.failWithBadUserInputFile(console, successCount, predictFile, progressTracker.getFailures(), predictor.getDataset(), 
+						validationEndpoint, null, earlyTermination.maxFailuresAllowed, listFailedRecordsMixin.listFailedRecords);
 				} catch (Exception e) {
 					LOGGER.debug("Failed molecule due to generic exception", e);
 					progressTracker.register(new FailedRecord.Builder(index,Cause.UNKNOWN).withID(id).withReason(e.getMessage()).build());
@@ -475,14 +476,14 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 			LOGGER.error("Failed with earlyLoadingStopException will try to generate a better error message",e);
 			IOUtils.closeQuietly(predWriter); // have to close it (in case Sys-out is controlled)
 			CLIProgramUtils.failWithBadUserInputFile(console, successCount, predictFile, progressTracker.getFailures(), 
-				predictor.getDataset(), validationEndpoint, null, earlyTermination.maxFailuresAllowed);
+				predictor.getDataset(), validationEndpoint, null, earlyTermination.maxFailuresAllowed, listFailedRecordsMixin.listFailedRecords);
 		}
 
 		if (!predictionDone){
 			LOGGER.debug("No molecules were predicted, with {} record failures: {}", progressTracker.getNumFailures(), progressTracker.getFailures());
 			IOUtils.closeQuietly(predWriter); // have to close it (in case Sys-out is controlled)
 			CLIProgramUtils.failWithBadUserInputFile(console, 0, predictFile, progressTracker.getFailures(), 
-				predictor.getDataset(), validationEndpoint, labels, earlyTermination.maxFailuresAllowed);
+				predictor.getDataset(), validationEndpoint, labels, earlyTermination.maxFailuresAllowed, listFailedRecordsMixin.listFailedRecords);
 		}
 			
 

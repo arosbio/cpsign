@@ -118,6 +118,7 @@ public class TestCSVFile {
 
 	@Test
 	public void testExcelInput_and_BOM_behavior() throws IOException {
+		// Note - before we had to specifically set to read the BOM, now we remove it if there is one (automagically)
 		CSVCmpdData csv = TestResources.Reg.getSolubility_10_excel();
 
 		ChemDataset dataset = new ChemDataset();
@@ -130,21 +131,9 @@ public class TestCSVFile {
 			MolAndActivityConverter molConv = MolAndActivityConverter.Builder.regressionConverter(iter,csv.property()).build();
 		) {
 			dataset.add(molConv);
-			Assert.fail("should not work without having read the BOM");
 		} catch (IllegalArgumentException e){
 		}
-		// System.err.println(dataset);
-
-		// now set to read the BOM
-		csvFile.setHasBOM(true);
-		try (
-			ChemFileIterator iter = csvFile.getIterator();
-			MolAndActivityConverter molConv = MolAndActivityConverter.Builder.regressionConverter(iter,csv.property()).build();
-		) {
-			dataset.add(molConv);
-		} catch (IllegalArgumentException e){
-		}
-		// System.err.println(dataset);
+		Assert.assertEquals(csv.numValidRecords(), dataset.size());
 
 	}
 

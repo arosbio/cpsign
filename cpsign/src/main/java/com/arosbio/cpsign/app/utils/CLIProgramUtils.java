@@ -737,7 +737,7 @@ public class CLIProgramUtils {
 		} catch (Exception e){
 			allFailedRecords.addAll(sp.getProgressTracker().getFailures()); // Add failures from the current file
 			LOGGER.debug("Failed parsing in chemical input data, will try to compile a good error message");
-			failWithBadUserInputFile(console, sp.getNumRecords(), currentFile, allFailedRecords, sp, endpoint, nl, maxNumAllowedFailures);
+			failWithBadUserInputFile(console, sp.getNumRecords(), currentFile, allFailedRecords, sp, endpoint, nl, maxNumAllowedFailures, listFailed);
 		}
 		
 		if (nl != null) {
@@ -829,13 +829,10 @@ public class CLIProgramUtils {
 		// Write out info in the end
 		StringBuilder extraInfoBuilder = new StringBuilder();
 		
-		if (listFailed) {
-			
-			appendFailedMolsInfo(extraInfoBuilder, info.getFailedRecords());
-			
-			if (extraInfoBuilder.length() > 0)
+		if (listFailed && info.getFailedRecords().size()>0) {
 			extraInfoBuilder.append("%n");
-			
+			appendFailedMolsInfo(extraInfoBuilder, info.getFailedRecords());
+			extraInfoBuilder.append("%n");
 		} else {
 			// Count the number of failures
 			int numFailed = info.getFailedRecords().size(); 
@@ -915,8 +912,11 @@ public class CLIProgramUtils {
 	
 	public static void appendFailedMolsInfo(StringBuilder sb, Collection<FailedRecord> records) {
 		List<FailedRecord> sortedUnique = CollectionUtils.getUniqueAndSorted(records);
+		if (!sortedUnique.isEmpty()){
+			sb.append("Failed records (indices starts at 0):");
+		}
 		for (FailedRecord r : sortedUnique) {
-			sb.append("%nRecord ");
+			sb.append("%n - Record ");
 			sb.append(r.getIndex());
 			if (r.hasID()) {
 				sb.append(" {").append(r.getID()).append('}');
@@ -1629,21 +1629,30 @@ public class CLIProgramUtils {
 	}
 	
 	public static void failWithBadUserInputFile(CLIConsole console, int numOK, ChemFile inputFile, 
-	List<FailedRecord> failedRecords, ChemDataset dataset, String property, NamedLabels givenLabels, int numMaxAllowedFailures) {
+	List<FailedRecord> failedRecords, ChemDataset dataset, String property, NamedLabels givenLabels, int numMaxAllowedFailures, boolean listFailed) {
 
 		if (failedRecords== null || failedRecords.isEmpty()){
 			failWithBadUserInputFileNoFailedRecords(console, numOK, inputFile, dataset, property, givenLabels, numMaxAllowedFailures);
 		}
 
-		StringBuilder errMessage = new StringBuilder("ERROR: ");
+		StringBuilder errMessage = new StringBuilder();
+
+		// If listing of failures, use only one from the current ProgressTracker (if any earlier, they should already have been listed)
+		if (listFailed){
+			appendFailedMolsInfo(errMessage, dataset.getProgressTracker().getFailures());
+			errMessage.append("%n");
+		}
+
+		
+		errMessage.append("%nERROR: ");
 		
 		Map<Cause,Integer> failureCounts = getCounts(failedRecords);
 		// Sort the Map by values
         List<Map.Entry<Cause, Integer>> entries = new ArrayList<>(failureCounts.entrySet());
         entries.sort(Map.Entry.<Cause, Integer>comparingByValue());
 
-		// Check the most common issue
-		Map.Entry<Cause,Integer> first = entries.get(0);
+		// Check the most common issue (the last index, sorted in ascending order)
+		Map.Entry<Cause,Integer> first = entries.get(entries.size()-1);
 
 		switch(first.getKey()){
 			case LOW_HAC:
@@ -1691,7 +1700,9 @@ public class CLIProgramUtils {
 			case INVALID_RECORD:
 				errMessage
 					.append(first.getValue())
-					.append(" records were discarded due to descriptor calculation failures, perhaps there is a bug in one or several of the descriptors that was specified.");
+					.append(" record")
+					.append(first.getValue()>1? "s":"")
+					.append(" were discarded due to descriptor calculation failures, perhaps there is a bug in one or several of the descriptors that was specified.");
 				break;
 			case INVALID_STRUCTURE:
 				errMessage
@@ -1705,7 +1716,7 @@ public class CLIProgramUtils {
 						.append(" records were discarded due to missing property values");
 				} else {
 					// No valid records found, perhaps we can give more details
-					errMessage.append("No records had the given property (").append(property).append(')');
+					errMessage.append("No records had the given property '").append(property).append('\'');
 
 					// check the first 10 records to find the properties that exists
 					List<String> propsInFirst10 = null;
@@ -1806,7 +1817,7 @@ public class CLIProgramUtils {
 				.append(" to either '-1' (to turn of early termination) or to a higher value than currently set to");
 		}
 
-		console.println(errMessage.toString(), PrintMode.SILENT);
+		console.printlnWrapped(errMessage.toString(), PrintMode.SILENT);
 		console.failWithArgError("Invalid arguments"); // fail with generic message, error message written to std-out to support ANSI coloring
 	}
 
@@ -1925,25 +1936,25 @@ public class CLIProgramUtils {
 		}
 
 		// 6. There is a BOM (byte order mark) in the file, but not configured to having one
-		try {
-			boolean hasBOM = UriUtils.hasBOM(inputFile.getURI());
-			if (hasBOM & inputFile instanceof CSVFile){
-				if (! ((CSVFile)inputFile).getHasBOM()){
-					LOGGER.debug("The file has a BOM and CSV-file not configured to parse the BOM");
-					errMessage.append("The input file:%n")
-						.append(inputFile.getURI())
-						.append("%nhas a Byte Order Mark (BOM) while the parameter for BOM was not set to true, see ");
-					appendExplainChemFormat(errMessage);
+		// try {
+		// 	boolean hasBOM = UriUtils.hasBOM(inputFile.getURI());
+		// 	if (hasBOM & inputFile instanceof CSVFile){
+		// 		if (! ((CSVFile)inputFile).getHasBOM()){
+		// 			LOGGER.debug("The file has a BOM and CSV-file not configured to parse the BOM");
+		// 			errMessage.append("The input file:%n")
+		// 				.append(inputFile.getURI())
+		// 				.append("%nhas a Byte Order Mark (BOM) while the parameter for BOM was not set to true, see ");
+		// 			appendExplainChemFormat(errMessage);
 
-					errMessage.append(" for further details on the available parameters.%n");
-				}
-			}
-		} catch (IOException e){
-			LOGGER.debug("Failed to check if the input file had a BOM, this means there's like likely something wrong with the file itself",e);
-			errMessage.append("Could not read from the given input file:%n")
-				.append(inputFile.getURI()).append("%nPlease verify that the file itself is valid");
-		}
-		failInCaseErrMessageBeenGenerated(console, errMessage);
+		// 			errMessage.append(" for further details on the available parameters.%n");
+		// 		}
+		// 	}
+		// } catch (IOException e){
+		// 	LOGGER.debug("Failed to check if the input file had a BOM, this means there's like likely something wrong with the file itself",e);
+		// 	errMessage.append("Could not read from the given input file:%n")
+		// 		.append(inputFile.getURI()).append("%nPlease verify that the file itself is valid");
+		// }
+		// failInCaseErrMessageBeenGenerated(console, errMessage);
 
 
 		LOGGER.debug("Failed to deduce what was wrong with the user argument, will instead give a generic error");

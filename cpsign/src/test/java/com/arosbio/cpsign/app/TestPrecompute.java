@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.JarFile;
@@ -1076,4 +1077,71 @@ public class TestPrecompute extends CLIBaseTest {
 		// printLogs();
  	}
 
+	@Test
+	public void testAmesWithInvalidRecsEarlyTermination() throws Exception {
+		
+		// with -1 termination no termination - will generate a precomputed file with some recs
+		CSVCmpdData errData = TestResources.Cls.getErroneous();
+		File out = TestUtils.createTempFile("dsagf", ".jar");
+		mockMain(Precompute.CMD_NAME,
+			"-td", errData.format(), "delim="+errData.delim(), errData.uri().toString(),
+			"-cd", errData.format(), "delim="+errData.delim(), errData.uri().toString(),
+			"-md", errData.format(), "delim="+errData.delim(), errData.uri().toString(),
+			"--property", errData.property(),
+			"-mo", out.getAbsolutePath(),
+			"--labels", getLabelsArg(errData.labels()),
+			"--early-termination", "-1",
+			"--list-failed"	
+		);
+
+		// printLogs();
+		ChemDataset precomputed = ModelSerializer.loadDataset(out.toURI(), null);
+		Assert.assertEquals(errData.numValidRecords(), precomputed.getDataset().size());
+		Assert.assertEquals(errData.numValidRecords(), precomputed.getCalibrationExclusiveDataset().size());
+		Assert.assertEquals(errData.numValidRecords(), precomputed.getModelingExclusiveDataset().size());
+
+		// Do it again with a lower number of allowed errors
+		Files.delete(out.toPath());
+		systemErrRule.clearLog();
+		systemOutRule.clearLog();
+
+		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
+		// exit.checkAssertionAfterwards(new PrintSysOutput());
+
+		mockMain(Precompute.CMD_NAME,
+			"-td", errData.format(), "delim="+errData.delim(), errData.uri().toString(),
+			"-cd", errData.format(), "delim="+errData.delim(), errData.uri().toString(),
+			"-md", errData.format(), "delim="+errData.delim(), errData.uri().toString(),
+			"--property", errData.property(),
+			"-mo", out.getAbsolutePath(),
+			"--labels", getLabelsArg(errData.labels()),
+			"--early-termination", "2", // should pass the 2 errors in train-data file and fail afterwards
+			"--list-failed"	
+		);
+	}
+
+
+	@Test
+	public void testRegressionCSVEarlyTerminationMissingBOM() throws Exception {
+		
+		// with -1 termination no termination - BUT we miss the BOM and thus no records has a valid property
+		CSVCmpdData errData = TestResources.Reg.getErroneous();
+		File out = TestUtils.createTempFile("dsagf", ".jar");
+
+		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
+		exit.checkAssertionAfterwards(new AssertSysOutContainsString("Record 0", "Record 1", "Invalid", "ERROR"));
+		// exit.checkAssertionAfterwards(new PrintSysOutput());
+
+		mockMain(Precompute.CMD_NAME,
+			"-td", errData.format(), "delim="+errData.delim(), errData.uri().toString(),
+			"-cd", errData.format(), "delim="+errData.delim(), errData.uri().toString(),
+			"-md", errData.format(), "delim="+errData.delim(), errData.uri().toString(),
+			"-mt", PRECOMPUTE_REGRESSION,
+			"--property", errData.property(),
+			"-mo", out.getAbsolutePath(),
+			"--early-termination", "1",
+			"--list-failed"	
+		);
+
+	}
 }

@@ -21,7 +21,7 @@ import org.openscience.cdk.silent.SilentChemObjectBuilder;
 
 import com.arosbio.commons.mixins.Described;
 import com.arosbio.commons.mixins.Named;
-import com.arosbio.io.StreamUtils;
+import com.arosbio.io.UriUtils;
 
 public class SDFile implements ChemFile, Described, Named {
 
@@ -53,7 +53,7 @@ public class SDFile implements ChemFile, Described, Named {
 	@Override
 	public SDFReader getIterator() throws IOException {
 		try {
-			return new SDFReader(StreamUtils.unZIP(uri.toURL().openStream()), SilentChemObjectBuilder.getInstance());
+			return new SDFReader(UriUtils.getInputStream(uri), SilentChemObjectBuilder.getInstance());
 		} catch (MalformedURLException e) {
 			throw new IOException(e.getMessage());
 		}
@@ -68,7 +68,7 @@ public class SDFile implements ChemFile, Described, Named {
 	public int countNumRecords() throws IOException {
 		int records = 0;
 		try (
-				BufferedReader reader = new BufferedReader(new InputStreamReader(StreamUtils.unZIP(uri.toURL().openStream()))) ) {
+				BufferedReader reader = new BufferedReader(new InputStreamReader(UriUtils.getInputStream(uri))) ) {
 			String line;
 			while ((line = reader.readLine()) != null) {
 				if ( line.startsWith("$$$$") )

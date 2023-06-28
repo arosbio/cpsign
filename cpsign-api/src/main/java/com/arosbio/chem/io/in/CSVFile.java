@@ -11,7 +11,6 @@ package com.arosbio.chem.io.in;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URI;
@@ -22,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.io.input.BOMInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +33,7 @@ import com.arosbio.commons.config.StringConfig;
 import com.arosbio.commons.config.StringListConfig;
 import com.arosbio.commons.mixins.Described;
 import com.arosbio.commons.mixins.Named;
-import com.arosbio.io.StreamUtils;
+import com.arosbio.io.UriUtils;
 
 public class CSVFile implements ChemFile, Named, Described, Configurable {
 	
@@ -59,7 +57,6 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 	private boolean ignoreEmptyLines = true;
 	private Character commentMarker = null;
 	private String[] userSpecifiedHeader = null;
-	private boolean includesBOM = false;
 	private Boolean skipFirstRow = null;
 	private String explicitSmilesHeader = null;
 	
@@ -117,12 +114,13 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 		return this;
 	}
 
+	@Deprecated
 	public CSVFile setHasBOM(boolean hasBOM) {
-		this.includesBOM = hasBOM;
 		return this;
 	}
+	@Deprecated
 	public boolean getHasBOM(){
-		return this.includesBOM;
+		return false;
 	}
 
 	/**
@@ -164,7 +162,7 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 		prop.put("recordSeparator", recordSeparator);
 		prop.put("ignoreEmptyLines", ignoreEmptyLines);
 		prop.put("commentMarker", commentMarker);
-		prop.put("includesBOM", includesBOM);
+		// prop.put("includesBOM", false);
 		if (userSpecifiedHeader != null)
 			prop.put("givenHeader", Arrays.asList(userSpecifiedHeader));
 		if (skipFirstRow != null)
@@ -178,10 +176,7 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 		CSVFormat f = getFormat();
 
 		try {
-			InputStream is = uri.toURL().openStream();
-			if (includesBOM)
-				is = new BOMInputStream(is);
-			return new CSVChemFileReader(f, new InputStreamReader(StreamUtils.unZIP(is)), explicitSmilesHeader);
+			return new CSVChemFileReader(f, new InputStreamReader(UriUtils.getInputStream(uri)), explicitSmilesHeader);
 		} catch (MalformedURLException e) {
 			throw new IOException(e.getMessage());
 		}
@@ -218,7 +213,7 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 		int lines = (getFormat().getSkipHeaderRecord() ? -1 : 0); 
 
 		try (
-				BufferedReader reader = new BufferedReader(new InputStreamReader(StreamUtils.unZIP(uri.toURL().openStream()))) ) {
+				BufferedReader reader = new BufferedReader(new InputStreamReader(UriUtils.getInputStream(uri))) ) {
 			String line;
 			if (commentMarker != null) {
 				while ((line = reader.readLine()) != null) {
@@ -255,7 +250,7 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 	public List<ConfigParameter> getConfigParameters() {
 		List<ConfigParameter> list = new ArrayList<>();
 		list.add(new BooleanConfig.Builder(CONF_BOM, false)
-			.description("If the file contains a byte order mark (BOM)")
+			.description("DEPRECATED: Now CPSign will check for a BOM and read it in case there is one. You do not have to set this manually, it will be removed in a future release.")
 			.build());
 		list.add(new CharConfig.Builder(CONF_COMMENT_MARKER, null)
 			.description("Specify a character that marks a row as a comment (as allowed in some CSV formats)")
@@ -305,8 +300,6 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 					}
 				} else if (CollectionUtils.containsIgnoreCase(CONF_DELIM,key)){
 					delimiter = TypeUtils.asChar(kv.getValue());
-				} else if (CollectionUtils.containsIgnoreCase(CONF_BOM,key)){
-					includesBOM = TypeUtils.asBoolean(kv.getValue());
 				}
 			} catch (Exception e) {
 				LOGGER.debug("failed setting config with key{"+kv.getKey() +"} and value {"+kv.getValue()+"}",e);

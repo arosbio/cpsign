@@ -202,7 +202,10 @@ public class UriUtils {
 	 * @throws IOException any issues reading from {@code uri} parameter
 	 */
 	public static InputStream getInputStream(URI uri) throws IOException {
-		return uri.toURL().openStream();
+		if (hasBOM(uri)){
+			return StreamUtils.unZIP(new BOMInputStream(uri.toURL().openStream()));
+		} 
+		return StreamUtils.unZIP(uri.toURL().openStream());
 	}
 
 	public static boolean canReadFromURI(URI uri) {

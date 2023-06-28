@@ -18,7 +18,7 @@ import java.util.Map;
 import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.mixins.Described;
 import com.arosbio.commons.mixins.Named;
-import com.arosbio.io.StreamUtils;
+import com.arosbio.io.UriUtils;
 
 public class JSONFile implements ChemFile, Described, Named {
 	
@@ -48,14 +48,14 @@ public class JSONFile implements ChemFile, Described, Named {
 	public Map<String, Object> getProperties() {
 		Map<String,Object> prop = new HashMap<>();
 		prop.put("uri", uri.toString());
-		prop.put("fileFormat", getFileFormat());
+		prop.put("fileFormat", FORMAT_NAME);
 		return prop;
 	}
 
 	@Override
 	public JSONChemFileReader getIterator() throws IOException {
 		try {
-			return new JSONChemFileReader(StreamUtils.unZIP(uri.toURL().openStream()));
+			return new JSONChemFileReader(UriUtils.getInputStream(uri));
 		} catch (MalformedURLException e) {
 			throw new IOException(e.getMessage());
 		} catch (IOException e) {

@@ -361,12 +361,16 @@ public class TestResources {
 		 * @return a dataset with 7 valid records and 3 invalid ones
 		 */
 		public static CmpdData getAmes10WithInvalidRecords(){
-			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_10.invalid.sdf"), Format.SDF, PROPERTY, 7, 3, AMES_LABELS)
+			return CmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_10.invalid.sdf"), Format.SDF, PROPERTY, 7, 3, AMES_LABELS)
 				.build();
 		}
 
+		/**
+		 * 2 invalid records in total; one row with non-valid smiles (and no property), and one smiles with missing property.
+		 * @return
+		 */
 		public static CSVCmpdData getErroneous(){
-			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"missing_activities.csv"), "solubility(fake!)", 17, 0, Arrays.asList("POS","NEG"))
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"missing_activities.csv"), "solubility(fake!)", 17, 2, Arrays.asList("POS","NEG"))
 				.delim('\t').build();
 		}
 
