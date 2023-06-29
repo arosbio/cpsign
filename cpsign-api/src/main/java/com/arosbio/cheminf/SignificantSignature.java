@@ -9,6 +9,7 @@
  */
 package com.arosbio.cheminf;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,10 +46,11 @@ public class SignificantSignature {
 		List<SparseFeature> fullGradient){
 		this.signature = signature;
 		this.height = height;
-		this.molGradient = molGradient;
-		this.atomsMatchingSignature = atomsMatchingSignature;
-		this.additionalFeaturesGradient = additionalFeaturesGradient;
-		this.fullGradient = fullGradient;
+		// Make sure all value below are non-null
+		this.molGradient = (molGradient!= null ? molGradient : Collections.emptyMap());
+		this.atomsMatchingSignature = (atomsMatchingSignature!=null ? atomsMatchingSignature : Collections.emptySet());
+		this.additionalFeaturesGradient = (additionalFeaturesGradient!=null ? additionalFeaturesGradient : Collections.emptyMap());
+		this.fullGradient = (fullGradient!=null ? fullGradient : Collections.emptyList());
 	}
 
 	public static class Builder {

@@ -34,6 +34,8 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.openscience.cdk.exception.CDKException;
 import org.openscience.cdk.interfaces.IAtomContainer;
+import org.openscience.cdk.silent.SilentChemObjectBuilder;
+import org.openscience.cdk.smiles.SmilesParser;
 
 import com.arosbio.chem.io.out.image.RendererTemplate.MolRendering;
 import com.arosbio.chem.io.out.image.RendererTemplate.RenderInfo;
@@ -405,6 +407,30 @@ public class TestMoleculeDepiction extends UnitTestBase {
 		g.drawLine(3, 3, 3, 15);
 		g.dispose();
 		ImageIO.write(img, "png", new File(imageOutputFolder, "line.png"));
+	}
+
+	@Test
+	public void testRealThing()throws Exception {
+
+		ColorGradient grad = GradientFactory.getDefaultBloomGradient();
+		AtomContributionRenderer renderer = new AtomContributionRenderer.Builder()
+			.colorScheme(grad)
+			.width(500)
+			.height(500)
+			.addFieldOverMol(new TitleField.Builder().alignment(Vertical.LEFT_ADJUSTED).underline(true).build())
+			.addFieldOverMol(new HighlightExplanationField.Builder(Color.CYAN,"nonmutagen").boxShape(BoxShape.CIRCLE).boxSize(6).build()).build();
+		SmilesParser sp = new SmilesParser(SilentChemObjectBuilder.getInstance());
+		IAtomContainer mol = sp.parseSmiles("C");
+
+		ChemCPClassifier predictor = (ChemCPClassifier) ModelSerializer.loadChemPredictor(PreTrainedModels.ACP_CLF_LIBLINEAR.toURI(), null);
+		predictor.getDataset().setMinHAC(0);
+		SignificantSignature ss = predictor.predictSignificantSignature(mol);
+		Assert.assertTrue(ss.getAtomContributions().isEmpty());
+		Assert.assertTrue(ss.getAtoms().isEmpty());
+		RenderInfo info = new RenderInfo.Builder(mol, ss).build();
+
+		renderer.render(info).saveToFile(new File(imageOutputFolder, "gradientDepiction_C.png"));
+
 	}
 
 

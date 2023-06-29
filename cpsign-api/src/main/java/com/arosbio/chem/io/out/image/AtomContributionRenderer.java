@@ -46,14 +46,16 @@ public class AtomContributionRenderer extends RendererTemplate<AtomContributionR
 
     Map<IAtom,Double> generateColorMapping(IAtomContainer mol, SignificantSignature prediction){
         Map<IAtom, Double> grad = new HashMap<>();
-		for (Map.Entry<?, Double> atom : prediction.getAtomContributions().entrySet()){
-			if (atom.getKey() instanceof IAtom)
-				grad.put((IAtom) atom.getKey(), atom.getValue());
-			else if (atom.getKey() instanceof Integer || atom.getKey() instanceof Long)
-				grad.put(mol.getAtom((Integer) atom.getKey()), atom.getValue());
-			else
-				throw new IllegalArgumentException("Atoms must be specified using either index (integer) or their IAtoms");
-		}
+        if (prediction.getAtomContributions() != null){
+            for (Map.Entry<?, Double> atom : prediction.getAtomContributions().entrySet()){
+                if (atom.getKey() instanceof IAtom)
+                    grad.put((IAtom) atom.getKey(), atom.getValue());
+                else if (atom.getKey() instanceof Integer || atom.getKey() instanceof Long)
+                    grad.put(mol.getAtom((Integer) atom.getKey()), atom.getValue());
+                else
+                    throw new IllegalArgumentException("Atoms must be specified using either index (integer) or their IAtoms");
+            }
+        }
         return grad;
     }
     
