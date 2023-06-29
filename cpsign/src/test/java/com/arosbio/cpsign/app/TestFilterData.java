@@ -22,6 +22,7 @@ import org.junit.experimental.categories.Category;
 
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.TestResources.CmpdData;
+import com.arosbio.tests.TestResources.CSVCmpdData;
 import com.arosbio.tests.suites.CLITest;
 import com.arosbio.tests.utils.TestUtils;
 
@@ -78,5 +79,25 @@ public class TestFilterData extends CLIBaseTest{
 		}
 
 //		printLogs();
+	}
+
+	@Test
+	public void testWithEarlyStopping() throws Exception {
+		CSVCmpdData solubility = TestResources.Reg.getErroneous();
+		File output = TestUtils.createTempFile("datafile", ".csv");
+
+		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
+		// exit.checkAssertionAfterwards(new PrintSysOutput());
+		mockMain(
+				FilterData.CMD_NAME,
+				"-mt", PRECOMPUTE_REGRESSION,
+				"-td", solubility.format(),"delim="+solubility.delim(), solubility.uri().toString(),
+				"-pr", solubility.property(), 
+				"--transformations", "voting", // this doesn't really matter, we shouldn't get that far
+				"-of", "csv",
+				"-o", output.getAbsolutePath(),
+				"--time",
+				"--early-termination", "2"
+				);
 	}
 }

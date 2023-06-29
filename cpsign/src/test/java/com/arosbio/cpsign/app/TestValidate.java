@@ -49,6 +49,7 @@ import com.arosbio.ml.cp.acp.ACPRegressor;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.TestResources.CSVCmpdData;
 import com.arosbio.tests.TestResources.CmpdData;
+import com.arosbio.tests.TestResources.Reg;
 import com.arosbio.tests.suites.CLITest;
 import com.arosbio.tests.utils.TestUtils;
 import com.arosbio.testutils.MockFailingDescriptor;
@@ -192,6 +193,48 @@ public class TestValidate extends CLIBaseTest{
 				"--echo"
 		);
 		// Thread.sleep(100);
+	}
+
+	@Test
+	public void testEarlyStopping() throws Exception {
+		CSVCmpdData predFile = Reg.getErroneous();
+		// by default all should work, but there are errors
+		mockMain(
+				Validate.CMD_NAME,
+				"-cp", "0.5 ", "0.7", "0.9",
+				"-m", PreTrainedModels.ACP_REG_LIBSVM.toString(),
+				"-p", predFile.format(), "delim="+predFile.delim(), predFile.uri().toString(),
+				"-vp", predFile.property(),
+				// "--progress-bar",
+				"-rf", "csv",
+				"--print-predictions",
+				"-of", "csv",
+				"--echo",
+				"--list-failed"
+		);
+		// printLogs();
+		systemErrRule.clearLog();
+		systemOutRule.clearLog();
+
+		// Set a maximum number of failures, now it should fail (4 invalid records)
+		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
+		exit.checkAssertionAfterwards(new AssertSysErrContainsString("Invalid"));
+		exit.checkAssertionAfterwards(new AssertSysOutContainsString("ERROR", "fail"));
+		mockMain(
+				Validate.CMD_NAME,
+				"-cp", "0.5 ", "0.7", "0.9",
+				"-m", PreTrainedModels.ACP_REG_LIBSVM.toString(),
+				"-p", predFile.format(), "delim="+predFile.delim(), predFile.uri().toString(),
+				"-vp", predFile.property(),
+				// "--progress-bar",
+				"-rf", "csv",
+				"--print-predictions",
+				"-of", "csv",
+				"--echo",
+				"--list-failed",
+				"--early-termination", "1"
+		);
+
 	}
 
 

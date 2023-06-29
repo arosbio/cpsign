@@ -24,6 +24,7 @@ import com.arosbio.cpsign.app.params.converters.MLTypeConverters.ClassRegConvert
 import com.arosbio.cpsign.app.params.mixins.ClassificationLabelsMixin;
 import com.arosbio.cpsign.app.params.mixins.ConsoleVerbosityMixin;
 import com.arosbio.cpsign.app.params.mixins.DescriptorsMixin;
+import com.arosbio.cpsign.app.params.mixins.EarlyTerminationMixin;
 import com.arosbio.cpsign.app.params.mixins.EchoMixin;
 import com.arosbio.cpsign.app.params.mixins.EncryptionMixin;
 import com.arosbio.cpsign.app.params.mixins.LogfileMixin;
@@ -32,21 +33,21 @@ import com.arosbio.cpsign.app.params.mixins.OutputChemMixin;
 import com.arosbio.cpsign.app.params.mixins.ProgramProgressMixin;
 import com.arosbio.cpsign.app.params.mixins.TransformerMixin;
 import com.arosbio.cpsign.app.utils.CLIConsole;
+import com.arosbio.cpsign.app.utils.CLIConsole.PrintMode;
+import com.arosbio.cpsign.app.utils.CLIConsole.VerbosityLvl;
 import com.arosbio.cpsign.app.utils.CLIProgramUtils;
 import com.arosbio.cpsign.app.utils.CLIProgressBar;
+import com.arosbio.cpsign.app.utils.CLIProgressBar.SupportsProgressBar;
 import com.arosbio.cpsign.app.utils.MissingParam;
 import com.arosbio.cpsign.app.utils.NullProgress;
 import com.arosbio.cpsign.app.utils.ParameterUtils;
-import com.arosbio.cpsign.app.utils.ProgramTimer;
-import com.arosbio.cpsign.app.utils.CLIConsole.PrintMode;
-import com.arosbio.cpsign.app.utils.CLIConsole.VerbosityLvl;
-import com.arosbio.cpsign.app.utils.CLIProgressBar.SupportsProgressBar;
 import com.arosbio.cpsign.app.utils.ParameterUtils.ArgumentType;
+import com.arosbio.cpsign.app.utils.ProgramTimer;
 import com.arosbio.cpsign.out.OutputNamingSettings;
-import com.arosbio.cpsign.out.PredictionResultsWriter;
-import com.arosbio.cpsign.out.ResultsHandler;
 import com.arosbio.cpsign.out.OutputNamingSettings.PB;
 import com.arosbio.cpsign.out.OutputNamingSettings.ProgressInfoTexts;
+import com.arosbio.cpsign.out.PredictionResultsWriter;
+import com.arosbio.cpsign.out.ResultsHandler;
 import com.arosbio.data.DataRecord;
 import com.arosbio.io.UriUtils;
 
@@ -87,8 +88,6 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 	private CLIConsole console = CLIConsole.getInstance();
 	private CLIProgressBar pb = new NullProgress();
 	private ProgramTimer timer = new ProgramTimer(false, console);
-//	private EncryptionSpecification encryptSpec = null;
-
 
 	/*****************************************
 	 * OPTIONS
@@ -108,15 +107,8 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 			)
 	private ClassOrRegType modeltype = ClassOrRegType.CLASSIFICATION;
 
-	// Data input
-//	@Option(names = { "-mi", "--model-in" },
-//			description = "Model file with precomputed data (old signatures will be used as starting point, records will be ignored)",
-//			paramLabel = ArgumentType.URI_OR_PATH
-//			)
-//	private URI modelFile;
-
 	@Option(names = { "-td", "--train-data" }, 
-			description = "File with molecules in CSV, SDF or JSON format. run @|bold explain chem-formats|@ to get further info.",
+			description = "File with molecules in CSV, SDF or JSON format. run "+ParameterUtils.RUN_EXPLAIN_ANSI_ON+"explain chem-formats|@ to get further info.",
 			paramLabel = ArgumentType.CHEM_FILE_ARGS,
 			parameterConsumer = ChemFileConverter.class)
 	private ChemFile trainFile;
@@ -127,15 +119,8 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 	@Mixin
 	private ClassificationLabelsMixin labelsMix;
 
-	@Option(names= {"--early-termination-after"}, 
-			description = "Early termination stops loading records once passing this number of failed records and fails execution of the program. "
-					+ "Specifying a value less than 0 means there is no early termination and loading will continue until finished. "
-					+ "This number of failures are the threshold applied to each of the three levels of processing (i.e. reading molecules from file, "
-					+ "getting the endpoint activity from the records and CDK-configuration/HeavyAtomCount/descriptor-calculation)%n"+
-					ParameterUtils.DEFAULT_VALUE_LINE,
-					paramLabel = ArgumentType.INTEGER,
-					defaultValue = "-1")
-	private int maxFailuresAllowed = -1;
+	@Mixin
+	private EarlyTerminationMixin earlyTermination = new EarlyTerminationMixin();
 
 	@Option(names = "--min-hac",
 			description="Specify the minimum allowed Heavy Atom Count (HAC) allowed for the records. This serves a s sanity check that parsing from file has been OK.",
@@ -212,7 +197,7 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 		timer.endSection();
 
 
-		// INIT PROBLEM - (Load previous signatures if any)
+		// INIT PROBLEM 
 		ChemDataset sp = new ChemDataset(descriptorSection.descriptors).setKeepMolRef(true); 
 		pb.stepProgress();
 
@@ -247,7 +232,7 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 				console,
 				listFailedMolecules,
 				minHAC,
-				maxFailuresAllowed);
+				earlyTermination.maxFailuresAllowed);
 		timer.endSection();
 
 		if (filterSection.transformers!=null && !filterSection.transformers.isEmpty()) {

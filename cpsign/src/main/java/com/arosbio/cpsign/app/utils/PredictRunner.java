@@ -3,6 +3,7 @@ package com.arosbio.cpsign.app.utils;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 
 import org.openscience.cdk.CDKConstants;
 import org.openscience.cdk.exception.CDKException;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import com.arosbio.chem.CPSignMolProperties;
 import com.arosbio.chem.io.in.ChemFileParserUtils;
+import com.arosbio.chem.io.in.EarlyLoadingStopException;
 import com.arosbio.chem.io.in.FailedRecord;
 import com.arosbio.chem.io.in.FailedRecord.Cause;
 import com.arosbio.chem.io.in.ProgressTracker;
@@ -30,6 +32,7 @@ import com.arosbio.cpsign.app.params.mixins.ConfidencesListMixin;
 import com.arosbio.cpsign.app.params.mixins.OutputChemMixin;
 import com.arosbio.cpsign.app.utils.CLIConsole.ParamComb;
 import com.arosbio.cpsign.app.utils.CLIConsole.PrintMode;
+import com.arosbio.cpsign.app.utils.CLIConsole.VerbosityLvl;
 import com.arosbio.cpsign.out.PredictionImageHandler;
 import com.arosbio.cpsign.out.PredictionImageHandler.GradientImageOpts;
 import com.arosbio.cpsign.out.PredictionImageHandler.SignificantSignatureImageOpts;
@@ -175,37 +178,42 @@ public class PredictRunner {
 			LOGGER.debug("Failed closing the results outputter",e); 
 			console.printlnWrappedStdErr("Could not properly close the result file, not all predictions might have successfully have been writen to file", 
 					PrintMode.NORMAL);
+		} catch (EarlyLoadingStopException e){
+			// we have failed enough times and should exit the program
+			LOGGER.debug("Encountered enough failed records to stop execution", e);
+			CLIProgramUtils.failWithBadUserInputFile(console, -1, toPredict.toPredict.predictFile, 
+				tracker.getFailures(), predictor.getDataset(), predictor.getDataset().getProperty(), null, tracker.getMaxAllowedFailures(), listFailed);
 		}
 
 		// We are done with all predictions
 		String molSingularOrPlural=(numSuccessfulPreds>1 || numSuccessfulPreds==0?"s":"");
-		console.println("%nSuccessfully predicted %s molecule%s", PrintMode.NORMAL,numSuccessfulPreds,molSingularOrPlural);
+		StringBuilder resultInfo = new StringBuilder(String.format(Locale.ENGLISH, "%nSuccessfully predicted %s molecule%s.",numSuccessfulPreds,molSingularOrPlural));
+		
 		
 		// If we had some failing records
 		if (tracker.getNumFailures()>0) {
 			List<FailedRecord> failedRecs = tracker.getFailures();
-			console.println("Failed predicting %s record%s", PrintMode.NORMAL,
-					failedRecs.size(),(failedRecs.size()>1 ? "s":""));
+			resultInfo.append(String.format(Locale.ENGLISH, " Failed predicting %d record%s.", failedRecs.size(),(failedRecs.size()>1 ? "s":"")));
 			
 			if (numMissingDataFails > 0) {
-				console.println("%s record(s) failed due to missing features - please make sure your data pre-processing is correct, consider using e.g. removal of poor descriptors (DropMissingDataFeatures) or impute missing features (SingleFeatImputer)", 
-						PrintMode.VERBOSE, numMissingDataFails);
+				String missingDataInfo = numMissingDataFails + " record(s) failed due to missing features - please make sure your data pre-processing is correct, consider using e.g. removal of poor descriptors (DropMissingDataFeatures) or impute missing features (SingleFeatImputer)%n";
+				if (console.getVerbosity() == VerbosityLvl.VERBOSE){
+					resultInfo.append(missingDataInfo);
+				} else {
+					LOGGER.debug(missingDataInfo);
+				}
 			}
 			
 			if (listFailed) {
-				StringBuilder failedStr = new StringBuilder("Failed the following record(s):%n");
-				for (int i=0; i< failedRecs.size()-1; i++) {
-					failedStr.append(failedRecs.get(i));
-					failedStr.append("%n");
-				}
-				failedStr.append(failedRecs.get(failedRecs.size()-1));
-				console.println(failedStr.toString(), PrintMode.NORMAL);
+				resultInfo.append("%n");
+				CLIProgramUtils.appendFailedMolsInfo(resultInfo, failedRecs);
 			}
 		}
-
+		// Print info
+		console.printlnWrapped(resultInfo.toString(), PrintMode.NORMAL);
 	}
 	
-    private int doPredict(PredictionResultsWriter predWriter) {
+    private int doPredict(PredictionResultsWriter predWriter) throws EarlyLoadingStopException {
 
 		int numSuccessfulPreds = 0;
 
@@ -244,7 +252,7 @@ public class PredictRunner {
 
 			Iterator<IAtomContainer> molIterator=null;
 			try {
-				molIterator = toPredict.toPredict.predictFile.getIterator();
+				molIterator = toPredict.toPredict.predictFile.getIterator(tracker);
 			} catch (IOException e) {
 				LOGGER.debug("Failed reading from predictFile",e);
 				console.failWithArgError("Could not read any molecules from parameter " + 
@@ -255,30 +263,33 @@ public class PredictRunner {
 
 			boolean predictionFromFileDone = false;
 			IAtomContainer mol=null;
+			int index = -1;
+			String id = "null";
 
-			while (molIterator.hasNext()) {
-				mol = molIterator.next();
-				if (mol.getProperty(CDKConstants.REMARK) == null)
-					mol.removeProperty(CDKConstants.REMARK);
-				int index = TypeUtils.asInt(CPSignMolProperties.getRecordIndex(mol));
-				String id = (CPSignMolProperties.hasMolTitle(mol)? CPSignMolProperties.getMolTitle(mol) : null);
-				
-				try {
+			// try{
+				while (molIterator.hasNext()) {
+					mol = molIterator.next();
+					if (mol.getProperty(CDKConstants.REMARK) == null)
+						mol.removeProperty(CDKConstants.REMARK);
+					index = TypeUtils.asInt(CPSignMolProperties.getRecordIndex(mol));
+					id = (CPSignMolProperties.hasMolTitle(mol)? CPSignMolProperties.getMolTitle(mol) : null);
+					
+					try {
 
-					predictMolecule(predictor, predWriter, mol);
-					predWriter.flush();
-					
-					predictionFromFileDone=true;
-					numSuccessfulPreds++;
-				} catch (Exception e){
-					trackError(index, id, e, id);
-				} finally {
-					molIterationCounter++;
-					
-					// Step Progress and print out
-					printPredictionProgressAndStep();
+						predictMolecule(predictor, predWriter, mol);
+						predWriter.flush();
+						
+						predictionFromFileDone=true;
+						numSuccessfulPreds++;
+					} catch (Exception e){
+						trackError(index, id, e, id);
+					} finally {
+						molIterationCounter++;
+						
+						// Step Progress and print out
+						printPredictionProgressAndStep();
+					}
 				}
-			}
 
 			if (!predictionFromFileDone){
 				console.failWithNoMoleculesCouldBeLoaded(toPredict.toPredict.predictFile);
@@ -291,7 +302,7 @@ public class PredictRunner {
 
 	private void printPredictionProgressAndStep() {
 		if (progressInterval > 0 && molIterationCounter % progressInterval == 0) {
-			console.println(" - Processed %s/%s molecules", 
+			console.println(" - Processed %d/%d molecules", 
 					PrintMode.NORMAL,molIterationCounter,numMolsToPredict);
 			pb.stepProgress();
 		}
@@ -346,19 +357,14 @@ public class PredictRunner {
 			IAtomContainer mol) throws CDKException, IllegalAccessException, IOException {
 		// Perform prediction
 		ResultsHandler resHandler = new ResultsHandler();
-		// try {
-			CVAPPrediction<String> res =  predictor.predict(mol);
-			resHandler.setProbabilities(MathUtils.roundAll(res.getProbabilities()));
 
-			// Prediction sets
-			resHandler.setP0P1Interval(MathUtils.roundTo3significantFigures(res.getMeanP0P1Width()), 
-					MathUtils.roundTo3significantFigures(res.getMedianP0P1Width()));
-		// } catch (CDKException e){
-		// 	LOGGER.debug("Exception running predictProbabilities", e);
-		// 	LOGGER.error("Dataset handling a molecule when predicting, skipping it");
-		// 	return;
-		// } 
-		
+		CVAPPrediction<String> res =  predictor.predict(mol);
+		resHandler.setProbabilities(MathUtils.roundAll(res.getProbabilities()));
+
+		// Prediction sets
+		resHandler.setP0P1Interval(MathUtils.roundTo3significantFigures(res.getMeanP0P1Width()), 
+				MathUtils.roundTo3significantFigures(res.getMedianP0P1Width()));
+
 		// Find Significant Signature 
 		if (calcGradient){
 			try{

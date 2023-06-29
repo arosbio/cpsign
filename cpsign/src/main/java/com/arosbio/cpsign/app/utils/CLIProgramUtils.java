@@ -1637,6 +1637,12 @@ public class CLIProgramUtils {
 
 		StringBuilder errMessage = new StringBuilder();
 
+		if (numMaxAllowedFailures>0 && failedRecords!=null && failedRecords.size()>= numMaxAllowedFailures){
+			LOGGER.debug("Writing info about stopping execution due to encountered max number of failures");
+			errMessage.append("%nStopping execution due to encountering more than the max number of allowed failures: failed ")
+				.append(failedRecords.size()).append(" record(s).");
+		}
+
 		// If listing of failures, use only one from the current ProgressTracker (if any earlier, they should already have been listed)
 		if (listFailed){
 			appendFailedMolsInfo(errMessage, dataset.getProgressTracker().getFailures());
@@ -1658,7 +1664,7 @@ public class CLIProgramUtils {
 			case LOW_HAC:
 				errMessage
 					.append(first.getValue())
-					.append(" records were discarded due to having too low Heavy atom count (now set to minimum ")
+					.append(" record(s) were discarded due to having too low Heavy atom count (now set to minimum ")
 					.append(dataset.getMinHAC())
 					.append(") - consider lowering the threshold using the ")
 					.append(ParameterUtils.PARAM_FLAG_ANSI_ON)
@@ -1669,7 +1675,7 @@ public class CLIProgramUtils {
 			case DESCRIPTOR_CALC_ERROR:
 				errMessage
 					.append(first.getValue())
-					.append(" records were discarded due to descriptor calculation failures, perhaps there is a bug in one of the descriptors. If you have missing data for some features this can be resolved by using a data transformation, run ")
+					.append(" record(s) were discarded due to descriptor calculation failures, perhaps there is a bug in one of the descriptors. If you have missing data for some features this can be resolved by using a data transformation, run ")
 					.append(ParameterUtils.RUN_EXPLAIN_ANSI_ON)
 					.append("explain transformations")
 					.append(ParameterUtils.ANSI_OFF)
@@ -1687,7 +1693,7 @@ public class CLIProgramUtils {
 					errMessage
 						.append("Running in classification mode, but ")
 						.append(first.getValue())
-						.append(" records had property values which did not match any of the given class labels (")
+						.append(" record(s) had property values which did not match any of the given class labels (")
 						.append(StringUtils.joinCollection(", ", givenLabels.getLabelsSet()))
 						.append("), where the correct class labels given to ")
 						.append(ParameterUtils.PARAM_FLAG_ANSI_ON)
@@ -1700,20 +1706,18 @@ public class CLIProgramUtils {
 			case INVALID_RECORD:
 				errMessage
 					.append(first.getValue())
-					.append(" record")
-					.append(first.getValue()>1? "s":"")
-					.append(" were discarded due to descriptor calculation failures, perhaps there is a bug in one or several of the descriptors that was specified.");
+					.append(" record(s) were discarded due to descriptor calculation failures, perhaps there is a bug in one or several of the descriptors that was specified.");
 				break;
 			case INVALID_STRUCTURE:
 				errMessage
 					.append(first.getValue())
-					.append(" records were discarded due to invalid chemical structures - please verify your input data");
+					.append(" record(s) were discarded due to invalid chemical structures - please verify your input data");
 				break;
 			case MISSING_PROPERTY:
 				if (numOK>0){
 					errMessage
 						.append(first.getValue())
-						.append(" records were discarded due to missing property values");
+						.append(" record(s) were discarded due to missing property values");
 				} else {
 					// No valid records found, perhaps we can give more details
 					errMessage.append("No records had the given property '").append(property).append('\'');
@@ -1760,7 +1764,7 @@ public class CLIProgramUtils {
 				if (inputFile instanceof CSVFile){
 					errMessage
 						.append(first.getValue())
-						.append(" records were discarded due to missing chemical structures. Please verify that the correct column in the CSV is used as structure");
+						.append(" record(s) were discarded due to missing chemical structures. Please verify that the correct column in the CSV is used as structure");
 					try {
 						CSVChemFileReader csv = ((CSVFile)inputFile).getIterator();
 						List<String> allHeaders = csv.getHeaders();
@@ -1783,13 +1787,13 @@ public class CLIProgramUtils {
 				} else if (inputFile instanceof JSONFile){
 					errMessage
 						.append(first.getValue())
-						.append(" records were discarded due to missing chemical structures - please check the requirements for using JSON input data by running: ");
+						.append(" record(s) were discarded due to missing chemical structures - please check the requirements for using JSON input data by running: ");
 					appendExplainChemFormat(errMessage);
 				} else {
 					LOGGER.debug("invalid structures in SDF format (or custom reader) - this should never occur - why does it?");
 					errMessage
 						.append(first.getValue())
-						.append(" records were discarded due to missing chemical structures - please verify your input data.");
+						.append(" record(s) were discarded due to missing chemical structures - please verify your input data.");
 				}
 				
 				break;

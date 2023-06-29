@@ -16,6 +16,7 @@ import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -53,6 +54,7 @@ import com.arosbio.cpsign.app.params.mixins.ProgramProgressMixin;
 import com.arosbio.cpsign.app.params.mixins.ValidationPointsMixin;
 import com.arosbio.cpsign.app.utils.CLIConsole;
 import com.arosbio.cpsign.app.utils.CLIConsole.PrintMode;
+import com.arosbio.cpsign.app.utils.CLIConsole.VerbosityLvl;
 import com.arosbio.cpsign.app.utils.CLIProgramUtils;
 import com.arosbio.cpsign.app.utils.CLIProgressBar;
 import com.arosbio.cpsign.app.utils.CLIProgressBar.SupportsProgressBar;
@@ -324,34 +326,41 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 		} catch (IllegalAccessException | IOException e) {
 			LOGGER.debug("Failed in doValidate",e);
 			console.failWithArgError("Could not parse predict-file");
+		} catch (EarlyLoadingStopException e){
+			// we have failed enough times and should exit the program
+			LOGGER.debug("Encountered enough failed records to stop execution", e);
+			CLIProgramUtils.failWithBadUserInputFile(console, -1, predictFile, 
+				progressTracker.getFailures(), predictor.getDataset(), predictor.getDataset().getProperty(), 
+				(predictor instanceof ChemClassifier ? ((ChemClassifier)predictor).getNamedLabels() : null), 
+				progressTracker.getMaxAllowedFailures(), listFailedRecordsMixin.listFailedRecords);
 		}
 
-		// We are done with predictions in predict-file
-		String moleculesSingularOrPlural = (successCount>1 ? "molecules" : "molecule");
-		console.println("%nSuccessfully predicted %s %s", PrintMode.NORMAL, successCount, moleculesSingularOrPlural);
-
+		// We are done with all predictions
+		String molSingularOrPlural=(successCount>1 || successCount==0?"s":"");
+		StringBuilder resultInfo = new StringBuilder(String.format(Locale.ENGLISH, "%nSuccessfully predicted %s molecule%s.",successCount,molSingularOrPlural));
+		
+		
 		// If we had some failing records
-		int numFailedRecords = progressTracker.getNumFailures();
-		if (numFailedRecords > 0) {
-			console.println("Failed predicting %s molecule%s", PrintMode.NORMAL,
-				numFailedRecords,(numFailedRecords>1 ? "s":""));
+		if (progressTracker.getNumFailures()>0) {
+			List<FailedRecord> failedRecs = progressTracker.getFailures();
+			resultInfo.append(String.format(Locale.ENGLISH, " Failed predicting %d record%s.", failedRecs.size(),(failedRecs.size()>1 ? "s":"")));
 			
-			if (numMissingDataFails >0) {
-				console.println("%s record(s) failed due to missing features - please make sure your data pre-processing is correct, consider using e.g. removal of poor descriptors (DropMissingDataFeatures) or impute missing features (SingleFeatImputer)", 
-						PrintMode.VERBOSE, numMissingDataFails);
-			}
-
-			if (listFailedRecordsMixin.listFailedRecords) {
-				StringBuilder failedStr = new StringBuilder("Failed the following record(s):%n");
-				List<FailedRecord> failedRecords = progressTracker.getFailures();
-				for (int i=0; i< failedRecords.size()-1; i++) {
-					failedStr.append(failedRecords.get(i));
-					failedStr.append("%n");
+			if (numMissingDataFails > 0) {
+				String missingDataInfo = numMissingDataFails + " record(s) failed due to missing features - please make sure your data pre-processing is correct, consider using e.g. removal of poor descriptors (DropMissingDataFeatures) or impute missing features (SingleFeatImputer)%n";
+				if (console.getVerbosity() == VerbosityLvl.VERBOSE){
+					resultInfo.append(missingDataInfo);
+				} else {
+					LOGGER.debug(missingDataInfo);
 				}
-				failedStr.append(failedRecords.get(failedRecords.size()-1));
-				console.println(failedStr.toString(), PrintMode.NORMAL);
+			}
+			
+			if (listFailedRecordsMixin.listFailedRecords) {
+				resultInfo.append("%n");
+				CLIProgramUtils.appendFailedMolsInfo(resultInfo, failedRecs);
 			}
 		}
+		// Print info
+		console.printlnWrapped(resultInfo.toString(), PrintMode.NORMAL);
 	}
 
 

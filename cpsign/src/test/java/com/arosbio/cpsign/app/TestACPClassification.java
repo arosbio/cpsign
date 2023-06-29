@@ -56,6 +56,7 @@ import com.arosbio.ml.sampling.SingleSample;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.TestResources.CSVCmpdData;
 import com.arosbio.tests.TestResources.CmpdData;
+import com.arosbio.tests.TestResources.Reg;
 import com.arosbio.tests.suites.CLITest;
 import com.arosbio.tests.suites.PerformanceTest;
 import com.arosbio.tests.utils.TestUtils;
@@ -1152,6 +1153,31 @@ public class TestACPClassification extends CLIBaseTest {
 				);
 		
 //		printLogs();
+		systemErrRule.clearLog();
+		systemOutRule.clearLog();
+
+		// Predict erronious input file, without issues it should work OK
+		CSVCmpdData predFile = Reg.getErroneous();
+		mockMain(Predict.CMD_NAME,
+				"-m", modelFile.getAbsolutePath(),
+				"--predict-file", predFile.format(), "delim="+predFile.delim(), predFile.uri().toString(),
+				"--list-failed"
+				);
+		// printLogs();
+
+		// Predict erronious input file again but not allow any errors - the call should fail
+		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
+		exit.checkAssertionAfterwards(new AssertSysErrContainsString("invalid", "arguments"));
+		exit.checkAssertionAfterwards(new AssertSysOutContainsString("chem", "structure", "error"));
+		// exit.checkAssertionAfterwards(new PrintSysOutput());
+		mockMain(Predict.CMD_NAME,
+				"-m", modelFile.getAbsolutePath(),
+				"--predict-file", predFile.format(), "delim="+predFile.delim(), predFile.uri().toString(),
+				"--list-failed",
+				"--early-termination", "0"
+				);
+		// printLogs();
 	}
+
 
 }

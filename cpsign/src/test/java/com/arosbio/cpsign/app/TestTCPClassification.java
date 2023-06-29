@@ -35,6 +35,7 @@ import com.arosbio.ml.cp.tcp.TCPClassifier;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.TestResources.CSVCmpdData;
 import com.arosbio.tests.TestResources.CmpdData;
+import com.arosbio.tests.TestResources.Reg;
 import com.arosbio.tests.suites.CLITest;
 import com.arosbio.tests.suites.PerformanceTest;
 import com.arosbio.tests.utils.TestUtils;
@@ -46,8 +47,6 @@ public class TestTCPClassification extends CLIBaseTest {
 
 	CmpdData ames_126 = TestResources.Cls.getAMES_126();
 	CSVCmpdData solu_10_to_pred = TestResources.Reg.getSolubility_10();
-//	private static final String PREDICT_FILE_SDF = AmesBinaryClass.MINI_FILE_PATH;
-//	private static final String PREDICT_FILE_SMILES = RegressionSolubility.SOLUBILITY_10_FILE_PATH;
 
 	@Before
 	public void resetLogging() throws Exception {
@@ -84,6 +83,27 @@ public class TestTCPClassification extends CLIBaseTest {
 		Assert.assertTrue(systemErrRule.getLog().isEmpty());
 		
 //		printLogs();
+
+		// Predict erronious input file, without issues it should work OK
+		CSVCmpdData predFile = Reg.getErroneous();
+		mockMain(Predict.CMD_NAME,
+				"-m", modelFile.getAbsolutePath(),
+				"--predict-file", predFile.format(), "delim="+predFile.delim(), predFile.uri().toString(),
+				"--list-failed"
+				);
+		// printLogs();
+
+		// Predict erronious input file  but not allow any errors - the call should fail
+		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
+		exit.checkAssertionAfterwards(new AssertSysErrContainsString("invalid", "arguments"));
+		exit.checkAssertionAfterwards(new AssertSysOutContainsString("chem", "structure", "error"));
+		// exit.checkAssertionAfterwards(new PrintSysOutput());
+		mockMain(Predict.CMD_NAME,
+				"-m", modelFile.getAbsolutePath(),
+				"--predict-file", predFile.format(), "delim="+predFile.delim(), predFile.uri().toString(),
+				"--list-failed",
+				"--early-termination", "0"
+				);
 	}
 
 	@Test
