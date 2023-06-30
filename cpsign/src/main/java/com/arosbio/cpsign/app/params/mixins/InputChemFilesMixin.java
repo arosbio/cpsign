@@ -20,20 +20,20 @@ import picocli.CommandLine.Option;
 public class InputChemFilesMixin {
 
 	@Option(names = { "-td", "--train-data" }, 
-			parameterConsumer = ChemFileConverter.class,
+			parameterConsumer = ChemFileConverter.TrainDataConverter.class,
 			description = "File with molecules in CSV, SDF or JSON format. run "+ParameterUtils.RUN_EXPLAIN_ANSI_ON+"explain chem-formats"+ParameterUtils.ANSI_OFF+" to get further info.",
 			paramLabel = ArgumentType.URI_OR_PATH)
 	public ChemFile trainFile;
 
 	@Option(names = { "-md", "--model-data" }, 
-			parameterConsumer = ChemFileConverter.class,
+			parameterConsumer = ChemFileConverter.ModelExclusiveDataConverter.class,
 			description = "File with molecules that exclusively should be used for training the scoring algorithm. In CSV, SDF or JSON format",
 			hidden=true,
 			paramLabel = ArgumentType.URI_OR_PATH)
 	public ChemFile properTrainExclusiveFile;
 
 	@Option(names = { "-cd", "--calibration-data" },
-			parameterConsumer = ChemFileConverter.class,
+			parameterConsumer = ChemFileConverter.CalibrationExclusiveDataConverter.class,
 			description = "File with molecules that exclusively should be used for calibrating predictions. In CSV, SDF or JSON format",
 			hidden=true,
 			paramLabel = ArgumentType.URI_OR_PATH)

@@ -139,7 +139,7 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 	@Option(
 			names = { "-p", "--predict-file" }, 
 			description = "File to use for validation. Accepted formats are CSV, SDFile or JSON.",
-			parameterConsumer = ChemFileConverter.class,
+			parameterConsumer = ChemFileConverter.PredictFileConverter.class,
 			paramLabel = ArgumentType.CHEM_FILE_ARGS,
 			required=true)
 	private ChemFile predictFile;

@@ -33,7 +33,7 @@ public class CompoundsToPredictMixin {
 		@Option(
 				names = { "-p", "--predict-file" }, 
 				description = "File to predict. Accepted formats are CSV, SDF or JSON. Run "+ParameterUtils.RUN_EXPLAIN_ANSI_ON+"explain chem-formats"+ParameterUtils.ANSI_OFF+" to get further info.",
-				parameterConsumer = ChemFileConverter.class,
+				parameterConsumer = ChemFileConverter.PredictFileConverter.class,
 				paramLabel = ArgumentType.CHEM_FILE_ARGS
 				)
 		public ChemFile predictFile;

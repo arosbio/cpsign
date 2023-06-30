@@ -110,21 +110,21 @@ public class Precompute implements RunnableCmd, SupportsProgressBar {
 	@Option(names = { "-td", "--train-data" }, 
 			description = "File with molecules in CSV, SDF or JSON format. run "+ParameterUtils.RUN_EXPLAIN_ANSI_ON+"explain chem-formats|@ to get further info.",
 			paramLabel = ArgumentType.CHEM_FILE_ARGS,
-			parameterConsumer = ChemFileConverter.class)
+			parameterConsumer = ChemFileConverter.TrainDataConverter.class)
 	private ChemFile trainFile;
 
 	@Option(names = { "-md", "--model-data" }, 
 			description = "File with molecules that exclusively should be used for training the scoring algorithm. In CSV, SDF or JSON format",
 			hidden=true,
 			paramLabel = ArgumentType.CHEM_FILE_ARGS,
-			parameterConsumer = ChemFileConverter.class)
+			parameterConsumer = ChemFileConverter.ModelExclusiveDataConverter.class)
 	private ChemFile properTrainExclusiveFile;
 
 	@Option(names = { "-cd", "--calibration-data" },
 			description = "File with molecules that exclusively should be used for calibrating predictions. In CSV, SDF or JSON format",
 			hidden=true,
 			paramLabel = ArgumentType.CHEM_FILE_ARGS,
-			parameterConsumer = ChemFileConverter.class)
+			parameterConsumer = ChemFileConverter.CalibrationExclusiveDataConverter.class)
 	private ChemFile calibrationExclusiveTrainFile;
 
 	@Mixin

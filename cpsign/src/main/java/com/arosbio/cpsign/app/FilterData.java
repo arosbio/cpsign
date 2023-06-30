@@ -110,7 +110,7 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 	@Option(names = { "-td", "--train-data" }, 
 			description = "File with molecules in CSV, SDF or JSON format. run "+ParameterUtils.RUN_EXPLAIN_ANSI_ON+"explain chem-formats|@ to get further info.",
 			paramLabel = ArgumentType.CHEM_FILE_ARGS,
-			parameterConsumer = ChemFileConverter.class)
+			parameterConsumer = ChemFileConverter.TrainDataConverter.class)
 	private ChemFile trainFile;
 
 	@Mixin

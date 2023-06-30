@@ -42,6 +42,50 @@ public class ChemFileConverter implements IParameterConsumer {
 
 	private static final String CORRECT_SYNTAX = "<parameter flag> " + ArgumentType.CHEM_FILE_ARGS;
 
+	String getCorrectSyntax(){
+		return CORRECT_SYNTAX;
+	}
+
+	public static class TrainDataConverter extends ChemFileConverter {
+		private static final String FLAG_ARG = "-td | --train-data";
+		@Override
+		String getCorrectSyntax() {
+			return FLAG_ARG + ArgumentType.CHEM_FILE_ARGS;
+		}
+	}
+
+	public static class ModelExclusiveDataConverter extends ChemFileConverter {
+		private static final String FLAG_ARG = "-md | --model-data";
+		@Override
+		String getCorrectSyntax() {
+			return FLAG_ARG + ArgumentType.CHEM_FILE_ARGS;
+		}
+	}
+
+	public static class CalibrationExclusiveDataConverter extends ChemFileConverter {
+		private static final String FLAG_ARG = "-cd | --calibration-data";
+		@Override
+		String getCorrectSyntax() {
+			return FLAG_ARG + ArgumentType.CHEM_FILE_ARGS;
+		}
+	}
+
+	public static class PredictFileConverter extends ChemFileConverter {
+		private static final String FLAG_ARG = "-p | --predict-file";
+		@Override
+		String getCorrectSyntax() {
+			return FLAG_ARG + ArgumentType.CHEM_FILE_ARGS;
+		}
+	}
+
+	public static class PercentilesDataConverter extends ChemFileConverter {
+		private static final String FLAG_ARG = "--percentiles-data";
+		@Override
+		String getCorrectSyntax() {
+			return FLAG_ARG + ArgumentType.CHEM_FILE_ARGS;
+		}
+	}
+
 	@Override
 	public void consumeParameters(Stack<String> args, 
 			ArgSpec argSpec, 
@@ -117,7 +161,7 @@ public class ChemFileConverter implements IParameterConsumer {
 
 		// URI / Path
 		if (args.isEmpty())
-			throw new IllegalArgumentException("Missing required URI/Path, the correct syntax is: " + CORRECT_SYNTAX);
+			throw new IllegalArgumentException("Missing required URI/Path, the correct syntax is: " + getCorrectSyntax());
 		URI uri = null;
 		String tmpVal = null;
 		try {
@@ -169,11 +213,11 @@ public class ChemFileConverter implements IParameterConsumer {
 			LOGGER.debug("Found no valid URI or path - invalid input of user");
 			if (extraOpts.isEmpty()) {
 				// No argument given at all
-				throw new IllegalArgumentException("Missing required URI or path, the correct syntax is: " + CORRECT_SYNTAX);
+				throw new IllegalArgumentException("Missing required URI or path, the correct syntax is: " + getCorrectSyntax());
 			}
 			String lastArg = extraOpts.get(extraOpts.size()-1);
 			if (isCSVConfigParam(lastArg))
-				throw new IllegalArgumentException("Missing required URI or path, the correct syntax is: " + CORRECT_SYNTAX);
+				throw new IllegalArgumentException("Missing required URI or path, the correct syntax is: " + getCorrectSyntax());
 			
 			throw new IllegalArgumentException("'"+ lastArg + "' is not a valid URI or path");
 		}

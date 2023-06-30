@@ -29,7 +29,7 @@ public class PercentilesMixin {
 
 	@Option(names = { "--percentiles-data" },
 			paramLabel = ArgumentType.CHEM_FILE_ARGS,
-			parameterConsumer = ChemFileConverter.class,
+			parameterConsumer = ChemFileConverter.PercentilesDataConverter.class,
 			description = "File with molecules that should be used for calculating percentiles (used when calculating gradients "
 					+ "and generating images). Required if the --percentiles is specified with a number greater than 0.")
 	public ChemFile percentilesFile;
