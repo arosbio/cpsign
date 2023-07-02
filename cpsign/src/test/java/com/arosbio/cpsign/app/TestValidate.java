@@ -219,7 +219,8 @@ public class TestValidate extends CLIBaseTest{
 		// Set a maximum number of failures, now it should fail (4 invalid records)
 		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
 		exit.checkAssertionAfterwards(new AssertSysErrContainsString("Invalid"));
-		exit.checkAssertionAfterwards(new AssertSysOutContainsString("ERROR", "fail"));
+		exit.checkAssertionAfterwards(new AssertSysOutContainsString("fail", "invalid", "record", "stopping"));
+		// exit.checkAssertionAfterwards(new PrintSysOutput());
 		mockMain(
 				Validate.CMD_NAME,
 				"-cp", "0.5 ", "0.7", "0.9",
@@ -235,6 +236,15 @@ public class TestValidate extends CLIBaseTest{
 				"--early-termination", "1"
 		);
 
+	}
+
+	// @Test
+	public void testCheckModelInfo() {
+		mockMain("model-info", "-v","-m", PreTrainedModels.ACP_REG_LIBSVM.toString());
+		printLogs();
+
+		CSVCmpdData predFile = Reg.getErroneous();
+		SYS_ERR.println("and predict-file props: " + predFile.property());
 	}
 
 

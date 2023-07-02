@@ -565,21 +565,21 @@ public class TestConverters extends CLIBaseTest {
 		
 		// invalid URI/Path (but looks correct)
 		doBadConfigTest(new Precompute(),
-				Arrays.asList("--train-data","non.existing.file.csv"), //, "file.csv"), //, "parameter"),
+				Arrays.asList("--train-data","non.existing.file.csv"),
 				Arrays.asList(
 						"--train-data", "csv", "delim=,", "non.existing.file.csv",
 						"-mo", tmpOut.getAbsolutePath()));
 		
 		// Missing URI/Path - continue with a new flag
 		doBadConfigTest(new Precompute(),
-				Arrays.asList("parameter", "missing", "-td","path", "uri"), //, "parameter"),
+				Arrays.asList("missing", "-td","--train-data","path", "uri"), //, "parameter"),
 				Arrays.asList(
 						"-td", "csv", "delim=,", // "file.csv", - no URI/path!
 						"-mo", tmpOut.getAbsolutePath()));
 		
 		// Missing URI/Path - end of args
 		doBadConfigTest(new Precompute(),
-				Arrays.asList("parameter", "missing","-td", "path", "uri"), //, "parameter"),
+				Arrays.asList("missing","-td", "path", "uri"), //, "parameter"),
 				Arrays.asList(
 						"-mo", tmpOut.getAbsolutePath(),
 						"-td", "csv", "delim=," // "file.csv", - no URI/path!
@@ -639,7 +639,8 @@ public class TestConverters extends CLIBaseTest {
 	}
 
 	private void doBadConfigTest(Object program, List<String> errShouldContain, List<String> args) {
-
+		systemErrRule.clearLog();
+		systemOutRule.clearLog();
 		CommandLine cml = new CommandLine(program);
 		//		LoggerUtils.setDebugMode(SYS_OUT);
 		try {
@@ -647,7 +648,7 @@ public class TestConverters extends CLIBaseTest {
 			Assert.fail("This should fail");
 		} catch (Exception e) {
 //			e.printStackTrace();
-//			System.err.println(e.getMessage());
+			// System.err.println("Message: " + e.getMessage());
 			TestUtils.assertTextContainsIgnoreCase(e.getMessage(),
 					errShouldContain.toArray(new String[] {}));
 		}

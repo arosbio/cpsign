@@ -203,8 +203,14 @@ public abstract class CLIBaseTest extends TestEnv {
 		@Override
 		public void checkAssertion() throws Exception {
 			String log = Help.Ansi.OFF.string(systemOutRule.getLog().toLowerCase());
-			for(String text: toLookFor)
-				Assert.assertTrue(log.contains(text.toLowerCase()));
+			List<String> notFound = new ArrayList<>();
+			for (String text: toLookFor)
+				if (!log.contains(text.toLowerCase())){
+					notFound.add(text);
+				}
+			if (!notFound.isEmpty()){
+				Assert.fail("Texts not found in system out log: " + notFound);
+			}
 		}
 
 	}

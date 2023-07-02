@@ -134,7 +134,7 @@ public class PredictRunner {
 	}
 
 	// Iteration info
-	int numMolsToPredict = 0, numMolsInPredictFile = 0, progressInterval = -1, molIterationCounter = 0, numMissingDataFails = 0;
+	int numMolsToPredict = 0, numMolsInPredictFile = 0, progressInterval = -1, molIterationCounter = 0, numMissingDataFails = 0, numSuccessfulPreds = 0;
 
 	public void runPredict() {
 
@@ -163,7 +163,6 @@ public class PredictRunner {
 		pb.addAdditionalSteps(numSteps); 
 
 		// Set up the ResultsOutputter + run doPredict
-		int numSuccessfulPreds = 0;
 		try(
 			PredictionResultsWriter predictionsWriter = CLIProgramUtils.setupResultsOutputter(cmd, 
 				outputSection.outputFormat, 
@@ -172,7 +171,7 @@ public class PredictRunner {
 				outputSection.printInChI, 
 				outputSection.compress);){
 
-			numSuccessfulPreds = doPredict(predictionsWriter);
+			doPredict(predictionsWriter);
 
 		} catch (IOException e) {
 			LOGGER.debug("Failed closing the results outputter",e); 
@@ -181,13 +180,14 @@ public class PredictRunner {
 		} catch (EarlyLoadingStopException e){
 			// we have failed enough times and should exit the program
 			LOGGER.debug("Encountered enough failed records to stop execution", e);
-			CLIProgramUtils.failWithBadUserInputFile(console, -1, toPredict.toPredict.predictFile, 
-				tracker.getFailures(), predictor.getDataset(), predictor.getDataset().getProperty(), null, tracker.getMaxAllowedFailures(), listFailed);
+			new CLIProgramUtils.UserInputErrorResolver(console, numSuccessfulPreds, toPredict.toPredict.predictFile, 
+				tracker.getFailures(), predictor.getDataset(), predictor.getDataset().getProperty(), null, tracker.getMaxAllowedFailures(), listFailed)
+				.failWithError();
 		}
 
 		// We are done with all predictions
 		String molSingularOrPlural=(numSuccessfulPreds>1 || numSuccessfulPreds==0?"s":"");
-		StringBuilder resultInfo = new StringBuilder(String.format(Locale.ENGLISH, "%nSuccessfully predicted %s molecule%s.",numSuccessfulPreds,molSingularOrPlural));
+		StringBuilder resultInfo = new StringBuilder(String.format(Locale.ENGLISH, "%nSuccessfully predicted %d molecule%s.",numSuccessfulPreds,molSingularOrPlural));
 		
 		
 		// If we had some failing records
@@ -213,11 +213,8 @@ public class PredictRunner {
 		console.printlnWrapped(resultInfo.toString(), PrintMode.NORMAL);
 	}
 	
-    private int doPredict(PredictionResultsWriter predWriter) throws EarlyLoadingStopException {
+    private void doPredict(PredictionResultsWriter predWriter) throws EarlyLoadingStopException {
 
-		int numSuccessfulPreds = 0;
-
-		
 		// Predict single SMILES
 		if (toPredict.toPredict.smilesToPredict != null) {
 			LOGGER.debug("Predicting single --smiles molecule");
@@ -266,38 +263,35 @@ public class PredictRunner {
 			int index = -1;
 			String id = "null";
 
-			// try{
-				while (molIterator.hasNext()) {
-					mol = molIterator.next();
-					if (mol.getProperty(CDKConstants.REMARK) == null)
-						mol.removeProperty(CDKConstants.REMARK);
-					index = TypeUtils.asInt(CPSignMolProperties.getRecordIndex(mol));
-					id = (CPSignMolProperties.hasMolTitle(mol)? CPSignMolProperties.getMolTitle(mol) : null);
-					
-					try {
+			while (molIterator.hasNext()) {
+				mol = molIterator.next(); // may throw EarlyLoadingStopException 
+				if (mol.getProperty(CDKConstants.REMARK) == null)
+					mol.removeProperty(CDKConstants.REMARK);
+				index = TypeUtils.asInt(CPSignMolProperties.getRecordIndex(mol));
+				id = (CPSignMolProperties.hasMolTitle(mol)? CPSignMolProperties.getMolTitle(mol) : null);
+				
+				try {
 
-						predictMolecule(predictor, predWriter, mol);
-						predWriter.flush();
-						
-						predictionFromFileDone=true;
-						numSuccessfulPreds++;
-					} catch (Exception e){
-						trackError(index, id, e, id);
-					} finally {
-						molIterationCounter++;
-						
-						// Step Progress and print out
-						printPredictionProgressAndStep();
-					}
+					predictMolecule(predictor, predWriter, mol);
+					predWriter.flush();
+					
+					predictionFromFileDone=true;
+					numSuccessfulPreds++;
+				} catch (Exception e){
+					trackError(index, id, e, id);
+				} finally {
+					molIterationCounter++;
+					
+					// Step Progress and print out
+					printPredictionProgressAndStep();
 				}
+			}
 
 			if (!predictionFromFileDone){
 				console.failWithNoMoleculesCouldBeLoaded(toPredict.toPredict.predictFile);
 			}
 		}
 
-		// Return the number of successful predictions
-		return numSuccessfulPreds;
 	}
 
 	private void printPredictionProgressAndStep() {
@@ -337,18 +331,18 @@ public class PredictRunner {
 		}
 	}
 
-	private void predictMolecule(ChemPredictor signpred, PredictionResultsWriter predWriter, IAtomContainer mol) 
+	private void predictMolecule(ChemPredictor chemPredictor, PredictionResultsWriter predWriter, IAtomContainer mol) 
 			throws IllegalAccessException, CDKException, IOException {
 
 		// Perform prediction 
-		if (signpred instanceof ChemCPRegressor)
-			predictMolecule((ChemCPRegressor)signpred, predWriter, mol);
-		else if (signpred instanceof ChemCPClassifier)
-			predictMolecule((ChemCPClassifier)signpred, predWriter, mol);
-		else if (signpred instanceof ChemVAPClassifier)
-			predictMolecule((ChemVAPClassifier)signpred, predWriter, mol);
+		if (chemPredictor instanceof ChemCPRegressor)
+			predictMolecule((ChemCPRegressor)chemPredictor, predWriter, mol);
+		else if (chemPredictor instanceof ChemCPClassifier)
+			predictMolecule((ChemCPClassifier)chemPredictor, predWriter, mol);
+		else if (chemPredictor instanceof ChemVAPClassifier)
+			predictMolecule((ChemVAPClassifier)chemPredictor, predWriter, mol);
 		else {
-			LOGGER.debug("ChemPredictor of a non-supported class: {}", signpred.getClass());
+			LOGGER.debug("ChemPredictor of a non-supported class: {}", chemPredictor.getClass());
 			console.failWithInternalError("Internal problem predicting molecules, please contact Aros Bio and kindly send include the cpsign logfile");
 		}
 	}

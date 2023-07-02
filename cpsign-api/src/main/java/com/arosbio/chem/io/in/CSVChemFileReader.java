@@ -97,8 +97,9 @@ public class CSVChemFileReader implements ChemFileIterator {
 			LOGGER.debug("SMILES header field not set explicitly - trying to deduce from the parsed headers");
 			smilesHeaderField = CPSignMolProperties.getCustomSmilesProperty(parser.getHeaderMap().keySet());
 			if (smilesHeaderField == null) {
+				LOGGER.debug("No header found in CSV that contains SMILES - user needs to set update the file header or set an explicit header for SMILES column");
 				throw new IOException("No header found in CSV that contains SMILES - please check the file and give an explicit header");
-			}
+			} 
 
 		} 
 		LOGGER.debug("Header field for smiles set to: {}, CSV reader headers: {}", smilesHeaderField,this.parser.getHeaderMap());

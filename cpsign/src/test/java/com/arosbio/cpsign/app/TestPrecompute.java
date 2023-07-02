@@ -1144,4 +1144,70 @@ public class TestPrecompute extends CLIBaseTest {
 		);
 
 	}
+
+	@Test
+	public void testCSVWrongDelim() throws Exception {
+		CSVCmpdData errData = TestResources.Reg.getErroneous();
+		File out = TestUtils.createTempFile("dsagf", ".jar");
+		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
+		exit.checkAssertionAfterwards(new AssertSysOutContainsString("Record 0", "Record 1", "Invalid", "delimiter", "explain chem-formats"));
+		mockMain(Precompute.CMD_NAME,
+			"-td", errData.format(), errData.uri().toString(), // do not specify the correct delimiter
+			"-mt", PRECOMPUTE_REGRESSION,
+			"--property", errData.property(),
+			"-mo", out.getAbsolutePath(),
+			"--list-failed"	
+		);
+	}
+
+
+
+	@Test
+	public void testCSVMissingHeader() throws Exception {
+		CSVCmpdData errData = TestResources.Reg.getSolubility_10_no_header();
+		File out = TestUtils.createTempFile("dsagf", ".jar");
+		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
+		exit.checkAssertionAfterwards(new AssertSysOutContainsString("header", "smiles", errData.uri().toString(),"csv"));
+		exit.checkAssertionAfterwards(new PrintSysOutput());
+		mockMain(Precompute.CMD_NAME,
+			"-td", errData.format(), "delim="+errData.delim(), errData.uri().toString(), 
+			"-mt", PRECOMPUTE_REGRESSION,
+			"--property", "bad property",
+			"-mo", out.getAbsolutePath(),
+			"--list-failed"	
+		);
+	}
+
+	@Test
+	public void testWrongProperty() throws Exception {
+		CSVCmpdData errData = TestResources.Reg.getErroneous();
+		File out = TestUtils.createTempFile("dsagf", ".jar");
+		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
+		exit.checkAssertionAfterwards(new AssertSysOutContainsString("Record 0", "Record 1", "Empty", "property", "bad property"));
+		// exit.checkAssertionAfterwards(new PrintSysOutput());
+		mockMain(Precompute.CMD_NAME,
+			"-td", errData.format(), "delim="+errData.delim(), errData.uri().toString(), 
+			"-mt", PRECOMPUTE_REGRESSION,
+			"--property", "bad property",
+			"-mo", out.getAbsolutePath(),
+			"--list-failed"	
+		);
+	}
+
+	@Test
+	public void testCannotConvertPropertyToNumerical() throws Exception {
+		// I.e. in case accidentally specifying regression but with textual strings
+		CSVCmpdData clfData = TestResources.Cls.getErroneous();
+		File out = TestUtils.createTempFile("dsagf", ".jar");
+		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
+		exit.checkAssertionAfterwards(new AssertSysOutContainsString("Record 0", "Record 1", "Invalid", "activity", "regression", "classification", "numerical"));
+		// exit.checkAssertionAfterwards(new PrintSysOutput());
+		mockMain(Precompute.CMD_NAME,
+			"-td", clfData.format(), "delim="+clfData.delim(), clfData.uri().toString(), 
+			"-mt", PRECOMPUTE_REGRESSION,
+			"--property", clfData.property(),
+			"-mo", out.getAbsolutePath(),
+			"--list-failed"	
+		);
+	}
 }

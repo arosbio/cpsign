@@ -205,7 +205,7 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 	 *****************************************/
 
 	private ProgressTracker progressTracker = null;
-	private int numMissingDataFails=0;
+	private int numMissingDataFails = 0, numSuccessfulPreds = 0;
 
 	@Override
 	public String getName() {
@@ -305,8 +305,6 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 
 		console.println(OutputNamingSettings.ProgressInfoTexts.COMPUTING_PREDICTIONS, PrintMode.NORMAL);
 
-		int successCount = -1;
-
 		// Set up the ResultsOutputter
 		try(
 			PredictionResultsWriter predictionWriter = printPredictions ? 
@@ -321,7 +319,7 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 
 
 			// Do the validation
-			successCount = doValidate(predictor, predictionWriter);
+			doValidate(predictor, predictionWriter);
 
 		} catch (IllegalAccessException | IOException e) {
 			LOGGER.debug("Failed in doValidate",e);
@@ -329,15 +327,15 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 		} catch (EarlyLoadingStopException e){
 			// we have failed enough times and should exit the program
 			LOGGER.debug("Encountered enough failed records to stop execution", e);
-			CLIProgramUtils.failWithBadUserInputFile(console, -1, predictFile, 
+			new CLIProgramUtils.UserInputErrorResolver(console, numSuccessfulPreds, predictFile, 
 				progressTracker.getFailures(), predictor.getDataset(), predictor.getDataset().getProperty(), 
 				(predictor instanceof ChemClassifier ? ((ChemClassifier)predictor).getNamedLabels() : null), 
-				progressTracker.getMaxAllowedFailures(), listFailedRecordsMixin.listFailedRecords);
+				progressTracker.getMaxAllowedFailures(), listFailedRecordsMixin.listFailedRecords).failWithError();
 		}
 
 		// We are done with all predictions
-		String molSingularOrPlural=(successCount>1 || successCount==0?"s":"");
-		StringBuilder resultInfo = new StringBuilder(String.format(Locale.ENGLISH, "%nSuccessfully predicted %s molecule%s.",successCount,molSingularOrPlural));
+		String molSingularOrPlural=(numSuccessfulPreds>1 || numSuccessfulPreds==0?"s":"");
+		StringBuilder resultInfo = new StringBuilder(String.format(Locale.ENGLISH, "%nSuccessfully predicted %d molecule%s.",numSuccessfulPreds,molSingularOrPlural));
 		
 		
 		// If we had some failing records
@@ -379,11 +377,11 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 		progressTracker = ProgressTracker.createStopAfter(earlyTermination.maxFailuresAllowed);
 	}
 
-	private int doValidate(ChemPredictor predictor, PredictionResultsWriter predWriter)
+	private void doValidate(ChemPredictor predictor, PredictionResultsWriter predWriter)
 			throws IllegalAccessException, FileNotFoundException, IOException {
 
 		// Config the progress-interval
-		int totalNumMolsToPredict = 0, iterationCount = 0, successCount=0;
+		int totalNumMolsToPredict = 0, iterationCount = 0;
 		try {
 			totalNumMolsToPredict = predictFile.countNumRecords();
 			LOGGER.debug("Found {} molecules in the predictFile (to be predicted)",
@@ -430,9 +428,9 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 					LOGGER.debug("Invalid arguments for reading the prediction file",e);
 				}
 				IOUtils.closeQuietly(predWriter); // have to close it (in case Sys-out is controlled)
-				CLIProgramUtils.failWithBadUserInputFile(console, molIterator.getNumOKMols(), 
+				new CLIProgramUtils.UserInputErrorResolver(console, molIterator.getNumOKMols(), 
 					predictFile, progressTracker.getFailures(), predictor.getDataset(), validationEndpoint, 
-					labels, earlyTermination.maxFailuresAllowed, listFailedRecordsMixin.listFailedRecords);
+					labels, earlyTermination.maxFailuresAllowed, listFailedRecordsMixin.listFailedRecords).failWithError();
 			}
 
 			Pair<IAtomContainer, Double> molRecord=null;
@@ -442,31 +440,26 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 			String id="";
 
 			while (molIterator.hasNext()) {
-				try {
-					molRecord = molIterator.next();
-					
-					mol = molRecord.getLeft();
-					trueValue = molRecord.getRight();
-					if (mol.getProperty(CDKConstants.REMARK) == null)
-						mol.removeProperty(CDKConstants.REMARK);
-					index = TypeUtils.asInt(CPSignMolProperties.getRecordIndex(mol));
-					id = (CPSignMolProperties.hasMolTitle(mol)? CPSignMolProperties.getMolTitle(mol) : null);
+				
+				molRecord = molIterator.next();
+				
+				mol = molRecord.getLeft();
+				trueValue = molRecord.getRight();
+				if (mol.getProperty(CDKConstants.REMARK) == null)
+					mol.removeProperty(CDKConstants.REMARK);
+				index = TypeUtils.asInt(CPSignMolProperties.getRecordIndex(mol));
+				id = (CPSignMolProperties.hasMolTitle(mol)? CPSignMolProperties.getMolTitle(mol) : null);
 
+				try {
 					predictMolecule(predictor, predWriter, mol, trueValue);
 
 					predictionDone=true;
-					successCount++;
+					numSuccessfulPreds++;
 
 				} catch (MissingDataException e) {
 					LOGGER.debug("Got a missing data exception - something wrong i pre-processing?");
 					progressTracker.register(new FailedRecord.Builder(index, Cause.DESCRIPTOR_CALC_ERROR).withID(id).withReason(e.getMessage()).build());
 					numMissingDataFails++;
-				} catch (EarlyLoadingStopException e){
-					// This likely means bad parameters was sent - need to give a good error output
-					LOGGER.error("Failed with earlyLoadingStopException will try to generate a better error message",e);
-					IOUtils.closeQuietly(predWriter); // have to close it (in case Sys-out is controlled)
-					CLIProgramUtils.failWithBadUserInputFile(console, successCount, predictFile, progressTracker.getFailures(), predictor.getDataset(), 
-						validationEndpoint, null, earlyTermination.maxFailuresAllowed, listFailedRecordsMixin.listFailedRecords);
 				} catch (Exception e) {
 					LOGGER.debug("Failed molecule due to generic exception", e);
 					progressTracker.register(new FailedRecord.Builder(index,Cause.UNKNOWN).withID(id).withReason(e.getMessage()).build());
@@ -474,29 +467,21 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 					iterationCount++;
 					if (progressInterval>0 && iterationCount % progressInterval == 0 ){
 						// Print progress to stdout
-						console.println(" - Processed %s/%s molecules", PrintMode.NORMAL,iterationCount,totalNumMolsToPredict);
+						console.println(" - Processed %d/%d molecules", PrintMode.NORMAL,iterationCount,totalNumMolsToPredict);
 						pb.stepProgress();
 					}
 				}
 			}
 
-		} catch (EarlyLoadingStopException e){
-			// This likely means bad parameters was sent - need to give a good error output
-			LOGGER.error("Failed with earlyLoadingStopException will try to generate a better error message",e);
-			IOUtils.closeQuietly(predWriter); // have to close it (in case Sys-out is controlled)
-			CLIProgramUtils.failWithBadUserInputFile(console, successCount, predictFile, progressTracker.getFailures(), 
-				predictor.getDataset(), validationEndpoint, null, earlyTermination.maxFailuresAllowed, listFailedRecordsMixin.listFailedRecords);
-		}
+		} 
 
 		if (!predictionDone){
 			LOGGER.debug("No molecules were predicted, with {} record failures: {}", progressTracker.getNumFailures(), progressTracker.getFailures());
 			IOUtils.closeQuietly(predWriter); // have to close it (in case Sys-out is controlled)
-			CLIProgramUtils.failWithBadUserInputFile(console, 0, predictFile, progressTracker.getFailures(), 
-				predictor.getDataset(), validationEndpoint, labels, earlyTermination.maxFailuresAllowed, listFailedRecordsMixin.listFailedRecords);
+			new CLIProgramUtils.UserInputErrorResolver(console, 0, predictFile, progressTracker.getFailures(), 
+				predictor.getDataset(), validationEndpoint, labels, earlyTermination.maxFailuresAllowed, listFailedRecordsMixin.listFailedRecords).failWithError();;
 		}
 			
-
-		return successCount;
 	}
 
 	private void predictMolecule(ChemPredictor chemPredictor, PredictionResultsWriter predictionWriter, IAtomContainer mol, double trueLabel) 

@@ -18,6 +18,7 @@ import java.lang.reflect.Field;
 import java.net.URI;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -737,7 +738,8 @@ public class CLIProgramUtils {
 		} catch (Exception e){
 			allFailedRecords.addAll(sp.getProgressTracker().getFailures()); // Add failures from the current file
 			LOGGER.debug("Failed parsing in chemical input data, will try to compile a good error message");
-			failWithBadUserInputFile(console, sp.getNumRecords(), currentFile, allFailedRecords, sp, endpoint, nl, maxNumAllowedFailures, listFailed);
+			new UserInputErrorResolver(console, sp.getNumRecords(), currentFile, allFailedRecords, sp, endpoint, nl, maxNumAllowedFailures, listFailed)
+				.failWithError();
 		}
 		
 		if (nl != null) {
@@ -1627,355 +1629,493 @@ public class CLIProgramUtils {
 		} else
 		return "not recognized model type";
 	}
-	
-	public static void failWithBadUserInputFile(CLIConsole console, int numOK, ChemFile inputFile, 
-	List<FailedRecord> failedRecords, ChemDataset dataset, String property, NamedLabels givenLabels, int numMaxAllowedFailures, boolean listFailed) {
 
-		if (failedRecords== null || failedRecords.isEmpty()){
-			failWithBadUserInputFileNoFailedRecords(console, numOK, inputFile, dataset, property, givenLabels, numMaxAllowedFailures);
+	public static class UserInputErrorResolver {
+
+		private final static String ERROR_MESSAGE = "Invalid arguments";
+
+		private final CLIConsole console;
+		private final int numOK;
+		private final ChemFile inputFile;
+		private final List<FailedRecord> failedRecords;
+		private final ChemDataset dataset;
+		private final String property;
+		private final NamedLabels givenLabels;
+		private final int numMaxAllowedFailures;
+		private final boolean listFailed;
+
+		public UserInputErrorResolver(CLIConsole console, int numOK, ChemFile inputFile, 
+			List<FailedRecord> failedRecords, ChemDataset dataset, String property, NamedLabels givenLabels, int numMaxAllowedFailures, boolean listFailed){
+			this.console = console;
+			this.numOK = numOK;
+			this.inputFile = inputFile;
+			this.failedRecords = failedRecords;
+			this.dataset = dataset;
+			this.property = property;
+			this.givenLabels = givenLabels;
+			this.numMaxAllowedFailures = numMaxAllowedFailures;
+			this.listFailed = listFailed;
 		}
 
-		StringBuilder errMessage = new StringBuilder();
+		public void failWithError() {
 
-		if (numMaxAllowedFailures>0 && failedRecords!=null && failedRecords.size()>= numMaxAllowedFailures){
-			LOGGER.debug("Writing info about stopping execution due to encountered max number of failures");
-			errMessage.append("%nStopping execution due to encountering more than the max number of allowed failures: failed ")
-				.append(failedRecords.size()).append(" record(s).");
-		}
+			// Step 1 - list any failed records for current file
+			listCurrentFailedRecords();
 
-		// If listing of failures, use only one from the current ProgressTracker (if any earlier, they should already have been listed)
-		if (listFailed){
-			appendFailedMolsInfo(errMessage, dataset.getProgressTracker().getFailures());
-			errMessage.append("%n");
-		}
+			// Step 2 - if early stopping was the cause
+			writeEarlyStoppingCause();
 
-		
-		errMessage.append("%nERROR: ");
-		
-		Map<Cause,Integer> failureCounts = getCounts(failedRecords);
-		// Sort the Map by values
-        List<Map.Entry<Cause, Integer>> entries = new ArrayList<>(failureCounts.entrySet());
-        entries.sort(Map.Entry.<Cause, Integer>comparingByValue());
+			// Step 3 - write trying to find the cause of the error
+			console.printlnWrapped("%nAttempting to find the most likely cause of the error%s",
+				PrintMode.SILENT, ProgressInfoTexts.SPACE_ELLIPSES);
 
-		// Check the most common issue (the last index, sorted in ascending order)
-		Map.Entry<Cause,Integer> first = entries.get(entries.size()-1);
+			// Step 4 - find the cause without using failures
+			String potentialCause = findErrorWithoutRecords();
+			if (potentialCause != null){
+				LOGGER.debug("Found a likely cause of the error without using failed errors info");
+			}
 
-		switch(first.getKey()){
-			case LOW_HAC:
-				errMessage
-					.append(first.getValue())
-					.append(" record(s) were discarded due to having too low Heavy atom count (now set to minimum ")
-					.append(dataset.getMinHAC())
-					.append(") - consider lowering the threshold using the ")
+			// Step 5 - If not found error yet - try to find the cause using the failures (if any)
+			if (potentialCause == null){
+				LOGGER.debug("No error could be found without using the failed records as help");
+				if (failedRecords != null && !failedRecords.isEmpty()){
+					potentialCause = findErrorWithRecords();
+					if (potentialCause != null){
+						LOGGER.debug("Found a likely cause of the error based on failed records info");
+					}
+				}
+			}
+
+			StringBuilder errorHelpText = new StringBuilder();
+			if (potentialCause != null){
+				errorHelpText.append("Found potential cause: ")
+					.append(potentialCause).append("%n");
+			}
+			
+
+			// Step 6 - if no errors could be found - write a generic error message
+			// And step 6b - if not using --list-fails give info about it
+			if (potentialCause == null){
+				errorHelpText.append("Could not deduce what was wrong with the arguments, please verify that you have specified all parameters correctly.");
+				if (!listFailed){
+					errorHelpText.append(" It may help to re-run the same parameters and adding the ")
+						.append(ParameterUtils.PARAM_FLAG_ANSI_ON).append("--list-failed").append(ParameterUtils.ANSI_OFF)
+						.append(" flag in order to find the erronious parameter.%n");
+				}
+			}
+
+			// Step 7 - this error could be OK (i.e. sparse data set not having measurements for all compounds)
+			if (numMaxAllowedFailures>=0 & dataset.getNumRecords()>0){
+				errorHelpText
+					.append("%nIf these issues are expected you may consider setting the parameter ")
 					.append(ParameterUtils.PARAM_FLAG_ANSI_ON)
-					.append("--min-hac")
+					.append("--early-termination-after")
 					.append(ParameterUtils.ANSI_OFF)
-					.append(" parameter");
-				break;
-			case DESCRIPTOR_CALC_ERROR:
-				errMessage
-					.append(first.getValue())
-					.append(" record(s) were discarded due to descriptor calculation failures, perhaps there is a bug in one of the descriptors. If you have missing data for some features this can be resolved by using a data transformation, run ")
-					.append(ParameterUtils.RUN_EXPLAIN_ANSI_ON)
-					.append("explain transformations")
-					.append(ParameterUtils.ANSI_OFF)
-					.append(" for further information");
-				break;
-			case INVALID_PROPERTY:
-				if (givenLabels == null){
-					// Regression setting
-					errMessage
-						.append("Running in regression mode, but ")
-						.append(first.getValue())
-						.append(" records had property values that could not be converted to numerical values");
-				} else {
-					// Classification setting
-					errMessage
-						.append("Running in classification mode, but ")
-						.append(first.getValue())
-						.append(" record(s) had property values which did not match any of the given class labels (")
-						.append(StringUtils.joinCollection(", ", givenLabels.getLabelsSet()))
-						.append("), where the correct class labels given to ")
-						.append(ParameterUtils.PARAM_FLAG_ANSI_ON)
-						.append("--labels")
-						.append(ParameterUtils.ANSI_OFF)
-						.append("?");
-				}
-				break;
+					.append(" to either '-1' (to turn of early termination) or to a higher value than currently set to.");
+			}
 
-			case INVALID_RECORD:
-				errMessage
-					.append(first.getValue())
-					.append(" record(s) were discarded due to descriptor calculation failures, perhaps there is a bug in one or several of the descriptors that was specified.");
-				break;
-			case INVALID_STRUCTURE:
-				errMessage
-					.append(first.getValue())
-					.append(" record(s) were discarded due to invalid chemical structures - please verify your input data");
-				break;
-			case MISSING_PROPERTY:
-				if (numOK>0){
-					errMessage
-						.append(first.getValue())
-						.append(" record(s) were discarded due to missing property values");
-				} else {
-					// No valid records found, perhaps we can give more details
-					errMessage.append("No records had the given property '").append(property).append('\'');
+			// Step 8 - combine all into a descriptive message
+			console.printlnWrapped(errorHelpText.toString(),PrintMode.SILENT);
 
-					// check the first 10 records to find the properties that exists
-					List<String> propsInFirst10 = null;
-					
-					try (ChemFileIterator reader = inputFile.getIterator();){
-						Set<String> allProps = new LinkedHashSet<>();
-						for (int i=0; i<10 && reader.hasNext(); i++){
-							IAtomContainer mol = reader.next();
-							allProps.addAll(mol.getProperties().keySet().stream().map(Object::toString).collect(Collectors.toList()));
-						}
-						propsInFirst10 = CPSignMolProperties.stripInteralProperties(allProps);
-
-						String bestMatch = new FuzzyMatcher().match(propsInFirst10, property);
-						// Found a best match
-						errMessage.append(" did you mean: '").append(bestMatch).append("'?");
-					} catch (NoMatchException e) {
-						// No match found with fuzzy search - but the allProps still contain all properties from the first 10 records
-						if (propsInFirst10 != null & !propsInFirst10.isEmpty() & propsInFirst10.size() < 11){
-							errMessage
-								.append(", here are the available properties found for the first 10 records: ")
-								.append(StringUtils.join(", ", propsInFirst10));
-						} else {
-							errMessage
-								.append(", please verify that you specify the correct property to model to the flag ")
-								.append(ParameterUtils.PARAM_FLAG_ANSI_ON)
-								.append("--property")
-								.append(ParameterUtils.ANSI_OFF)
-								.append(" including correct font case.");
-						}
-					} catch (Exception e){
-						// Failed - not sure why, give a more generic answer then
-						LOGGER.debug("Tried to deduce all properties from the first 10 molecules - failed",e);
-						errMessage.append(" did you specify it correctly, using the correct letter case?");
-					}
-
-				}
+			// Step 9 - write final sys-err error text and quit 
+			console.failWithArgError(ERROR_MESSAGE);
 				
-				break;
-			case MISSING_STRUCTURE:
-				// this is likely due to having the wrong header in CSV to be regarded as the column with SMILES
-				if (inputFile instanceof CSVFile){
+		}
+
+		private void listCurrentFailedRecords(){
+			if (listFailed && !failedRecords.isEmpty()){
+				StringBuilder errMessage = new StringBuilder();
+				appendFailedMolsInfo(errMessage, failedRecords);
+				errMessage.append("%n");
+				console.printlnWrapped(errMessage.toString(),PrintMode.NORMAL);
+			}
+		}
+
+		private void writeEarlyStoppingCause(){
+			if (numMaxAllowedFailures>0 && failedRecords!=null && failedRecords.size()>= numMaxAllowedFailures){
+				LOGGER.debug("Writing info about stopping execution due to encountered max number of failures");
+				console.printlnWrapped("%nStopping execution due to encountering more than the max number of allowed failures: failed %d record(s)", 
+					PrintMode.SILENT, failedRecords.size());
+			}
+		}
+
+		private String findErrorWithoutRecords() {
+		
+			LOGGER.debug("Trying to find errors without looking at any failed records");
+		
+			StringBuilder errMessage = new StringBuilder();
+			// 1. Cannot read from the file itself
+			if (!UriUtils.canReadFromURI(inputFile.getURI())){
+				errMessage
+					.append("%nCannot read from file:%n")
+					.append(inputFile.getURI())
+					.append("%n");
+				return errMessage.toString();
+			}
+
+			// 2. Input file is empty
+			if (!UriUtils.verifyURINonEmpty(inputFile.getURI())){
+				LOGGER.debug("Found input file {} to be empty", inputFile.getURI());
+				errMessage
+					.append("%nInput file is empty:%n")
+					.append(inputFile.getURI())
+					.append("%n");
+				return errMessage.toString();
+			}
+
+			// 3. Wrong chem-format given
+			ChemIOFormat actualFormat = null;
+			boolean correctFormat = false;
+			try {
+				actualFormat = ChemIOUtils.deduceFormat(inputFile.getURI());
+				LOGGER.debug("Tried to deduce the file format and found it to be {}, let's check if the given argument {} matches",
+					actualFormat, inputFile.getClass().getSimpleName());
+				switch (actualFormat){
+					case CSV:
+						correctFormat = inputFile instanceof CSVFile;
+						break;
+					case JSON:
+						correctFormat = inputFile instanceof JSONFile;
+						break;
+					case SDF:
+						correctFormat = inputFile instanceof SDFile;
+						break;
+					case UNKNOWN:
+					default:
+						actualFormat = ChemIOFormat.UNKNOWN;
+						correctFormat = false; // we do not actually know the format, 
+						break;
+				}
+
+				if (!correctFormat){
 					errMessage
-						.append(first.getValue())
-						.append(" record(s) were discarded due to missing chemical structures. Please verify that the correct column in the CSV is used as structure");
-					try {
-						CSVChemFileReader csv = ((CSVFile)inputFile).getIterator();
-						List<String> allHeaders = csv.getHeaders();
-						String smilesCol = csv.getSmilesColumnHeader();
-						errMessage
-							.append(", currently '")
-							.append(smilesCol)
-							.append("' is used as the column containing SMILES out of ");
-						if (allHeaders.size() < 11){
-							// specify all of them
-							errMessage.append("the following columns: ").append(StringUtils.join(", ", allHeaders)).append('.');
-						} else {
-							// just give the total number of headers
-							errMessage.append(allHeaders.size()).append(" columns.");
-						}
-					} catch(Exception e){
-						// Failed getting it, so there might be an issue with the CSV settings?
-						errMessage.append('.');
-					}
-				} else if (inputFile instanceof JSONFile){
-					errMessage
-						.append(first.getValue())
-						.append(" record(s) were discarded due to missing chemical structures - please check the requirements for using JSON input data by running: ");
+						.append("%nThe given input file:%n")
+						.append(inputFile.getURI())
+						.append("%nseems to be of type ")
+						.append(actualFormat.toString())
+						.append(" while given type was ")
+						.append(inputFile.getFileFormat())
+						.append(" please make sure you specify the correct file format and any extra sub-arguments, for more information please run ");
 					appendExplainChemFormat(errMessage);
-				} else {
-					LOGGER.debug("invalid structures in SDF format (or custom reader) - this should never occur - why does it?");
+					errMessage.append("%n");
+					return errMessage.toString();
+				}
+			} catch (Exception e){
+				LOGGER.debug("Failed to deduce the file format",e);
+			}
+
+			// 4. Invalid argument for the given type
+			if (correctFormat){
+				LOGGER.debug("Found that the specified format seems to match what we deduce it to be: {}",actualFormat);
+				if (actualFormat == ChemIOFormat.CSV){
+					// Only the CSV fomrat that have settings that makes sense
+					// 4.1 - do we have the correct delimiter?
+					CSVFile file = (CSVFile) inputFile;
+					try {
+						char delim = ChemIOUtils.deduceDelimiter(inputFile.getURI());
+						if (delim != file.getDelimiter()){
+							errMessage
+								.append("%nFor input CSV file:%n")
+								.append(inputFile.getURI())
+								.append("%nThe delimiter was set to \"")
+								.append(file.getDelimiter())
+								.append("\" but it seems that it uses delimiter \"").append(delim).append("\", please run ");
+							appendExplainChemFormat(errMessage);
+							errMessage.append(" for further information of about the available parameters and syntax.%n");
+							return errMessage.toString();
+						}
+						
+					} catch (Exception e){
+						LOGGER.debug("Failed to find delimiter for input CSV", e);
+						errMessage
+							.append("%nAttempted to find the delimiter for input CSV file:%n")
+							.append(inputFile.getURI())
+							.append("%nbut failed trying to deduce the correct one. Please verify your parameters and run ");
+						appendExplainChemFormat(errMessage);
+						errMessage.append(" for further information about the available parameters and syntax.%n");
+						return errMessage.toString();
+					}
+					// 4.2 user defined header
+					String[] userDefHeader = file.getUserDefinedheader(); 
+					if (userDefHeader != null){
+						// verify there is a valid SMILES column
+						if (file.getSMILESColumnHeader()!=null){
+							// If explicit header set
+							String explictHeader = file.getSMILESColumnHeader();
+							boolean smilesHeaderFound = false;
+							for (String h : userDefHeader){
+								if (h.equals(explictHeader)){
+									smilesHeaderFound = true;
+									break;
+								}
+							}
+							if (!smilesHeaderFound){
+								// NO header found
+								errMessage.append("%nA custom header was set for CSV input, as well as an explicit header for SMILES - but header (")
+									.append(explictHeader).append(") was not found in the given headers: ")
+									.append(StringUtils.join(", ",userDefHeader))
+									.append(".%nPlease set the correct header that contains the SMILES structures.%n");
+								return errMessage.toString();
+							}
+						} else {
+							// if trying to deduce the correct column 
+							try {
+								String smilesHeaderField = CPSignMolProperties.getCustomSmilesProperty(Arrays.asList(userDefHeader));
+								if (smilesHeaderField == null){
+									errMessage.append("%nNo header found in CSV file:%n")
+										.append(file.getURI())
+										.append("%nthat contains 'smiles' - no header can thus be assumed to contain chemical structure. Please verify your input and run ");
+									appendExplainChemFormat(errMessage);
+									errMessage.append(" to see the available parameters.");
+									return errMessage.toString();
+								}
+							} catch (Exception e){
+								errMessage.append("%nFailed reading from CSV file:%n")
+									.append(file.getURI())
+									.append("%nwith cause: ")
+									.append(e.getMessage())
+									.append("%nPlease verify your input and run ");
+								appendExplainChemFormat(errMessage);
+								errMessage.append(" to see the available parameters.");
+								return errMessage.toString();
+							}
+						}
+					} // End user defined header
+					else {
+						// 4.3 - user defined header not set - using the one from the file
+						try{
+							List<String> headerInFile = file.getIterator().getHeaders();
+							try {
+								String smilesHeaderField = CPSignMolProperties.getCustomSmilesProperty(Arrays.asList(headerInFile));
+								if (smilesHeaderField == null){
+									errMessage.append("%nNo header found in CSV file:%n")
+										.append(file.getURI())
+										.append("%nthat contains 'smiles' - no header can thus be assumed to contain chemical structure. Please verify your input and run ");
+									appendExplainChemFormat(errMessage);
+									errMessage.append(" to see the available parameters.");
+									return errMessage.toString();
+								}
+							} catch (Exception e){
+								errMessage.append("%nFailed reading from CSV file:%n")
+									.append(file.getURI())
+									.append("%nwith cause: ")
+									.append(e.getMessage())
+									.append("%nPlease verify your input and run ");
+								appendExplainChemFormat(errMessage);
+								errMessage.append(" to see the available parameters.");
+								return errMessage.toString();
+							}
+							
+						} catch (Exception e){
+							LOGGER.debug("Could not get the file header from the file, it must be missing or other invalid arguments");
+							errMessage.append("%nFailed reading from CSV file:%n")
+								.append(file.getURI())
+								.append("%nwith cause: ").append(e.getMessage())
+								.append("%nPlease verify your input and run ");
+							appendExplainChemFormat(errMessage);
+							errMessage.append(" to see the available parameters.");
+							return errMessage.toString();
+						}
+
+					}
+
+				} else if (actualFormat == ChemIOFormat.JSON){
+					// Our JSON format is very strict, so possibly the input was not formatted so we could read it properly?
+					errMessage.append("%nInput file:%n")
+						.append(inputFile.getURI())
+						.append("%nwas JSON, please verify that your JSON is following the required branching by e.g. running ");
+					appendExplainChemFormat(errMessage);
+					errMessage.append("%n");
+					return errMessage.toString();
+				}
+			}
+
+			LOGGER.debug("Failed to deduce what was wrong with the user argument without checking failed records..");
+			return null;
+		}
+
+		private String findErrorWithRecords() {
+			// If method called when no failed records exists 
+			if (failedRecords == null || failedRecords.isEmpty())
+				return null;
+
+			StringBuilder errMessage = new StringBuilder();
+			
+			Map<Cause,Integer> failureCounts = getCounts(failedRecords);
+			// Sort the Map by values
+			List<Map.Entry<Cause, Integer>> entries = new ArrayList<>(failureCounts.entrySet());
+			entries.sort(Map.Entry.<Cause, Integer>comparingByValue());
+
+			// Check the most common issue (the last index, sorted in ascending order)
+			Map.Entry<Cause,Integer> first = entries.get(entries.size()-1);
+
+			switch(first.getKey()){
+				case LOW_HAC:
 					errMessage
 						.append(first.getValue())
-						.append(" record(s) were discarded due to missing chemical structures - please verify your input data.");
-				}
-				
-				break;
-			case UNKNOWN:
-			default:
-				LOGGER.debug("Most records ({}/{}) failed due to unknown reasons - trying to deduce why..", first.getValue(), failedRecords.size());
-				errMessage
-					.append("Most records failed due to non-characterized errors, please revise your arguments for potential spelling error or similar. You may also get further information from using the ")
-					.append(ParameterUtils.PARAM_FLAG_ANSI_ON)
-					.append("--list-failed")
-					.append(ParameterUtils.ANSI_OFF)
-					.append(" flag to get info about each individual failed record.");
-				break;
-				
-		}
-
-		errMessage.append("%n%n");
-
-		if (numMaxAllowedFailures>=0 & dataset.getNumRecords()>0){
-			errMessage
-				.append("If these issues are expected you may consider setting the parameter ")
-				.append(ParameterUtils.PARAM_FLAG_ANSI_ON)
-				.append("--early-termination-after")
-				.append(ParameterUtils.ANSI_OFF)
-				.append(" to either '-1' (to turn of early termination) or to a higher value than currently set to");
-		}
-
-		console.printlnWrapped(errMessage.toString(), PrintMode.SILENT);
-		console.failWithArgError("Invalid arguments"); // fail with generic message, error message written to std-out to support ANSI coloring
-	}
-
-	public static void failWithBadUserInputFileNoFailedRecords(CLIConsole console, int numOK, ChemFile inputFile, 
-	ChemDataset dataset, String property, NamedLabels givenLabels, int numMaxAllowedFailures) {
-		LOGGER.debug("We have no failed records to help with deducing the possible argument error");
-		
-		StringBuilder errMessage = new StringBuilder();
-		// 1. Cannot read from the file itself
-		if (!UriUtils.canReadFromURI(inputFile.getURI())){
-			errMessage
-				.append("%nCannot read from file:%n")
-				.append(inputFile.getURI())
-				.append("%n");
-			failInCaseErrMessageBeenGenerated(console,errMessage);
-		}
-
-		// 2. Input file is empty
-		if (!UriUtils.verifyURINonEmpty(inputFile.getURI())){
-			LOGGER.debug("Found input file {} to be empty", inputFile.getURI());
-			errMessage
-				.append("%nInput file is empty:%n")
-				.append(inputFile.getURI())
-				.append("%n");
-			failInCaseErrMessageBeenGenerated(console,errMessage);
-		}
-
-		// 3. Wrong chem-format given
-		ChemIOFormat actualFormat = null;
-		boolean correctFormat = false;
-		try {
-			actualFormat = ChemIOUtils.deduceFormat(inputFile.getURI());
-			LOGGER.debug("Tried to deduce the file format and found it to be {}, let's check if the given argument {} matches",
-				actualFormat, inputFile.getClass().getSimpleName());
-			switch (actualFormat){
-				case CSV:
-					correctFormat = inputFile instanceof CSVFile;
+						.append(" record(s) were discarded due to having too low Heavy atom count (now set to minimum ")
+						.append(dataset.getMinHAC())
+						.append(") - consider lowering the threshold using the ")
+						.append(ParameterUtils.PARAM_FLAG_ANSI_ON)
+						.append("--min-hac")
+						.append(ParameterUtils.ANSI_OFF)
+						.append(" parameter");
 					break;
-				case JSON:
-					correctFormat = inputFile instanceof JSONFile;
+				case DESCRIPTOR_CALC_ERROR:
+					errMessage
+						.append(first.getValue())
+						.append(" record(s) were discarded due to descriptor calculation failures, perhaps there is a bug in one of the descriptors. If you have missing data for some features this can be resolved by using a data transformation, run ")
+						.append(ParameterUtils.RUN_EXPLAIN_ANSI_ON)
+						.append("explain transformations")
+						.append(ParameterUtils.ANSI_OFF)
+						.append(" for further information");
 					break;
-				case SDF:
-					correctFormat = inputFile instanceof SDFile;
+				case INVALID_PROPERTY:
+					if (givenLabels == null){
+						// Regression setting
+						errMessage
+							.append("Running in regression mode, but ")
+							.append(first.getValue())
+							.append(" records had property values that could not be converted to numerical values, is this a classification data set?");
+					} else {
+						// Classification setting
+						errMessage
+							.append("Running in classification mode, but ")
+							.append(first.getValue())
+							.append(" record(s) had property values which did not match any of the given class labels (")
+							.append(StringUtils.joinCollection(", ", givenLabels.getLabelsSet()))
+							.append("), where the correct class labels given to ")
+							.append(ParameterUtils.PARAM_FLAG_ANSI_ON)
+							.append("--labels")
+							.append(ParameterUtils.ANSI_OFF)
+							.append("?");
+					}
+					break;
+
+				case INVALID_RECORD:
+					errMessage
+						.append(first.getValue())
+						.append(" record(s) were discarded due to descriptor calculation failures, perhaps there is a bug in one or several of the descriptors that was specified.");
+					break;
+				case INVALID_STRUCTURE:
+					errMessage
+						.append(first.getValue())
+						.append(" record(s) were discarded due to invalid chemical structures - please verify your input data");
+					break;
+				case MISSING_PROPERTY:
+					if (numOK>0){
+						errMessage
+							.append(first.getValue())
+							.append(" record(s) were discarded due to missing property values");
+					} else {
+						// No valid records found, perhaps we can give more details
+						errMessage.append("No records had the given property '").append(property).append('\'');
+
+						// check the first 10 records to find the properties that exists
+						List<String> propsInFirst10 = null;
+						
+						try (ChemFileIterator reader = inputFile.getIterator();){
+							Set<String> allProps = new LinkedHashSet<>();
+							for (int i=0; i<10 && reader.hasNext(); i++){
+								IAtomContainer mol = reader.next();
+								allProps.addAll(CPSignMolProperties.stripEmptyCDKProperties(mol.getProperties()).keySet().stream().map(Object::toString).collect(Collectors.toList()));
+							}
+							propsInFirst10 = CPSignMolProperties.stripInteralProperties(allProps);
+
+							String bestMatch = new FuzzyMatcher().match(propsInFirst10, property);
+							// Found a best match
+							errMessage.append(" did you mean: '").append(bestMatch).append("'?");
+						} catch (NoMatchException e) {
+							// No match found with fuzzy search - but the allProps still contain all properties from the first 10 records
+							if (propsInFirst10 != null & !propsInFirst10.isEmpty() & propsInFirst10.size() < 11){
+								errMessage
+									.append(", here are the available properties found for the first 10 records: ")
+									.append(StringUtils.join(", ", propsInFirst10));
+							} else {
+								errMessage
+									.append(", please verify that you specify the correct property to model to the flag ")
+									.append(ParameterUtils.PARAM_FLAG_ANSI_ON)
+									.append("--property")
+									.append(ParameterUtils.ANSI_OFF)
+									.append(" including correct font case.");
+							}
+						} catch (Exception e){
+							// Failed - not sure why, give a more generic answer then
+							LOGGER.debug("Tried to deduce all properties from the first 10 molecules - failed",e);
+							errMessage.append(" did you specify it correctly, using the correct letter case?");
+						}
+
+					}
+					
+					break;
+				case MISSING_STRUCTURE:
+					// this is likely due to having the wrong header in CSV to be regarded as the column with SMILES
+					if (inputFile instanceof CSVFile){
+						errMessage
+							.append(first.getValue())
+							.append(" record(s) were discarded due to missing chemical structures. Please verify that the correct column in the CSV is used as structure");
+						try {
+							CSVChemFileReader csv = ((CSVFile)inputFile).getIterator();
+							List<String> allHeaders = csv.getHeaders();
+							String smilesCol = csv.getSmilesColumnHeader();
+							errMessage
+								.append(", currently '")
+								.append(smilesCol)
+								.append("' is used as the column containing SMILES out of ");
+							if (allHeaders.size() < 11){
+								// specify all of them
+								errMessage.append("the following columns: ").append(StringUtils.join(", ", allHeaders)).append('.');
+							} else {
+								// just give the total number of headers
+								errMessage.append(allHeaders.size()).append(" columns.");
+							}
+						} catch(Exception e){
+							// Failed getting it, so there might be an issue with the CSV settings?
+							errMessage.append('.');
+						}
+					} else if (inputFile instanceof JSONFile){
+						errMessage
+							.append(first.getValue())
+							.append(" record(s) were discarded due to missing chemical structures - please check the requirements for using JSON input data by running: ");
+						appendExplainChemFormat(errMessage);
+					} else {
+						LOGGER.debug("invalid structures in SDF format (or custom reader) - this should never occur - why does it?");
+						errMessage
+							.append(first.getValue())
+							.append(" record(s) were discarded due to missing chemical structures - please verify your input data.");
+					}
+					
 					break;
 				case UNKNOWN:
 				default:
-					actualFormat = ChemIOFormat.UNKNOWN;
-					correctFormat = false; // we do not actually know the format, 
+					LOGGER.debug("Most records ({}/{}) failed due to unknown reasons - could not deduce why", first.getValue(), failedRecords.size());
+					errMessage
+						.append("Most records failed due to non-characterized errors, please revise your arguments for potential spelling error or similar. You may also get further information from using the ")
+						.append(ParameterUtils.PARAM_FLAG_ANSI_ON)
+						.append("--list-failed")
+						.append(ParameterUtils.ANSI_OFF)
+						.append(" flag to get info about each individual failed record.");
 					break;
 			}
 
-			if (!correctFormat){
-				errMessage
-					.append("%nThe given input file:%n")
-					.append(inputFile.getURI())
-					.append("%nseems to be of type ")
-					.append(actualFormat.toString())
-					.append(" while given type was ")
-					.append(inputFile.getFileFormat())
-					.append(" please make sure you specify the correct file format and any extra sub-arguments, for more information please run ");
-				appendExplainChemFormat(errMessage);
-				errMessage.append("%n");
-				failInCaseErrMessageBeenGenerated(console, errMessage);
+			if (errMessage.length()>5){
+				LOGGER.debug("Found a potential cause of the error based on the failed records");
+				return errMessage.toString();
 			}
-		} catch (Exception e){
-			LOGGER.debug("Failed to deduce the file format",e);
+
+			LOGGER.debug("Could not deduce an error based on the failed records either");
+			return null;
+
+
 		}
 
-		// 4. Invalid argument for the given type
-		if (correctFormat){
-			LOGGER.debug("Found that the specified format seems to match what we deduce it to be: {}",actualFormat);
-			if (actualFormat == ChemIOFormat.CSV){
-				// Only the CSV fomrat that have settings that makes sense
-				// 4.1 - do we have the correct delimiter?
-				try{
-					char delim = ChemIOUtils.deduceDelimiter(inputFile.getURI());
-					CSVFile file = (CSVFile) inputFile;
-					if (delim != file.getDelimiter()){
-						errMessage
-							.append("%For input CSV file:%n")
-							.append(inputFile.getURI())
-							.append("%nThe delimiter was set to \"")
-							.append(file.getDelimiter())
-							.append("\" but it seems that it uses delimiter \"").append(delim).append("\"");
-						appendExplainChemFormat(errMessage);
-						errMessage.append("%n");
-						failInCaseErrMessageBeenGenerated(console, errMessage);
-					}
-				} catch (Exception e){
-					LOGGER.debug("Failed to find delimiter for input CSV", e);
-					errMessage
-						.append("%Attempted to find the delimiter for input CSV file:%n")
-						.append(inputFile.getURI())
-						.append("%nbut failed trying to deduce the correct one. Please verify your parameters and run ");
-					appendExplainChemFormat(errMessage);
-					errMessage.append(" for further information%n");
-					failInCaseErrMessageBeenGenerated(console, errMessage);
-				}
-
-			} else if (actualFormat == ChemIOFormat.JSON){
-				// Our JSON format is very strict, so possibly the input was not formatted so we could read it properly?
-				errMessage.append("%Input file:%n")
-					.append(inputFile.getURI())
-					.append("%nwas JSON, please verify that your JSON is following the required branching by e.g. running ");
-				appendExplainChemFormat(errMessage);
-				errMessage.append("%n");
-				failInCaseErrMessageBeenGenerated(console, errMessage);
-			}
+		private static void appendExplainChemFormat(StringBuilder sb){
+			sb.append(ParameterUtils.RUN_EXPLAIN_ANSI_ON)
+				.append("explain chem-formats")
+				.append(ParameterUtils.ANSI_OFF);
 		}
 
-		// 5. Invalid property (in case ChemDataset already have a property and records loaded)
-		if (dataset.getProperty()!=null && !dataset.getProperty().equals(property)) {
-			// This is in validate/predict 
-			errMessage.append("The given property '").append(property).append("' does not match the one used by the model '").append(dataset.getProperty()).append("'%n");
-			failInCaseErrMessageBeenGenerated(console, errMessage);
-		}
-
-		// 6. There is a BOM (byte order mark) in the file, but not configured to having one
-		// try {
-		// 	boolean hasBOM = UriUtils.hasBOM(inputFile.getURI());
-		// 	if (hasBOM & inputFile instanceof CSVFile){
-		// 		if (! ((CSVFile)inputFile).getHasBOM()){
-		// 			LOGGER.debug("The file has a BOM and CSV-file not configured to parse the BOM");
-		// 			errMessage.append("The input file:%n")
-		// 				.append(inputFile.getURI())
-		// 				.append("%nhas a Byte Order Mark (BOM) while the parameter for BOM was not set to true, see ");
-		// 			appendExplainChemFormat(errMessage);
-
-		// 			errMessage.append(" for further details on the available parameters.%n");
-		// 		}
-		// 	}
-		// } catch (IOException e){
-		// 	LOGGER.debug("Failed to check if the input file had a BOM, this means there's like likely something wrong with the file itself",e);
-		// 	errMessage.append("Could not read from the given input file:%n")
-		// 		.append(inputFile.getURI()).append("%nPlease verify that the file itself is valid");
-		// }
-		// failInCaseErrMessageBeenGenerated(console, errMessage);
-
-
-		LOGGER.debug("Failed to deduce what was wrong with the user argument, will instead give a generic error");
-		console.failWithArgError("Invalid user arguments, please verify that you have specified all parameters correctly");
 	}
-
-	private static void failInCaseErrMessageBeenGenerated(CLIConsole console, StringBuilder errorMessageBuilder){
-		if (errorMessageBuilder.length()>0){
-			console.print(errorMessageBuilder.toString(), PrintMode.SILENT);
-			console.failWithArgError("Invalid arguments");
-		}
-	}
-
-	private static void appendExplainChemFormat(StringBuilder sb){
-		sb.append(ParameterUtils.RUN_EXPLAIN_ANSI_ON)
-			.append("explain chem-formats")
-			.append(ParameterUtils.ANSI_OFF);
-	}
+	
 	
 }

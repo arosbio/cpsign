@@ -47,7 +47,7 @@ public class ChemFileConverter implements IParameterConsumer {
 	}
 
 	public static class TrainDataConverter extends ChemFileConverter {
-		private static final String FLAG_ARG = "-td | --train-data";
+		private static final String FLAG_ARG = "-td | --train-data ";
 		@Override
 		String getCorrectSyntax() {
 			return FLAG_ARG + ArgumentType.CHEM_FILE_ARGS;
@@ -55,7 +55,7 @@ public class ChemFileConverter implements IParameterConsumer {
 	}
 
 	public static class ModelExclusiveDataConverter extends ChemFileConverter {
-		private static final String FLAG_ARG = "-md | --model-data";
+		private static final String FLAG_ARG = "-md | --model-data ";
 		@Override
 		String getCorrectSyntax() {
 			return FLAG_ARG + ArgumentType.CHEM_FILE_ARGS;
@@ -63,7 +63,7 @@ public class ChemFileConverter implements IParameterConsumer {
 	}
 
 	public static class CalibrationExclusiveDataConverter extends ChemFileConverter {
-		private static final String FLAG_ARG = "-cd | --calibration-data";
+		private static final String FLAG_ARG = "-cd | --calibration-data ";
 		@Override
 		String getCorrectSyntax() {
 			return FLAG_ARG + ArgumentType.CHEM_FILE_ARGS;
@@ -71,7 +71,7 @@ public class ChemFileConverter implements IParameterConsumer {
 	}
 
 	public static class PredictFileConverter extends ChemFileConverter {
-		private static final String FLAG_ARG = "-p | --predict-file";
+		private static final String FLAG_ARG = "-p | --predict-file ";
 		@Override
 		String getCorrectSyntax() {
 			return FLAG_ARG + ArgumentType.CHEM_FILE_ARGS;

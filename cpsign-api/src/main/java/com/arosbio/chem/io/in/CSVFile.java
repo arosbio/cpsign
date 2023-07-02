@@ -64,11 +64,7 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 		this.uri = uri;
 	}
 
-	public URI getUri() {
-		return uri;
-	}
-
-	public CSVFile setUri(URI uri) {
+	public CSVFile setURI(URI uri) {
 		this.uri = uri;
 		return this;
 	}
@@ -112,6 +108,18 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 	public CSVFile setUserDefinedHeader(String... header) {
 		this.userSpecifiedHeader = header;
 		return this;
+	}
+	public String[] getUserDefinedheader(){
+		return this.userSpecifiedHeader;
+	}
+
+	public CSVFile setSMILESColumnHeader(String header){
+		this.explicitSmilesHeader = header;
+		return this;
+	}
+
+	public String getSMILESColumnHeader(){
+		return explicitSmilesHeader;
 	}
 
 	@Deprecated
