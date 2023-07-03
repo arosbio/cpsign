@@ -95,6 +95,9 @@ mvn versions:set -DnewVersion=2.0.0-rc1
 ```
 from the root project. Then a new git-tag that starts with `v` should be created and pushed to GitHub, e.g. by running `git tag -a v2.0.0-rc1 -m 'release candidate 1 for 2.0.0 version'` and pushed by running `git push origin --tags`. This step will trigger the build and deployment to maven central repo described in the following section.
 
+## Changelog
+A changelog can now be found in [changlog](changelog.md).
+
 ### Deploying to Maven central
 This is an automated step that is triggered by pushing a new git-tag that starts with `v` to GitHub as described above. This will trigger the github action defined in [create_release](.github/workflows/create_release.yml). This performs all necessary steps in assembly of artifacts and signing of these, as well as uploading it to the staging area for maven central through nexus, described e.g. in the [maven central guide](https://central.sonatype.org/publish/publish-maven/#releasing-to-central).
 
@@ -109,5 +112,6 @@ mvn javadoc:aggregate-jar -Ddoctitle='CPSign bundle javadoc'
 The output of the second command will be something starting with "parent" which is not what we want, instead rename it to e.g. `cpsign-{version}-fatjar-javadoc.jar`. 
 
 Once these steps have been performed, manually create the release on github and link to the tag that you created above, and include the two generated 'fat jar' artifacts. 
+
 ## Future work
 - [x] Implement isotonic regression in a Java project, to replace the [pairAdjacentViolators](https://github.com/sanity/pairAdjacentViolators) dependency which also require bundling in Kotlin standard lib - leading to an increased memory footprint of the jars.
