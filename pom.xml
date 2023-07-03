@@ -116,7 +116,7 @@
     <commons-io.version>2.11.0</commons-io.version>
     <commons-text.version>1.10.0</commons-text.version>
     <commons-lang.version>3.9</commons-lang.version>
-    <guava.version>31.0.1-jre</guava.version>
+    <guava.version>32.0.0-jre</guava.version>
     <filters.version>2.0.235-1</filters.version>
     <libsvm.version>3.24</libsvm.version>
     <liblinear.version>2.44</liblinear.version>
