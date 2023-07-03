@@ -9,6 +9,7 @@
  */
 package com.arosbio.data.transform;
 
+import java.io.Serializable;
 import java.util.Collection;
 
 import com.arosbio.commons.Experimental;
@@ -30,7 +31,7 @@ import com.arosbio.data.FeatureVector;
  *
  */
 @Experimental
-public interface Transformer extends Described, Named, Configurable, Cloneable {
+public interface Transformer extends Described, Named, Configurable, Cloneable, Serializable {
 
     public static class TransformationException extends RuntimeException {
 

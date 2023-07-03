@@ -10,6 +10,7 @@
 package com.arosbio.commons.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.arosbio.commons.config.Configurable.ConfigParameter;
@@ -40,6 +41,10 @@ public class BooleanConfig implements ConfigParameter {
 		private List<Boolean> defaultGrid;
 		private String description;
 		private Sorter sorting = Sorter.none();
+
+		public Builder(String name, boolean defaultValue){
+			this(Arrays.asList(name), defaultValue);
+		}
 
 		public Builder(List<String> names, boolean defaultValue){
 			if (names==null || names.isEmpty())

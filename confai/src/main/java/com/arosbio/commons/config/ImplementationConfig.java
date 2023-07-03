@@ -10,6 +10,7 @@
 package com.arosbio.commons.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.arosbio.commons.config.Configurable.ConfigParameter;
@@ -43,6 +44,10 @@ public class ImplementationConfig<T> implements ConfigParameter {
 		private List<Class<T>> defaultGrid = new ArrayList<>();
 		private String description;
 		private Sorter sorting = Sorter.none();
+
+		public Builder(String name,  Class<T> clazz){
+			this(Arrays.asList(name), clazz);
+		}
 
 		public Builder(List<String> names, Class<T> clazz){
 			if (names==null || names.isEmpty())

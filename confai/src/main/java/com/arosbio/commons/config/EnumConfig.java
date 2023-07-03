@@ -10,6 +10,7 @@
 package com.arosbio.commons.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
@@ -45,6 +46,10 @@ public class EnumConfig <T extends Enum<T>> implements ConfigParameter {
 		private List<T> defaultGrid;
 		private String description;
 		private Sorter sorting = Sorter.none();
+
+		public Builder(String name, EnumSet<T> allowedValues, T defaultValue){
+			this(Arrays.asList(name), allowedValues, defaultValue);
+		}
 
 		public Builder(List<String> names,EnumSet<T> allowedValues, T defaultValue){
 			if (names==null || names.isEmpty())

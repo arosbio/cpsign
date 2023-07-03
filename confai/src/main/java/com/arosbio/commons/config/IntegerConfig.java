@@ -10,6 +10,7 @@
 package com.arosbio.commons.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.arosbio.commons.config.Configurable.ConfigParameter;
@@ -45,12 +46,20 @@ public class IntegerConfig implements ConfigParameter {
 		private String description;
 		private Sorter sorting = Sorter.none();
 
+		public Builder(String name){
+			this(Arrays.asList(name));
+		}
+
 		public Builder(List<String> names){
 			if (names==null || names.isEmpty())
 				throw new IllegalArgumentException("Names must not be empty");
 			this.names = names;
 		}
 
+		public Builder(String name, Integer defaultValue){
+			this(Arrays.asList(name), defaultValue);
+		}
+		
 		public Builder(List<String> names, Integer defaultValue){
 			this(names);
 			this.defaultValue = defaultValue;

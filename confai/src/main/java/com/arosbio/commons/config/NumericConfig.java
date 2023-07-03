@@ -10,6 +10,7 @@
 package com.arosbio.commons.config;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import com.arosbio.commons.config.Configurable.ConfigParameter;
@@ -44,6 +45,10 @@ public class NumericConfig implements ConfigParameter {
 		private List<Double> defaultGrid = new ArrayList<>();
 		private String description;
 		private Sorter sorting = Sorter.none();
+
+		public Builder(String name, double defaultValue){
+			this(Arrays.asList(name), defaultValue);
+		}
 
 		public Builder(List<String> names, double defaultValue){
 			if (names==null || names.isEmpty())
