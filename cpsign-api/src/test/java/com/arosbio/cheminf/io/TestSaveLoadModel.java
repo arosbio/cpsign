@@ -37,6 +37,7 @@ import com.arosbio.cheminf.data.ChemDataset;
 import com.arosbio.cheminf.data.ChemDataset.DescriptorCalcInfo;
 import com.arosbio.cheminf.descriptors.SignaturesDescriptor;
 import com.arosbio.cheminf.descriptors.SignaturesDescriptor.SignatureType;
+import com.arosbio.cheminf.filter.HACFilter;
 import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.Version;
 import com.arosbio.commons.logging.LoggerUtils;
@@ -180,7 +181,7 @@ public class TestSaveLoadModel extends UnitTestBase {
 		SamplingStrategy strat = (CCP ? new FoldedSampling(nrFolds):new RandomSampling(nrModels, calibSize));
 		ACPClassifier modelimpl = new ACPClassifier(new NegativeDistanceToHyperplaneNCM(impl), strat);
 		ChemCPClassifier signacp = new ChemCPClassifier(modelimpl);
-		signacp.getDataset().setMinHAC(minHAC);
+		signacp.getDataset().withFilters(new HACFilter().withMinHAC(minHAC));
 		signacp.withModelInfo(inf);
 		if (useStereoSignatures)
 			((SignaturesDescriptor)signacp.getDataset().getDescriptors().get(0)).setSignaturesType(SignatureType.STEREO);
@@ -608,12 +609,13 @@ public class TestSaveLoadModel extends UnitTestBase {
 
 	@Test
 	public void Precomp_only_reg() throws Exception {
+		// LoggerUtils.setDebugMode(SYS_ERR);
 		int minHac = 10;
 		ChemDataset sp = new ChemDataset(0, 4);
 		if (INCHI_AVAILABLE_ON_SYSTEM) {
 			((SignaturesDescriptor)sp.getDescriptors().get(0)).setSignaturesType(SignatureType.STEREO);
 		}
-		sp.setMinHAC(minHac);
+		sp.withFilters(new HACFilter().withMinHAC(minHac));
 		sp.initializeDescriptors();
 
 		DescriptorCalcInfo info = sp.add(new CSVFile(regData.uri()).getIterator(),regData.property());
@@ -637,7 +639,7 @@ public class TestSaveLoadModel extends UnitTestBase {
 		else
 			Assert.assertTrue(loadedDesc.getSignatureType() == SignatureType.STANDARD);
 
-		Assert.assertEquals(loadedModel.getMinHAC(), minHac);
+		Assert.assertEquals(minHac,loadedModel.getMinHAC());
 		
 	}
 

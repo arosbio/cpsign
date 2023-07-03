@@ -11,6 +11,8 @@ package com.arosbio.cheminf.data;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
@@ -38,10 +40,12 @@ import com.arosbio.chem.io.in.FailedRecord;
 import com.arosbio.chem.io.in.FailedRecord.Cause;
 import com.arosbio.chem.io.in.MolAndActivityConverter;
 import com.arosbio.chem.io.in.ProgressTracker;
+import com.arosbio.cheminf.ChemFilter;
 import com.arosbio.cheminf.descriptors.ChemDescriptor;
 import com.arosbio.cheminf.descriptors.DescriptorCalcException;
 import com.arosbio.cheminf.descriptors.DescriptorFactory;
 import com.arosbio.cheminf.descriptors.SignaturesDescriptor;
+import com.arosbio.cheminf.filter.HACFilter;
 import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.TypeUtils;
 import com.arosbio.data.DataRecord;
@@ -81,21 +85,25 @@ public final class ChemDataset extends Dataset {
 	// STATIC DATA
 	// ---------------------------------------------------------------------
 	private static final Logger LOGGER = LoggerFactory.getLogger(ChemDataset.class);
+	private static final int DEFAULT_MIN_HAC = 5;
 
 	private static final String META_FILE_NAME = "meta.json";
 
 	private static final String DESCRIPTORS_DIRECTORY_NAME = "descriptors";
 	private static final String DESCRIPTORS_META_FILE_NAME = "meta.json";
 	private static final String DESCRIPTOR_INDIVIDUAL_FILE_NAME = "descriptor";
+	private static final String CHEM_FILTERS_DIRECTORY_NAME = "chemFilters";
+	private static final String CHEM_FILTER_INDIVIDUAL_FILE_NAME = "filter.";
 
 	// ---------------------------------------------------------------------
 	// INSTANCE VARIABLES
 	// ---------------------------------------------------------------------
-	/** The minimum heavy atom count*/
-	private int minimumHAC = 5;
+	/** Filters that should be applied at data loading and potentially at prediction time */
+	private List<ChemFilter> filters = new ArrayList<>(Arrays.asList(new HACFilter().withMinHAC(DEFAULT_MIN_HAC)));
 	private ProgressTracker tracker = ProgressTracker.createNoEarlyStopping();
 
 	private List<ChemDescriptor> descriptors = new ArrayList<>();
+	// Cached lists - needs to be invalidated when changes are made
 	private List<String> featureNamesExcludingSignatures;
 	private List<String> featureNamesIncludingSignatures;
 
@@ -128,15 +136,14 @@ public final class ChemDataset extends Dataset {
 	 *
 	 */
 	public static class DescriptorCalcInfo {
-		private final int numOK, cdkFailed, hacFailed, numDescriptorCalcFail, minHACThreshold, fileReaderFailures;
+		private final int numOK, cdkFailed, removedByFilter, numDescriptorCalcFail, fileReaderFailures;
 		private final List<FailedRecord> failedRecords;
 
-		private DescriptorCalcInfo(int numOK, int numCDKFailed, int numHACFailed, int numDescriptorFail, int hacThreshold, int fileReaderFailed, List<FailedRecord> recs) {
+		private DescriptorCalcInfo(int numOK, int numCDKFailed, int numFilteredOut, int numDescriptorFail, int fileReaderFailed, List<FailedRecord> recs) {
 			this.numOK = numOK;
 			this.cdkFailed = numCDKFailed;
-			this.hacFailed = numHACFailed;
+			this.removedByFilter = numFilteredOut;
 			this.numDescriptorCalcFail = numDescriptorFail;
-			this.minHACThreshold = hacThreshold;
 			this.fileReaderFailures = fileReaderFailed;
 			this.failedRecords = recs;
 		}
@@ -148,16 +155,12 @@ public final class ChemDataset extends Dataset {
 			return cdkFailed;
 		}
 
-		public int getNumHeavyAtomCountFailed() {
-			return hacFailed;
+		public int getNumRemovedByChemFilter() {
+			return removedByFilter;
 		}
 
 		public int getNumDescriptorCalcFailed() {
 			return numDescriptorCalcFail;
-		}
-
-		public int getMinHACThreshold(){
-			return minHACThreshold;
 		}
 
 		public int getReaderFailures(){
@@ -181,13 +184,12 @@ public final class ChemDataset extends Dataset {
 				txt.append("Failed ").append(cdkFailed).append(" molecules due to CDK exception handling aromaticity.");
 			}
 
-			if (hacFailed > 0) {
+			if (removedByFilter > 0) {
 				if (txt.length()>0)
 					txt.append(' ');
 				txt.append("Failed ")
-				.append(hacFailed )
-				.append(" molecules due to being too small (min Heavy Atom Count is ")
-				.append(minHACThreshold).append(").");
+				.append(removedByFilter )
+				.append(" molecules due to chemical structure filters.");
 			}
 			if (numDescriptorCalcFail>0) {
 				if (txt.length()>0)
@@ -205,17 +207,17 @@ public final class ChemDataset extends Dataset {
 
 		private static class Builder {
 
-			private int numOK, numCDKFailed, numHACFailed, numDescriptorCalcFailed, minHACThreshold, fileReaderFailures;
+			private int numOK, numCDKFailed, numFilteredOut, numDescriptorCalcFailed, fileReaderFailures;
 			private List<FailedRecord> failedRecords = new ArrayList<>();
 
 			private int getNumFailsCurrentLevel(){
-				return numCDKFailed+numHACFailed+numDescriptorCalcFailed;
+				return numCDKFailed+numFilteredOut+numDescriptorCalcFailed;
 			}
 
 			private DescriptorCalcInfo build(){
 				// Calc the number of reader failures
 				fileReaderFailures = failedRecords.size() - getNumFailsCurrentLevel();
-				return new DescriptorCalcInfo(numOK, numCDKFailed, numHACFailed, numDescriptorCalcFailed, minHACThreshold, fileReaderFailures, failedRecords);
+				return new DescriptorCalcInfo(numOK, numCDKFailed, numFilteredOut, numDescriptorCalcFailed, fileReaderFailures, failedRecords);
 			}
 
 		}
@@ -288,7 +290,10 @@ public final class ChemDataset extends Dataset {
 		}
 
 		// Copy settings
-		clone.minimumHAC = minimumHAC;
+		clone.filters = new ArrayList<>();
+		for (ChemFilter f : filters){
+			clone.filters.add(f.clone());
+		}
 		clone.tracker = tracker.clone();
 		clone.keepMolRef = keepMolRef;
 		if (textualLabels != null)
@@ -489,38 +494,71 @@ public final class ChemDataset extends Dataset {
 	 * for molecules to be added to the dataset. The default is 5.
 	 * @param hac the new HAC to use
 	 * @return The reference to the current ChemDataset
+	 * @deprecated Will be removed in the future, use {@link #withFilters(ChemFilter...)} or {@link #addFilter(ChemFilter)}
 	 */
 	public ChemDataset setMinHAC(int hac) {
-		this.minimumHAC = hac;
+		boolean beenSet = false;
+		for (ChemFilter f : filters){
+			if (f instanceof HACFilter){
+				((HACFilter)f).withMinHAC(hac);
+				beenSet = true;
+			}
+		}
+		if (!beenSet){
+			// Add it as a new filter
+			filters.add(new HACFilter().withMinHAC(hac));
+		}
 		return this;
 	}
 
 	/**
 	 * Getter for the Minium Heavy Atom Count (HAC) required
-	 * for molecules to be added to the dataset. The default is 5.
-	 * @return the current minimum HAC
+	 * for molecules to be added to the dataset. The default is 5. 
+	 * @return the current minimum HAC, 0 if no filter based on HAC
 	 */
 	public int getMinHAC() {
-		return minimumHAC;
+		for (ChemFilter f : filters){
+			if (f instanceof HACFilter){
+				return ((HACFilter)f).getMinHAC();
+			}
+		}
+		return 0; // if no HAC fiter, no threshold applied
+	}
+
+	public ChemDataset withFilters(List<ChemFilter> filters){
+		if (filters == null){
+			this.filters = new ArrayList<>();
+		} else {
+			this.filters = new ArrayList<>(filters);
+		}
+		return this;
+	}
+
+	public ChemDataset withFilters(ChemFilter... filters){
+		if (filters == null){
+			this.filters = new ArrayList<>();
+		} else {
+			this.filters = new ArrayList<>();
+			for (ChemFilter f : filters){
+				this.filters.add(f);
+			}
+		}
+		return this;
+	}
+
+	public ChemDataset addFilter(ChemFilter filter){
+		this.filters.add(filter);
+		return this;
+	}
+
+	public List<ChemFilter> getFilters(){
+		return filters;
 	}
 
 	public ChemDataset setKeepMolRef(boolean keep) {
 		this.keepMolRef = keep;
 		return this;
 	}
-	// /**
-	//  * Controls the number of allowed failures when loading data using any of the <code>add(..)</code> methods. 
-	//  * These failures can be due to CDK configuration issues, {@link #setMinHAC(int) HAC} or descriptor calculation issues.
-	//  * Note that this only applies to the current level of processing, any up-stream processing (i.e. reading molecules from
-	//  * storage) needs to be handled up-stream. The parsing will stop with an {@link EarlyLoadingStopException} once passed the 
-	//  * <code>numAllowed</code> numbers of failures. If a number less than 0 is given,
-	//  * there is no early termination and the loading will continue until completion. 
-	//  * @param numAllowed The maximum allowed number of failures before terminating parsing of new molecules. Or <code>-1</code> for no early stopping
-	//  */
-	// public void setNumLoadingFailuresAllowed(int numAllowed) {
-	// 	this.numParsingFailuresAllowed = numAllowed;
-	// }
-
 
 	public boolean isReady() {
 		// Must have at least one descriptor
@@ -723,7 +761,7 @@ public final class ChemDataset extends Dataset {
 
 	/**
 	 * Uses no validation - common logic for processing a single input molecule, including the following steps;
-	 * HAC-check, {@link #prepareMol(IAtomContainer)}, descriptor-calc, transformation(s). Corresponds to the 
+	 * ChemFilters (if any), {@link #prepareMol(IAtomContainer)}, descriptor-calc, transformation(s). Corresponds to the 
 	 * {@link #doAdd(IAtomContainer, double, RecordType)} which does the same steps but includes the record in the
 	 * ChemDataset instance and uses the {@link ChemDescriptor#calculateDescriptorsAndUpdate(IAtomContainer)} instead
 	 * of the {@link ChemDescriptor#calculateDescriptors(IAtomContainer)} which this method uses
@@ -731,11 +769,13 @@ public final class ChemDataset extends Dataset {
 	 * @return the {@link FeatureVector} of the mol, after all transformations 
 	 */
 	private FeatureVector convert2FeatVector(IAtomContainer mol) 
-			throws NullPointerException, HACTooLowFail, CDKException, DescriptorCalcException {
+			throws NullPointerException, DiscardedByChemFilter, CDKException, DescriptorCalcException {
 		Objects.requireNonNull(mol, "Molecule cannot be null");
-
-		if (mol.getAtomCount()<minimumHAC) {
-			throw new HACTooLowFail(mol.getAtomCount(), minimumHAC);
+		
+		for (ChemFilter f : filters){
+			if (f.applyToPredictions() && ! f.keep(mol)){
+				throw new DiscardedByChemFilter(f.getDiscardReason(mol));
+			}
 		}
 
 		// Perceive aromaticity
@@ -781,9 +821,10 @@ public final class ChemDataset extends Dataset {
 	 * @return A FeatureVector for the given molecule
 	 * @throws CDKException If there is a problem configuring the molecule
 	 * @throws IllegalStateException In case the {@link ChemDataset} do not contain any descriptors
+	 * @throws DiscardedByChemFilter If the {@code mol} is filtered out
 	 */
 	public FeatureVector convertToFeatureVector(IAtomContainer mol) 
-			throws CDKException, IllegalStateException {
+			throws CDKException, IllegalStateException, DiscardedByChemFilter {
 		if (! isReady()) {
 			throw new IllegalStateException("Descriptors not initialized");
 		}
@@ -832,11 +873,10 @@ public final class ChemDataset extends Dataset {
 				matrix.add(convert2FeatVector(mol));
 				state.numOK++;
 			}
-			catch (HACTooLowFail hacExcept) {
-				LOGGER.debug("Skipped molecule due to less than {} HAC, had {}",
-						minimumHAC, hacExcept.count);
-				state.numHACFailed++;
-				tracker.register(new FailedRecord.Builder(index, Cause.LOW_HAC).withID(mol.getID()).withReason(hacExcept.getMessage()).build());
+			catch (DiscardedByChemFilter filterExcept) {
+				LOGGER.debug("Skipped molecule due to chem-filter");
+				state.numFilteredOut++;
+				tracker.register(new FailedRecord.Builder(index, Cause.LOW_HAC).withID(mol.getID()).withReason(filterExcept.getMessage()).build());
 			} catch (DescriptorCalcException e) {
 				LOGGER.debug("Failed molecule with index {} while computing descriptors", index, e);
 				state.numDescriptorCalcFailed++;
@@ -1020,7 +1060,7 @@ public final class ChemDataset extends Dataset {
 
 			if (tracker.shouldStop()) {
 				LOGGER.debug("Early stopping due to encountered too many failed records: cdk-err: {}, HAC: {}, desc-calc: {}",
-						state.numCDKFailed, state.numHACFailed, state.numDescriptorCalcFailed);
+						state.numCDKFailed, state.numFilteredOut, state.numDescriptorCalcFailed);
 
 				throw new EarlyLoadingStopException("Encountered too many invalid records",tracker.getFailures());
 			}
@@ -1042,11 +1082,10 @@ public final class ChemDataset extends Dataset {
 				doAdd(mol,activityValue,type);
 
 				state.numOK++;
-			} catch (HACTooLowFail hacExcept) {
-				LOGGER.debug("Skipped molecule due to less than {} HAC, had {}",
-						minimumHAC, hacExcept.count);
-				state.numHACFailed++;
-				tracker.register(new FailedRecord.Builder(index, Cause.LOW_HAC).withID(mol.getID()).withReason(hacExcept.getMessage()).build());
+			} catch (DiscardedByChemFilter chemFilterExcept) {
+				LOGGER.debug("Skipped molecule due to chem-filter");
+				state.numFilteredOut++;
+				tracker.register(new FailedRecord.Builder(index, Cause.LOW_HAC).withID(mol.getID()).withReason(chemFilterExcept.getMessage()).build());
 			} catch (DescriptorCalcException e) {
 				LOGGER.debug("Failed molecule with index {} while computing descriptors", index, e);
 				state.numDescriptorCalcFailed++;
@@ -1075,10 +1114,10 @@ public final class ChemDataset extends Dataset {
 			output.append(state.numCDKFailed); 
 			output.append(" molecules due to CDK-error applying aromaticity.");
 		}
-		if (state.numHACFailed > 0) {
+		if (state.numFilteredOut > 0) {
 			output.append(". Skipped ");
-			output.append(state.numHACFailed);
-			output.append(" molecules due to too small molecules, required min HAC: " + minimumHAC);
+			output.append(state.numFilteredOut);
+			output.append(" molecules due to Chemical structure filter.");
 		}
 		if (state.numDescriptorCalcFailed > 0) {
 			output.append(". Skipped ");
@@ -1116,11 +1155,13 @@ public final class ChemDataset extends Dataset {
 
 	}
 	private void doAdd(IAtomContainer mol, double label, RecordType type) 
-			throws HACTooLowFail, CDKException, DescriptorCalcException {
+			throws DiscardedByChemFilter, CDKException, DescriptorCalcException {
 		Objects.requireNonNull(mol, "Mol cannot be null");
 
-		if (mol == null || mol.getAtomCount()<minimumHAC) {
-			throw new HACTooLowFail(mol.getAtomCount(), minimumHAC);
+		for (ChemFilter f : filters){
+			if (!f.keep(mol)){
+				throw new DiscardedByChemFilter(f.getDiscardReason(mol));
+			}
 		}
 
 		IAtomContainer preppedMol = prepareMol(mol);
@@ -1143,23 +1184,9 @@ public final class ChemDataset extends Dataset {
 		}
 	}
 
-	static class HACTooLowFail extends IllegalArgumentException {
-		/**
-		 * 
-		 */
-		private static final long serialVersionUID = 1L;
-		private final int count;
-
-		public HACTooLowFail(int count, int minAllowed) {
-			super(String.format("Heavy Atom Count {%s} too low, min required {%s}",count,minAllowed));
-			this.count = count;
-		}
-		public HACTooLowFail(int count) {
-			super(String.format("Heavy Atom Count {%s} too low",count));
-			this.count = count;
-		}
-		public int getHAC() {
-			return count;
+	static class DiscardedByChemFilter extends IllegalArgumentException {
+		public DiscardedByChemFilter(String reason){
+			super(reason);
 		}
 	}
 
@@ -1243,8 +1270,41 @@ public final class ChemDataset extends Dataset {
 
 	}
 
+	private void saveChemFiltersToSink(DataSink sink, String basePath) throws IOException {
+		if (filters.isEmpty()){
+			LOGGER.debug("no chem-filters to save");
+			return;
+		}
+		List<ChemFilter> toSave = new ArrayList<>();
+		for (ChemFilter f : filters){
+			if (f.applyToPredictions()){
+				toSave.add(f);
+			}
+		}
+		if (toSave.isEmpty()){
+			LOGGER.debug("no chem-filters to save");
+			return;
+		}
+		// create the directory
+		String baseDir = DataIOUtils.appendTrailingDash(
+				DataIOUtils.createBaseDirectory(sink, basePath, CHEM_FILTERS_DIRECTORY_NAME));
+		LOGGER.debug("Saving {} chem-filters to path={}",toSave.size(), baseDir);
+
+		for (int index=0; index<toSave.size(); index++) {
+			ChemFilter f = toSave.get(index);
+			String fPath = baseDir+CHEM_FILTER_INDIVIDUAL_FILE_NAME+index;
+			try (OutputStream os = sink.getOutputStream(fPath);
+					ObjectOutputStream oos = new ObjectOutputStream(os);){
+				oos.writeObject(f);
+				oos.writeUTF("\n");
+				LOGGER.debug("Saved chem-filter {} to path: {}",f, fPath);
+			}
+		}
+		
+	}
+
 	/**
-	 * Saves descriptors, transformations and meta data/settings used for this instance.
+	 * Saves descriptors, transformations, ChemFilters and meta data/settings used for this instance.
 	 * Does not save the data/records - use {@link #saveToDataSink(DataSink, String, EncryptionSpecification)} for that
 	 * @param sink Where to save data
 	 * @param path a path within the {@code sink}
@@ -1260,6 +1320,9 @@ public final class ChemDataset extends Dataset {
 
 		LOGGER.debug("Saving transformations to sink");
 		super.saveTransformersToSink(sink, path);
+
+		LOGGER.debug("Saving ChemFilters to sink");
+		saveChemFiltersToSink(sink, path);
 
 		saveMetaData(sink, path);
 		LOGGER.debug("Finished saving ChemDataset state");
@@ -1280,6 +1343,9 @@ public final class ChemDataset extends Dataset {
 		LOGGER.debug("Saving data + transformations to sink");
 		super.saveToDataSink(sink, path, spec);
 
+		LOGGER.debug("Saving ChemFilters to sink");
+		saveChemFiltersToSink(sink, path);
+
 		saveMetaData(sink, path);
 
 		LOGGER.debug("Finished saving ChemDataset to sink");
@@ -1298,7 +1364,7 @@ public final class ChemDataset extends Dataset {
 			throws IOException {
 		LOGGER.debug("Saving meta data");
 		Map<String,Object> metaProps = new HashMap<>();
-		metaProps.put(MetaDataProps.MIN_HAC_PROP, minimumHAC);
+		metaProps.put(MetaDataProps.MIN_HAC_PROP, getMinHAC()); 
 		metaProps.put(MetaDataProps.MODEL_PROPERTY_PROP, property);
 		metaProps.put(MetaDataProps.NUM_PARSE_FAIL_ALLOWED_PROP, tracker.getMaxAllowedFailures());
 		metaProps.put(MetaDataProps.KEEP_REFS_PROP, keepMolRef);
@@ -1323,6 +1389,8 @@ public final class ChemDataset extends Dataset {
 		LOGGER.debug("Loading entire ChemDataset from path={}", path);
 		loadDescriptorsFromSource(src, path, spec);
 
+		loadChemFiltersFromSource(src);
+
 		LOGGER.debug("Trying to load data");
 		try {
 			super.loadFromDataSource(src, path, spec);
@@ -1339,6 +1407,8 @@ public final class ChemDataset extends Dataset {
 		LOGGER.debug("Loading ChemDataset state from path={}", path);
 		loadDescriptorsFromSource(src, path, spec);
 		
+		loadChemFiltersFromSource(src);
+
 		super.loadTransformersFromSource(src);
 
 		loadMetaData(src, path);
@@ -1400,6 +1470,46 @@ public final class ChemDataset extends Dataset {
 		LOGGER.debug("Loaded all descriptors from source");
 	}
 
+	protected void loadChemFiltersFromSource(DataSource source) 
+			throws IOException, InvalidKeyException {
+		try {
+			String base = DataIOUtils.locateBasePath(source, null, CHEM_FILTER_INDIVIDUAL_FILE_NAME);
+			doLoadChemFiltersFromSource(source, base);
+		} catch (IOException e) {
+			// No transformers saved
+			LOGGER.debug("No chemfilters saved");
+		}
+	}
+
+	private void doLoadChemFiltersFromSource(final DataSource src,final String baseName) 
+			throws IOException, InvalidKeyException {
+		filters = new ArrayList<>();
+
+		LOGGER.debug("loading chem-filters from path={}",baseName);
+
+		if (src.hasEntry(baseName + 0)) {  
+			// At least one transformer has been saved!
+			int index = 0;
+			while (true) {
+				String tPath = baseName + index; 
+				// Check if there is more filters saved - break if not
+				if (!src.hasEntry(tPath))
+					break;
+
+				try (ObjectInputStream ois = new ObjectInputStream(src.getInputStream(tPath));){
+					ChemFilter f = (ChemFilter) ois.readObject();
+					filters.add(f);
+					LOGGER.debug("Successfully loaded ChemFilter {}", f);
+				} catch (Exception e) {
+					LOGGER.debug("Failed loading ChemFilter at path: {}", tPath, e);
+					throw new IOException("Failed loading ChemFilter from model");
+				}
+				index++;
+			}
+			LOGGER.debug("Loaded {} ChemFilters from data source",filters.size());
+		}
+	}
+
 	@SuppressWarnings("unchecked")
 	private static <T> T getOrDefault(Map<String,Object> map,String key, T defaultValue){
 		try {
@@ -1424,9 +1534,8 @@ public final class ChemDataset extends Dataset {
 			try (InputStream metaStream = src.getInputStream(metaPath)){
 				Map<String,Object> props = MetaFileUtils.readPropertiesFromStream(metaStream);
 				LOGGER.debug("Loaded ChemDataset properties from stream: {}",props);
-				minimumHAC = getOrDefault(props, MetaDataProps.MIN_HAC_PROP, minimumHAC); //key, defaultValue).asInt(props.getOrDefault(MetaDataProps.MIN_HAC_PROP, minimumHAC));
-				property = getOrDefault(props, MetaDataProps.MODEL_PROPERTY_PROP, property); //props.getOrDefault(MetaDataProps.MODEL_PROPERTY_PROP, minimumHAC).toString();
-				tracker = ProgressTracker.createStopAfter(getOrDefault(props, MetaDataProps.NUM_PARSE_FAIL_ALLOWED_PROP, -1)); //TypeUtils.asInt(props.getOrDefault(MetaDataProps.NUM_PARSE_FAIL_ALLOWED_PROP, numParsingFailuresAllowed));
+				property = getOrDefault(props, MetaDataProps.MODEL_PROPERTY_PROP, property);
+				tracker = ProgressTracker.createStopAfter(getOrDefault(props, MetaDataProps.NUM_PARSE_FAIL_ALLOWED_PROP, -1));
 				keepMolRef = getOrDefault(props, MetaDataProps.KEEP_REFS_PROP, keepMolRef);
 				if (textualLabels == null){
 					Map<String,Integer> storedLabels = getOrDefault(props, MetaDataProps.LABELS_PROP, (Map<String,Integer>) null);

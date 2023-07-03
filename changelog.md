@@ -8,3 +8,4 @@
  - Update dependency version of Picocli.
  - Added logics for trying to deduce the user error to improve error messages to CLI users, specifically for running `precompute`. Also streamlined the output to be more coherent among `predict`, `predict-online` and `validate`. 
  - Extracted prediction logics of `predict` and `predict-online` into common utility class, again to streamline the behaviour seen by the user.
+ - Added more information to the `model-info` program of the CLI, i.e. in case a model can be used for generating prediction images and the number of attributes/features used.

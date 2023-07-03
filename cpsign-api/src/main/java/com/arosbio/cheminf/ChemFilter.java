@@ -55,4 +55,5 @@ public interface ChemFilter extends Described, Named, Configurable, Cloneable, S
      */
     public String getDiscardReason(IAtomContainer molecule) throws IllegalStateException, IllegalArgumentException, CDKException;
     
+    public ChemFilter clone();
 }
