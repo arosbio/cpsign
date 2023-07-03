@@ -1,0 +1,3 @@
+# Size based filters
+com.arosbio.cheminf.filter.HACFilter
+com.arosbio.cheminf.filter.MolMassFilter

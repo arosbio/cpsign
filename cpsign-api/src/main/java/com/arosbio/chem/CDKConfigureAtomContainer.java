@@ -40,12 +40,7 @@ public class CDKConfigureAtomContainer {
 		AtomContainerManipulator.suppressHydrogens(mol);
 	}
 
-	public static IAtomContainer calculate3DCoordinates(IAtomContainer mol, boolean forceRecalculate) 
-			throws CDKException {
-		if (GeometryUtil.has3DCoordinates(mol) && !forceRecalculate) {
-			return mol;
-		}
-		
+	public static IAtomContainer getLargestContainer(IAtomContainer mol){
 		IAtomContainer largestConnectedFragment = mol;
 		if (!ConnectivityChecker.isConnected(mol)) {
 			IAtomContainerSet set = ConnectivityChecker.partitionIntoMolecules(mol);
@@ -56,8 +51,16 @@ public class CDKConfigureAtomContainer {
 			}
 			largestConnectedFragment.setProperties(new LinkedHashMap<>(mol.getProperties()));
 		}
+		return largestConnectedFragment;
+	}
+
+	public static IAtomContainer calculate3DCoordinates(IAtomContainer mol, boolean forceRecalculate) 
+			throws CDKException {
+		if (GeometryUtil.has3DCoordinates(mol) && !forceRecalculate) {
+			return mol;
+		}
 		
-		
+		IAtomContainer largestConnectedFragment = getLargestContainer(mol);
 		
 		try {
 			ModelBuilder3D mb3d = ModelBuilder3D.getInstance(SilentChemObjectBuilder.getInstance());
