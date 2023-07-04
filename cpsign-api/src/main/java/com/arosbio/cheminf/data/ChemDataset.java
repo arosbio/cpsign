@@ -1476,8 +1476,9 @@ public final class ChemDataset extends Dataset {
 			String base = DataIOUtils.locateBasePath(source, null, CHEM_FILTER_INDIVIDUAL_FILE_NAME);
 			doLoadChemFiltersFromSource(source, base);
 		} catch (IOException e) {
-			// No transformers saved
+			// No chem filters saved
 			LOGGER.debug("No chemfilters saved");
+			filters = new ArrayList<>(); // clean the default one
 		}
 	}
 

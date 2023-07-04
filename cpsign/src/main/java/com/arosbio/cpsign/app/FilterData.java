@@ -21,6 +21,7 @@ import com.arosbio.cheminf.data.DataRecordWithRef;
 import com.arosbio.cpsign.app.params.CLIParameters.ClassOrRegType;
 import com.arosbio.cpsign.app.params.converters.ChemFileConverter;
 import com.arosbio.cpsign.app.params.converters.MLTypeConverters.ClassRegConverter;
+import com.arosbio.cpsign.app.params.mixins.ChemFilterMixin;
 import com.arosbio.cpsign.app.params.mixins.ClassificationLabelsMixin;
 import com.arosbio.cpsign.app.params.mixins.ConsoleVerbosityMixin;
 import com.arosbio.cpsign.app.params.mixins.DescriptorsMixin;
@@ -122,11 +123,8 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 	@Mixin
 	private EarlyTerminationMixin earlyTermination = new EarlyTerminationMixin();
 
-	@Option(names = "--min-hac",
-			description="Specify the minimum allowed Heavy Atom Count (HAC) allowed for the records. This serves a s sanity check that parsing from file has been OK.",
-			paramLabel = ArgumentType.INTEGER,
-			defaultValue = "5")
-	private int minHAC = 5;
+	@Mixin
+	private ChemFilterMixin chemFilters = new ChemFilterMixin();
 
 	@Option(names = {"--list-failed"},
 			description = "List @|bold all|@ failed molecules, such as invalid records, molecules removed due to Heavy Atom Count or failures at descriptor calculation. "+
@@ -199,6 +197,7 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 
 		// INIT PROBLEM 
 		ChemDataset sp = new ChemDataset(descriptorSection.descriptors).setKeepMolRef(true); 
+		sp.withFilters(chemFilters.getFilters(console));
 		pb.stepProgress();
 
 		// DO PRECOMPUTE
@@ -220,6 +219,7 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 		return ExitStatus.SUCCESS.code;
 	}
 
+
 	private void precompute(ChemDataset dataset) {
 		boolean isClassification = modeltype.equals(ClassOrRegType.CLASSIFICATION);
 		CLIProgramUtils.loadData(dataset,
@@ -231,7 +231,7 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 				this, 
 				console,
 				listFailedMolecules,
-				minHAC,
+				// minHAC,
 				earlyTermination.maxFailuresAllowed);
 		timer.endSection();
 

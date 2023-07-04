@@ -208,4 +208,11 @@ public class TestCLIExplainArgument extends CLIBaseTest {
 		Assert.assertTrue(errTxt.toLowerCase().contains("invalid"));
 		
 	}
+
+	@Test
+	public void testChemFilters() {
+		mockMain(ExplainArgument.CMD_NAME, "chem-filter");
+		Assert.assertTrue(systemErrRule.getLog().isEmpty());
+		// printLogs();
+	}
 }

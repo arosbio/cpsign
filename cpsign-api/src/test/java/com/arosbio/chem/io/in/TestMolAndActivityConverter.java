@@ -105,7 +105,7 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 
 		
 		try (
-			CSVChemFileReader reader = new CSVFile(data.uri()).setDelimiter(data.delim()).setHasBOM(true).getIterator();	
+			CSVChemFileReader reader = new CSVFile(data.uri()).setDelimiter(data.delim()).getIterator();	
 			MolAndActivityConverter molAct = MolAndActivityConverter.Builder.regressionConverter(reader, data.property()).build();
 			
 			){

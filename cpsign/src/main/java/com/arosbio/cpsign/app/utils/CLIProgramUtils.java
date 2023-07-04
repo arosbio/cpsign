@@ -70,7 +70,6 @@ import com.arosbio.cpsign.app.params.CLIParameters.TextOutputType;
 import com.arosbio.cpsign.app.params.mixins.ClassificationLabelsMixin;
 import com.arosbio.cpsign.app.params.mixins.ConsoleVerbosityMixin;
 import com.arosbio.cpsign.app.params.mixins.DescriptorsMixin;
-import com.arosbio.cpsign.app.params.mixins.InputChemFilesMixin;
 import com.arosbio.cpsign.app.params.mixins.ModelingPropertyMixin;
 import com.arosbio.cpsign.app.params.mixins.PrecomputedDatasetMixin;
 import com.arosbio.cpsign.app.params.mixins.ProgramProgressMixin;
@@ -434,30 +433,6 @@ public class CLIProgramUtils {
 		} catch (Exception e) {}
 	}
 	
-	public static void verifyClassLabelsGivenWhenNeeded(InputChemFilesMixin trainData, boolean precompModelGiven,
-	boolean isClassification, CLIConsole console) {
-		// If there's a precomputed model given - we don't need the labels!
-		if (precompModelGiven) {
-			return;
-		}
-		
-		if (!isClassification) {
-			if (trainData.labelsOpt.labels != null)
-			console.failWithArgError(
-			"Parameter " + CLIProgramUtils.getParamName(trainData, "labels", "CLASS_LABELS")
-			+ " cannot be given in regression mode");
-			return;
-		}
-		
-		// Else we require them
-		if (trainData.labelsOpt.labels == null)
-		console.failDueToMissingParameters(new MissingParam("labels", "CLASS_LABELS", InputChemFilesMixin.class));
-		if (trainData.labelsOpt.labels.size() < 2)
-		console.failWithArgError("Parameter " + CLIProgramUtils.getParamName(trainData, "labels", "CLASS_LABELS")
-		+ " must be at least of length 2");
-		
-	}
-	
 	public static void loadPrecomputedData(ChemPredictor predictor, 
 	PrecomputedDatasetMixin data, EncryptionSpecification spec, CLIConsole console) {
 		
@@ -547,28 +522,9 @@ public class CLIProgramUtils {
 		cons.printlnWrapped(sb.toString(), PrintMode.NORMAL);
 	}
 	
-	/**
-	* Wrapper method of {@link #loadData(ChemPredictor, URI, ChemFile, ChemFile, ChemFile, String, List, EncryptionSpecification, RunnableCmd, CLIConsole, boolean, int, int)},
-	* simply pulling out all required arguments
-	* @param predictor
-	* @param inputSection
-	* @param spec
-	* @param train
-	* @param console
-	* @param listFailed
-	*/
-	public static void loadData(ChemPredictor predictor, InputChemFilesMixin inputSection,
-	EncryptionSpecification spec, RunnableCmd train, CLIConsole console, boolean listFailed) {
-		
-		loadData(predictor, null, inputSection.trainFile,
-		inputSection.properTrainExclusiveFile, inputSection.calibrationExclusiveTrainFile,
-		inputSection.endpointOpt.endpoint, inputSection.labelsOpt.labels, spec, train,
-		console, listFailed, inputSection.minHAC, inputSection.maxFailuresAllowed);
-	}
-	
 	public static void loadData(ChemPredictor predictor, URI precompModel, ChemFile trainFile,
 	ChemFile modelExclusiveTrainFile, ChemFile calibExclusiveTrainFile, String endpoint, List<String> labels,
-	EncryptionSpecification spec, RunnableCmd program, CLIConsole console, boolean listFailed, int minHAC,
+	EncryptionSpecification spec, RunnableCmd program, CLIConsole console, boolean listFailed, // int minHAC,
 	int maxNumAllowedFailures) {
 		
 		CLIProgressBar pb = getPB(program); 
@@ -617,19 +573,12 @@ public class CLIProgramUtils {
 		else if (trainFile != null || modelExclusiveTrainFile != null || calibExclusiveTrainFile != null) {
 			loadData(predictor.getDataset(), (predictor instanceof ChemClassifier), trainFile,
 			modelExclusiveTrainFile, calibExclusiveTrainFile, endpoint, labels, program, console, listFailed,
-			minHAC, maxNumAllowedFailures);
+			// minHAC, 
+			maxNumAllowedFailures);
 		} else {
 			// should never happen, should be handled before calling this method
 			throw new IllegalArgumentException("Neither training data or precomputed model was given");
 		}
-	}
-	
-	public static void loadData(ChemDataset sp, boolean isClassification, InputChemFilesMixin input, Object program,
-	CLIConsole console, boolean listFailed) {
-		
-		loadData(sp, isClassification, input.trainFile, input.properTrainExclusiveFile,
-		input.calibrationExclusiveTrainFile, input.endpointOpt.endpoint, input.labelsOpt.labels, program,
-		console, listFailed, input.minHAC, input.maxFailuresAllowed);
 	}
 	
 	/**
@@ -644,14 +593,14 @@ public class CLIProgramUtils {
 	* @param program
 	* @param console
 	* @param listFailed
-	* @param minHAC
 	* @param maxNumAllowedFailures
 	*
 	*/
 	public static void loadData(final ChemDataset sp, final boolean isClassification, final ChemFile trainFile,
 	final ChemFile modelExclusiveTrainFile, final ChemFile calibExclusiveTrainFile, final String endpoint, final List<String> labels,
 	final Object program, 
-	final CLIConsole console, final boolean listFailed, final int minHAC, final int maxNumAllowedFailures) {
+	final CLIConsole console, final boolean listFailed, 
+	final int maxNumAllowedFailures) {
 		
 		CLIProgressBar pb = getPB(program);
 		int numDatasetsUsed = 0;
@@ -675,7 +624,6 @@ public class CLIProgramUtils {
 			nl = new NamedLabels(labels);
 		}
 		
-		sp.setMinHAC(minHAC);
 		boolean usingEarlyStopping = maxNumAllowedFailures >= 0;
 		int numAllowedFailsLeft = maxNumAllowedFailures;
 		

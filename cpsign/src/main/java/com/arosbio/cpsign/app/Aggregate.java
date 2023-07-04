@@ -504,12 +504,6 @@ public class Aggregate implements RunnableCmd, SupportsProgressBar {
 
 	private void assertAndSetupAggregate() {
 
-		// Make sure we have train priv and get auth
-		// encryptSpec = CLIProgramUtils.getEncryptSpec(console, 
-		// 		null, //TODO 
-		// 		encryptSection.encryptLicense, 
-		// 		encryptSection.yubiKeyPin);
-
 		// Check models were given and resolve to proper uri's
 		if (inputModels == null || 
 				inputModels.isEmpty())

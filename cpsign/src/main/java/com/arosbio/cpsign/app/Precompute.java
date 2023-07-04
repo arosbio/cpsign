@@ -20,6 +20,7 @@ import com.arosbio.cheminf.io.ModelSerializer;
 import com.arosbio.cpsign.app.params.CLIParameters.ClassOrRegType;
 import com.arosbio.cpsign.app.params.converters.ChemFileConverter;
 import com.arosbio.cpsign.app.params.converters.MLTypeConverters.ClassRegConverter;
+import com.arosbio.cpsign.app.params.mixins.ChemFilterMixin;
 import com.arosbio.cpsign.app.params.mixins.ClassificationLabelsMixin;
 import com.arosbio.cpsign.app.params.mixins.ConsoleVerbosityMixin;
 import com.arosbio.cpsign.app.params.mixins.DescriptorsMixin;
@@ -136,11 +137,8 @@ public class Precompute implements RunnableCmd, SupportsProgressBar {
 	@Mixin
 	private EarlyTerminationMixin earlyTermination = new EarlyTerminationMixin();
 
-	@Option(names = "--min-hac",
-			description="Specify the minimum allowed Heavy Atom Count (HAC) allowed for the records. This serves as a sanity check that parsing from file has been OK.",
-			paramLabel = ArgumentType.INTEGER,
-			defaultValue = "5")
-	private int minHAC = 5;
+	@Mixin
+	private ChemFilterMixin chemFilters = new ChemFilterMixin();
 
 	@Mixin
 	private ListFailedRecordsMixin listFailedRecordsMixin = new ListFailedRecordsMixin();
@@ -209,6 +207,7 @@ public class Precompute implements RunnableCmd, SupportsProgressBar {
 
 		// INIT PROBLEM 
 		ChemDataset sp = new ChemDataset(descriptorSection.descriptors);
+		sp.withFilters(chemFilters.getFilters(console));
 		pb.stepProgress();
 
 		// DO PRECOMPUTE
@@ -244,7 +243,6 @@ public class Precompute implements RunnableCmd, SupportsProgressBar {
 				this, 
 				console,
 				listFailedRecordsMixin.listFailedRecords,
-				minHAC,
 				earlyTermination.maxFailuresAllowed);
 		timer.endSection();
 

@@ -20,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ServiceLoader;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.WordUtils;
@@ -29,6 +30,7 @@ import org.fusesource.jansi.AnsiRenderer;
 import com.arosbio.chem.io.in.CSVFile;
 import com.arosbio.chem.io.in.JSONFile;
 import com.arosbio.chem.io.in.SDFile;
+import com.arosbio.cheminf.ChemFilter;
 import com.arosbio.cheminf.descriptors.CDKPhysChemWrapper;
 import com.arosbio.cheminf.descriptors.ChemDescriptor;
 import com.arosbio.cheminf.descriptors.DescriptorFactory;
@@ -108,6 +110,7 @@ import picocli.CommandLine.TypeConversionException;
 				ExplainArgument.TestSamplingInfo.class,
 				ExplainArgument.TuneParamsInfo.class,
 				ExplainArgument.TransformerInfo.class,
+				ExplainArgument.ChemFiltersInfo.class,
 				ExplainArgument.ListSyntaxInfo.class,
 		}
 
@@ -1365,7 +1368,7 @@ public class ExplainArgument implements Named {
 		@Override
 		public Integer call() throws Exception {
 			StringBuilder text = new StringBuilder();
-			addHeading(text, "TRANSFORMERS");
+			addHeading(text, SUB_NAME);
 
 			if ((list==null || list.isEmpty()) && !info) {
 				info = true;
@@ -1507,6 +1510,57 @@ public class ExplainArgument implements Named {
 		public String getName() {
 			return SUB_NAME;
 		}
+
+	}
+
+	@Command(helpCommand=true,
+			name = ChemFiltersInfo.SUB_NAME,
+			aliases = ChemFiltersInfo.SUB_ALIAS,
+			description = ChemFiltersInfo.SUB_DESCRIPTION)
+	public static class ChemFiltersInfo implements RunnableCmd {
+
+		public static final String SUB_NAME = "chem-filters";
+		public static final String SUB_ALIAS = "hac";
+		public static final String SUB_DESCRIPTION = "Available filters based on chemical structure and their parameters";
+		
+
+		static {
+			CLIConsole.getInstance().setRunningCMD(CMD_NAME + ' ' +SUB_NAME);
+		}
+
+		@Override
+		public Integer call() throws Exception {
+			StringBuilder text = new StringBuilder();
+			addHeading(text, SUB_NAME);
+			
+			StringBuilder toWrap = new StringBuilder("Apply one or several filters based on chemical structure, i.e. to filter out too small or too large molecules based on their Heavy Atom Count (HAC) or molecular mass. ")
+				.append("One example is the HAC filter, where sub-parameters are set using the :-syntax, e.g.;");
+			text.append(
+				com.arosbio.commons.StringUtils.wrap(toWrap.toString(), CONSOLE_WIDTH))
+				.append("%n%n")
+				.append(CODE_EXAMPLE_LINE_START).append(addParamStyle("--chem-filter")).append(addArgumentStyle(" HAC:min=6:max=60")).append("\t\tKeep only molecules with minimum 6 and maximum 60 heavy atoms%n");
+
+			addSubHeading(text, "Available filters");
+			TextTable table = getTable();
+			Iterator<ChemFilter> iter = ServiceLoader.load(ChemFilter.class).iterator();
+			
+			while(iter.hasNext()){
+				ChemFilter filter = iter.next();
+				appendImplementation(table, filter);
+			}
+			
+			table.toString(text);
+
+			CLIConsole.getInstance().println(text.toString(), PrintMode.NORMAL);
+
+			return ExitStatus.SUCCESS.code;
+		}
+		@Override
+		public String getName() {
+			return SUB_NAME;
+		}
+
+		
 
 	}
 

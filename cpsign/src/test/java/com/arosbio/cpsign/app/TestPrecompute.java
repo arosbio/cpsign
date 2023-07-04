@@ -28,11 +28,13 @@ import org.junit.experimental.categories.Category;
 
 import com.arosbio.chem.io.in.CSVFile;
 import com.arosbio.chem.io.in.SDFile;
+import com.arosbio.cheminf.ChemFilter;
 import com.arosbio.cheminf.data.ChemDataset;
 import com.arosbio.cheminf.descriptors.ChemDescriptor;
 import com.arosbio.cheminf.descriptors.DescriptorFactory;
 import com.arosbio.cheminf.descriptors.SignaturesDescriptor;
 import com.arosbio.cheminf.descriptors.UserSuppliedDescriptor;
+import com.arosbio.cheminf.filter.HACFilter;
 import com.arosbio.cheminf.io.ModelSerializer;
 import com.arosbio.commons.CollectionUtils;
 import com.arosbio.data.DataRecord;
@@ -120,7 +122,7 @@ public class TestPrecompute extends CLIBaseTest {
 	@Test
 	public void testUsage() {
 		mockMain(Precompute.CMD_NAME);
-//		printLogs();
+		// printLogs();
 	}
 
 	@Test
@@ -270,6 +272,69 @@ public class TestPrecompute extends CLIBaseTest {
 		}
 
 		//		printLogs();
+	}
+
+	@Test
+	public void testHAC() throws Exception {
+		File preFirst = TestUtils.createTempFile("datafile", ".csr.jar");
+
+		mockMain(Precompute.CMD_NAME,
+			"-td", SDFile.FORMAT_NAME , ames10.uri().toString(),
+			"-pr", ames10.property(),
+			"--labels", LABELS_STRING,
+			"-mo", preFirst.getAbsolutePath(),
+			"-mn", "dasf",
+			"--time");
+
+		ChemDataset first = ModelSerializer.loadDataset(preFirst.toURI(), null);
+		Assert.assertEquals("The default should be minimum 5 HAC",5, first.getMinHAC());
+
+		// Try again, see what happens when using the deprecated --min-hac flag
+		Files.delete(preFirst.toPath());
+		mockMain(Precompute.CMD_NAME,
+			"-td", SDFile.FORMAT_NAME , ames10.uri().toString(),
+			"-pr", ames10.property(),
+			"--labels", LABELS_STRING,
+			"-mo", preFirst.getAbsolutePath(),
+			"--min-hac", "10",
+			"-mn", "dasf",
+			"--time");
+		ChemDataset second = ModelSerializer.loadDataset(preFirst.toURI(), null);
+		Assert.assertEquals("The HAC should be configured to be 10",10, second.getMinHAC());
+
+		// Set using the new --chem-filter parameter
+		Files.delete(preFirst.toPath());
+		mockMain(Precompute.CMD_NAME,
+			"-td", SDFile.FORMAT_NAME , ames10.uri().toString(),
+			"-pr", ames10.property(),
+			"--labels", LABELS_STRING,
+			"-mo", preFirst.getAbsolutePath(),
+			"--chem-filters", "HAC:min=8:max=50",
+			"-mn", "dasf",
+			"--time");
+		ChemDataset third = ModelSerializer.loadDataset(preFirst.toURI(), null);
+		Assert.assertEquals("The HAC should be configured to be 8",8, third.getMinHAC());
+		List<ChemFilter> filters = third.getFilters();
+		Assert.assertEquals(1, filters.size());
+		HACFilter hacFilter = (HACFilter) filters.get(0);
+		Assert.assertEquals(8, hacFilter.getMinHAC());
+		Assert.assertEquals(50, hacFilter.getMaxHAC());
+
+		// I do not wish to have any filters at all
+		Files.delete(preFirst.toPath());
+		mockMain(Precompute.CMD_NAME,
+			"-td", SDFile.FORMAT_NAME , ames10.uri().toString(),
+			"-pr", ames10.property(),
+			"--labels", LABELS_STRING,
+			"-mo", preFirst.getAbsolutePath(),
+			"--chem-filters", "none",
+			"-mn", "dasf",
+			"--time");
+		ChemDataset forth = ModelSerializer.loadDataset(preFirst.toURI(), null);
+		Assert.assertTrue(forth.getFilters().isEmpty());
+		Assert.assertEquals(0, forth.getMinHAC()); // means no HAC filter is applied
+
+		// printLogs();
 	}
 
 

@@ -29,7 +29,9 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.arosbio.cheminf.ChemFilter;
 import com.arosbio.cheminf.descriptors.SignaturesDescriptor;
+import com.arosbio.cheminf.filter.HACFilter;
 import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.config.Configurable.ConfigParameter;
 import com.arosbio.commons.config.ImplementationConfig;
@@ -45,11 +47,13 @@ import com.arosbio.cpsign.app.PrecomputedDatasets.Classification;
 import com.arosbio.cpsign.app.Train;
 import com.arosbio.cpsign.app.params.converters.ListOrRangeConverter;
 import com.arosbio.cpsign.app.params.converters.MLAlgorithmConverter;
+import com.arosbio.cpsign.app.params.mixins.ChemFilterMixin;
 import com.arosbio.cpsign.app.params.mixins.ClassificationLabelsMixin;
 import com.arosbio.cpsign.app.params.mixins.PredictorMixinClasses;
 import com.arosbio.cpsign.app.params.mixins.TestingStrategyMixin;
 import com.arosbio.cpsign.app.params.mixins.TransformerMixin.TransformerParamConsumer;
 import com.arosbio.cpsign.app.params.mixins.TuneGridMixin;
+import com.arosbio.cpsign.app.utils.CLIConsole;
 import com.arosbio.cpsign.app.utils.MultiArgumentSplitter;
 import com.arosbio.cpsign.app.utils.ParameterUtils;
 import com.arosbio.cpsign.app.utils.ParameterUtils.ArgumentType;
@@ -698,6 +702,52 @@ public class TestConverters extends CLIBaseTest {
 		Assert.assertTrue(lcParamNames.contains("epsilon"));
 		Assert.assertTrue(lcParamNames.contains("cost"));
 		Assert.assertTrue(lcParamNames.contains("gamma"));
+	}
+
+	public static class TestChemFilterConv implements Callable<Integer> {
+
+		@Option(names = {"-v" })
+		int value;
+
+		@Mixin
+		public ChemFilterMixin mixin = new ChemFilterMixin();
+
+		@Override
+		public Integer call() throws Exception {
+			return null;
+		}
+
+	}
+
+	@Test
+	public void testConsumeChemFilters(){
+
+		// NO argument - use fallback
+		doChemFilterTest(Arrays.asList(new HACFilter()));
+
+		// Explicit value
+		doChemFilterTest(Arrays.asList(new HACFilter().withMinHAC(6)), "--chem-filters", "HAC:min=6");
+
+		// Specify _no_ filter
+		doChemFilterTest(Arrays.asList(), "--chem-filters", "none");
+
+		// using the deprecated --min-hac option
+		doChemFilterTest(Arrays.asList(new HACFilter().withMinHAC(10)), "--min-hac", "10");
+		
+	}
+
+	private void doChemFilterTest(List<ChemFilter> expectedFilters, String... args){
+		TestChemFilterConv test = new TestChemFilterConv();
+
+		CommandLine cml = new CommandLine(test);
+		cml.setTrimQuotes(true);
+		cml.parseArgs(args);
+
+		List<ChemFilter> parsedFromArgs = test.mixin.getFilters(CLIConsole.getInstance());
+		Assert.assertEquals(expectedFilters.size(), parsedFromArgs.size());
+		for (int i=0; i<expectedFilters.size(); i++){
+			Assert.assertEquals(expectedFilters.get(i).toString(), parsedFromArgs.get(i).toString());
+		}
 	}
 
 }

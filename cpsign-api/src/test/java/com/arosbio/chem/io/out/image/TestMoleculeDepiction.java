@@ -423,7 +423,7 @@ public class TestMoleculeDepiction extends UnitTestBase {
 		IAtomContainer mol = sp.parseSmiles("C");
 
 		ChemCPClassifier predictor = (ChemCPClassifier) ModelSerializer.loadChemPredictor(PreTrainedModels.ACP_CLF_LIBLINEAR.toURI(), null);
-		predictor.getDataset().setMinHAC(0);
+		predictor.getDataset().withFilters();
 		SignificantSignature ss = predictor.predictSignificantSignature(mol);
 		Assert.assertTrue(ss.getAtomContributions().isEmpty());
 		Assert.assertTrue(ss.getAtoms().isEmpty());
