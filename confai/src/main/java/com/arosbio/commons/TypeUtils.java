@@ -15,10 +15,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.arosbio.commons.mixins.Aliased;
 import com.arosbio.commons.mixins.Named;
 
 public class TypeUtils {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(TypeUtils.class);
 	
 	public static List<String> getNames(Object o){
 		if (o instanceof Named) {
@@ -44,6 +49,14 @@ public class TypeUtils {
 		}
 	}
 
+	/**
+	 * Converts an object into an int if possible. Although not strictly mathematically correct, Strings of {@code Inf}/{@code Infinity}
+	 * will be converted into Integer.MAX_VALUE and {@code -Inf}/{@code -Infinity} to Integer.MIN_VALUE, which for most cases will 
+	 * be the intent for the purpose of the user. 
+	 * @param obj to be converted
+	 * @return value converted to int
+	 * @throws NumberFormatException If {@code obj} could not be converted
+	 */
 	public static int asInt(Object obj) throws NumberFormatException {
 		if (obj instanceof Integer) {
 			return (int) obj;
@@ -53,7 +66,24 @@ public class TypeUtils {
 			try {
 				Long asLong = Long.parseLong((String)obj);
 				return asLong.intValue();
-			} catch (NumberFormatException e) {}
+			} catch (NumberFormatException e) {
+				LOGGER.debug("Failed parsing input '{}' into an int - checking if it matches NaN, Inf, -Inf etc",obj);
+				try {
+					String txt = ((String)obj).trim();
+					if ("NaN".equalsIgnoreCase(txt)){
+						LOGGER.debug("Value was NaN");
+					} 
+					boolean isNegative = txt.startsWith("-");
+					boolean hasPlusSign = txt.startsWith("+");
+					if (hasPlusSign || isNegative){
+						// read the + or - sign
+						txt = txt.substring(1);
+					}
+					if (txt.equalsIgnoreCase("Inf") || txt.equalsIgnoreCase("Infinity")){
+						return isNegative ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+					}
+				} catch (Exception e2){}
+			}
 		} else if (obj instanceof BigDecimal) {
 			try {
 				return (int) ((BigDecimal) obj).longValueExact();
@@ -97,15 +127,41 @@ public class TypeUtils {
 		}
 	}
 
+	/**
+	 * Convert object into a double value if possible. 
+	 * @param obj to be converted
+	 * @return the value converted to double 
+	 * @throws NumberFormatException If {@code obj} could not be converted
+	 */
 	public static double asDouble(Object obj) throws NumberFormatException {
-		if (obj instanceof BigDecimal) {
+		if (obj instanceof Double){
+			return ((Double) obj).doubleValue();
+		} else if (obj instanceof BigDecimal) {
 			return ((BigDecimal) obj).doubleValue();
 		} else if (obj instanceof Number) {
 			return ((Number) obj).doubleValue();
 		} else if (obj instanceof String) {
 			try {
 				return Double.parseDouble((String)obj);
-			} catch (NumberFormatException e) {}
+			} catch (NumberFormatException e) {
+				LOGGER.debug("Failed parsing input '{}' into a double - checking if it matches NaN, Inf, -Inf etc",obj);
+				try {
+					String txt = ((String)obj).trim();
+					if ("NaN".equalsIgnoreCase(txt)){
+						LOGGER.debug("Value was NaN");
+						return Double.NaN;
+					} 
+					boolean isNegative = txt.startsWith("-");
+					boolean hasPlusSign = txt.startsWith("+");
+					if (hasPlusSign || isNegative){
+						// read the + or - sign
+						txt = txt.substring(1);
+					}
+					if (txt.equalsIgnoreCase("Inf") || txt.equalsIgnoreCase("Infinity")){
+						return isNegative ? Double.NEGATIVE_INFINITY : Double.POSITIVE_INFINITY;
+					}
+				} catch (Exception e2){}
+			}
 		}
 		throw new NumberFormatException(String.format("'%s' is not a double",obj));
 	}
@@ -133,9 +189,9 @@ public class TypeUtils {
 			throw new IllegalArgumentException("Empty argument cannot be converted to boolean");
 		String lowerCase = input.toLowerCase().trim();
 
-		if (lowerCase.equals("t")|| lowerCase.equals("true")) {
+		if (lowerCase.equals("t")|| lowerCase.equals("true") || lowerCase.equals("y") || lowerCase.equals("yes")) {
 			return true;
-		} else if (lowerCase.equals("f") || lowerCase.equals("false")) {
+		} else if (lowerCase.equals("f") || lowerCase.equals("false") || lowerCase.equals("n") || lowerCase.equals("no")) {
 			return false;
 		}
 		throw new IllegalArgumentException(String.format("'%s' is not a boolean",input));

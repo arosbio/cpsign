@@ -61,4 +61,12 @@ public class TestTypeUtils {
 		Assert.assertFalse(TypeUtils.objectIsOfType(Double.valueOf(0), String.class));
 	}
 
+	@Test
+	public void testSpecifyInf()throws Exception {
+		Assert.assertEquals(Integer.MAX_VALUE, TypeUtils.asInt("Infinity"));
+		Assert.assertEquals(Integer.MIN_VALUE, TypeUtils.asInt("-Inf"));
+		Assert.assertEquals(Integer.MAX_VALUE, TypeUtils.asInt("Inf"));
+		Assert.assertEquals(Double.POSITIVE_INFINITY, TypeUtils.asDouble("Inf"), 0d);
+	}
+
 }
