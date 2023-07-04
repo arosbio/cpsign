@@ -9,7 +9,6 @@
  */
 package com.arosbio.data.transform.feature_selection;
 
-import java.io.Serializable;
 import java.util.List;
 
 import com.arosbio.data.transform.Transformer;
@@ -22,7 +21,7 @@ import com.arosbio.data.transform.Transformer;
  * @author staffan
  *
  */
-public interface FeatureSelector extends Transformer, Serializable {
+public interface FeatureSelector extends Transformer {
 	
 	/**
 	 * Get the features that will be removed by this {@link FeatureSelector}, this will only

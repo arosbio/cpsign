@@ -9,7 +9,6 @@
  */
 package com.arosbio.data.transform.scale;
 
-import java.io.Serializable;
 
 import com.arosbio.data.transform.Transformer;
 
@@ -22,7 +21,7 @@ import com.arosbio.data.transform.Transformer;
  * @author staffan
  *
  */
-public interface FeatureScaler extends Transformer, Serializable {
+public interface FeatureScaler extends Transformer {
 	
 	static final String CONVERTING_SPARSE_TO_DENSE_WARNING_MSG = "Note: using this transformer forces to store all features explicitly and removes sparseness in data, which could lead to memory issues.";
 

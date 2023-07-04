@@ -9,11 +9,9 @@
  */
 package com.arosbio.data.transform.impute;
 
-import java.io.Serializable;
-
 import com.arosbio.data.transform.Transformer;
 
-public interface Imputer extends Transformer, Serializable {
+public interface Imputer extends Transformer {
 	
 
 	

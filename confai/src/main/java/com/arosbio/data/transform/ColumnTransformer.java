@@ -9,7 +9,6 @@
  */
 package com.arosbio.data.transform;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -32,7 +31,7 @@ import com.google.common.collect.Range;
  *
  */
 @Experimental
-public abstract class ColumnTransformer implements Transformer, Serializable {
+public abstract class ColumnTransformer implements Transformer {
 	
 	private static final List<String> COL_MAX_IND_CONF = Arrays.asList("colMaxIndex");
 	private static final List<String> COL_MIN_IND_CONF = Arrays.asList("colMinIndex");
