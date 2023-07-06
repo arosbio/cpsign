@@ -287,7 +287,8 @@ public class TestPrecompute extends CLIBaseTest {
 			"--time");
 
 		ChemDataset first = ModelSerializer.loadDataset(preFirst.toURI(), null);
-		Assert.assertEquals("The default should be minimum 5 HAC",5, first.getMinHAC());
+		HACFilter f = (HACFilter) first.getFilters().get(0);
+		Assert.assertEquals("The default should be minimum 5 HAC",5, f.getMinHAC());
 
 		// Try again, see what happens when using the deprecated --min-hac flag
 		Files.delete(preFirst.toPath());
@@ -300,7 +301,8 @@ public class TestPrecompute extends CLIBaseTest {
 			"-mn", "dasf",
 			"--time");
 		ChemDataset second = ModelSerializer.loadDataset(preFirst.toURI(), null);
-		Assert.assertEquals("The HAC should be configured to be 10",10, second.getMinHAC());
+		f = (HACFilter) second.getFilters().get(0);
+		Assert.assertEquals("The HAC should be configured to be 10",10, f.getMinHAC());
 
 		// Set using the new --chem-filter parameter
 		Files.delete(preFirst.toPath());
@@ -313,7 +315,8 @@ public class TestPrecompute extends CLIBaseTest {
 			"-mn", "dasf",
 			"--time");
 		ChemDataset third = ModelSerializer.loadDataset(preFirst.toURI(), null);
-		Assert.assertEquals("The HAC should be configured to be 8",8, third.getMinHAC());
+		f = (HACFilter) third.getFilters().get(0);
+		Assert.assertEquals("The HAC should be configured to be 8",8, f.getMinHAC());
 		List<ChemFilter> filters = third.getFilters();
 		Assert.assertEquals(1, filters.size());
 		HACFilter hacFilter = (HACFilter) filters.get(0);
@@ -332,7 +335,6 @@ public class TestPrecompute extends CLIBaseTest {
 			"--time");
 		ChemDataset forth = ModelSerializer.loadDataset(preFirst.toURI(), null);
 		Assert.assertTrue(forth.getFilters().isEmpty());
-		Assert.assertEquals(0, forth.getMinHAC()); // means no HAC filter is applied
 
 		// printLogs();
 	}
@@ -1233,7 +1235,7 @@ public class TestPrecompute extends CLIBaseTest {
 		File out = TestUtils.createTempFile("dsagf", ".jar");
 		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
 		exit.checkAssertionAfterwards(new AssertSysOutContainsString("header", "smiles", errData.uri().toString(),"csv"));
-		exit.checkAssertionAfterwards(new PrintSysOutput());
+		// exit.checkAssertionAfterwards(new PrintSysOutput());
 		mockMain(Precompute.CMD_NAME,
 			"-td", errData.format(), "delim="+errData.delim(), errData.uri().toString(), 
 			"-mt", PRECOMPUTE_REGRESSION,

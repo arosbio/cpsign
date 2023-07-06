@@ -496,6 +496,7 @@ public final class ChemDataset extends Dataset {
 	 * @return The reference to the current ChemDataset
 	 * @deprecated Will be removed in the future, use {@link #withFilters(ChemFilter...)} or {@link #addFilter(ChemFilter)}
 	 */
+	@Deprecated(forRemoval = true)
 	public ChemDataset setMinHAC(int hac) {
 		boolean beenSet = false;
 		for (ChemFilter f : filters){
@@ -515,7 +516,9 @@ public final class ChemDataset extends Dataset {
 	 * Getter for the Minium Heavy Atom Count (HAC) required
 	 * for molecules to be added to the dataset. The default is 5. 
 	 * @return the current minimum HAC, 0 if no filter based on HAC
+	 * @deprecated Use the {@link #getFilters()} to see all current filters and their settings
 	 */
+	@Deprecated(forRemoval = true)
 	public int getMinHAC() {
 		for (ChemFilter f : filters){
 			if (f instanceof HACFilter){
@@ -876,7 +879,7 @@ public final class ChemDataset extends Dataset {
 			catch (DiscardedByChemFilter filterExcept) {
 				LOGGER.debug("Skipped molecule due to chem-filter");
 				state.numFilteredOut++;
-				tracker.register(new FailedRecord.Builder(index, Cause.LOW_HAC).withID(mol.getID()).withReason(filterExcept.getMessage()).build());
+				tracker.register(new FailedRecord.Builder(index, Cause.REMOVED_BY_FILTER).withID(mol.getID()).withReason(filterExcept.getMessage()).build());
 			} catch (DescriptorCalcException e) {
 				LOGGER.debug("Failed molecule with index {} while computing descriptors", index, e);
 				state.numDescriptorCalcFailed++;
@@ -1085,7 +1088,7 @@ public final class ChemDataset extends Dataset {
 			} catch (DiscardedByChemFilter chemFilterExcept) {
 				LOGGER.debug("Skipped molecule due to chem-filter");
 				state.numFilteredOut++;
-				tracker.register(new FailedRecord.Builder(index, Cause.LOW_HAC).withID(mol.getID()).withReason(chemFilterExcept.getMessage()).build());
+				tracker.register(new FailedRecord.Builder(index, Cause.REMOVED_BY_FILTER).withID(mol.getID()).withReason(chemFilterExcept.getMessage()).build());
 			} catch (DescriptorCalcException e) {
 				LOGGER.debug("Failed molecule with index {} while computing descriptors", index, e);
 				state.numDescriptorCalcFailed++;

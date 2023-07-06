@@ -30,8 +30,8 @@ public class FailedRecord implements Comparable<FailedRecord>{
 		INVALID_PROPERTY("Invalid property value"),
 
 		// Structure issues
-		/** Structure filtered out based on heavy atom count threshold */
-		LOW_HAC("Too low Heavy Atom Count (HAC)"),
+		/** Structure filtered out based on a ChemFilter, e.g. HAC threshold or MolMass */
+		REMOVED_BY_FILTER("Structure was filtered out"),
 		/** Record that failed during descriptor calculation */
 		DESCRIPTOR_CALC_ERROR("Failed computing descriptors"),
 		

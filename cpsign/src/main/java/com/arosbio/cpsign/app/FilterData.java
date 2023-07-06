@@ -231,7 +231,6 @@ public class FilterData implements RunnableCmd, SupportsProgressBar {
 				this, 
 				console,
 				listFailedMolecules,
-				// minHAC,
 				earlyTermination.maxFailuresAllowed);
 		timer.endSection();
 

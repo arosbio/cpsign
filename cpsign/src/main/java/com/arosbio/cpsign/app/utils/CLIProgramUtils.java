@@ -573,7 +573,6 @@ public class CLIProgramUtils {
 		else if (trainFile != null || modelExclusiveTrainFile != null || calibExclusiveTrainFile != null) {
 			loadData(predictor.getDataset(), (predictor instanceof ChemClassifier), trainFile,
 			modelExclusiveTrainFile, calibExclusiveTrainFile, endpoint, labels, program, console, listFailed,
-			// minHAC, 
 			maxNumAllowedFailures);
 		} else {
 			// should never happen, should be handled before calling this method
@@ -816,14 +815,14 @@ public class CLIProgramUtils {
 		List<FailedRecord> sortedUnique = CollectionUtils.getUniqueAndSorted(records);
 		int initialLen = sb.length();
 		
-		int numInvalidRec=0, numLowHAC=0, numMissingOrInvalidProperty=0, numUnknown=0, numDescriptorCalcError=0;
+		int numInvalidRec=0, numRmByChemFilter=0, numMissingOrInvalidProperty=0, numUnknown=0, numDescriptorCalcError=0;
 		for (FailedRecord r : sortedUnique){
 			switch (r.getCause()){
 				case DESCRIPTOR_CALC_ERROR:
 					numDescriptorCalcError++;
 					break;
-				case LOW_HAC:
-					numLowHAC++;
+				case REMOVED_BY_FILTER:
+					numRmByChemFilter++;
 					break;
 				case INVALID_PROPERTY:
 				case MISSING_PROPERTY:
@@ -849,8 +848,8 @@ public class CLIProgramUtils {
 		if (numDescriptorCalcError>0){
 			sb.append("%n - Failed ").append(numDescriptorCalcError).append(" record(s) during descriptor calculation");
 		}
-		if (numLowHAC>0){
-			sb.append("%n - Failed ").append(numLowHAC).append(" record(s) due to Heavy Atom Count threshold");
+		if (numRmByChemFilter>0){
+			sb.append("%n - Failed ").append(numRmByChemFilter).append(" record(s) due to Chemical filters");
 		}
 		if (numUnknown>0){
 			sb.append("%n - Failed ").append(numUnknown).append(" record(s) due to unknown error");
@@ -1898,16 +1897,14 @@ public class CLIProgramUtils {
 			Map.Entry<Cause,Integer> first = entries.get(entries.size()-1);
 
 			switch(first.getKey()){
-				case LOW_HAC:
+				case REMOVED_BY_FILTER:
 					errMessage
 						.append(first.getValue())
-						.append(" record(s) were discarded due to having too low Heavy atom count (now set to minimum ")
-						.append(dataset.getMinHAC())
-						.append(") - consider lowering the threshold using the ")
+						.append(" record(s) were discarded due to the used ")
 						.append(ParameterUtils.PARAM_FLAG_ANSI_ON)
-						.append("--min-hac")
+						.append("--chem-filters")
 						.append(ParameterUtils.ANSI_OFF)
-						.append(" parameter");
+						.append(" - consider updating this/these in case the result is not what you wished for");
 					break;
 				case DESCRIPTOR_CALC_ERROR:
 					errMessage

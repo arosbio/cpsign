@@ -31,6 +31,7 @@ import com.arosbio.chem.io.in.SDFile;
 import com.arosbio.cheminf.ChemCPClassifier;
 import com.arosbio.cheminf.ChemCPRegressor;
 import com.arosbio.cheminf.ChemClassifier;
+import com.arosbio.cheminf.ChemFilter;
 import com.arosbio.cheminf.ChemPredictorImpl;
 import com.arosbio.cheminf.ChemVAPClassifier;
 import com.arosbio.cheminf.data.ChemDataset;
@@ -209,7 +210,9 @@ public class TestSaveLoadModel extends UnitTestBase {
 		Map<Integer, ICPClassifier> allModels = loaded.getPredictors();
 		Assert.assertEquals(1, allModels.size());
 		Assert.assertTrue(allModels.containsKey(trainIndex));
-		Assert.assertEquals(minHAC, loadedSingle.getDataset().getMinHAC());
+		List<ChemFilter> loadedFilters = loadedSingle.getDataset().getFilters();
+		Assert.assertEquals(1, loadedFilters.size());
+		Assert.assertEquals(minHAC, ((HACFilter)loadedFilters.get(0)).getMinHAC());
 
 		signacp.train();
 		// LoggerUtils.setDebugMode(SYS_ERR);
@@ -239,7 +242,9 @@ public class TestSaveLoadModel extends UnitTestBase {
 		// load the model
 		ChemCPClassifier loadedSignAcp = (ChemCPClassifier) ModelSerializer.loadChemPredictor(modelFile.toURI(), spec);
 		assertEquals(signacp, loadedSignAcp);
-		Assert.assertEquals(minHAC, loadedSignAcp.getDataset().getMinHAC());
+		List<ChemFilter> filters = loadedSignAcp.getDataset().getFilters();
+		Assert.assertEquals(1, filters.size());
+		Assert.assertEquals(minHAC, ((HACFilter)filters.get(0)).getMinHAC());
 
 		Assert.assertEquals(clfData.property(), loadedSignAcp.getProperty());
 		Map<String,Double> loadedPred = loadedSignAcp.predict(getTestMol());
@@ -631,15 +636,16 @@ public class TestSaveLoadModel extends UnitTestBase {
 		}
 		ModelSerializer.saveDataset(sp, mInfo, modelFile, null);
 
-		ChemDataset loadedModel = ModelSerializer.loadDataset(modelFile.toURI(), null);
-		assertEquals(sp, loadedModel);
-		SignaturesDescriptor loadedDesc = (SignaturesDescriptor) loadedModel.getDescriptors().get(0);
+		ChemDataset loadedData = ModelSerializer.loadDataset(modelFile.toURI(), null);
+		assertEquals(sp, loadedData);
+		SignaturesDescriptor loadedDesc = (SignaturesDescriptor) loadedData.getDescriptors().get(0);
 		if (INCHI_AVAILABLE_ON_SYSTEM)
 			Assert.assertTrue(loadedDesc.getSignatureType() == SignatureType.STEREO);
 		else
 			Assert.assertTrue(loadedDesc.getSignatureType() == SignatureType.STANDARD);
 
-		Assert.assertEquals(minHac,loadedModel.getMinHAC());
+		Assert.assertEquals(1, loadedData.getFilters().size());
+		Assert.assertEquals(minHac,((HACFilter)loadedData.getFilters().get(0)).getMinHAC());
 		
 	}
 
