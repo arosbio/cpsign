@@ -196,7 +196,7 @@
 			<!-- For testing -->
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.0.0-M5</version>
+				<version>${surefire.plugin.version}</version>
 				<executions>
 
 					<!-- CLI TESTS -->

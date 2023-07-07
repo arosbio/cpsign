@@ -34,7 +34,7 @@ import java.security.InvalidKeyException;
  * @author staffan
  *
  */
-public interface EncryptionSpecification extends Cloneable {
+public interface EncryptionSpecification extends Cloneable, javax.security.auth.Destroyable {
 
 	/**
 	 * Name of the implementation. Useful in case several specs are available, i.e. this name
@@ -53,7 +53,7 @@ public interface EncryptionSpecification extends Cloneable {
 	public String getInfo();
 
 	/**
-	 * Get the length of the allowed key lengths (i.e. number of {@code bytes} that should be sent to {@link #init(byte[])}.
+	 * Get the length of the allowed key lengths in number of bytes (i.e. number of {@code bytes} that should be sent to {@link #init(byte[])}.
 	 * E.g. multiple lengths can be allowed, depending on the specific implementation.
 	 * @return an array of allowed lengths
 	 */
@@ -64,7 +64,7 @@ public interface EncryptionSpecification extends Cloneable {
 	 * should correspond to one given from the {@link EncryptionSpecification#getAllowedKeyLengths()} 
 	 * method. This method should thrown an {@link IllegalArgumentException} in case the {@code length}
 	 * parameter is not one of the allowed lengths. 
-	 * @param length the length of the key, should be &gt;0
+	 * @param length the length of the key, in bytes, should be &gt;0
 	 * @return an encryption key 
 	 * @throws IllegalArgumentException In case the {@code length} parameter is &le; 0
 	 */
