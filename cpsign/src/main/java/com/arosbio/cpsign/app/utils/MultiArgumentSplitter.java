@@ -59,7 +59,7 @@ public class MultiArgumentSplitter {
 		} 
 
 		// Here we go through the quotes step by step
-		LOGGER.debug("Attempting to split argument with quoteType{"+quoteType+"}: " + value);
+		LOGGER.debug("Attempting to split argument with quoteType {} : {}",quoteType, value);
 
 		List<String> finalList = new ArrayList<>();
 
@@ -96,7 +96,7 @@ public class MultiArgumentSplitter {
 		}
 
 
-		LOGGER.debug("Final list after splitting with quotes: " + finalList);
+		LOGGER.debug("Final list after splitting with quotes: {}", finalList);
 		return finalList;
 
 	}

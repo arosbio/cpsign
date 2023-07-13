@@ -25,19 +25,14 @@ import picocli.CommandLine.TypeConversionException;
 public class IntegerListOrRangeConverter implements ITypeConverter<List<Integer>> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IntegerListOrRangeConverter.class);
-	//	private static final String CORRECT_BASE_SYNTAX = "<start>:<end>[:<step>]";
 
 	public List<Integer> convert(final String input){
 		if (input == null || input.trim().isEmpty())
 			return new ArrayList<>();
 
-		// First split the thing into a list of separate strings
-		//		List<String> inputs = MultiArgumentSplitter.split(input);
-
 		List<Integer> finalList = new ArrayList<>();
 
 		String inp = input.trim();
-		//		for (String inp: inputs) {
 		if (inp.contains(":")) {
 			// This is a start-stop-step-'base'-range!
 			String[] splitted = inp.split(":");
@@ -72,7 +67,6 @@ public class IntegerListOrRangeConverter implements ITypeConverter<List<Integer>
 				throw new TypeConversionException("Argument " + input + " could not be converted into a list");
 			}
 		}
-		//		}
 
 		return CollectionUtils.getUnique(finalList);
 	}

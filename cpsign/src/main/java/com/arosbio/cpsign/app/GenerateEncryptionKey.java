@@ -255,7 +255,9 @@ public class GenerateEncryptionKey implements RunnableCmd {
 			byte[] key = type.generateRandomKey(keyLength);
 			String keyStr = Base64.getEncoder().encodeToString(key);
 
-			console.print("%s", PrintMode.SILENT_ON_MATCH, keyStr);
+			// write the key only if SILENT_MODE
+			console.print("%s", PrintMode.SILENT_ON_MATCH, keyStr); 
+			// Write some human readable info as well if not SILENT
 			console.print("Here is your generated encryption-key, copy the full line below:%n%s%n", 
 				PrintMode.NORMAL, keyStr);
 		}

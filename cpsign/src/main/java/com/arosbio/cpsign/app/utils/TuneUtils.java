@@ -516,7 +516,7 @@ public class TuneUtils {
 					args.remove(0);
 					if (!(o instanceof Configurable)) {
 						LOGGER.debug("Tried configure object of type " + cls
-								+ " but it does not implement Configurable (ImplementationConfigParameter) in tune");
+								+ " but it does not implement Configurable (ImplementationConfig<T>) in tune");
 						throw new IllegalArgumentException("Object " + cls.getSimpleName() + " is not configurable");
 					}
 					ConfigUtils.setConfigs((Configurable) o, args, input);

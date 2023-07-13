@@ -32,13 +32,8 @@ public class ListOrRangeConverter implements ITypeConverter<List<Double>> {
 		if (input == null || input.trim().isEmpty())
 			return new ArrayList<>();
 
-		// First split the thing into a list of separate strings
-		//		List<String> inputs = MultiArgumentSplitter.split(input);
-		//		LOGGER.debug("After MultiArgumentSplitter: '{}'",  inputs);
-
 		List<Double> finalList = new ArrayList<>();
 
-		//		for (String inp: inputs) {
 		String inp = input.trim();
 		LOGGER.debug("Working with input: {}", inp);
 		if (inp.contains(":")) {
@@ -95,7 +90,6 @@ public class ListOrRangeConverter implements ITypeConverter<List<Double>> {
 				throw new TypeConversionException("Argument '" + input + "' could not be converted into a list");
 			}
 		}
-		//		}
 
 		return CollectionUtils.getUnique(finalList);
 	}
