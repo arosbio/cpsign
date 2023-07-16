@@ -222,7 +222,7 @@ public class UriUtils {
 	/**
 	 * Checks both if the URI is valid and if it is empty, returns false for both cases, true
 	 * if it is non-empty
-	 * @param uri
+	 * @param uri URI to check
 	 * @return {@code false} both if we cannot read from the given URI and if it is empty
 	 */
 	public static boolean verifyURINonEmpty(URI uri) {

@@ -582,17 +582,17 @@ public class CLIProgramUtils {
 	
 	/**
 	* Main method for precomputing data from chemical files 
-	* @param sp
-	* @param isClassification
-	* @param trainFile
-	* @param modelExclusiveTrainFile
-	* @param calibExclusiveTrainFile
-	* @param endpoint
-	* @param labels
-	* @param program
-	* @param console
-	* @param listFailed
-	* @param maxNumAllowedFailures
+	* @param sp dataset to add to
+	* @param isClassification if it should be classification data 
+	* @param trainFile standard training data
+	* @param modelExclusiveTrainFile training data exclusively used for model training
+	* @param calibExclusiveTrainFile training data exclusively used for model calibration
+	* @param endpoint property to model - to be read from the input file(s)
+	* @param labels labels (if any)
+	* @param program the CLI program running this
+	* @param console console to print to
+	* @param listFailed if all failed records should be printed with their cause
+	* @param maxNumAllowedFailures the maximum number of allowed failures during processing
 	*
 	*/
 	public static void loadData(final ChemDataset sp, final boolean isClassification, final ChemFile trainFile,

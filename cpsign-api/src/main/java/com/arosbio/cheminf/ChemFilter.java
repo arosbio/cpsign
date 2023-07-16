@@ -19,9 +19,9 @@ import com.arosbio.commons.mixins.Described;
 import com.arosbio.commons.mixins.Named;
 
 /**
- * A {@code ChemFilter} is used when loading molecules into a {@link ChemDataset} in order to filter out 
+ * A {@code ChemFilter} is used when loading molecules into a {@link com.arosbio.cheminf.data.ChemDataset ChemDataset} in order to filter out 
  * molecules that should not be part of modeling, this may be due to outliers. Note that the {@code ChemFilter}
- * needs to be set on the {@link ChemDataset} before any of the add methods are called, as they require chemical structure
+ * needs to be set on the {@link com.arosbio.cheminf.data.ChemDataset ChemDataset} before any of the add methods are called, as they require chemical structure
  * which is lost after descriptors have been calculated. The {@link #applyToPredictions()} method is used for checking if
  * a filter needs to be stored together with the predictor model, so it can be applied to future predictions as well.
  */
@@ -35,25 +35,23 @@ public interface ChemFilter extends Described, Named, Configurable, Cloneable, S
 
     /**
      * Check if a given {@code molecule} should be keept or removed, this method can be applied both at training/data loading 
-     * stage and at prediction time, depending on what {@link #applyToTrainingData()} and {@link #applyToPredictions()} returns. 
+     * stage and (optionally) at prediction time, depending on what {@link #applyToPredictions()} returns. 
      * @param molecule the molecule to check
      * @return {@code true} if {@code molecule} should be keept (either)
-     * @throws IllegalStateException If the filter needs fitting before this method, and the {@link #fit(Iterable)} has not been called
      * @throws IllegalArgumentException Any invalid arguments
      * @throws CDKException Issues handling the molecule
      */
-    public boolean keep(IAtomContainer molecule) throws IllegalStateException, IllegalArgumentException, CDKException;
+    public boolean keep(IAtomContainer molecule) throws IllegalArgumentException, CDKException;
 
     /**
      * Generate a textual description of why a molecule should be discarded, i.e. {@link #keep(IAtomContainer)} returns {@code false}
      * for the given molecule.
      * @param molecule a molecule for which the {@link #keep(IAtomContainer)} returned {@code false} for
      * @return a textual description of why the molecule is discarded 
-     * @throws IllegalStateException If the filter needs fitting before this method, and the {@link #fit(Iterable)} has not been called
      * @throws IllegalArgumentException Any invalid arguments, or e.g. the {@code molecule} should be keept 
      * @throws CDKException Issues handling the molecule
      */
-    public String getDiscardReason(IAtomContainer molecule) throws IllegalStateException, IllegalArgumentException, CDKException;
+    public String getDiscardReason(IAtomContainer molecule) throws IllegalArgumentException, CDKException;
     
     public ChemFilter clone();
 }

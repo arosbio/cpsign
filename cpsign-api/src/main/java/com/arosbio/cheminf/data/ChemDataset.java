@@ -1025,7 +1025,7 @@ public final class ChemDataset extends Dataset {
 	 * @return DescriptorCalcInfo with information about how many compounds was added and possibly failed compounds
 	 * @throws IllegalStateException If the Descriptors are not initialized yet
 	 * @throws IllegalArgumentException If there was no valid molecules that could be added to this {@link ChemDataset}
-	 * @throws EarlyLoadingStopException Stops parsing once failed too many recods, {@link #setNumLoadingFailuresAllowed(int)}
+	 * @throws EarlyLoadingStopException If parsing stops due to too many failed recods, see {@link #setProgressTracker(ProgressTracker)}
 	 */
 	public DescriptorCalcInfo add(Iterator<Pair<IAtomContainer, Double>> data, 
 			RecordType type) 
@@ -1042,7 +1042,7 @@ public final class ChemDataset extends Dataset {
 	 * @return DescriptorCalcInfo with information about how many compounds was added and possibly failed compounds
 	 * @throws IllegalStateException If the Descriptors are not initialized yet
 	 * @throws IllegalArgumentException If there was no valid molecules that could be added to this {@link ChemDataset}
-	 * @throws EarlyLoadingStopException Stops parsing once failed too many records, {@link #setNumLoadingFailuresAllowed(int)}
+	 * @throws EarlyLoadingStopException If parsing stops due to too many failed recods, see {@link #setProgressTracker(ProgressTracker)}
 	 */
 	public DescriptorCalcInfo add(Iterator<Pair<IAtomContainer, Double>> data, 
 			RecordType type, int recordStartIndex) 
