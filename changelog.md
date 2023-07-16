@@ -1,6 +1,7 @@
 # Change log for CPSign versions
 
-### 2.0.0 RC2 :
+### 2.0.0 ~~RC2~~ RC3 :
+**Note:** due to a minor mistake in updating the encrypt-api version to the updated 2.0.1 version in the test-utils module, the build failed at GitHub and RC1 is amended directly by release candidate 3 (RC3).
 - Introduced a common `ProgressTracker` that is shared among the processing stack while loading and processing new data. This way a specific threshold of "number of allowed failures" can be adhered to instead of having individual thresholds for each level of processing. This trickles down into `--early-termination` of the CLI now stopping when it should.
  - Fixed bug where `MolAndActivityConverter` would stop when encountering the maximum specified number of conversion failures, and do it silently without causing the expected exception. This bug was also present when using the CLI `precompute` program - and is now solved.
  - Remove the possibility to use clustered POSIX flags to the CLI, which resulted in strange behaviour that was hard to find the cause of.
