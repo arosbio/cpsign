@@ -100,19 +100,6 @@ public abstract class ColumnTransformer implements Transformer {
 					colsCollection.add((Integer)kv.getValue());
 				}
 				
-// 				else { //TODO - did this work??
-// 					List<String> args = MultiArgumentSplitter.split(kv.getValue().toString());
-// 					List<Integer> cols = new ArrayList<>();
-// 					for (String a : args) {
-// 						cols.addAll(new IntegerListOrRangeConverter().convert(a));
-// 					}
-// 					colsCollection.addAll(CollectionUtils.getUnique(cols));
-// //					String[] args = kv.getValue()
-// //							.toString().split(",");
-// //					for (String a : args) {
-// //						colsCollection.add(TypeUtils.asInt(a));
-// //					}
-// 				}
 			} else if (CollectionUtils.containsIgnoreCase(USE_ALL_COLS_CONF,kv.getKey())) {
 				useAllCols = TypeUtils.asBoolean(kv.getValue());
 			} 

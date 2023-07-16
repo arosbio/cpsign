@@ -38,31 +38,15 @@ import ch.qos.logback.core.joran.spi.JoranException;
 @Category(UnitTest.class)
 public class TestLoggerUtils {
 	
-//	private static final Logger LOGGER = (Logger)LoggerFactory.getLogger(TestLoggerUtils.class);
-
 	@Before
 	@After
 	public void resetLogging(){
 		try {
 			LoggerUtils.reloadLoggingConfig();
 		} catch(JoranException e) {
-			// TODO Auto-generated catch block
 			System.err.println("Could not reload the default logging-config");
 			Assert.fail();
-//			e.printStackTrace();
 		}
-//		LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-//		context.reset();
-//		JoranConfigurator configurator = new JoranConfigurator();
-//		configurator.setContext(context);
-//		try {
-//			configurator.doConfigure(this.getClass().getResourceAsStream("/logback.xml"));
-//		} catch (JoranException e) {
-//			// TODO Auto-generated catch block
-//			System.err.println("Could not reload the default logging-config");
-//			Assert.fail();
-////			e.printStackTrace();
-//		}
 	}
 	
 	@Test

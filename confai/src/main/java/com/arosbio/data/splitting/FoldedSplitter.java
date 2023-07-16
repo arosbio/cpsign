@@ -262,27 +262,6 @@ public class FoldedSplitter implements DataSplitter {
         } finally{
             currentFold++;
         }
-
-        // Dataset trainingData = new Dataset()
-        //     .withCalibrationExclusiveDataset(dataClone.getCalibrationExclusiveDataset().clone()) // TODO - do we need the clone call?
-        //     .withModelingExclusiveDataset(dataClone.getModelingExclusiveDataset().clone());
-
-        // List<DataRecord> split0 = new ArrayList<>(numberOfDataRecords);
-        // List<DataRecord> split1 = iteratorFolds.get(currentFold);
-        // for (int i=0; i<iteratorFolds.size(); i++) {
-        //     if (i != currentFold) {
-        //         split0.addAll(iteratorFolds.get(i));
-        //     }
-        // }
-
-        // trainingData.withDataset(new SubSet(split0));
-
-        // LOGGER.debug("Using {} examples in first {} examples second (not counting model-exclusive or calibration-exclusive data)",
-        //     split0.size(), split1.size());
-        // // Update the fold for next call to next()
-        // currentFold++;
-
-        // return new DataSplit(trainingData,split1,seed,foundRange);
     }
     
     @Override
@@ -297,26 +276,6 @@ public class FoldedSplitter implements DataSplitter {
         LOGGER.debug("Getting fold {}/{} for repeat: {}",(getIndex+1),numFolds,getRep);
 
         return get(getIndex, getRep);
-
-        // LOGGER.debug("Generating fold {}/{} for repeat: {}",currentIndex,numFolds,currentRep);
-
-        // Dataset trainingData = new Dataset();
-        // trainingData.withCalibrationExclusiveDataset(dataClone.getCalibrationExclusiveDataset().clone()); // TODO - do we need the clone call?
-        // trainingData.withModelingExclusiveDataset(dataClone.getModelingExclusiveDataset().clone());
-
-        // List<DataRecord> trainingSet = new ArrayList<>(numberOfDataRecords);
-        // List<DataRecord> testSet = iteratorFolds.get(currentFold);
-        // for (int i=0; i<iteratorFolds.size(); i++) {
-        //     if (i != currentFold) {
-        //         trainingSet.addAll(iteratorFolds.get(i));
-        //     }
-        // }
-
-        // trainingData.withDataset(new SubSet(trainingSet));
-
-        // LOGGER.debug("Using {} examples for training and {} examples for testing (not counting model-exclusive or calibration-exclusive data)",
-        //     trainingSet.size(),testSet.size());
-        // return new DataSplit(trainingData,testSet,seed,foundRange);
     }
 
     private DataSplit get(int fold, int rep) throws NoSuchElementException {
@@ -332,10 +291,10 @@ public class FoldedSplitter implements DataSplitter {
 
         // Copy over the calibration and modeling exclusive data sets
         Dataset first = new Dataset()
-            .withCalibrationExclusiveDataset(dataClone.getCalibrationExclusiveDataset().clone()) // TODO - do we need the clone call?
+            .withCalibrationExclusiveDataset(dataClone.getCalibrationExclusiveDataset().clone()) 
             .withModelingExclusiveDataset(dataClone.getModelingExclusiveDataset().clone());
 
-        List<DataRecord> firstDataOnly = new ArrayList<>(  dataClone.getDataset().size());
+        List<DataRecord> firstDataOnly = new ArrayList<>(dataClone.getDataset().size());
         List<DataRecord> second = theFolds.get(fold);
         for (int i=0; i<numFolds; i++) {
             if (i != fold) {

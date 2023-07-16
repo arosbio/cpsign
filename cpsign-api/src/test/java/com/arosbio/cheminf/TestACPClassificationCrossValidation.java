@@ -99,7 +99,6 @@ public class TestACPClassificationCrossValidation extends UnitTestBase{
 		TestRunner runner = new TestRunner.Builder(new KFoldCV(cvFolds)).build();
 		List<Metric> metrics = MetricFactory.getMetrics(signCCP.getPredictor(),false);
 		MetricFactory.setEvaluationPoints(metrics, Arrays.asList(confidence));
-//		//TODO: FIX ASSERTION
 		List<? extends Metric> acc = runner.evaluate(signCCP.getDataset(),signCCP.getPredictor(), metrics);
 		for (Metric m: acc) {
 			System.out.println(m);

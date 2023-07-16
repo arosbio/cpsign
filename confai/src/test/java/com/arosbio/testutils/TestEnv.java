@@ -93,8 +93,8 @@ public abstract class TestEnv extends TestBase {
 				}
 				throw new IllegalArgumentException("could not find correct accuracy metric");
 			}
-			else if (m instanceof MetricAggregation && (((MetricAggregation)m).spawnNewMetricInstance().getClass() == accuracyType.getClass())){
-				return ((MetricAggregation) m).getScore();
+			else if (m instanceof MetricAggregation && (((MetricAggregation<?>)m).spawnNewMetricInstance().getClass() == accuracyType.getClass())){
+				return ((MetricAggregation<?>) m).getScore();
 			}
 
 		}
@@ -115,10 +115,9 @@ public abstract class TestEnv extends TestBase {
 					throw new IllegalArgumentException("Could not find the correct efficiency metric");
 				}
 			} else if (m instanceof MetricAggregation){
-				// SingleValuedMetric base = ;
-				Class<?> clz = ((MetricAggregation)m).spawnNewMetricInstance().getClass();
+				Class<?> clz = ((MetricAggregation<?>)m).spawnNewMetricInstance().getClass();
 				if (clz == effType.getClass()){
-					return ((MetricAggregation)m).getScore();
+					return ((MetricAggregation<?>)m).getScore();
 				}
 			} else if (m instanceof PlotMetricAggregation){
 				PlotMetric base = ((PlotMetricAggregation)m).spawnNewMetricInstance();
@@ -138,8 +137,8 @@ public abstract class TestEnv extends TestBase {
 		for (Metric m: metrics) {
 			if (m instanceof LogLoss)
 				return ((LogLoss) m).getScore();
-			else if (m instanceof MetricAggregation && ((MetricAggregation)m).spawnNewMetricInstance() instanceof LogLoss){
-				return ((MetricAggregation)m).getScore();
+			else if (m instanceof MetricAggregation && ((MetricAggregation<?>)m).spawnNewMetricInstance() instanceof LogLoss){
+				return ((MetricAggregation<?>)m).getScore();
 			}
 		}
 		throw new IllegalArgumentException("No LogLoss found");

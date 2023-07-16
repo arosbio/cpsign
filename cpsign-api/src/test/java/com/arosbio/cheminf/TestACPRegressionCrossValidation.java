@@ -135,14 +135,13 @@ public class TestACPRegressionCrossValidation extends UnitTestBase{
 		
 		TestRunner cv = new TestRunner.Builder(new KFoldCV(cvFolds)).evalPoints(Arrays.asList(confidence)).build();
 		
-		List<Metric> cvres = cv.evaluate(signCCP.getDataset(),signCCP.getPredictor()); //signCCP.crossvalidate(cvFolds, confidence);
+		List<Metric> cvres = cv.evaluate(signCCP.getDataset(),signCCP.getPredictor());
 		double acc = -1;
 		for (Metric m: cvres) {
 			if (m instanceof CalibrationPlot)
 				acc = ((CalibrationPlot) m).getAccuracy(confidence);
 		}
 		
-		//TODO: FIX ASSERTION
 		System.out.println(cvres);
 		if (dataset.equals(LARGE_DATASET))
 			Assert.assertEquals(acc, confidence, 0.025);
