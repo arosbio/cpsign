@@ -20,6 +20,9 @@ import com.arosbio.commons.MathUtils;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.metrics.classification.ROC_AUC;
+import com.arosbio.ml.metrics.cp.CPAccuracy;
+import com.arosbio.ml.metrics.cp.classification.ObservedFuzziness;
+import com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth;
 import com.arosbio.ml.metrics.plots.MergedPlot;
 import com.arosbio.ml.metrics.plots.Plot2D;
 import com.arosbio.ml.metrics.plots.PlotMetric;
@@ -27,18 +30,34 @@ import com.github.cliftonlabs.json_simple.Jsoner;
 
 public class MetricsOutputFormatter {
 
-	private List<SingleValuedMetric> singleMetric = new ArrayList<>();
-	private List<PlotMetric> plotMetrics = new ArrayList<>();
+	private final List<SingleValuedMetric> singleMetrics = new ArrayList<>();
+	private final MergedPlot plot;
 
 	public MetricsOutputFormatter(List<? extends Metric> metrics) {
+		List<Plot2D> tmpPlots = new ArrayList<>();
+		
 		for (Metric m : metrics) {
 			if (m instanceof SingleValuedMetric)
-				singleMetric.add((SingleValuedMetric) m);
+				singleMetrics.add((SingleValuedMetric) m);
 			else if (m instanceof PlotMetric)
-				plotMetrics.add((PlotMetric) m);
+				tmpPlots.add(((PlotMetric) m).buildPlot());
 			else
 				throw new RuntimeException("Metric " + m.getClass() + " not recognized - it must implement SingleValuedMetric or PlotMetric!");
 		}
+		if (!tmpPlots.isEmpty()){
+			plot = new MergedPlot(tmpPlots);
+		} else {
+			plot = null;
+		}
+	}
+
+	public int getNumEvaluationPoints(){
+		if (plot == null)
+			return 0;
+		else {
+			return plot.getXvalues().size();
+		}
+		
 	}
 
 	public String getTextOnlySingleValueMetrics() {
@@ -60,25 +79,56 @@ public class MetricsOutputFormatter {
 		return sb.toString();
 	}
 
-	public String getTextOnlyPlots(char delim) throws IOException {
-		if (plotMetrics.isEmpty())
-			return "";
-		List<Plot2D> plots = new ArrayList<>();
-		for (PlotMetric pm : plotMetrics) {
-			plots.add(pm.buildPlot());
+	/**
+	 * This method assumes that we only have a single confidence level set
+	 * so we do not have a calibration plot, instead we list them and add a row
+	 * with information about the confidence level
+	 * @return the text
+	 */
+	public String getTextOnlyOneEvaluationPoint(){
+		if (plot.getXvalues().size() != 1){
+			throw new IllegalStateException("Plot metrics do not have a single x-value, this method should not be called!");
 		}
-		MergedPlot plot = new MergedPlot(plots);
+		// Add the single-value stuff (not relying on a confidence level, or a different one than the plot)
+		StringBuilder sb = new StringBuilder(getTextOnlySingleValueMetrics());
+		sb.append("Confidence dependent metrics, using confidence of ").append(plot.getXvalues().get(0)).append(":%n");
+
+		Map<String,Number> values = new LinkedHashMap<>(plot.getYlabels().size());
+		// Find the widest text string and aggregate all values
+		int widest = -1;
+		for (Map.Entry<String,List<Number>> label2Value : plot.getCurves().entrySet()) {
+			if (label2Value.getKey() == plot.getXlabel().label()){
+				// Skip the x-value, included as a line above 
+				continue;
+			}
+			widest = Math.max(widest, label2Value.getKey().length());
+			Number n = label2Value.getValue().get(0);
+			if (n instanceof Float || n instanceof Double){
+				values.put(label2Value.getKey(), MathUtils.roundTo3significantFigures(n.doubleValue()));
+			} else {
+				values.put(label2Value.getKey(),n);
+			}
+			
+		}
+		final String lineFormat = " - %-"+widest+"s : %s%n";
+		Formatter f = new Formatter(sb);
+		for (String key : values.keySet()) {
+			f.format(lineFormat, key, values.get(key));
+		}
+		f.close();
+
+		return sb.toString();
+	}
+
+	public String getTextOnlyPlots(char delim) throws IOException {
+		if (plot == null)
+			return "";
 		return plot.toCSV(delim,null);
 	}
 
 	public String getCSV(char delim) throws IOException {
 		Map<String, Object> nonPlotData = compileSingleMetrics();
-
-		List<Plot2D> plots = new ArrayList<>();
-		for (PlotMetric pm : plotMetrics) {
-			plots.add(pm.buildPlot());
-		}
-		return new MergedPlot(plots).toCSV(delim, nonPlotData);
+		return plot.toCSV(delim, nonPlotData);
 	}
 
 	public String getJSON(boolean addROC) {
@@ -87,25 +137,20 @@ public class MetricsOutputFormatter {
 
 		// ROC
 		if (addROC) {
-			for (SingleValuedMetric m : singleMetric) {
+			for (SingleValuedMetric m : singleMetrics) {
 				if (m instanceof ROC_AUC)
 					mets.put(OutputNamingSettings.JSON.ROC_PLOT_SECTION,((ROC_AUC)m).rocAsJSON());
 			}
 		}
 		
-		// Plot
-		List<Plot2D> plots = new ArrayList<>();
-		for (PlotMetric pm : plotMetrics) {
-			plots.add(pm.buildPlot());
-		}
-		mets.put(OutputNamingSettings.JSON.PLOT_SECTION, new MergedPlot(plots).getCurves());
+		mets.put(OutputNamingSettings.JSON.PLOT_SECTION, plot.getCurves());
 
 		// Round everything and convert to pretty-print
 		return Jsoner.prettyPrint(JSONFormattingHelper.toJSON(mets).toJson());
 	}
 
 	public String getROCAsTSV(char delim) {
-		for (SingleValuedMetric m: singleMetric) {
+		for (SingleValuedMetric m : singleMetrics) {
 			if (m instanceof ROC_AUC)
 				return ((ROC_AUC) m).rocAsCSV(delim);
 		}
@@ -115,13 +160,22 @@ public class MetricsOutputFormatter {
 
 	private Map<String, Object> compileSingleMetrics(){
 		Map<String,Object> metrics = new LinkedHashMap<>();
-		for (SingleValuedMetric m : singleMetric) {
+		for (SingleValuedMetric m : singleMetrics) {
 			try {
 				metrics.putAll(m.asMap());
 			} catch (Exception e) {}
 		}
 
 		return MathUtils.roundAllValues(metrics);
+	}
+
+	public boolean isConformalResult(){
+		for (SingleValuedMetric svm : singleMetrics){
+			if (svm instanceof CPAccuracy || svm instanceof ObservedFuzziness || svm instanceof MeanPredictionIntervalWidth){
+				return true;
+			}
+		}
+		return false;
 	}
 
 }

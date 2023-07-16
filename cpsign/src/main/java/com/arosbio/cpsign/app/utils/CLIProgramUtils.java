@@ -1484,10 +1484,7 @@ public class CLIProgramUtils {
 			break;
 			
 			case TEXT:
-			LOGGER.debug("printing results as text");
-			sb.append(formatter.getTextOnlySingleValueMetrics());
-			sb.append("%nCalibration plot:%n");
-			sb.append(formatter.getTextOnlyPlots(CLIConsole.DEFAULT_DELIMITER_CSV));
+			doAddResultAsText(sb, formatter);
 			break;
 			
 			default:
@@ -1495,10 +1492,7 @@ public class CLIProgramUtils {
 			console.printlnWrappedStdErr(
 			"Unrecognized results format: " + format + "%nFalling back to printing as text..%n",
 			PrintMode.NORMAL);
-			
-			sb.append(formatter.getTextOnlySingleValueMetrics());
-			sb.append("%nCalibration plot:%n");
-			sb.append(formatter.getTextOnlyPlots(CLIConsole.DEFAULT_DELIMITER_CSV));
+			doAddResultAsText(sb, formatter);
 			break;
 		}
 		
@@ -1520,6 +1514,19 @@ public class CLIProgramUtils {
 		}
 		
 		return sb.toString();
+	}
+
+	private static void doAddResultAsText(StringBuilder resultText, MetricsOutputFormatter formatter) throws IOException{
+		LOGGER.debug("printing results as text");
+		if (formatter.getNumEvaluationPoints() <=1 && formatter.isConformalResult()){
+			// Single evaluation level - output without the "calibration plot" text
+			resultText.append(formatter.getTextOnlyOneEvaluationPoint());
+		} else {
+			resultText.append(formatter.getTextOnlySingleValueMetrics());
+			resultText.append("%nCalibration plot:%n");
+			resultText.append(formatter.getTextOnlyPlots(CLIConsole.DEFAULT_DELIMITER_CSV));
+		}
+			
 	}
 	
 	private static double getClosest(List<Double> valPoints, double original) {

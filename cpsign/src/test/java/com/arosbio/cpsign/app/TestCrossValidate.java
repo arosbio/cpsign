@@ -131,6 +131,20 @@ public class TestCrossValidate extends CLIBaseTest{
 		if (PRINT_RESULTS)
 			printLogs();
 	}
+
+	@Test
+	public void testCrossValidateACPRegOneCalibPoint() throws Exception {
+		mockMain(new String[]{
+				CrossValidate.CMD_NAME, // });
+				"-pt", ""+ACP_REGRESSION_TYPE,
+				"-ds", Regression.getChang().getAbsolutePath(),
+				"-k", "10",
+				"--calibration-points","0.8",
+				"--result-format", "text"	
+		});
+		if (PRINT_RESULTS)
+			printLogs();
+	}
 	
 	
 	@Test
