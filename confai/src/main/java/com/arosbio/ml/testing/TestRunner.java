@@ -268,7 +268,7 @@ public class TestRunner {
 			List<Metric> wrappedMetrics = new ArrayList<>();
 			for (Metric m : input) {
 				if (m instanceof SingleValuedMetric) {
-					wrappedMetrics.add(new MetricAggregation((SingleValuedMetric)m));
+					wrappedMetrics.add(new MetricAggregation<>((SingleValuedMetric)m));
 				} else if (m instanceof PlotMetric){
 					wrappedMetrics.add(new PlotMetricAggregation((PlotMetric)m));
 				} else {
@@ -286,7 +286,7 @@ public class TestRunner {
 		List<Metric> testSplitMetrics = new ArrayList<>();
 		for (Metric m : metrics){
 			if (m instanceof MetricAggregation){
-				testSplitMetrics.add( ((MetricAggregation) m).spawnNewMetricInstance());
+				testSplitMetrics.add(((MetricAggregation<?>) m).spawnNewMetricInstance());
 			} else if (m instanceof PlotMetricAggregation){
 				testSplitMetrics.add(((PlotMetricAggregation) m).spawnNewMetricInstance());
 			} else {
@@ -302,7 +302,7 @@ public class TestRunner {
 		for (int i=0; i<aggMetrics.size(); i++) {
 			if (aggMetrics.get(i) instanceof MetricAggregation){
 				// Single metric
-				((MetricAggregation)aggMetrics.get(i)).addSplitEval((SingleValuedMetric)splitMetrics.get(i));
+				((MetricAggregation<?>)aggMetrics.get(i)).addSplitEval((SingleValuedMetric) splitMetrics.get(i));
 			} else if (aggMetrics.get(i)instanceof PlotMetricAggregation){
 				// Plot metric
 				((PlotMetricAggregation)aggMetrics.get(i)).addSplitEval((PlotMetric)splitMetrics.get(i));

@@ -18,11 +18,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.arosbio.commons.MathUtils;
 import com.arosbio.ml.metrics.plots.Plot2D.X_Axis;
+import com.arosbio.ml.metrics.vap.VAPCalibrationPlotBuilder;
 
 /**
  * This class handles aggregation of several metrics of a single type, e.g.
@@ -39,7 +41,7 @@ public class PlotMetricAggregation implements PlotMetric {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(PlotMetricAggregation.class);
 
-	public final String STANDARD_DEVIATION_NAME_SUFFIX = "_SD";
+	public final static String STANDARD_DEVIATION_NAME_SUFFIX = "_SD";
 
 	private List<Plot2D> results = new ArrayList<>();
 	private int totalCount = 0;
@@ -118,8 +120,8 @@ public class PlotMetricAggregation implements PlotMetric {
 
 	}
 
-	private Plot2D buildPlotWithAvgAndStdOnly() {
-		Map<String, Map<Number, SummaryStatistics>> sums = new LinkedHashMap<>();
+	public Plot2D buildPlotWithAvgAndStdOnly() {
+		Map<String, Map<Number, DescriptiveStatistics>> sums = new LinkedHashMap<>();
 
 		X_Axis xLabel = results.get(0).getXlabel();
 
@@ -136,11 +138,9 @@ public class PlotMetricAggregation implements PlotMetric {
 		// Set up summary-statistic for every y-label
 		for (String yLabel : yLabels) {
 
-			Map<Number, SummaryStatistics> x2sum = new LinkedHashMap<>();
-			// List<SummaryStatistics> list = new ArrayList<>(xTicks.size());
+			Map<Number, DescriptiveStatistics> x2sum = new LinkedHashMap<>();
 			for (Number x : xTicks) {
-				x2sum.put(x, new SummaryStatistics());
-				// list.add(new SummaryStatistics());
+				x2sum.put(x, new DescriptiveStatistics());
 			}
 			sums.put(yLabel, x2sum);
 		}
@@ -156,7 +156,7 @@ public class PlotMetricAggregation implements PlotMetric {
 					continue;
 				}
 
-				Map<Number, SummaryStatistics> ySS = sums.get(kv.getKey());
+				Map<Number, DescriptiveStatistics> ySS = sums.get(kv.getKey());
 
 				for (int i = 0; i < currXTicks.size(); i++) {
 					try {
@@ -177,18 +177,32 @@ public class PlotMetricAggregation implements PlotMetric {
 		// X-axes first
 		curves.put(xLabel.label(), xTicks);
 		// Go through remaining y-labels and compute mean and std
-		for (Map.Entry<String, Map<Number, SummaryStatistics>> kvSum : sums.entrySet()) {
-			List<Number> means = new ArrayList<>();
-			List<Number> std = new ArrayList<>();
-			// Go through them, they are in correct order already due to usage of
-			// LinkedHashMap
-			for (SummaryStatistics kv : kvSum.getValue().values()) {
-				means.add(kv.getMean());
-				std.add(kv.getStandardDeviation());
-			}
+		for (Map.Entry<String, Map<Number, DescriptiveStatistics>> kvSum : sums.entrySet()) {
+			if (kvSum.getKey().startsWith(VAPCalibrationPlotBuilder.NUM_EX_PER_BIN_LABEL)){
+				// This is the number of examples per bin for CVAP calibration - use sum instead of mean+/-std
+				List<Number> numExamples = new ArrayList<>();
+				for (DescriptiveStatistics kv : kvSum.getValue().values()) {
+					numExamples.add(kv.getSum());
+				}
+				curves.put(kvSum.getKey(), numExamples);
+			} else {
+				List<Number> means = new ArrayList<>();
+				List<Number> std = new ArrayList<>();
+				// Go through them, they are in correct order already due to usage of
+				// LinkedHashMap
+				for (DescriptiveStatistics kv : kvSum.getValue().values()) {
+					double mean = kv.getMean();
+					// Special-treat mean value if NaN - could be only [POS|NEG]_INF values
+					if (Double.isNaN(mean)){
+						mean = MathUtils.mean(kv.getValues());
+					}
+					means.add(mean);
+					std.add(kv.getStandardDeviation());
+				}
 
-			curves.put(kvSum.getKey(), means);
-			curves.put(kvSum.getKey() + STANDARD_DEVIATION_NAME_SUFFIX, std);
+				curves.put(kvSum.getKey(), means);
+				curves.put(kvSum.getKey() + STANDARD_DEVIATION_NAME_SUFFIX, std);
+			}
 		}
 
 		if (LOGGER.isTraceEnabled()) {
@@ -200,24 +214,67 @@ public class PlotMetricAggregation implements PlotMetric {
 		return new Plot(curves, xLabel);
 	}
 
-	private Plot2D buildPlotWithAllSplits() {
+	public Plot2D buildPlotWithAllSplits() {
 		Plot2D x_mean_std_plot = buildPlotWithAvgAndStdOnly();
 
 		X_Axis xLab = x_mean_std_plot.getXlabel();
 
 		Map<String, List<Number>> curves = x_mean_std_plot.getCurves();
+		List<Number> xTicks = curves.get(xLab.label());
 		// Simply add all individual ones, appending an index to each
 		for (int i = 0; i < results.size(); i++) {
 			Plot2D current = results.get(i);
+			List<Number> currentXticks = current.getXvalues();
+			
 			for (Map.Entry<String, List<Number>> kv : current.getCurves().entrySet()) {
 				if (kv.getKey().equals(xLab.label())) {
 					continue; // Skip x-ticks
 				}
-				curves.put(String.format("%s_%d", kv.getKey(), i), kv.getValue());
+				// Make sure the list is of the correct length
+				List<Number> values = kv.getValue();
+				if (! xTicks.equals(currentXticks)){
+					if (kv.getKey().startsWith(VAPCalibrationPlotBuilder.NUM_EX_PER_BIN_LABEL)){
+						// For numbers - fill with 0 occurrences, makes more sense than NaN
+						values = fillGaps(xTicks, currentXticks, values, 0);
+					} else {
+						values = fillGaps(xTicks, currentXticks, values, Double.NaN);
+					}
+				} 
+				
+				curves.put(String.format("%s_%d", kv.getKey(), i), values);
 			}
 		}
 
 		return new Plot(curves, xLab);
+	}
+
+
+	static List<Number> fillGaps(List<Number> allXs, List<Number> currXs, List<Number> values, double fallback){
+		List<Number> out = new ArrayList<>(allXs.size());
+		int j = 0;
+		for (Number x : allXs){
+			boolean added = false;
+			for (; j<currXs.size() && ! added; ){
+				if (MathUtils.equals(x.doubleValue(), currXs.get(j).doubleValue(), 0.00001)){
+					// Had the value - add it as well as step the j index
+					out.add(values.get(j));
+					added = true;
+					j++;
+				} else if (x.doubleValue()<currXs.get(j).doubleValue()){
+					// current x-ticks did not contain a value, add NaN
+					out.add(fallback);
+					added = true;
+				} else {
+					// shouldn't happen in theory.. only in case the currXs has a value not in allXs
+					LOGGER.debug("One metric had an x-value not part of the previously found Xs: {}",currXs);
+					j++;
+				}
+			}
+			if (! added){
+				out.add(fallback);
+			}
+		}
+		return out;
 	}
 
 	@Override

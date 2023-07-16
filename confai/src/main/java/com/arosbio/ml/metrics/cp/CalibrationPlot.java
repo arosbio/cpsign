@@ -29,7 +29,7 @@ public class CalibrationPlot extends Plot {
 	public CalibrationPlot(Map<String,List<Number>> curve, X_Axis xLabel, String accuracyLabel) {
 		super(curve,xLabel);
 		this.accuracyLabel = accuracyLabel;
-		this.setPlotName(DEFAULT_PLOT_NAME);
+		setPlotName(DEFAULT_PLOT_NAME);
 	}
 	
 	/**
@@ -43,7 +43,7 @@ public class CalibrationPlot extends Plot {
 		super(curve,xLabel);
 		this.label = label;
 		this.accuracyLabel = accuracyLabel;
-		this.setPlotName(DEFAULT_PLOT_NAME);
+		setPlotName(DEFAULT_PLOT_NAME);
 	}
 	
 	public String getAccuracyLabel() {
@@ -74,7 +74,14 @@ public class CalibrationPlot extends Plot {
 		return accuracyLabel;
 	}
 	
-	public boolean isValidWithinTolerance(double tolerance) {
+	/**
+	 * Goes through all confidence levels and checks if the following expression holds true: {@code accuracy >= confidence - tolerance}.
+	 * If the expression is not true for any of the confidence levels the method will return {@code false}, otherwise {@code true}.
+	 * @param tolerance the allowed deviation of accuracy vs confidence, &gt;0
+	 * @return {@code true} if the calibration is not deviating more than {@code tolerance} for any confidence level, {@code false} otherwise
+	 * @throws IllegalArgumentException if {@code tolerance} is &lt;0
+	 */
+	public boolean isValidWithinTolerance(double tolerance) throws IllegalArgumentException {
 		if (tolerance < 0) {
 			throw new IllegalArgumentException("Tolerance must be >=0");
 		}
@@ -82,7 +89,7 @@ public class CalibrationPlot extends Plot {
 		List<Number> accuracies = getPoints(accuracyLabel);
 		
 		for (int i=0; i<confidences.size(); i++) {
-			if (accuracies.get(i).doubleValue()-confidences.get(i).doubleValue() < - tolerance)
+			if (accuracies.get(i).doubleValue() < confidences.get(i).doubleValue() - tolerance)
 				return false;
 		}
 		return true;

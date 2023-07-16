@@ -7,7 +7,7 @@
  *
  * 2) CPSign Proprietary License that allows you to use CPSign for commercial activities, such as in a revenue-generating operation or environment, or integrate CPSign in your proprietary software without worrying about disclosing the source code of your proprietary software, which is required if you choose to use the software under GPLv3 license. See arosbio.com/cpsign/commercial-license for details.
  */
-package com.arosbio.ml.metrics;
+package com.arosbio.ml.metrics.plots;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +19,6 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.arosbio.ml.metrics.plots.Plot;
 import com.arosbio.ml.metrics.plots.Plot2D.X_Axis;
 import com.arosbio.tests.suites.UnitTest;
 import com.github.cliftonlabs.json_simple.JsonObject;
@@ -112,5 +111,21 @@ public class TestPlot {
 			Assert.assertTrue(p.asMap().containsKey(key));
 
 		Assert.assertEquals(4, p.getAsCSV().split("\n").length);
+	}
+
+	@Test
+	public void testFillGaps(){
+		List<Number> allXs = Arrays.asList(.1,.2,.3,.4,.5,.6);
+		List<Number> availableXs = Arrays.asList(.2,.5);
+		List<Number> availableVals = Arrays.asList(3,5);
+
+		List<Number> filled = PlotMetricAggregation.fillGaps(allXs, availableXs, availableVals, Double.NaN);
+		Assert.assertEquals(Arrays.asList(Double.NaN,3,Double.NaN,Double.NaN,5, Double.NaN), filled);
+
+		// When all values are there
+		availableXs = new ArrayList<>(allXs);
+		availableVals = Arrays.asList(1,2,3,4,5,6);
+		filled = PlotMetricAggregation.fillGaps(allXs, availableXs, availableVals, -10);
+		Assert.assertEquals(Arrays.asList(1,2,3,4,5,6), filled);
 	}
 }

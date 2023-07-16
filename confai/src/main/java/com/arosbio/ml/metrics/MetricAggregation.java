@@ -29,7 +29,8 @@ import com.google.common.collect.ImmutableMap;
  *
  * 
  */
-public class MetricAggregation implements SingleValuedMetric {
+@SuppressWarnings("unchecked")
+public class MetricAggregation<T extends SingleValuedMetric> implements SingleValuedMetric {
 	
 	public final String STANDARD_DEVIATION_NAME_SUFFIX = "_SD"; 
 
@@ -37,13 +38,16 @@ public class MetricAggregation implements SingleValuedMetric {
 	private Map<String,List<Double>> mapValues = new HashMap<>();
 	private List<Integer> counts = new ArrayList<>();
 	
-	private SingleValuedMetric type;
+	private T type;
 	
-	public MetricAggregation(SingleValuedMetric metric) {
-		type = metric.clone();
+	public MetricAggregation(T metric) {
+		type = (T) metric.clone();
 	}
-	
-	public void addSplitEval(SingleValuedMetric metric) {
+
+	public void addSplitEval(SingleValuedMetric metric) throws IllegalArgumentException {
+		if (metric.getClass() != type.getClass()){
+			throw new IllegalArgumentException("Invalid metric sent to aggregate");
+		}
 		scores.add(metric.getScore());
 		counts.add(metric.getNumExamples());
 		Map<String,? extends Object> res = metric.asMap();
@@ -80,6 +84,9 @@ public class MetricAggregation implements SingleValuedMetric {
 		return type.getName();
 	}
 
+	public List<Double> getScores(){
+		return new ArrayList<>(scores);
+	}
 	@Override
 	public double getScore() {
 		return MathUtils.mean(scores);
@@ -101,8 +108,8 @@ public class MetricAggregation implements SingleValuedMetric {
 		return std.evaluate(sc);
 	}
 	
-	public SingleValuedMetric spawnNewMetricInstance() {
-		return type.clone();
+	public T spawnNewMetricInstance() {
+		return (T) type.clone();
 	}
 
 	@Override
@@ -123,13 +130,15 @@ public class MetricAggregation implements SingleValuedMetric {
 	}
 
 	@Override
-	public MetricAggregation clone() {
-		return new MetricAggregation(type);
+	public MetricAggregation<T> clone() {
+		return new MetricAggregation<>(type);
 	}
 
 	@Override
 	public String toString() {
-		return String.format(Locale.ENGLISH,"%s: %.3f+/-%.03f", type.getName(),getScore(),getStd());
+		if (!scores.isEmpty())
+			return String.format(Locale.ENGLISH,"%s: %.3f+/-%.03f", type.getName(),getScore(),getStd());
+		return getName();
 	}
 
 
