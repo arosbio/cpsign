@@ -45,6 +45,10 @@ public class AverageC implements SingleValuedMetric, CPClassifierMetric, Confide
         this.confidence = confidence;
     }
 
+    public String toString(){
+        return SingleValuedMetric.toString(this);
+    }
+
     @Override
     public void clear() {
         counter.clear();

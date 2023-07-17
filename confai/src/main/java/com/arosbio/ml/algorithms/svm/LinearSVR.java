@@ -252,7 +252,6 @@ public class LinearSVR implements SVR {
 	@Override
 	public void loadFromStream(InputStream istream) throws IOException {
 		svm = LibLinear.loadFromStream(istream);
-		//		parameters.setParamsAndValidate(svm.getParameters()); //TODO
 	}
 
 }

@@ -1022,9 +1022,9 @@ public class GridSearch {
 			if (m instanceof CPAccuracy) {
 				return ((CPAccuracy) m).getScore();
 			} else if (m instanceof MetricAggregation) {
-				SingleValuedMetric underlyingMetric = ((MetricAggregation) m).spawnNewMetricInstance();
+				SingleValuedMetric underlyingMetric = ((MetricAggregation<?>) m).spawnNewMetricInstance();
 				if (underlyingMetric instanceof CPAccuracy) {
-					return ((MetricAggregation) m).getScore();
+					return ((MetricAggregation<?>) m).getScore();
 				}
 			}
 		}
