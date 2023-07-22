@@ -255,8 +255,6 @@ public class FoldedSplitter implements DataSplitter {
         if (! hasNext())
             throw new NoSuchElementException("No more folds!");
 
-        LOGGER.debug("Generating fold {}/{} for repeat: {}",(currentFold+1),numFolds,currentRepetition);
-
         try {
             return get(currentFold, currentRepetition);
         } finally{
@@ -272,8 +270,6 @@ public class FoldedSplitter implements DataSplitter {
 
         int getRep = index / numFolds;
         int getIndex = index % numFolds;
-
-        LOGGER.debug("Getting fold {}/{} for repeat: {}",(getIndex+1),numFolds,getRep);
 
         return get(getIndex, getRep);
     }

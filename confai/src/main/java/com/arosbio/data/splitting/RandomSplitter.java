@@ -308,13 +308,13 @@ public class RandomSplitter implements DataSplitter {
 	}
 	
 	@Override
-	public int getMaxSplitIndex() {
-		return numSamples-1;
+	public int getMinSplitIndex() {
+		return 0;
 	}
 
 	@Override
-	public int getMinSplitIndex() {
-		return 0;
+	public int getMaxSplitIndex() {
+		return numSamples-1;
 	}
 
 }

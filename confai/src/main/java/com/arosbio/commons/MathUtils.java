@@ -301,7 +301,7 @@ public class MathUtils {
 
 	public static int multiplyAllTogetherInt(Collection<Integer> values){
 		int res = 1;
-		for (double v : values){
+		for (int v : values){
 			res *= v;
 		}
 		return res;

@@ -147,13 +147,13 @@ public class LOOSplitter implements DataSplitter {
     }
 
     @Override
-    public int getMaxSplitIndex() {
+    public int getMinSplitIndex() {
         return 0;
     }
 
     @Override
-    public int getMinSplitIndex() {
+    public int getMaxSplitIndex() {
         return shuffledRecords.size() -1;
     }
-    
+
 }
