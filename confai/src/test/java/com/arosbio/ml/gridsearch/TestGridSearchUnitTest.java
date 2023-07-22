@@ -58,6 +58,9 @@ import com.arosbio.ml.cp.nonconf.calc.StandardPValue;
 import com.arosbio.ml.cp.nonconf.classification.NegativeDistanceToHyperplaneNCM;
 import com.arosbio.ml.cp.nonconf.regression.NormalizedNCM;
 import com.arosbio.ml.gridsearch.GridSearch.GSResult;
+import com.arosbio.ml.gridsearch.GridSearch.ProgressCallback;
+import com.arosbio.ml.gridsearch.GridSearch.ProgressInfo;
+import com.arosbio.ml.gridsearch.GridSearch.ProgressMonitor;
 import com.arosbio.ml.interfaces.ClassificationPredictor;
 import com.arosbio.ml.interfaces.Predictor;
 import com.arosbio.ml.metrics.MetricFactory;
@@ -309,6 +312,11 @@ public class TestGridSearchUnitTest extends TestEnv {
 			System.err.println("Best GAMMA: " + bestGamma + " best costs: " + bestGammas);
 			Assert.assertTrue(bestGammas.contains(bestGamma));
 		}
+
+	}
+
+	@Test
+	public void testCallbackAndMonitor(){
 
 	}
 
@@ -689,6 +697,85 @@ public class TestGridSearchUnitTest extends TestEnv {
 			Assert.fail("Missing data - should fail!");
 		} catch (MissingDataException e) {
 		}
+	}
+
+	@Test
+	public void testProgressInfoPredictor() throws Exception {
+		AVAPClassifier acp = new AVAPClassifier(new LinearSVC(),
+				new RandomSampling());
+		Dataset ds = TestDataLoader.getInstance().getDataset(true, true);
+		Map<String, List<?>> grid = new HashMap<>();
+		grid.put("c", Arrays.asList(1, 2, .5, 10., 100.));
+		GridSearch gs = new GridSearch.Builder()
+				.testStrategy(new RandomSplit())
+				.secondaryMetrics(MetricFactory.filterToSingleValuedMetrics(MetricFactory.getMetrics(acp, false)))
+				.register(new MyProgressCallback())
+				.register(new MyEarlyStoppingMonitor(3))
+				.loggingWriter(new SystemOutWriter())
+				.build();
+
+		GridSearchResult res = gs.search(ds, acp, grid);
+		System.out.println(res);
+		Assert.assertNotNull(res);
+		Assert.assertEquals(3, res.getNumGSResults());	
+		Assert.assertTrue("should be a warning message",res.getWarning().length()>10);
+	}
+
+	@Test
+	public void testProgressInfoMLAlg() throws Exception {
+		Classifier svc = new C_SVC();
+		Dataset ds = TestDataLoader.getInstance().getDataset(true, true);
+		Map<String, List<?>> grid = new HashMap<>();
+		grid.put("c", Arrays.asList(.5, 10., 100.));
+		GridSearch gs = new GridSearch.Builder()
+				.testStrategy(new RandomSplit())
+				.secondaryMetrics(MetricFactory.filterToSingleValuedMetrics(MetricFactory.getMetrics(svc, false)))
+				.register(new MyProgressCallback())
+				.register(new MyEarlyStoppingMonitor(2))
+				.loggingWriter(new SystemOutWriter())
+				.build();
+
+		GridSearchResult res = gs.search(ds, svc, grid);
+		System.out.println(res);
+		Assert.assertNotNull(res);
+		Assert.assertEquals(2, res.getNumGSResults());	
+		Assert.assertTrue("should be a warning message",res.getWarning().length()>10);
+		
+	}
+
+	private static class MyProgressCallback implements ProgressCallback {
+
+		// First time called should be after completing the first grid point
+		int counter = 1;
+		@Override
+		public void updatedInfo(ProgressInfo info) {
+			Assert.assertEquals("the current step should always match the counter",counter, info.getNumProcessedGridPoints());
+			counter++;
+		}
+
+	}
+
+	private static class MyEarlyStoppingMonitor implements ProgressMonitor {
+		public int maxNumPoints;
+		// First time called should be after completing the first grid point
+		int counter = 1;
+		public MyEarlyStoppingMonitor(int maxStep){
+			maxNumPoints = maxStep;
+		}
+		@Override
+		public Action actOnInfo(ProgressInfo info) {
+			try{
+				Assert.assertEquals("the current step should always match the counter",counter, info.getNumProcessedGridPoints());
+				if (counter < maxNumPoints)
+					return Action.CONTINUE;
+				// if equal - exit execution
+				return Action.EXIT;
+			} finally{
+				counter++;
+			}
+
+		}
+
 	}
 
 }

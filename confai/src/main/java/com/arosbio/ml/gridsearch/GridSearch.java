@@ -123,6 +123,81 @@ public class GridSearch {
 		}
 	}
 
+	/**
+	 * This is a callback interface that you can optionally register an instance of,
+	 * in order to get information about the currently running grid search. This can be used 
+	 * in order to e.g. stop execution early to revise any parameters.
+	 */
+	public static interface ProgressCallback {
+		/**
+		 * Get information about the currently running grid search (will be called after every param-combo finished)
+		 * @param info {@link ProgressInfo} with the current state
+		 */
+		public void updatedInfo(ProgressInfo info);
+	}
+
+	/**
+	 * This is a callback interface, similar to {@link ProgressCallback} but has the option to return an action 
+	 * given the current state - i.e. to stop execution (or continue) so that the JVM doesn't need to be stoped, 
+	 * and e.g. the parameter grid or other things can be altered programatically.
+	 */
+	public static interface ProgressMonitor {
+
+		public static enum Action {
+			CONTINUE, EXIT;
+		}
+
+		/**
+		 * Allows the {@link ProgrssMonitor} to act on the current state of execution,
+		 * by either specifying that the grid search should continue or to exit it and 
+		 * return the currently best parameters and any information 
+		 * @param info the current information 
+		 * @return an {@link Action} for the grid search 
+		 */
+		public Action actOnInfo(ProgressInfo info);
+
+	}
+
+	/**
+	 * This is a class holding information about the current progress when running {@link GridSearch},
+	 * this can be recieved by registering a {@link ProgressMonitor} when instantiating the {@link GridSearch}
+	 * class.
+	 */
+	public static class ProgressInfo {
+		private final int numTotalGridPoints;
+		private final int numProcessedGridPoints;
+		private final long runtime;
+		private final double currentBestScore;
+
+		private ProgressInfo(int numTotal, int numProcessed, long runtime, double bestScore){
+			this.numTotalGridPoints = numTotal;
+			this.numProcessedGridPoints = numProcessed;
+			this.runtime = runtime;
+			this.currentBestScore = bestScore;
+		}
+		public int getTotalNumGridPoints(){
+			return numTotalGridPoints;
+		}
+		/**
+		 * Get the number of processed grid points (i.e. combinations of hyperparameters)
+		 * @return the number of grid points that has been tested
+		 */
+		public int getNumProcessedGridPoints(){
+			return numProcessedGridPoints;
+		}
+		/**
+		 * Get the elapsed time in milliseconds for the currently running grid search
+		 * @return elapsed time in milliseconds
+		 */
+		public long getElapsedTimeMS(){
+			return runtime;
+		}
+
+		public double currentBestScore(){
+			return currentBestScore;
+		}
+	}
+
 	public static class GSResult { 
 
 		private final Map<String, Object> parameters;
@@ -249,7 +324,8 @@ public class GridSearch {
 	private final double tolerance;
 	private final int maxNumGSresults;
 
-	private Stopwatch timer = new Stopwatch();
+	private final ProgressCallback callback;
+	private final ProgressMonitor monitor;
 
 	private GridSearch(Builder builder) {
 		customResultsWriter = builder.customWriter;
@@ -263,6 +339,9 @@ public class GridSearch {
 		confidence = builder.confidence;
 		tolerance = builder.tolerance;
 		maxNumGSresults = builder.maxNumGSresults;
+
+		monitor = builder.monitor;
+		callback = builder.callback;
 	}
 
 	/**
@@ -279,6 +358,8 @@ public class GridSearch {
 		private double confidence = ConfidenceDependentMetric.DEFAULT_CONFIDENCE;
 		private double tolerance = 0.05;
 		private int maxNumGSresults = 10;
+		private ProgressCallback callback;
+		private ProgressMonitor monitor;
 
 		public Builder testStrategy(TestingStrategy strategy) {
 			this.testStrategy = strategy;
@@ -394,6 +475,16 @@ public class GridSearch {
 			return this;
 		}
 
+		public Builder register(ProgressCallback callback){
+			this.callback = callback;
+			return this;
+		}
+
+		public Builder register(ProgressMonitor monitor){
+			this.monitor = monitor;
+			return this;
+		}
+
 		public GridSearch build() {
 			return new GridSearch(this);
 		}
@@ -457,9 +548,12 @@ public class GridSearch {
 	}
 
 	private final static String WARNING_MESSAGE = "WARNING: Optimal parameters found at border of the grid, true optimal parameters might be outside the search grid. Parameters affected: ";
+	private final static String WARNING_EXECUTION_STOPPED = "WARNING: execution was manually terminated, all given parameters may not have been tested";
 	private final static String WARNING_NO_VALID_RESULTS = "WARNING: no parameter combinations produced valid models";
 
-	private String getWarning(Map<String, Object> optimalParams, Map<String, List<?>> grid) {
+	private String getWarning(Map<String, Object> optimalParams, Map<String, List<?>> grid, boolean stoppedEarly) {
+		if (stoppedEarly)
+			return WARNING_EXECUTION_STOPPED;
 		StringBuilder warningBuilder = new StringBuilder();
 
 		for (String p : optimalParams.keySet()) {
@@ -548,7 +642,7 @@ public class GridSearch {
 		return paramGrid;
 	}
 
-	private Iterator<Map<String, Object>> getParametersIterator(
+	private ParameterCombinationsIterator getParametersIterator(
 			Map<String, List<? extends Object>> parameterGrid,
 			Configurable predictor) {
 
@@ -567,14 +661,21 @@ public class GridSearch {
 
 		private LazyListsPermutationIterator permutationIterator;
 
+		private final int numTotalCombinations;
+		private int currentIndex = 0;
+
 		public ParameterCombinationsIterator(Map<String, List<?>> grid) {
 			this.grid = grid;
 			this.paramOrder = new ArrayList<>(grid.keySet());
 			List<Integer> paramSizes = new ArrayList<>();
+			int numCombos = 1;
 			for (String p : paramOrder) {
-				paramSizes.add(grid.get(p).size());
+				int s = grid.get(p).size();
+				paramSizes.add(s);
+				numCombos *= s;
 			}
 			this.permutationIterator = new LazyListsPermutationIterator(paramSizes);
+			this.numTotalCombinations = numCombos;
 		}
 
 		@Override
@@ -592,10 +693,26 @@ public class GridSearch {
 				String paramName = paramOrder.get(i);
 				params.put(paramName, grid.get(paramName).get(combo.get(i)));
 			}
+			// update the internal counter
+			currentIndex++;
 
 			return params;
 		}
 
+		public int getNumTotalCombinations(){
+			return numTotalCombinations;
+		}
+
+
+		/**
+		 * This method retuns the index (0-based) of the next parameter 
+		 * combination that will be returned. I.e. before the first has been retreieved this index is 0,
+		 * after the fist combation has been given by calling {@link #next()} it will return 1 and so on.
+		 * @return the current (0-index based) index.
+		 */
+		public int getCurrentIndex(){
+			return currentIndex;
+		}
 	}
 
 	@SuppressWarnings("resource")
@@ -626,7 +743,8 @@ public class GridSearch {
 			Predictor predictor,
 			Map<String, List<?>> parameterGrid)
 			throws IllegalArgumentException, IOException, GridSearchException {
-
+		
+		Stopwatch fullMethodTimer = new Stopwatch().start();
 		// Validation
 		if (testStrategy == null)
 			throw new IllegalArgumentException("TestingStrategy must be set");
@@ -664,7 +782,7 @@ public class GridSearch {
 
 		verifyMetricsOfCorrectType(metrics, predictor);
 
-		Iterator<Map<String, Object>> paramsIterator = getParametersIterator(parameterGrid, predictor);
+		ParameterCombinationsIterator paramsIterator = getParametersIterator(parameterGrid, predictor);
 		GSResComparator sorter = new GSResComparator(predictor);
 
 		List<GSResult> results = null;
@@ -674,9 +792,13 @@ public class GridSearch {
 			results = new ArrayList<>((int) Math.pow(10, parameterGrid.size())); // Assume 10 values for each parameter
 
 		TestRunner runner = new TestRunner.Builder(testStrategy).calcMeanAndStd(calcMeanAndSD).build();
+		
+		Stopwatch timer = new Stopwatch();
 
 		// Configure the output logging
 		Writer resWriter = configAndGetOutput();
+		LOGGER.debug("Running with progresscallback: {}, progressmonitor: {}", callback!=null, monitor!=null);
+		boolean executionManuallyStopped = false;
 
 		try (
 				GridResultCSVWriter resultPrinter = new GridResultCSVWriter.Builder()
@@ -695,7 +817,7 @@ public class GridSearch {
 				currentStatus = EvalStatus.IN_PROGRESS;
 
 				try {
-					LOGGER.debug("Running with parameters: {}", currentParams);
+					LOGGER.debug("Running grid point {}/{} with parameters: {}", paramsIterator.currentIndex,paramsIterator.numTotalCombinations, currentParams);
 					// Clone the metrics for this run
 					paramResult = cloneMetrics(metrics);
 					// Start timer, before things can fail
@@ -748,6 +870,27 @@ public class GridSearch {
 					// clear allocations from current model
 					predictor.releaseResources();
 
+					// update any registered callback methods
+					if (callback != null || monitor != null){
+						Collections.sort(results, sorter);
+						ProgressInfo info = new ProgressInfo(
+							paramsIterator.getNumTotalCombinations(),
+							paramsIterator.getCurrentIndex(),
+							fullMethodTimer.stop().elapsedTimeMillis(),
+							results.get(0).getResult());
+						
+						if (callback != null)
+							callback.updatedInfo(info);
+						if (monitor != null){
+							ProgressMonitor.Action a = monitor.actOnInfo(info);
+							if (a == ProgressMonitor.Action.EXIT){
+								LOGGER.debug("ProgressMonitor instructed grid search to exit parameter optimization - gathering current results and returning");
+								executionManuallyStopped = true;
+								break;
+							}
+						}
+					}
+
 				}
 			}
 		}
@@ -767,7 +910,7 @@ public class GridSearch {
 			GridSearchResult.Builder res = new GridSearchResult.Builder(results, optimizationMetric.clone());
 
 			// Set warnings
-			String warning = getWarning(results.get(0).parameters, parameterGrid);
+			String warning = getWarning(results.get(0).parameters, parameterGrid, executionManuallyStopped);
 
 			if (warning != null) {
 				LOGGER.debug(warning);
@@ -787,7 +930,8 @@ public class GridSearch {
 			MLAlgorithm alg,
 			Map<String, List<?>> parameterGrid)
 			throws IllegalArgumentException, IOException, GridSearchException {
-
+		
+		Stopwatch fullMethodTimer = new Stopwatch();
 		if (!(alg instanceof Regressor || alg instanceof Classifier))
 			throw new IllegalArgumentException("Algorithm " + alg.getName() + " not supported by GridSearch");
 		// Validation
@@ -825,7 +969,7 @@ public class GridSearch {
 
 		verifyMetricsOfCorrectType(metrics, alg);
 
-		Iterator<Map<String, Object>> paramsIterator = getParametersIterator(parameterGrid, alg);
+		ParameterCombinationsIterator paramsIterator = getParametersIterator(parameterGrid, alg);
 		GSResComparator sorter = new GSResComparator(alg);
 
 		List<GSResult> results = null;
@@ -835,7 +979,9 @@ public class GridSearch {
 			results = new ArrayList<>((int) Math.pow(10, parameterGrid.size())); // Assume 10 values for each parameter
 
 		TestRunner runner = new TestRunner.Builder(testStrategy).calcMeanAndStd(calcMeanAndSD).build();
-
+		LOGGER.debug("Running with progresscallback: {}, progressmonitor: {}", callback!=null, monitor!=null);
+		boolean executionManuallyStopped = false;
+		Stopwatch timer = new Stopwatch();
 		Writer resWriter = configAndGetOutput();
 
 		try (
@@ -856,7 +1002,7 @@ public class GridSearch {
 				errorMsg = null;
 
 				try {
-					LOGGER.debug("Running with parameters: {}", currentParams);
+					LOGGER.debug("Running grid point {}/{} with parameters: {}", paramsIterator.currentIndex,paramsIterator.numTotalCombinations, currentParams);
 					// Clone the metrics for this run
 					inputMetrics = cloneMetrics(metrics);
 
@@ -917,6 +1063,29 @@ public class GridSearch {
 						((ResourceAllocator) alg).releaseResources();
 						LOGGER.debug("released resources from ML model");
 					}
+
+					// update any registered callback methods
+					if (callback != null || monitor != null){
+						Collections.sort(results, sorter);
+						ProgressInfo info = new ProgressInfo(
+							paramsIterator.getNumTotalCombinations(),
+							paramsIterator.getCurrentIndex(),
+							fullMethodTimer.stop().elapsedTimeMillis(),
+							results.get(0).getResult());
+						
+						if (callback != null)
+							callback.updatedInfo(info);
+						if (monitor != null){
+							ProgressMonitor.Action a = monitor.actOnInfo(info);
+							if (a == ProgressMonitor.Action.EXIT){
+								LOGGER.debug("ProgressMonitor instructed grid search to exit parameter optimization - gathering current results and returning");
+								executionManuallyStopped = true;
+								break;
+							}
+						}
+					}
+						
+							
 				}
 			}
 		}
@@ -936,7 +1105,7 @@ public class GridSearch {
 			GridSearchResult.Builder res = new GridSearchResult.Builder(results, optimizationMetric.clone());
 
 			// Set warnings
-			String warning = getWarning(results.get(0).parameters, parameterGrid);
+			String warning = getWarning(results.get(0).parameters, parameterGrid, executionManuallyStopped);
 
 			if (warning != null) {
 				LOGGER.debug(warning);
