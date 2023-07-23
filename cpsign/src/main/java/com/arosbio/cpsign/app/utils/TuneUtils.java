@@ -59,6 +59,8 @@ import com.arosbio.ml.gridsearch.GridResultCSVWriter;
 import com.arosbio.ml.gridsearch.GridSearch;
 import com.arosbio.ml.gridsearch.GridSearch.EvalStatus;
 import com.arosbio.ml.gridsearch.GridSearch.GSResult;
+import com.arosbio.ml.gridsearch.GridSearch.ProgressCallback;
+import com.arosbio.ml.gridsearch.GridSearch.ProgressInfo;
 import com.arosbio.ml.gridsearch.GridSearchResult;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.SingleValuedMetric;
@@ -73,6 +75,23 @@ public class TuneUtils {
 	private static final int NUM_SIGN_DIGITS_IN_RESULT = 3;
 
 	private static final int BACKUP_TXT_FORMAT_WIDTH = 20;
+
+	static class TuneProgress implements ProgressCallback {
+
+		final CLIConsole console;
+		final int printInterval;
+
+		public TuneProgress(CLIConsole console, int totalNumPoints){
+			this.console = console;
+			this.printInterval = CLIProgramUtils.getProgressInterval(totalNumPoints,10);
+		}
+		@Override
+		public void updatedInfo(ProgressInfo info) {
+			if (info.getNumProcessedGridPoints() % printInterval == 0){
+				console.println(" - Finished %d/%d grid points", PrintMode.NORMAL, info.getNumProcessedGridPoints(), info.getTotalNumGridPoints());
+			}
+		}
+	}
 
 	public static void printTuneResults(TextOutputType format, GridSearchResult gsRes, Double confidence,
 			File resultFile) {
@@ -155,7 +174,7 @@ public class TuneUtils {
 			// Optimization one first
 			metrics.putAll(res.getOptimizationMetric().asMap());
 			// Secondary metrics
-			metrics.putAll(getSecondaryMapping(res));
+			metrics.putAll(getSecondaryMetricsMapping(res));
 			// Round all values and add to JSON mapping
 			paramRes.put(METRICS, MathUtils.roundAllValues(metrics));
 			// End metrics
@@ -267,7 +286,7 @@ public class TuneUtils {
 				}
 				// Secondary metrics
 				if (res.getSecondaryMetrics() != null) {
-					for (Map.Entry<String, Object> kv : getSecondaryMapping(res).entrySet()) {
+					for (Map.Entry<String, Object> kv : getSecondaryMetricsMapping(res).entrySet()) {
 						if (kv.getValue() instanceof Float || kv.getValue() instanceof Double)
 							f.format(lineFormat, kv.getKey(), MathUtils.roundToNSignificantFigures(
 									TypeUtils.asDouble(kv.getValue()), NUM_SIGN_DIGITS_IN_RESULT));
@@ -299,7 +318,7 @@ public class TuneUtils {
 
 	}
 
-	private static Map<String, Object> getSecondaryMapping(GSResult res) {
+	private static Map<String, Object> getSecondaryMetricsMapping(GSResult res) {
 		Map<String, Object> mapping = new LinkedHashMap<>();
 		if (res.getSecondaryMetrics() != null) {
 			for (SingleValuedMetric svm : res.getSecondaryMetrics()) {
@@ -406,7 +425,7 @@ public class TuneUtils {
 		if (finalGrid.isEmpty()) {
 			LOGGER.error("No grid was possible to set up, have {} non-recognized/un-used params - failing",
 					unUsedParams.size());
-			console.failWithArgError("No parameters added to search-grid");
+			console.failWithArgError("No parameters sucessfully added to search-grid");
 		}
 
 		return finalGrid;
@@ -580,12 +599,12 @@ public class TuneUtils {
 	 * @return the configured {@link GridSearch} instance
 	 */
 	public static GridSearch initAndConfigGS(TestingStrategyMixin testing, SingleValuedMetric optMetric, List<SingleValuedMetric> secondaryMetrics,
-			int numResultsToPrint, CLIConsole console) {
-		return initAndConfigGS(testing, optMetric, secondaryMetrics, numResultsToPrint, CLIParameters.DEFAULT_CONFIDENCE, 1d, console);
+			int numResultsToPrint, CLIConsole console, int numGridPoints) {
+		return initAndConfigGS(testing, optMetric, secondaryMetrics, numResultsToPrint, CLIParameters.DEFAULT_CONFIDENCE, 1d, console, numGridPoints);
 	}
 
 	public static GridSearch initAndConfigGS(TestingStrategyMixin testing, SingleValuedMetric optMetric, List<SingleValuedMetric> secondaryMetrics,
-			int numResultsToPrint, double cvConf, double cvTol, CLIConsole console) {
+			int numResultsToPrint, double cvConf, double cvTol, CLIConsole console, int numGridPoints) {
 
 		testing.testStrategy.setSeed(GlobalConfig.getInstance().getRNGSeed());
 
@@ -596,6 +615,7 @@ public class TuneUtils {
 				.tolerance(cvTol)
 				.evaluationMetric(optMetric)
 				.testStrategy(testing.testStrategy)
+				.register(new TuneProgress(console, numGridPoints))
 				.maxNumResults(numResultsToPrint);
 
 			if (secondaryMetrics != null && !secondaryMetrics.isEmpty()) {

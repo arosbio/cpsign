@@ -317,14 +317,17 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 		
 		// Set up the optimization metric and (optionally) secondary metrics
 		Pair<SingleValuedMetric, List<SingleValuedMetric>> metrics = setupMetrics(predictor);
-		// INIT GRID-SEARCH
-		GridSearch grid = TuneUtils.initAndConfigGS(testStrat,metrics.getLeft(),metrics.getRight(),numResultsToPrint,cvConfidence, cvTolerance,console);
+		// INIT GRID-SEARCH 
+		Map<String,List<?>> grid = TuneUtils.setupParamGrid(predictor.getPredictor(), gridMixin.paramGrid);
+		int numGridPoints = TuneUtils.calcNumGridPoints(grid);
+		GridSearch tuner = TuneUtils.initAndConfigGS(testStrat, metrics.getLeft(), 
+			metrics.getRight(),numResultsToPrint,cvConfidence, cvTolerance, console, numGridPoints);
 		
 		pb.stepProgress();
 		timer.endSection();
 
 
-		tuneAndPrintResults(grid, predictor);
+		tuneAndPrintResults(tuner, predictor, grid, numGridPoints);
 
 		// FINISH PROGRAM
 		pb.finish();
@@ -472,14 +475,14 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 
 	
 	@SuppressWarnings("null")
-	private void tuneAndPrintResults(GridSearch searcher, ChemPredictor chemPredictor) {
-		Map<String,List<?>> grid = TuneUtils.setupParamGrid(chemPredictor.getPredictor(), gridMixin.paramGrid);
-		console.printlnWrapped("Parameter grid contains " + TuneUtils.calcNumGridPoints(grid) + " combinations to be evaluated" , PrintMode.VERBOSE);
-
+	private void tuneAndPrintResults(GridSearch searcher, ChemPredictor chemPredictor, Map<String, List<?>> grid, int numGridPoints) {
+		
+		console.printlnWrapped("Parameter grid contains %d combinations to be evaluated" , PrintMode.VERBOSE,numGridPoints);
+		// TuneUtils.calcNumGridPoints(grid)
 		GridSearchResult gsRes = null;
 
 		// Run the tuning/grid-search
-		console.print(String.format("Running tune grid search using %s strategy... ",testStrat.testStrategy), PrintMode.NORMAL);
+		console.println(String.format("Running tune grid search using %s strategy...",testStrat.testStrategy), PrintMode.NORMAL);
 		pb.setCurrentTask(PB.CROSSVALIDATING_PROGRESS);
 
 		try {

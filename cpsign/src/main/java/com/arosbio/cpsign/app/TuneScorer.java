@@ -240,10 +240,12 @@ public class TuneScorer implements RunnableCmd, SupportsProgressBar {
 		Pair<SingleValuedMetric, List<SingleValuedMetric>> metrics = setupMetrics();
 
 		// INIT GRID-SEARCH
-		GridSearch grid = TuneUtils.initAndConfigGS(testStrat, metrics.getLeft(), metrics.getRight(), numResultsToPrint,console);
+		Map<String,List<?>> grid = TuneUtils.setupParamGrid(predictor, gridMixin.paramGrid);
+		int numGridPoints = TuneUtils.calcNumGridPoints(grid);
+		GridSearch tuner = TuneUtils.initAndConfigGS(testStrat, metrics.getLeft(), metrics.getRight(), numResultsToPrint,console, numGridPoints);
 		
 		// Run tune!
-		tuneAndPrintResults(grid, predictor);
+		tuneAndPrintResults(tuner, predictor, grid, numGridPoints);
 
 		// FINISH PROGRAM
 		pb.finish();
@@ -362,19 +364,17 @@ public class TuneScorer implements RunnableCmd, SupportsProgressBar {
 	}
 
 	@SuppressWarnings("null")
-	private void tuneAndPrintResults(GridSearch searcher, MLAlgorithm algorithm) {
-		Map<String,List<?>> grid = TuneUtils.setupParamGrid(algorithm, gridMixin.paramGrid);
-		console.printlnWrapped("Parameter grid contains %s combinations to be evaluated", PrintMode.VERBOSE,
-			TuneUtils.calcNumGridPoints(grid));
+	private void tuneAndPrintResults(GridSearch searcher, MLAlgorithm algorithm,Map<String, List<?>> grid, int numGridPoints) {
+		console.printlnWrapped("Parameter grid contains %d combinations to be evaluated", PrintMode.VERBOSE,
+			numGridPoints);
 
 		GridSearchResult gsRes = null;
 
 		// Run the tuning/grid-search
-		console.print("Running tune grid search using %s strategy... ", PrintMode.NORMAL, testStrat.testStrategy);
+		console.println("Running tune grid search using %s strategy...", PrintMode.NORMAL, testStrat.testStrategy);
 		pb.setCurrentTask(PB.CROSSVALIDATING_PROGRESS);
 
 		try {
-			// searcher.setEvaluationMetric(optMetric);
 			gsRes = searcher.search(data,algorithm, grid);
 		} catch (Exception e){
 			LOGGER.debug("failed gridsearch with exception",e);
