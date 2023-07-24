@@ -344,6 +344,9 @@
       <plugin>
         <artifactId>maven-resources-plugin</artifactId>
         <version>${resources.plugin.version}</version>
+        <configuration>
+          <propertiesEncoding>UTF-8</propertiesEncoding>
+        </configuration>
       </plugin>
 
       <plugin>
