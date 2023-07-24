@@ -1,3 +1,6 @@
 # Encrypt-API
 
 This project has a single interface (`EncryptionSpecification`) which serves as the backbone for encrypting both precomputed data sets and prediction models. Note there is no implementation of this interface supplied with CPSign, but one can be purchased from [Aros Bio](https://arosbio.com). It is also fully possible to implement your own solution and expose it as a service on the classpath, and ConfAI and all other projects will be able to pick it up. One further implementation note is that currently the CLI requires that a single implementation is accessible on the classpath, as there is currently no way of choosing which specification to use otherwise. 
+
+### Deployment
+From the 2.0.2 version of this project it is no longer a sub-module of the cpsign parent project, as it does not need to be deployed as often and potential issues with depending on a older version of the cpsign parent pom. It now has its own [github action](../.github/workflows/release_encrypt-api.yml) for deployment at Maven central. This is triggered by pushing a tag `encrypt-api-v*`, where `*` can be replaced with any text.
