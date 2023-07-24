@@ -1540,7 +1540,7 @@ public class CLIProgramUtils {
 	}
 	
 	public static int getProgressInterval(int totalNum, int numProgress) {
-		// If we dont have 10 in total
+		// If we dont have numProgress in total
 		if (totalNum < numProgress)
 		return 1;
 		

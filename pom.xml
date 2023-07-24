@@ -29,7 +29,6 @@
   <modules>
     <module>fast-ivap</module>
     <module>depict</module>
-    <module>encrypt-api</module>
     <module>test-utils</module>
     <module>confai</module>
     <module>cpsign-api</module>
@@ -73,7 +72,6 @@
       <organization>Pharmb.io</organization>
       <organizationUrl>https://pharmb.io/</organizationUrl>
     </developer>
-
   </developers>
 
 
@@ -120,6 +118,7 @@
     <filters.version>2.0.235-1</filters.version>
     <libsvm.version>3.24</libsvm.version>
     <liblinear.version>2.44</liblinear.version>
+    <encrypt-api.version>2.0.2</encrypt-api.version>
   </properties>
 
 
