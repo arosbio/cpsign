@@ -359,16 +359,6 @@
           <author>false</author>
           <bottom><![CDATA[<i>Copyright &#169; 2022, <a href="https://arosbio.com">Aros Bio AB</a>. All Rights Reserved.</i>]]></bottom>
         </configuration>
-        <!--
-        <executions>
-          <execution>
-            <id>attach-javadocs</id>
-            <goals>
-              <goal>jar</goal>
-            </goals>
-          </execution>
-        </executions>
-      -->
       </plugin>
 
       
