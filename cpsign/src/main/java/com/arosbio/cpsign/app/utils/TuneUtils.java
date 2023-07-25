@@ -596,6 +596,7 @@ public class TuneUtils {
 	 * @param secondaryMetrics any secondary metrics
 	 * @param numResultsToPrint how many of the top results that should be returned from grid-searching
 	 * @param console the console instance
+	 * @param numGridPoints the total number of grid points (i.e. parameter combinations)
 	 * @return the configured {@link GridSearch} instance
 	 */
 	public static GridSearch initAndConfigGS(TestingStrategyMixin testing, SingleValuedMetric optMetric, List<SingleValuedMetric> secondaryMetrics,

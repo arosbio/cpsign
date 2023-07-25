@@ -148,7 +148,7 @@ public class GridSearch {
 		}
 
 		/**
-		 * Allows the {@link ProgrssMonitor} to act on the current state of execution,
+		 * Allows the {@link ProgressMonitor} to act on the current state of execution,
 		 * by either specifying that the grid search should continue or to exit it and 
 		 * return the currently best parameters and any information 
 		 * @param info the current information 
