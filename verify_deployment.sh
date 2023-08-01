@@ -53,7 +53,7 @@ if [ $status -ne 0 ]; then
 fi
 
 # Check javadoc is OK
-mvn javadoc:aggregate-jar 
+mvn javadoc:aggregate-jar -Ddoctitle='CPSign bundle javadoc'
 
 status=$?
 if [ $status -ne 0 ]; then

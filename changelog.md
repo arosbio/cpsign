@@ -2,6 +2,7 @@
 
 ### 2.0.0 RC4 :
 - Solved minor bug with swapped `get[Min|Max]SplitIndex` values for the `LOOSplitter` class.
+- Solved bug with filtering of property files, which caused the project version not being correctly injected into `confai.properties` which is used for keeping track of the CPSign version. Thus the version could not be found either at API or CLI level.
 - Moved the [encrypt-api](encrypt-api/README.md) to a separate project which simplifies and decouples that API vs the remaining code. Now the other components can rely on a fixed version (as it is not likely to change often or at all) and not have issues with incompatibility due to transitive dependencies to the `parent` project pom (i.e. encrypt-api would rely on e.g. the 2.0.0-rc3 version whilst the remaining cpsign modules will rely on a later version of the parent pom). 
 - Added two callback interfaces for progress information and monitoring while running `GridSearch` jobs, one that only get information (`ProgressCallback`) and the other one (`ProgressMonitor`) that can choose to exit the grid search e.g. due to time-restraints. Note that these are synchronous calls at this point (CPSign is not multithreaded otherwise so no use adding that for this one task). Added an implementation tailored for the CLI so that information is printed in the terminal (e.g. " - Finished 2/10 grid points") to provide more feedback about the progress so e.g. too long jobs can be aborted earlier. 
 
