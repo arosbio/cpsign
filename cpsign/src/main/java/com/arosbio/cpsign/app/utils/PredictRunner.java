@@ -232,7 +232,7 @@ public class PredictRunner {
 
 			// Predict it
 			try {
-				predictMolecule(predictor,predWriter, mol);
+				predictMolecule(predictor, predWriter, mol);
 				predWriter.flush();
 				numSuccessfulPreds++;
 			} catch (Exception e){
@@ -253,7 +253,7 @@ public class PredictRunner {
 			} catch (IOException e) {
 				LOGGER.debug("Failed reading from predictFile",e);
 				console.failWithArgError("Could not read any molecules from parameter " + 
-						CLIProgramUtils.getParamName(this, "predictFile", "PREDICT_FILE"));
+						CLIProgramUtils.getParamName(CompoundsToPredictMixin.class, "predictFile", "PREDICT_FILE"));
 			}
 
 			// DO THE PREDICTIONS
@@ -447,7 +447,7 @@ public class PredictRunner {
 	}
 
 	private void generateImgs(IAtomContainer mol, ResultsHandler res) {
-		if (imageHandler.isPrintingSignatureImgs()){
+				if (imageHandler.isPrintingSignatureImgs()){
 			try {
 				imageHandler.writeSignificantSignatureImage(res.toRenderInfo(mol));
 			} catch (Exception e) {

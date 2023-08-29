@@ -160,8 +160,6 @@ public class PredictionImageHandler {
 		public int imageWidth = CLIParameters.DEFAULT_IMAGE_WIDTH;
 	}
 
-	private GradientImageOpts gradientParams;
-	private SignificantSignatureImageOpts significantSignatureParams;
 
 	private AtomContributionRenderer gradientDepictor;
 	private ImageFileHandler gradientFileHandler;
@@ -172,9 +170,7 @@ public class PredictionImageHandler {
 		SignificantSignatureImageOpts signatureParams, 
 		ChemPredictor predictor) {
 		
-		this.gradientParams = gradientParams;
-		this.significantSignatureParams = signatureParams;
-		setupImageDepictors(predictor);
+		setupImageDepictors(predictor,gradientParams,signatureParams);
 	}
 
 	public boolean isUsed() {
@@ -289,8 +285,12 @@ public class PredictionImageHandler {
 
 
 
-	private void setupImageDepictors(ChemPredictor predictor) throws IllegalArgumentException {
+	private void setupImageDepictors(ChemPredictor predictor, 
+		GradientImageOpts gradientParams, 
+		SignificantSignatureImageOpts significantSignatureParams) throws IllegalArgumentException {
+
 		if (gradientParams.createImgs){
+			LOGGER.debug("Configuring gradient image generation");
 			if (gradientParams.imageFile == null)
 				throw new IllegalArgumentException("Image file must be given when creating images");
 
@@ -323,11 +323,13 @@ public class PredictionImageHandler {
 			if (gradientParams.depictColorScheme)
 				builder.addFieldUnderMol(new ColorGradientField.Builder(gradientParams.colorScheme).build());
 			
+			gradientDepictor = builder.build();
 			LOGGER.debug("finished configuring gradient depictor");
 		}
 
 		// Do the same for significant signature depictor
 		if (significantSignatureParams.createImgs){
+			LOGGER.debug("Configuring significant signature image generation");
 			if (significantSignatureParams.imageFile == null)
 				throw new IllegalArgumentException("Image file must be given when creating images");
 
@@ -359,6 +361,7 @@ public class PredictionImageHandler {
 			if (significantSignatureParams.depictColorScheme)
 				builder.addFieldUnderMol(new HighlightExplanationField.Builder(significantSignatureParams.highlightColor).build());
 
+			signatureDepictor = builder.build();
 			LOGGER.debug("finished configuring significant signature depictor");
 		}
 		

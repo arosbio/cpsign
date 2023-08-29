@@ -89,8 +89,6 @@ public class Predict implements RunnableCmd, SupportsProgressBar{
 	private CLIProgressBar pb = new NullProgress();
 	private ProgramTimer timer = new ProgramTimer(false, console);
 
-	// private PredictionImageHandler imageHandler;
-
 	/*****************************************
 	 * OPTIONS
 	 *****************************************/

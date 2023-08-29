@@ -47,6 +47,25 @@ public class TestPredictImages extends CLITestReqOutputDir {
 	private static final CmpdData ames_126 = TestResources.Cls.getAMES_126();
 
 	@Test
+	public void testPredictSMILES() throws Exception {
+		mockMain(
+				Predict.CMD_NAME,
+				"-m", PreTrainedModels.ACP_REG_LIBSVM.toString(),
+				"--smiles", TEST_SMILES,
+				"--confidences", "0.7",
+				"-gi",
+				"-gi:o", imageFolder+"/single_smiles.png",
+				"--gi:legend",
+				"--gi:height", imageSize,
+				"-gi:w", imageSize
+		);
+
+		File folderDir = new File(imageFolder);
+		File[] files = folderDir.listFiles();
+		Assert.assertTrue("Should be at least one image saved in the output directory", files!=null && files.length>0);
+	}
+
+	@Test
 	public void testTCPClassification() throws IOException{
 		
 		File dataFile = TestUtils.createTempFile("data", ".jar");
