@@ -116,7 +116,7 @@ public class PredictRunner {
 					(predictionWidths == null || predictionWidths.isEmpty())) {
 				LOGGER.debug("No confidences or predictionWidths given when predicting regression - fail!");
 				console.failDueToMissingParameters(ParamComb.AND_OR, "must be given when doing CP regression", 
-						new MissingParam("setConfidences","CONFIDENCES", Predict.class),
+						new MissingParam("setConfidences","CONFIDENCES", ConfidencesListMixin.class),
 						new MissingParam("predictionWidths","PREDICTION_WIDTHS", Predict.class));
 			}
 		}

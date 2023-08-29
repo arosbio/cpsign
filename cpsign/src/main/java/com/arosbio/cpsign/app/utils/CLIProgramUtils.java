@@ -15,6 +15,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
@@ -256,17 +257,25 @@ public class CLIProgramUtils {
 	
 	public static String getParamName(Class<?> optionClazz, String fieldName, String defaultName)
 	throws IllegalArgumentException {
+		// Check for fields first (most common)
 		Field theField = getField(optionClazz, fieldName);
-		if (theField == null)
-		return defaultName;
-		
-		try {
-			Option paramAnnotation = theField.getAnnotation(Option.class);
-			return getPrefName(paramAnnotation.names());
-		} catch (Exception e) {
+		if (theField != null){
+			try {
+				Option paramAnnotation = theField.getAnnotation(Option.class);
+				return getPrefName(paramAnnotation.names());
+			} catch (Exception e) {
+			}	
+		}
+		// Check for methods secondly (less common)
+		Method method = getMethod(optionClazz, fieldName);
+		if (method != null){
+			try {
+				Option paramAnnotation = method.getAnnotation(Option.class);
+				return getPrefName(paramAnnotation.names());
+			} catch (Exception e) {
+			}
 		}
 		return defaultName;
-		
 	}
 	
 	public static String getPrefName(String[] names) {
@@ -291,14 +300,55 @@ public class CLIProgramUtils {
 		}
 		return prefName;
 	}
-	
-	private static Field getField(Class<?> type, String fieldName) {
-		return getField(type, fieldName, true, true);
+
+	private static Method getMethod(Class<?> type, String methodName){
+		return getMethodHelper(type, methodName, true, true);
+	}
+
+	private static Method getMethodHelper(Class<?> type, String methodName, boolean followDelegate, boolean searchSuperClasses){
+		if (type == null)
+			return null;
+		
+		// Check methods at this class 'level'
+		Method[] methods = type.getDeclaredMethods();
+		for (Method m : methods){
+			if (m.getName().equalsIgnoreCase(methodName)){
+				return m;
+			}
+		}
+
+		// Try to go to super-class
+		if (searchSuperClasses) {
+			Method method = getMethodHelper(type.getSuperclass(), methodName, true, true);
+			if (method != null)
+				return method;
+		}
+		
+		// If failed - try to get from Mixin classes and ArgGroup
+		if (followDelegate) {
+			for (Field f : type.getDeclaredFields()) {
+				if (f.getAnnotation(picocli.CommandLine.Mixin.class) != null
+				|| f.getAnnotation(ArgGroup.class) != null) {
+					
+					Method tmp = getMethodHelper(f.getType(), methodName, true, true);
+					if (tmp != null)
+						return tmp;
+				}
+			}
+			
+		}
+		
+		return null;
+		
 	}
 	
-	private static Field getField(Class<?> type, String fieldName, boolean followDelegate, boolean searchSuperClasses) {
+	private static Field getField(Class<?> type, String fieldName) {
+		return getFieldHelper(type, fieldName, true, true);
+	}
+	
+	private static Field getFieldHelper(Class<?> type, String fieldName, boolean followDelegate, boolean searchSuperClasses) {
 		if (type == null)
-		return null;
+			return null;
 		
 		// Try to get the field from this 'level'
 		try {
@@ -310,7 +360,7 @@ public class CLIProgramUtils {
 		
 		// Try to go to super-class
 		if (searchSuperClasses) {
-			theField = getField(type.getSuperclass(), fieldName, true, true);
+			theField = getFieldHelper(type.getSuperclass(), fieldName, true, true);
 			if (theField != null)
 			return theField;
 		}
@@ -321,7 +371,7 @@ public class CLIProgramUtils {
 				if (f.getAnnotation(picocli.CommandLine.Mixin.class) != null
 				|| f.getAnnotation(ArgGroup.class) != null) {
 					
-					Field tmp = getField(f.getType(), fieldName, true, true);
+					Field tmp = getFieldHelper(f.getType(), fieldName, true, true);
 					if (tmp != null)
 					return tmp;
 				}

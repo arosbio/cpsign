@@ -249,8 +249,14 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 
 		List<DataRecord> trainingset = new ArrayList<>(data.getNumRecords()+1);
 		trainingset.addAll(data.getDataset());
-		trainingset.addAll(data.getModelingExclusiveDataset());
-		trainingset.addAll(data.getCalibrationExclusiveDataset());
+		if (!data.getModelingExclusiveDataset().isEmpty()){
+            LOGGER.warn("TCP predictor trained with model-exclusive data, TCP does not support this at this time - all data is merged and used");
+            trainingset.addAll(data.getModelingExclusiveDataset());
+        }
+		if (! data.getCalibrationExclusiveDataset().isEmpty()){
+            LOGGER.warn("TCP predictor trained with calibration-exclusive data, TCP does not support this at this time - all data is merged and used");
+            trainingset.addAll(data.getCalibrationExclusiveDataset());
+        }
 
 		// Validate to make sure it's big enough
 		TrainingsetValidator.getInstance().validateClassification(trainingset);

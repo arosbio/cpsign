@@ -16,5 +16,6 @@ public class MissingParam {
 	public MissingParam(String fieldName, String fallback, Class<?> origin) {
 		this.fieldName = fieldName;
 		this.fallbackName = fallback;
+		this.origin = origin;
 	}
 }

@@ -138,6 +138,8 @@ public class RandomSplitter implements DataSplitter {
 	private RandomSplitter(final Builder b, final Dataset dataset) {
 
 		Objects.requireNonNull(dataset, "data must not be null");
+		if (dataset.getDataset().isEmpty())
+			throw new IllegalArgumentException("Training data is empty - cannot split it");
 		this.dataClone = dataset.cloneDataOnly();
 		this.numSamples = b.numSamples;
 		this.seed=b.seed;

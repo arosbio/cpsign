@@ -382,9 +382,8 @@ public class TestACPRegression extends CLIBaseTest {
 		systemErrRule.clearLog();
 		mockMain(new String[] {
 				Predict.CMD_NAME,
-				"-m", PreTrainedModels.ACP_REG_LIBSVM.toString(), //CHEM_ACP_REG_LIBLINEAR_PATH,
-				// "--smiles", TEST_SMILES,
-				"-p", amesSDF.format(), amesSDF.uri().toString(), // AmesBinaryClass.FILE_FORMAT, AmesBinaryClass.MINI_FILE_PATH,
+				"-m", PreTrainedModels.ACP_REG_LIBSVM.toString(),
+				"-p", amesSDF.format(), amesSDF.uri().toString(),
 				"-co", TestUtils.toString(confs,','),
 								// "-of", "sdf",
 				"--verbose",
