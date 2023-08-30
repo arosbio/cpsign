@@ -1,5 +1,9 @@
 # Change log for CPSign versions
 
+### 2.0.0 RC5 :
+- Solved major bug for generating prediction images using the CLI, which was completely turned off but should now work as expected.
+- Improved error messages from the CLI to indicate the parameter flags correctly. Solved minor bugs for that lookup as well as extended it for parameters based on method annotations.
+
 ### 2.0.0 RC4 :
 - Solved minor bug with swapped `get[Min|Max]SplitIndex` values for the `LOOSplitter` class.
 - Solved bug with filtering of property files, which caused the project version not being correctly injected into `confai.properties` which is used for keeping track of the CPSign version. Thus the version could not be found either at API or CLI level.
