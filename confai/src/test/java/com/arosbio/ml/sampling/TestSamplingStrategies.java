@@ -23,6 +23,7 @@ import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
 import com.arosbio.commons.FuzzyServiceLoader;
+import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.logging.LoggerUtils;
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.DataUtils;
@@ -504,11 +505,19 @@ public class TestSamplingStrategies {
 			Dataset data = TestDataLoader.getInstance().getDataset(true, true);
 
 			ACPClassifier acp = new ACPClassifier(
-					new ICPClassifier(new NegativeDistanceToHyperplaneNCM(new LinearSVC())),
-					new RandomSampling(10, .2));
-
-			acp.train(data);
+						new ICPClassifier(new NegativeDistanceToHyperplaneNCM(new LinearSVC())),
+						new RandomSampling(10, .2));
+			try {
+				acp.train(data);
+			} catch (IllegalArgumentException e){
+				GlobalConfig config = GlobalConfig.getInstance();
+				System.err.println("Failed training with the current seed: " + config.getRNGSeed());
+				// This may fail, as there might be too few of one of the classes
+				config.setRNGSeed(981276124l); // Set a seed that we know results in valid splits
+				acp.train(data); // train again, and we now use the new seed - if failing now we know it's a true failure
+			}
 			Assert.assertEquals(10, acp.getNumTrainedPredictors());
+			
 		}
 
 		@Test

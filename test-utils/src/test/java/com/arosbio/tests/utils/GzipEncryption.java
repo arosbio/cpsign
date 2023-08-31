@@ -30,6 +30,7 @@ public class GzipEncryption implements EncryptionSpecification {
     private static final Logger LOGGER = LoggerFactory.getLogger(GzipEncryption.class);
 
     private int encNumber = -1;
+    private boolean initialized = false;
     private final static String PRE_TEXT = "gzip=";
     public final static int ALLOWED_KEY_LEN = 16;
 
@@ -48,8 +49,6 @@ public class GzipEncryption implements EncryptionSpecification {
         stream.mark(200);
 
         byte[] toRead = new byte[PRE_TEXT.getBytes(StandardCharsets.UTF_8).length+4];
-
-
 
         try {
             int nRead = stream.read(toRead);
@@ -71,7 +70,7 @@ public class GzipEncryption implements EncryptionSpecification {
 
     @Override
     public InputStream decryptStream(InputStream stream) throws InvalidKeyException, IOException {
-        if (encNumber == -1){
+        if (! initialized){
             throw new InvalidKeyException("Not inited");
         }
         stream.mark(200);
@@ -101,6 +100,9 @@ public class GzipEncryption implements EncryptionSpecification {
 
     @Override
     public OutputStream encryptStream(OutputStream stream) throws InvalidKeyException, IOException {
+        if (!initialized){
+            throw new InvalidKeyException("Not initialized yet");
+        }
         LOGGER.trace("Printing start-text to encryptStream: {}",getUniqueStartText());
         stream.write(getUniqueStartText().getBytes(StandardCharsets.UTF_8));
         stream.flush();
@@ -142,6 +144,7 @@ public class GzipEncryption implements EncryptionSpecification {
             encNumber += (int)arg0[i];
         }
         encNumber = encNumber % 1000;
+        initialized = true;
     }
 
     @Override
@@ -166,6 +169,20 @@ public class GzipEncryption implements EncryptionSpecification {
         GzipEncryption clone =  new GzipEncryption();
         clone.encNumber = encNumber;
         return clone;
+    }
+
+    // For testing-purposes only
+    int getEncryptNumber(){
+        return encNumber;
+    }
+
+    public void destroy(){
+        initialized = false;
+        encNumber = -1;
+    }
+
+    public boolean isDestroyed(){
+        return ! initialized;
     }
     
 }
