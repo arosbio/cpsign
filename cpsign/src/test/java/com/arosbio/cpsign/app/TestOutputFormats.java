@@ -951,26 +951,27 @@ public class TestOutputFormats extends CLIBaseTest {
 
 	@Test
 	public void TestSilentModeStillPrintToSTDOUT() throws Exception {
-		runCheckSilent("json", 7, false); // 7 molecules!
-		runCheckSilent("csv", 8, false); // 7 mols + header
-		runCheckSilent("sdf", 300, false); // bunch of lines..
+		runCheckSilent(ChemOutputType.JSON, 7, false); // 7 molecules!
+		runCheckSilent(ChemOutputType.CSV, 8, false); // 7 mols + header
+		runCheckSilent(ChemOutputType.SDF_V3000, 300, false); // bunch of lines..
 	}
 
 	@Test
 	public void TestCompressionOfResultsSTDOUT() throws Exception {
-		runCompressionTest("json", false);
-		runCompressionTest("csv", false);
-		runCompressionTest("sdf", false);
+		runCompressionTest(ChemOutputType.JSON, false);
+		runCompressionTest(ChemOutputType.TSV, false);
+		runCompressionTest(ChemOutputType.SDF_V2000, false);
+		runCompressionTest(ChemOutputType.SDF_V3000, false);
 	}
 
 	@Test
 	public void TestCompressionOfResultsFILE() throws Exception {
-		runCompressionTestToFile("json", 7, false);
-		runCompressionTestToFile("csv", 8, false);
-		runCompressionTestToFile("sdf", 100, false);
+		runCompressionTestToFile(ChemOutputType.JSON, 7, false);
+		runCompressionTestToFile(ChemOutputType.CSV, 8, false);
+		runCompressionTestToFile(ChemOutputType.SDF_V2000, 100, false);
 	}
 
-	public void runCheckSilent(String outputFormat, int minNumRows, boolean printOutput) throws Exception {
+	public void runCheckSilent(ChemOutputType outputFormat, int minNumRows, boolean printOutput) throws Exception {
 		// Predict to System.out
 		systemOutRule.clearLog();
 		// No silentMode
@@ -980,7 +981,7 @@ public class TestOutputFormats extends CLIBaseTest {
 				"--smiles",TEST_SMILES,
 				"-p", predictfile_smiles.format(), predictfile_smiles.uri().toString(),
 				"--confidences", "0.1,0.4,0.9",
-				"-of", outputFormat
+				"-of", outputFormat.name()
 		});
 		String normalLog = systemOutRule.getLog();
 		systemOutRule.clearLog();
@@ -994,7 +995,7 @@ public class TestOutputFormats extends CLIBaseTest {
 				"-p", predictfile_smiles.format(), predictfile_smiles.uri().toString(),
 				"--confidences", "0.1,0.4,0.9",
 				"--silent",
-				"-of", outputFormat
+				"-of", outputFormat.name()
 		});
 		LoggerUtils.reloadLoggingConfig();
 		String silentLog = systemOutRule.getLog();
@@ -1010,7 +1011,7 @@ public class TestOutputFormats extends CLIBaseTest {
 		// Verify that the prediction output is the same in both
 		List<String> fromNormal = getPredictionOutputFromFullLog(normalLog);
 		String[] fromSilent = silentLog.split("\n");
-		if (outputFormat.equalsIgnoreCase("sdf")){
+		if (outputFormat == ChemOutputType.SDF_V2000 || outputFormat == ChemOutputType.SDF_V3000){
 			ChemTestUtils.assertSameSDFOutput(fromNormal, Arrays.asList(fromSilent));
 		} else {
 			for(int i=0; i<fromNormal.size();i++){
@@ -1021,7 +1022,7 @@ public class TestOutputFormats extends CLIBaseTest {
 
 	}
 
-	public void runCompressionTest(String outputFormat, boolean printOutputs) throws Exception {
+	public void runCompressionTest(ChemOutputType outputFormat, boolean printOutputs) throws Exception {
 		// Predict to System.out
 
 		// NORMAL (only print predictions)
@@ -1035,7 +1036,7 @@ public class TestOutputFormats extends CLIBaseTest {
 				"--smiles",TEST_SMILES,
 				"-p", predictfile_smiles.format(), predictfile_smiles.uri().toString(),
 				"--confidences", "0.1,0.4,0.9",
-				"-of", outputFormat,
+				"-of", outputFormat.name(),
 				"--silent",
 		});
 		System.out.flush();
@@ -1056,7 +1057,7 @@ public class TestOutputFormats extends CLIBaseTest {
 				"--confidences", "0.1,0.4,0.9",
 				"--compress",
 				"--silent",
-				"-of", outputFormat
+				"-of", outputFormat.name()
 		});
 
 		LoggerUtils.reloadLoggingConfig();
@@ -1071,12 +1072,15 @@ public class TestOutputFormats extends CLIBaseTest {
 			SYS_OUT.println("--- UNZIPPED: ---");
 			SYS_OUT.println(unzippedOutput);
 		}
-
-		Assert.assertEquals(normalLog, unzippedOutput);
-
+		if (outputFormat == ChemOutputType.SDF_V2000 || outputFormat == ChemOutputType.SDF_V3000){
+			// SDF can warry depending on time stamp - which is not relevant
+			ChemTestUtils.assertSameSDFOutput(normalLog, unzippedOutput);
+		} else {
+			Assert.assertEquals(normalLog, unzippedOutput);
+		}
 	}
 
-	public void runCompressionTestToFile(String outputFormat, int minNumRows, boolean printOutputs) throws Exception {
+	public void runCompressionTestToFile(ChemOutputType outputFormat, int minNumRows, boolean printOutputs) throws Exception {
 		// Predict to System.out
 
 		// Normal TO STDOUT
@@ -1087,7 +1091,7 @@ public class TestOutputFormats extends CLIBaseTest {
 				"-p", predictfile_smiles.format(), predictfile_smiles.uri().toString(),
 				"--confidences", "0.1,0.4,0.9",
 				"--silent",
-				"-of", outputFormat
+				"-of", outputFormat.name()
 		});
 		String normalLog = systemOutRule.getLog().trim();
 		LoggerUtils.reloadLoggingConfig();
@@ -1104,7 +1108,7 @@ public class TestOutputFormats extends CLIBaseTest {
 				"-p", predictfile_smiles.format(), predictfile_smiles.uri().toString(),
 				"--confidences", "0.1,0.4,0.9",
 				"--compress",
-				"-of", outputFormat,
+				"-of", outputFormat.name(),
 				"--output", tmpFile.getAbsolutePath(),
 		});
 		String fileLog = systemOutRule.getLog();
@@ -1126,7 +1130,11 @@ public class TestOutputFormats extends CLIBaseTest {
 		}
 
 		Assert.assertTrue(normalLog.split("\n").length >= minNumRows);
-		Assert.assertEquals(normalLog.trim(), unzippedFile.trim());
+		if (outputFormat == ChemOutputType.SDF_V2000 || outputFormat == ChemOutputType.SDF_V3000){
+			ChemTestUtils.assertSameSDFOutput(normalLog.trim(), unzippedFile.trim());
+		} else {
+			Assert.assertEquals(normalLog.trim(), unzippedFile.trim());
+		}
 
 	}
 

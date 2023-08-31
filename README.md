@@ -148,7 +148,7 @@ This section is completely for the developers to aid in deployment. Once it is t
 ```
 mvn versions:set -DnewVersion=2.0.0-rc1
 ```
-from the root project. Then a new git-tag that starts with `v` should be created and pushed to GitHub, e.g. by running `git tag -a v2.0.0-rc1 -m 'release candidate 1 for 2.0.0 version'` and pushed by running `git push origin --tags`. This step will trigger the build and deployment to maven central repo described in the following section.
+from the root project. Once a new version is set, run the `verify_deployment.sh` script that runs the build including java-doc generation - to mimic the build in GitHub servers. Then a new git-tag that starts with `v` should be created and pushed to GitHub, e.g., by running `git tag -a v2.0.0-rc1 -m 'release candidate 1 for 2.0.0 version'` and pushed by running `git push origin --tags`. This step will trigger the build and deployment to maven central repo described in the following section.
 
 
 ### Deploying to Maven central
