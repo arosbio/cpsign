@@ -6,7 +6,7 @@ with the signatures molecular descriptor and SVM. <br>
 
 ============================================================
 
-CPSign is the final sub-project of this repository and include all of its predecessor and make up the final CLI software. 
+CPSign is the final sub-module of this repository and include all other maven modules - making up the final CLI software. 
 
 
 ## CLI usage
@@ -40,7 +40,7 @@ Running by only giving the `[command]` after invocation of cpsign will output th
 ```
 java -jar cpsign-[version].jar train
 ```
-Will list the help for running the **train** command, including all of its available arguments.
+Will list the help for running the `train` command, including all of its available arguments.
 
 
 ## Developer info
