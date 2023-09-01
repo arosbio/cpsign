@@ -105,7 +105,7 @@
     <nexus.staging.plugin.version>1.6.7</nexus.staging.plugin.version>
 
     <!-- Dependency versions -->
-    <cdk.version>2.8</cdk.version>
+    <cdk.version>2.9</cdk.version>
     <slf4j.version>1.7.36</slf4j.version>
     <logback.version>1.2.10</logback.version>
     <json-simple.version>4.0.1</json-simple.version>
