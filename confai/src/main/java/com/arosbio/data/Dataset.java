@@ -834,7 +834,10 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 		return labels;
 	}
 
-
+	/**
+	 * Merge data in all three Dataset.SubSet instances, without shuffling
+	 * @return a list of all data
+	 */
 	public List<DataRecord> all(){
 		List<DataRecord> all = new ArrayList<>();
 		all.addAll(dataset);

@@ -444,8 +444,8 @@ public final class ACPRegressor extends PredictorBase implements ACP, ConformalR
 		}
 
 		// Midpoint: take median for Yhat
-		double y_hat = MathUtils.median(Y_hats);
-		double scaling = MathUtils.median(intervalScalings);
+		double y_hat = ACP.aggregate(aggregation, Y_hats);
+		double scaling = ACP.aggregate(aggregation, intervalScalings);
 		CPRegressionPrediction result = new CPRegressionPrediction(y_hat, scaling, minObs, maxObs);
 		Map<Double,PredictedInterval> intervals = new HashMap<>();
 
@@ -555,26 +555,6 @@ public final class ACPRegressor extends PredictorBase implements ACP, ConformalR
 		}
 		return DataUtils.averageIdenticalIndices(gradients);
 	}
-
-	// private GradientResultCPRegression computeGradient(List<GradientResult> gradients, List<Double> y_hats) {
-	// 	int gradientLength = gradients.get(0).getGradient().size();
-	// 	List<SparseFeature> medianGradient = new ArrayList<>(gradientLength);
-
-	// 	//All have same index for a value
-	// 	for (int i=0; i<gradientLength; i++){
-	// 		List<Double> values = new ArrayList<>();
-
-	// 		for (GradientResult grad : gradients){
-	// 			values.add(grad.getGradient().get(i).getValue());
-	// 		}
-	// 		double median = MathUtils.median(values);
-	// 		medianGradient.add(new SparseFeatureImpl(gradients.get(0).getGradient().get(i).getIndex(),median));
-	// 	}
-
-	// 	double median_y_hat = MathUtils.median(y_hats);
-
-	// 	return new GradientResultCPRegression(medianGradient, median_y_hat);
-	// }
 
 	/* 
 	 * =================================================

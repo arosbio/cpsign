@@ -357,7 +357,7 @@ public class SignedNormalizedNCM implements NCMRegression {
 
 		// Load beta value
 		if (!params.containsKey(BETA_PROPERTY_KEY)) {
-			throw new IOException("Could not retreive NCM properties correctly");
+			throw new IOException("Could not retrieve NCM properties correctly");
 		}
 
 		try {

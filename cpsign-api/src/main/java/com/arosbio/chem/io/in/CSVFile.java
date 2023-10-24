@@ -278,7 +278,7 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 		list.add(new StringConfig.Builder(CONF_SMILES_COL, null)
 			.description("Explicitly set which column in the CSV that contain the SMILES. "+
 				"By default the headers will be searched left-to-right and the first header "+
-				"containing 'SMILES' (case-insensitive) will be used. E.g. usefull if the header "+
+				"containing 'SMILES' (case-insensitive) will be used. E.g. useful if the header "+
 				"contain multiple columns with the text SMILES or if the column is called something else")
 			.build());
 		return list;
@@ -303,7 +303,7 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 					} else if (val instanceof String[]) {
 						userSpecifiedHeader = (String[]) val;
 					} else {
-						LOGGER.debug("Parameter "+key + " had invalid format (must be list or array of string), but was: " + val.getClass());
+						LOGGER.debug("Parameter {} had invalid format (must be list or array of string), but was: {}",key,val.getClass());
 						throw new IllegalArgumentException("Invalid format");
 					}
 				} else if (CollectionUtils.containsIgnoreCase(CONF_DELIM,key)){

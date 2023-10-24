@@ -55,6 +55,7 @@ import com.arosbio.chem.io.in.SDFReader;
 import com.arosbio.chem.io.in.SDFile;
 import com.arosbio.chem.io.out.CSVWriter;
 import com.arosbio.cheminf.data.ChemDataset.DescriptorCalcInfo;
+import com.arosbio.cheminf.data.TestChemDataset.ComparisonLP;
 import com.arosbio.cheminf.descriptors.ChemDescriptor;
 import com.arosbio.cheminf.descriptors.DescriptorFactory;
 import com.arosbio.cheminf.descriptors.SignaturesDescriptor;
@@ -101,6 +102,27 @@ public class TestChemDataset extends UnitTestBase {
 		Assert.assertEquals(10, pi.getNumSuccessfullyAdded()+pi.getFailedRecords().size());
 
 	}
+
+	@Test
+	public void testSMILESwithMetalAtom() throws Exception {
+		String smiles = "[Cu+2]12(N)(N)(N)(N)S(=O)(=O)O[Cu+2]34(N)(N)(N)(N)S(=O)(=O)O1O2O3O4";
+		IAtomContainer mol = sp.parseSmiles(smiles);
+		ChemDataset ds = new ChemDataset();
+		ds.initializeDescriptors();
+		ds.add(mol,1d);
+
+		List<String> signatures = ds.getFeatureNames(true);
+
+		boolean containsCopper = false;
+		for(String s : signatures){
+			if (s.contains("Cu")){
+				containsCopper = true;
+				break;
+			}
+		}
+		Assert.assertTrue(containsCopper);
+	}
+
 	
 
 	@Test

@@ -65,8 +65,8 @@ public class LogNormalizedNCM implements NCMRegression {
 			+ "set is used for training an error-model that will normalize the nonconformity scores for new objects. "
 			+ "Thus making 'easier' objects get smaller prediction intervals and more difficult to get larger ones. "
 			+ "The error-model is trained on the log of the residuals in contrast with the " + NormalizedNCM.IDENTIFIER + " NCM. "
-			+ "The " + CONFIG_BETA_PARAM_NAMES.get(0) + " parameter 'smoothes' the importance of the normalization and a beta >0 "
-			+ "remove the possibility of generating infinitly large scores due to division by 0.";
+			+ "The " + CONFIG_BETA_PARAM_NAMES.get(0) + " parameter 'smooths' the importance of the normalization and a beta >0 "
+			+ "remove the possibility of generating infinitely large scores due to division by 0.";
 
 
 	private double beta=DEFAULT_BETA_VALUE;

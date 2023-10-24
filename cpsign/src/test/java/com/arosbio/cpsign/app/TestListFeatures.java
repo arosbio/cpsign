@@ -35,29 +35,6 @@ import ch.qos.logback.core.joran.spi.JoranException;
 public class TestListFeatures extends CLIBaseTest {
 
 
-//	final static String outputFormat = ChemOutputType.TSV.name();
-//
-//	final static String TRAIN_FILE_SMILES = getFile("/resources/smiles_files/smiles_classification.smi").getAbsolutePath();
-//	final static String TRAIN_FILE_SMILES_MULTI_COLUMN = getFile("/resources/smiles_files/smiles_classification_multiColumn.smi").getAbsolutePath();
-//	final static String trainSMILES_MultiColumn_Property = "Activity";
-//	final static String labelsSMILES ="NEG,POS";
-//	final static String TRAIN_FILE = SMALL_FILE_PATH+GZIP_SUFFIX;
-//	final static String TRAIN_FORMAT = SDFile.FORMAT_NAME;
-//	final static String TRAIN_FILE_JSON = getFile("/resources/json/ames_mini.json").getAbsolutePath();
-//	final static boolean USE_JSON_TRIAN_FILE = false;
-//
-//	final static String PREDICT_FILE_SDF = MINI_FILE_PATH;
-//	final static String PREDICT_FILE_SMILES = SOLUBILITY_10_FILE_PATH;
-//	final static String TEST_SMILES="OCc1ccc(cc1)Cl";
-//	final static int nrModels=3;
-//
-//	//	final static String train_sdf_GZIPPED = getFile("/resources/ames_small.sdf.gz").getAbsolutePath();
-////	final static String TRAIN_SMILES_GZIPPED = getFile("/resources/smiles_files/smiles_classification.smi.gz").getAbsolutePath();
-//	final static String PREDICT_FILE_SDF_GZIPPED = CHANG_FILE_PATH+GZIP_SUFFIX;
-//	final static String PREDICT_FILE_SMILES_GZIPPED = getFile("/resources/solubility_10.smi.gz").getAbsolutePath();
-//
-//	//	final File modelFile = getFile(SIGNATURES_ACP_CLASSIFICATION_LIBLINEAR_TRAINED_MODEL_PATH);
-
 
 	@AfterClass
 	public static void teardown()throws JoranException{
@@ -121,9 +98,9 @@ public class TestListFeatures extends CLIBaseTest {
 		
 		mockMain(new String[] {
 				Precompute.CMD_NAME,
-				"--train-data", ames.format(), ames.uri().toString(), // SDFile.FORMAT_NAME, AmesBinaryClass.MINI_FILE_PATH,
-				"--labels", getLabelsArg(ames.labels()), //AmesBinaryClass.LABELS_STRING,
-				"--property", ames.property(), // AmesBinaryClass.PROPERTY,
+				"--train-data", ames.format(), ames.uri().toString(),
+				"--labels", getLabelsArg(ames.labels()), 
+				"--property", ames.property(), 
 				"--model-type", "classification",
 				"-mo", preFile.getAbsolutePath(),
 				"-mn", "ames-precomp",

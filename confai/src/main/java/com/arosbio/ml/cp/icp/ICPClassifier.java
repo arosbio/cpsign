@@ -91,7 +91,7 @@ public class ICPClassifier implements ICP, ClassificationPredictor {
 	 */
 
 	/**
-	 * Creates an empy instance, that will require loading or setting of all parameters individually 
+	 * Creates an empty instance, that will require loading or setting of all parameters individually 
 	 */
 	public ICPClassifier() {
 	}
