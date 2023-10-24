@@ -36,6 +36,7 @@ import com.arosbio.commons.config.EnumConfig;
 import com.arosbio.commons.config.IntegerConfig;
 import com.arosbio.commons.config.NumericConfig;
 import com.arosbio.commons.mixins.HasID;
+import com.arosbio.commons.mixins.Named;
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.FeatureVector;
 import com.arosbio.data.FeatureVector.Feature;
@@ -146,7 +147,7 @@ public class LibSvm {
 		return parameters;
 	}
 
-	public enum KernelType implements HasID {
+	public enum KernelType implements HasID, Named {
 
 		LINEAR (svm_parameter.LINEAR),
 		POLY (svm_parameter.POLY),
@@ -190,9 +191,14 @@ public class LibSvm {
 			return id;
 		}
 
+		@Override
+		public String getName() {
+			return name();
+		}
+
 	}
 
-	public enum SvmType implements HasID {
+	public enum SvmType implements HasID, Named {
 
 		C_SVC(svm_parameter.C_SVC),
 		NU_SVC(svm_parameter.NU_SVC),
@@ -217,6 +223,11 @@ public class LibSvm {
 		@Override
 		public int getID() {
 			return id;
+		}
+
+		@Override
+		public String getName() {
+			return name();
 		}
 
 	}

@@ -39,6 +39,7 @@ import com.arosbio.commons.config.EnumConfig;
 import com.arosbio.commons.config.StringListConfig;
 import com.arosbio.commons.mixins.Aliased;
 import com.arosbio.commons.mixins.Described;
+import com.arosbio.commons.mixins.Named;
 import com.arosbio.data.MissingValueFeature;
 import com.arosbio.data.SparseFeature;
 import com.arosbio.data.SparseFeatureImpl;
@@ -56,13 +57,18 @@ import com.arosbio.ml.io.MetaFileUtils;
 @Experimental
 public class UserSuppliedDescriptor implements ChemDescriptor, Described, Aliased {
 	
-	public static enum SortingOrder {
+	public static enum SortingOrder implements Named {
 		UNMODIFIED ("unmodified"), ALPHABETICAL("alphabetical"), REVERSE_ALPHABETICAL ("reverseAlphabetical");
 		
 		private final String name;
 		
 		private SortingOrder(String name) {
 			this.name = name;
+		}
+
+		@Override
+		public String getName() {
+			return name;
 		}
 	}
 

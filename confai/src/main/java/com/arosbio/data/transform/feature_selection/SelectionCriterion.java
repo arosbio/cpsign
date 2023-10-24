@@ -25,6 +25,8 @@ import com.arosbio.commons.config.Configurable;
 import com.arosbio.commons.config.EnumConfig;
 import com.arosbio.commons.config.IntegerConfig;
 import com.arosbio.commons.config.NumericConfig;
+import com.arosbio.commons.mixins.HasID;
+import com.arosbio.commons.mixins.Named;
 
 public class SelectionCriterion implements Configurable {
 
@@ -33,7 +35,7 @@ public class SelectionCriterion implements Configurable {
 	private final static String THRESHOLD_PARAM_NAME = "threshold";
 	private final static double DEFAULT_THRESHOLD = 1e-10;
 
-	public enum Criterion {
+	public enum Criterion implements Named, HasID {
 		KEEP_LARGER_THAN_MEAN("mean",1), 
 		KEEP_N("keepN",2), 
 		KEEP_LARGER_THAN_THRESHOLD("threshold",3),
@@ -77,6 +79,16 @@ public class SelectionCriterion implements Configurable {
 
 		public String toString() {
 			return String.format("(%d) %s",id, text);
+		}
+
+		@Override
+		public String getName() {
+			return text;
+		}
+
+		@Override
+		public int getID() {
+			return id;
 		}
 	}
 
@@ -182,7 +194,11 @@ public class SelectionCriterion implements Configurable {
 	public void setConfigParameters(Map<String, Object> params) throws IllegalStateException, IllegalArgumentException {
 		for (Map.Entry<String, Object> p : params.entrySet()) {
 			if (p.getKey().equalsIgnoreCase(FILTER_CRITERION_PARAM_NAME)) {
-				crit = Criterion.get(p.getValue().toString());
+				if (p.getValue() instanceof Criterion){
+					crit = (Criterion) p.getValue();
+				} else {
+					crit = Criterion.get(p.getValue().toString());
+				}
 			} else if (p.getKey().equalsIgnoreCase(KEEP_MAXIMUM_NUMBER_PARAM_NAME)) {
 				numToKeep = TypeUtils.asInt(p.getValue());
 			} else if (p.getKey().equalsIgnoreCase(THRESHOLD_PARAM_NAME)) {

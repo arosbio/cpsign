@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Stack;
 
 import org.apache.commons.lang3.tuple.ImmutableTriple;
@@ -25,6 +26,7 @@ import com.arosbio.chem.io.in.ChemFile;
 import com.arosbio.chem.io.in.JSONFile;
 import com.arosbio.chem.io.in.SDFile;
 import com.arosbio.commons.StringUtils;
+import com.arosbio.commons.config.Configurable;
 import com.arosbio.commons.config.Configurable.ConfigParameter;
 import com.arosbio.cpsign.app.param_exceptions.InputConversionException;
 import com.arosbio.cpsign.app.utils.ParameterUtils;
@@ -103,9 +105,10 @@ public class ChemFileConverter implements IParameterConsumer {
 		List<String> extraOpts;
 		URI uri;
 
-		// Process differently depending on using new :-syntax or older one with each separated by space
+		// Process differently depending on using new :-syntax or older one with each separated by whitespace character(s)
+		boolean newSyntax = args.peek().contains(ParameterUtils.SUB_PARAM_SPLITTER);
 		try {
-			if (args.peek().contains(ParameterUtils.SUB_PARAM_SPLITTER)) {
+			if (newSyntax) {
 				Triple<String,List<String>,URI> result = processUsingNewSyntax(args);
 				format = result.getLeft();
 				extraOpts = result.getMiddle();
@@ -117,6 +120,7 @@ public class ChemFileConverter implements IParameterConsumer {
 				uri = result.getRight();
 			}
 		} catch (Exception e) {
+			LOGGER.debug("failed converting chemical file correctly",e);
 			throw new InputConversionException(initStackSize, e.getMessage());
 		}
 
@@ -125,19 +129,31 @@ public class ChemFileConverter implements IParameterConsumer {
 
 		if (!extraOpts.isEmpty()) {
 
-			if (! (file instanceof CSVFile)) {
+			if (! (file instanceof Configurable)) {
 				throw new InputConversionException(initStackSize,file.getFileFormat() + " does not support additional arguments"); 
 			}
 
-			LOGGER.debug("Setting config arguments for CSV; {}", StringUtils.toStringNoBrackets(extraOpts));
+			LOGGER.debug("Setting config arguments for {}; {}",file.getFileFormat(), StringUtils.toStringNoBrackets(extraOpts));
 
-			CSVFile csv = (CSVFile) file;
+			Configurable csv = (Configurable) file;
 
 			try {
 				ConfigUtils.setConfigs(csv, extraOpts, format+ ' ' + StringUtils.toStringNoBrackets(extraOpts) + ' ' + uri);
 			} catch (Exception e) {
-				LOGGER.debug("Failed configuring CSV input format",e);
-				throw new InputConversionException(initStackSize,"Invalid sub parameter(s) to CSV file: " + e.getMessage());
+				LOGGER.debug("Failed configuring "+file.getFileFormat()+" input format",e);
+
+				// here try to deduce if the user mixed the new and old syntax, which then causes issues
+				String extraErrText = "";
+				if (e.getMessage().toLowerCase(Locale.ENGLISH).contains("correct syntax") && ! newSyntax){
+					for (String opt : extraOpts){
+						if (opt.contains(ParameterUtils.SUB_PARAM_SPLITTER)){
+							LOGGER.debug("Extra option contains sub-param splitter: may be mixing of input syntax");
+							extraErrText = "%nThe input seems to mix the two input syntaxes, please see explain chemical-files for more info";
+						}
+					}
+				}
+
+				throw new InputConversionException(initStackSize,"Invalid sub parameter(s) to "+file.getFileFormat()+" file: " + e.getMessage() + extraErrText);
 			}
 
 		}
@@ -168,7 +184,11 @@ public class ChemFileConverter implements IParameterConsumer {
 			tmpVal = args.pop();
 			uri = UriUtils.getURI(tmpVal);
 		} catch (IOException |IllegalArgumentException e) {
-			LOGGER.debug("URI/Path not valid: {}",tmpVal);
+			LOGGER.debug("URI/Path not valid (or if's not a URI - wrong syntax!): {}",tmpVal);
+			if (tmpVal.contains(ParameterUtils.SUB_PARAM_SPLITTER)){
+				LOGGER.debug("The URI/path contains a sub-param splitter character (:), it might be wrong syntax as well..");
+
+			}
 			throw new IllegalArgumentException("Invalid URI/path '"+ tmpVal+'\'');
 		}
 

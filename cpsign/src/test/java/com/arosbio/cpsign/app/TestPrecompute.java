@@ -414,11 +414,12 @@ public class TestPrecompute extends CLIBaseTest {
 					Precompute.CMD_NAME,
 					"-td", herg.format(),herg.uri().toString(),
 					"-pr", herg.property(),
-					"--descriptors", "usersupplied:IC50", "signatures:1",
+					"--descriptors", "usersupplied:IC50", "signatures:1:3",
 					"--labels", getLabelsArg(herg.labels()),
 					"-mo", preFirst.getAbsolutePath(),
 					"-mn", "dasf",
-					"--time"
+					"--time",
+					"--echo"
 			}
 					);
 		} catch(Exception e){
@@ -475,22 +476,46 @@ public class TestPrecompute extends CLIBaseTest {
 		Assert.fail("Not containing: " + item);
 	}
 
+	
+	@Test
+	public void testBadFormattingTrainData() throws Exception {
+		// here mixing the blank-space separation and the :-separation syntax
+		File preFirst = TestUtils.createTempFile("datafile", ".csr.jar");
+
+		CSVCmpdData withDescriptors = TestResources.Cls.getAMES_126_chem_desc_no_header();
+		String header = TestResources.Cls.AMES_126_chem_header_line;
+
+		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
+		// exit.checkAssertionAfterwards(new PrintSysOutput(true));
+		mockMain(
+				Precompute.CMD_NAME,
+				"-td", withDescriptors.format(), "delim="+withDescriptors.delim()+":header="+header, withDescriptors.uri().toString(),
+				"-pr", withDescriptors.property(),
+				"--labels", getLabelsArg(withDescriptors.labels()),
+				"-mo", preFirst.getAbsolutePath(),
+				"-mn", "dasf",
+				"--time"
+		);
+	}
+
 	@Test
 	public void testUserSuppliedDescriptorsALL_EXCEPT() throws Exception {
 		File preFirst = TestUtils.createTempFile("datafile", ".csr.jar");
 
-		CSVCmpdData withDescriptors = TestResources.Cls.getAMES_126_chem_desc();
-			mockMain(new String[] {
-					Precompute.CMD_NAME,
-					"-td", withDescriptors.format(), "delim="+withDescriptors.delim(), withDescriptors.uri().toString(),
-					"-pr", withDescriptors.property(),
-					"--descriptors", "usersupplied:sortingOrder=revers-alphabetical:properties=all,-cdk_Title,-Molecular Signature,-\"Ames test categorisation\",-bpol", 
-					"--labels", getLabelsArg(withDescriptors.labels()),
-					"-mo", preFirst.getAbsolutePath(),
-					"-mn", "dasf",
-					"--time"
-			}
-					);
+		CSVCmpdData withDescriptors = TestResources.Cls.getAMES_126_chem_desc_no_header();
+		String header = TestResources.Cls.AMES_126_chem_header_line;
+		
+		mockMain(new String[] {
+				Precompute.CMD_NAME,
+				"-td", withDescriptors.format(), "delim="+withDescriptors.delim(),"header="+header, withDescriptors.uri().toString(),
+				"-pr", withDescriptors.property(),
+				"--descriptors", "usersupplied:sortingOrder=revers-alphabetical:properties=all,-cdk_Title,-Molecular Signature,-\"Ames test categorisation\",-bpol", "signatures:1:3",
+				"--labels", getLabelsArg(withDescriptors.labels()),
+				"-mo", preFirst.getAbsolutePath(),
+				"-mn", "dasf",
+				"--time"
+		}
+		);
 		
 
 		ChemDataset precomp = ModelSerializer.loadDataset(preFirst.toURI(), null);
@@ -499,6 +524,8 @@ public class TestPrecompute extends CLIBaseTest {
 		Assert.assertTrue(descriptorsList.get(0) instanceof UserSuppliedDescriptor);
 		Assert.assertTrue(((UserSuppliedDescriptor) descriptorsList.get(0)).getPropertyNames().contains("ALOGP"));
 		Assert.assertTrue(((UserSuppliedDescriptor) descriptorsList.get(0)).getPropertyNames().size()>20); // A bunch of them in there!
+		// not serialized, uses the order saved as meta-data instead - but it works now!
+		// Assert.assertEquals(((UserSuppliedDescriptor) descriptorsList.get(0)).getSortingOrder(), SortingOrder.REVERSE_ALPHABETICAL);
 
 		boolean containsMissingVals = false, containsNaN = false;
 		for (DataRecord r : precomp.getDataset()) {

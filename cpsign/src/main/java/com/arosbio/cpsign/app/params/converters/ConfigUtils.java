@@ -9,11 +9,21 @@
  */
 package com.arosbio.cpsign.app.params.converters;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.FuzzyMatcher;
@@ -31,11 +41,6 @@ import com.arosbio.commons.config.StringConfig;
 import com.arosbio.commons.config.StringListConfig;
 import com.arosbio.commons.mixins.HasID;
 import com.arosbio.commons.mixins.Named;
-
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import picocli.CommandLine.TypeConversionException;
 
@@ -137,21 +142,27 @@ public class ConfigUtils {
 				if (id!=null && o instanceof HasID) {
 					try {
 						if (id==((HasID)o).getID()) {
-							return o;
+							return convertToString(o);
 						}
 					} catch (Exception e) {}
 				} 
 				if (o instanceof Named) {
+					// use identical name
 					if (((Named) o).getName().equalsIgnoreCase(input)) {
-						return o;
+						return convertToString(o);
 					}
 				}
 				// try using the name
 				if (input.equalsIgnoreCase(((Enum<?>)o).name())) {
-					return o;
+					return convertToString(o);
 				}
 			}
-			LOGGER.debug("Found no match for enum of class {} for input: {}", p.getClass().getSimpleName(), input);
+			LOGGER.debug("Found no match for enum of class {} for input: {}, attempting with fuzzy match", p.getClass().getSimpleName(), input);
+			try{
+				return convertToString(new FuzzyMatcher().match(Arrays.asList(values),input));
+			} catch (Exception e){
+				LOGGER.debug("Failed performing a fuzzymatch of input {}", input);
+			}
 
 		} else if (p instanceof ImplementationConfig<?>) {
 			ImplementationConfig<?> impl = (ImplementationConfig<?>)p;
@@ -180,15 +191,34 @@ public class ConfigUtils {
 			return input;
 		} else if (p instanceof StringListConfig) {
 			LOGGER.debug("Configuring {} with argument: {}",p,input);
-			String[] array = input.split("[,:\t]");
-			LOGGER.debug("Splitted list: {}", Arrays.toString(array));
 			List<String> list = new ArrayList<>();
-			for (String s : array) {
-				String trimmed = s.trim();
-				if (!trimmed.isEmpty()) {
-					list.add(trimmed);
+			try{
+				CSVParser parser = CSVFormat.DEFAULT.parse(new StringReader(input));
+				
+				int numRecs=0;
+				for (CSVRecord r : parser){
+					for (int col=0; col<r.size();col++){
+						list.add(r.get(col));
+					}
+					numRecs++;
 				}
+				if (numRecs>1){
+					LOGGER.warn("Read more than one record, this might be an error!");
+				}
+			} catch(IOException e){
+				LOGGER.debug("Failed parsing list of string input",e);
+				// Fall-back
 			}
+			
+			// String[] array = input.split("[,:\t]");
+			// LOGGER.debug("Splitted list: {}", Arrays.toString(array));
+			// List<String> list = new ArrayList<>();
+			// for (String s : array) {
+			// 	String trimmed = s.trim();
+			// 	if (!trimmed.isEmpty()) {
+			// 		list.add(trimmed);
+			// 	}
+			// }
 			LOGGER.debug("Final LIST: {}", list);
 			return list;
 		} 
@@ -197,6 +227,15 @@ public class ConfigUtils {
 		// Fall-back - hope the Configurable object can convert it correctly
 		return input;
 
+	}
+
+	private static String convertToString(Object o){
+		if (o instanceof Named){
+			return ((Named)o).getName();
+		} else if (o instanceof Enum<?>){
+			return ((Enum<?>)o).name();	
+		}
+		return o.toString();
 	}
 
 	@SuppressWarnings("unused")
