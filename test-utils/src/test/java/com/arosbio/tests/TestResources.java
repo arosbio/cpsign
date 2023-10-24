@@ -287,6 +287,13 @@ public class TestResources {
 			return CmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_126.sdf"), Format.SDF, PROPERTY,123, 3, AMES_LABELS)
 				.build();
 		}
+		public static CSVCmpdData getAMES_126_chem_desc_no_header(){
+			return CSVCmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_126_36_cdk_descriptors.no-header.csv"), PROPERTY,123, 3, AMES_LABELS)
+				.delim(',').build();
+		}
+		/** Header line that corresponds to {@link #getAMES_126_chem_desc_no_header()} */
+		public static final String AMES_126_chem_header_line = "Smiles,cdk_Title,\"Molecular Signature\",\"Ames test categorisation\",bpol,nRings3,nRings4,ALogp2,nAromBlocks,nA,nC,ALogP,nD,nE,nF,nG,nH,nI,nAromRings,nK,nL,nM,nN,nSmallRings,nRingBlocks,nP,nQ,nR,nS,nT,AMR,nV,nW,MW,nY,nRings9,nRings7,nRings8,nRings5,nRings6";
+
 		public static CmpdData getAMES_126_gzip(){
 			return CmpdData.Builder.classification(getURL(CmpdData.CLF_FOLDER+"ames_126.sdf.gz"), Format.SDF, PROPERTY, 123, 3, AMES_LABELS)
 				.zipped(true).build();
