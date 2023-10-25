@@ -687,7 +687,7 @@ public class CLIProgramUtils {
 			// Parse molecules
 			if (trainFile != null) {
 				currentFile = trainFile;
-				console.println("Reading train file and calculating descriptors...", PrintMode.NORMAL);
+				console.print("Reading train file and calculating descriptors... ", PrintMode.NORMAL);
 				pb.addAdditionalStep();
 				sp.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(numAllowedFailsLeft) : ProgressTracker.createNoEarlyStopping());
 				loadData(sp, trainFile, endpoint, nl, RecordType.NORMAL, console, listFailed);
@@ -704,7 +704,7 @@ public class CLIProgramUtils {
 			if (calibExclusiveTrainFile != null) {
 				currentFile = calibExclusiveTrainFile;
 				pb.addAdditionalStep();
-				console.println("Reading calibration exclusive train file and calculating descriptors...",
+				console.print("Reading calibration exclusive train file and calculating descriptors... ",
 				PrintMode.NORMAL);
 				sp.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(numAllowedFailsLeft) : ProgressTracker.createNoEarlyStopping());
 				loadData(sp, calibExclusiveTrainFile, endpoint, nl, RecordType.CALIBRATION_EXCLUSIVE, console,
@@ -722,7 +722,7 @@ public class CLIProgramUtils {
 			if (modelExclusiveTrainFile != null) {
 				currentFile = modelExclusiveTrainFile;
 				pb.addAdditionalStep();
-				console.println("Reading modeling exclusive train file and calculating descriptors...", PrintMode.NORMAL);
+				console.print("Reading modeling exclusive train file and calculating descriptors... ", PrintMode.NORMAL);
 				sp.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(numAllowedFailsLeft) : ProgressTracker.createNoEarlyStopping());
 				loadData(sp, modelExclusiveTrainFile, endpoint, nl, RecordType.MODELING_EXCLUSIVE, console, listFailed);
 				
@@ -733,6 +733,7 @@ public class CLIProgramUtils {
 				pb.stepProgress();
 			}
 		} catch (Exception e){
+			console.println(ProgressInfoTexts.FAILED_TAG, PrintMode.NORMAL);
 			allFailedRecords.addAll(sp.getProgressTracker().getFailures()); // Add failures from the current file
 			LOGGER.debug("Failed parsing in chemical input data, will try to compile a good error message");
 			new UserInputErrorResolver(console, sp.getNumRecords(), currentFile, allFailedRecords, sp, endpoint, nl, maxNumAllowedFailures, listFailed)
@@ -843,8 +844,8 @@ public class CLIProgramUtils {
 		IOUtils.closeQuietly(iterator);
 		IOUtils.closeQuietly(reader);
 		
-		// Write data about the signatures generation
-		console.printlnWrapped(
+		// Write data about the descriptor calculation - start with [done] tag
+		console.printlnWrapped(ProgressInfoTexts.DONE_TAG + "%n" +
 		getLoadedMoleculesInfo(problem.getDataset(type), problem, currentNumSignatures) + extraInfoBuilder.toString(),
 		PrintMode.NORMAL);
 		

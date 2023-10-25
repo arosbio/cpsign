@@ -9,42 +9,17 @@
  */
 package com.arosbio.cpsign.app.params.mixins;
 
-import java.util.List;
-
-import com.arosbio.cpsign.app.utils.CLIConsole;
-import com.arosbio.cpsign.app.utils.CLIConsole.PrintMode;
-
-import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
-import picocli.CommandLine.Spec;
 
+/**
+ * Note: this class has no actual effect, apart from making the --echo flag show up in the
+ * usage guide. 
+ */
 public class EchoMixin {
-
-	@Spec(Spec.Target.MIXEE) CommandSpec mixee;
 
 	@Option(names = "--echo", 
 			description = "Echo the input arguments given to CPSign"
 			)
-	public void echo(boolean b) {
-		if (b) {
-			List<String> args = mixee.commandLine().getParseResult().originalArgs();
-			StringBuilder sb = new StringBuilder("%nRunning command:%n");
-			for (String arg : args) {
-				if (arg.split(" ").length > 1) {
-					sb.append('"');
-					sb.append(arg);
-					sb.append('"');
-				} else {
-					sb.append(arg);
-				}
-
-				// print a space between each parameter
-				sb.append(' ');
-			}
-			sb.append("%n");
-
-			CLIConsole.getInstance().println(sb.toString(), PrintMode.NORMAL);
-		}
-	}
+	boolean echoInput = false;
 
 }

@@ -35,6 +35,7 @@ import com.arosbio.cpsign.app.param_exceptions.InputConversionException;
 import com.arosbio.cpsign.app.params.converters.FileConverter;
 import com.arosbio.cpsign.app.params.converters.URIConverter;
 import com.arosbio.cpsign.app.utils.CLIConsole;
+import com.arosbio.cpsign.app.utils.CLIConsole.PrintMode;
 import com.arosbio.cpsign.app.utils.ParameterUtils.ArgumentType;
 import com.arosbio.io.UriUtils;
 
@@ -91,7 +92,7 @@ import picocli.CommandLine.UnmatchedArgumentException;
 		abbreviateSynopsis = true,
 
 		// customSynopsis
-		optionListHeading = CPSignApp.PARAMTERS_HEADER,
+		optionListHeading = CPSignApp.PARAMETERS_HEADER,
 
 		commandListHeading = CPSignApp.COMMANDS_HEADER,
 
@@ -114,9 +115,9 @@ public class CPSignApp implements IVersionProvider {
 	public static final String COMMANDS_HEADER = "%n@|bold COMMANDS|@%n";
 	public static final String EXIT_CODE_HEADER = "%n@|bold EXIT CODES|@%n";
 	public static final String USAGE_HEADER = "%n@|bold USAGE|@%n";
-	public static final String PARAMTERS_HEADER = "%n@|bold PARAMETERS|@%n";
+	public static final String PARAMETERS_HEADER = "%n@|bold PARAMETERS|@%n";
 
-	// Hold a reference to this, to keep from GC and accedentally change global seed
+	// Hold a reference to this, to keep from GC and accidentally change global seed
 	private static GlobalConfig settings = GlobalConfig.getInstance();
 
 	@Option(hidden = true, names = { "--no-ansi", "--ansi-off" })
@@ -234,6 +235,9 @@ public class CPSignApp implements IVersionProvider {
 				// Config RNG seed and logfile before anything else
 				configLogAndSeed(args);
 
+				// Check echo of arguments
+				echoArgs(args);
+
 				if (loaded) {
 					cmd.setDefaultValueProvider(new PropertiesDefaultProvider(p));
 				}
@@ -266,6 +270,34 @@ public class CPSignApp implements IVersionProvider {
 		} finally {
 			AnsiConsole.systemUninstall();
 		}
+	}
+
+	private static void echoArgs(String[] args){
+		boolean echo = false;
+		StringBuilder sb = new StringBuilder("%nRunning command:%n");
+		for (String arg : args) {
+			if (arg.equals("--echo"))
+				echo = true;
+			if (arg.split(" ").length > 1 && !arg.contains("\"")) {
+				sb.append('"');
+				sb.append(arg);
+				sb.append('"');
+			} else {
+				sb.append(arg);
+			}
+
+			// print a space between each parameter
+			sb.append(' ');
+		}
+		sb.append("%n");
+
+		if (echo){
+			CLIConsole.getInstance().println(sb.toString(), PrintMode.NORMAL);
+		}
+		else {
+			LOGGER.debug(sb.toString());
+		}
+		
 	}
 
 	private static void configLogAndSeed(String[] args){
@@ -510,7 +542,7 @@ public class CPSignApp implements IVersionProvider {
 				// Write suggestions (if any)
 				UnmatchedArgumentException.printSuggestions((ParameterException) t, err);
 				err.println();
-			}
+			} 
 
 			// Print how to get usage text (white)
 			err.printf(AnsiRenderer
