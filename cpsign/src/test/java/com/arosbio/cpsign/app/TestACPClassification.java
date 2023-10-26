@@ -200,19 +200,17 @@ public class TestACPClassification extends CLIBaseTest {
 		expectExit(ExitStatus.USER_ERROR);
 		// exit.checkAssertionAfterwards(new PrintSysOutput(true));
 		exit.checkAssertionAfterwards(new AssertSysErrContainsString("missing", "data", "feature"));
-		try {
-			mockMain(new String[] {
-					Train.CMD_NAME,
-					"-ds", PrecomputedDatasets.Classification.getMissingDataDS().toString(),
-					"-mo", modelFile.getAbsolutePath(),
-					"-mn", "dasf",
-					"--time"
-			}
-					);
-			Assert.fail();
-
-		} catch(Exception e){
+		mockMain(new String[] {
+				Train.CMD_NAME,
+				"-ds", PrecomputedDatasets.Classification.getMissingDataDS().toString(),
+				"-mo", modelFile.getAbsolutePath(),
+				"-mn", "dasf",
+				"--time"
 		}
+				);
+		Assert.fail();
+
+		
 	}
 
 	@Test
@@ -1072,8 +1070,8 @@ public class TestACPClassification extends CLIBaseTest {
 		CSVCmpdData cas = TestResources.Cls.getCox2();
 		mockMain(new String[] {
 				Train.CMD_NAME,
-				"-pt", ACP_CLASSIFICATION_TYPE, // TODO does this work??
-				"-td", cas.format(), "delim="+cas.delim() ,cas.uri().toString(), // "delim:\\t" getURI("/resources/datasets/classification/cas_N6512.smi").toString(),
+				"-pt", ACP_CLASSIFICATION_TYPE, 
+				"-td", cas.format(), "delim="+cas.delim() ,cas.uri().toString(),
 				"-pr", "class",
 				"--labels", "0 1",
 				"-ss", strategy(RANDOM_SAMPLING, nrModels),
@@ -1086,7 +1084,7 @@ public class TestACPClassification extends CLIBaseTest {
 				"--time"
 		});
 
-		printLogs();
+		// printLogs();
 
 		systemOutRule.clearLog();
 		File predictions = TestUtils.createTempFile("preds", ".smi");
@@ -1156,7 +1154,7 @@ public class TestACPClassification extends CLIBaseTest {
 		systemErrRule.clearLog();
 		systemOutRule.clearLog();
 
-		// Predict erronious input file, without issues it should work OK
+		// Predict erroneous input file, without issues it should work OK
 		CSVCmpdData predFile = Reg.getErroneous();
 		mockMain(Predict.CMD_NAME,
 				"-m", modelFile.getAbsolutePath(),
@@ -1164,8 +1162,10 @@ public class TestACPClassification extends CLIBaseTest {
 				"--list-failed"
 				);
 		// printLogs();
+		systemErrRule.clearLog();
+		systemOutRule.clearLog();
 
-		// Predict erronious input file again but not allow any errors - the call should fail
+		// Predict erroneous input file again but not allow any errors - the call should fail
 		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
 		exit.checkAssertionAfterwards(new AssertSysErrContainsString("invalid", "arguments"));
 		exit.checkAssertionAfterwards(new AssertSysOutContainsString("chem", "structure", "error"));

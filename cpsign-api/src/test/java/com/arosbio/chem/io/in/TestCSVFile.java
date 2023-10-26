@@ -15,7 +15,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
-import java.util.Map;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -24,16 +23,16 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.openscience.cdk.interfaces.IAtomContainer;
 
 import com.arosbio.cheminf.data.ChemDataset;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.TestResources.CSVCmpdData;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.TestUtils;
+import com.arosbio.testutils.UnitTestBase;
 
 @Category(UnitTest.class)
-public class TestCSVFile {
+public class TestCSVFile extends UnitTestBase{
 
 	// @Test
 	public void testRawCSVParser() throws Exception {
@@ -59,23 +58,24 @@ public class TestCSVFile {
 		// Try with too few headers - this _should_ fail
 		CSVFile f = new CSVFile(csvFile.toURI()).setUserDefinedHeader("SMILES","FLAG");
 		Assert.assertEquals(1, f.countNumRecords());
-		ChemFileIterator it = f.getIterator();
-		Assert.assertFalse("There should be no valid records in this (miss-match of number of columns)",it.hasNext());
-		FailedRecord r = it.getProgressTracker().getFailures().get(0);
-		String lcReason = r.getReason().toLowerCase();
-		Assert.assertTrue(lcReason.contains("inconsistent"));
-		Assert.assertTrue(lcReason.contains("columns"));
-		Assert.assertTrue(lcReason.contains("fields"));
+		try {
+			CSVChemFileReader it = f.getIterator();
+			it.hasNext();
+			Assert.fail("inconsistent number of fields/headers should fail");
+		} catch (IllegalArgumentException e){
+			Assert.assertTrue(e.getMessage().toLowerCase().contains("inconsistent"));
+		}
 		
 		// Try with too many headers (i.e. some records miss some values, this we pass)
 		f = new CSVFile(csvFile.toURI()).setUserDefinedHeader("SMILES","FLAG", "Some property", "comments", "something not there", "another col");
 		Assert.assertEquals(1, f.countNumRecords());
-		it = f.getIterator();
-		Assert.assertTrue(it.hasNext());
-		IAtomContainer mol = it.next();
-		Map<Object,Object> props = mol.getProperties();
-		Assert.assertTrue(props.containsKey("SMILES"));
-		Assert.assertTrue(props.containsKey("FLAG"));
+		try {
+			ChemFileIterator it = f.getIterator();
+			it.hasNext();
+			Assert.fail("inconsistent number of fields/headers should fail");
+		} catch (IllegalArgumentException e){
+			Assert.assertTrue(e.getMessage().toLowerCase().contains("inconsistent"));
+		}
 		
 	}
 

@@ -45,6 +45,8 @@ public class CSVChemFileReader implements ChemFileIterator {
 	private SmilesParser sp = new SmilesParser(DEFAULT_BUILDER);
 	private CSVParser parser;
 	private Iterator<CSVRecord> recordIterator;
+	/** The number of header fields (either given or read from input file), to be populated at init */
+	private int numHeaderFields = -1;
 	private String smilesHeaderField;
 	private int numRecordsSuccessfullyRead = 0;
 
@@ -84,9 +86,9 @@ public class CSVChemFileReader implements ChemFileIterator {
 	private void initialize(CSVFormat format, Reader reader) throws IOException {
 		LOGGER.debug("Initializing CSV parser with the following CSVFormat: {}", format.toString());
 		if (format.getHeader() == null){
-			if (!format.getSkipHeaderRecord())
+			if (!format.getSkipHeaderRecord()){
 				format = format.builder().setSkipHeaderRecord(true).build(); 
-
+			}
 		}
 
 		this.parser = format.parse(reader);
@@ -101,8 +103,11 @@ public class CSVChemFileReader implements ChemFileIterator {
 				throw new IOException("No header found in CSV that contains SMILES - please check the file and give an explicit header");
 			} 
 
-		} 
-		LOGGER.debug("Header field for smiles set to: {}, CSV reader headers: {}", smilesHeaderField,this.parser.getHeaderMap());
+		}
+		Map<String,Integer> tmpHeaderMap = this.parser.getHeaderMap();
+		numHeaderFields = tmpHeaderMap.size();
+		LOGGER.debug("Header field for smiles set to: {}, CSV reader headers: {}", smilesHeaderField,tmpHeaderMap);
+
 	}
 
 	public List<String> getHeaders(){
@@ -115,9 +120,9 @@ public class CSVChemFileReader implements ChemFileIterator {
 
 	@Override
 	public boolean hasNext() throws EarlyStoppingException {
-		if (nextMol != null)
+		if (nextMol != null){
 			return true;
-		else {
+		} else {
 			return tryParseNext();
 		}
 	}
@@ -136,7 +141,7 @@ public class CSVChemFileReader implements ChemFileIterator {
 		}
 	}
 
-	private boolean tryParseNext() throws EarlyLoadingStopException {
+	private boolean tryParseNext() throws EarlyStoppingException {
 
 		if (!recordIterator.hasNext()) {
 			LOGGER.debug("No more records in CSV File, found {} records", numRecordsSuccessfullyRead);
@@ -148,6 +153,18 @@ public class CSVChemFileReader implements ChemFileIterator {
 
 		try {
 			CSVRecord next = recordIterator.next();
+
+			// Verify consistent number of fields
+			if (numHeaderFields != next.size()){
+				tracker.register(
+					new FailedRecord.Builder(recordIndex, Cause.INVALID_RECORD)
+						.withReason(
+							String.format(Locale.ENGLISH,"Inconsistent number of columns in CSV record, found %d fields but header has %d fields", next.size(),numHeaderFields))
+					.build());
+				String msg = String.format("Inconsistent number of header fields (%d) and fields in csv record with index %d (%d) - please verify your input data",numHeaderFields,recordIndex,next.size());
+				LOGGER.warn(msg);
+				throw new IllegalArgumentException(msg);
+			}
 
 			String smiles = next.get(smilesHeaderField);
 			try {
@@ -169,17 +186,6 @@ public class CSVChemFileReader implements ChemFileIterator {
 				return tryParseNext();
 			}
 
-			// Check that the columns were consistent
-			if (next.size() > parser.getHeaderNames().size()){
-				// numInconsistentRecords++;
-				tracker.register(
-					new FailedRecord.Builder(recordIndex, Cause.INVALID_RECORD)
-						.withReason(
-							String.format(Locale.ENGLISH,"Inconsistent number of columns in CSV record, found %d fields but header has %d fields", next.size(),parser.getHeaderNames().size()))
-					.build());
-				checkIfExit();
-				return tryParseNext();
-			}
 
 			Map<Object,Object> properties = new LinkedHashMap<>(next.toMap());
 			// remove all empty
@@ -201,9 +207,9 @@ public class CSVChemFileReader implements ChemFileIterator {
 			CPSignMolProperties.setSMILES(nextMol, smiles);
 
 			return true;
-		} catch (EarlyStoppingException e){
+		} catch (IllegalArgumentException e){
 			// Pass along
-			throw e;	
+			throw e;
 		} catch (Exception e) {
 			LOGGER.debug("Failed parsing line in CSV, continuing to next, err-message: {}", e.getMessage());
 			return tryParseNext();

@@ -137,7 +137,6 @@ public class PredictRunner {
 	int numMolsToPredict = 0, numMolsInPredictFile = 0, progressInterval = -1, molIterationCounter = 0, numMissingDataFails = 0, numSuccessfulPreds = 0;
 
 	public void runPredict() {
-
 		// Calculate the number of compounds to predict
 		// From predict-file
 		if (toPredict.toPredict.predictFile!=null){
@@ -284,6 +283,9 @@ public class PredictRunner {
 					
 					// Step Progress and print out
 					printPredictionProgressAndStep();
+
+					// Check if continue or not
+					tracker.assertCanContinueParsing();
 				}
 			}
 
@@ -312,7 +314,7 @@ public class PredictRunner {
 			tracker.register(new FailedRecord.Builder(index, Cause.DESCRIPTOR_CALC_ERROR).withReason(e.getMessage()).build());
 		} else if (e instanceof CDKException){
 			LOGGER.debug("Failed configuring the input molecule properly",e);
-			tracker.register(new FailedRecord.Builder(index, Cause.INVALID_STRUCTURE).withReason("Failed configuring input stucture: " + e.getMessage()).build());
+			tracker.register(new FailedRecord.Builder(index, Cause.INVALID_STRUCTURE).withReason("Failed configuring input structure: " + e.getMessage()).build());
 		} else if (e instanceof MissingDataException){
 			LOGGER.debug("Got a missing data exception - something wrong i pre-processing?");
 			tracker.register(new FailedRecord.Builder(index, Cause.DESCRIPTOR_CALC_ERROR).withID(id).withReason(e.getMessage()).build());

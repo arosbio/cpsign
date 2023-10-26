@@ -39,7 +39,7 @@ public class DescriptorsMixin {
 	@Option(
 			names= {"-d", "--descriptors"},
 			description = "Descriptors to use. Run "+ParameterUtils.RUN_EXPLAIN_ANSI_ON+"explain descriptors"+ParameterUtils.ANSI_OFF+" to view all available " +
-					"decriptors%n" + 
+					"descriptors%n" + 
 					ParameterUtils.DEFAULT_PRE_TEXT + "signatures:1:3",
 					parameterConsumer = DescriptorParamConsumer.class,
 					split = ParameterUtils.SPLIT_WS_REGEXP,
@@ -106,7 +106,7 @@ public class DescriptorsMixin {
 			} else if (lc.equals("all-cdk-3d")) {
 				return DescriptorFactory.getCDKDescriptorsRequire3D();
 			}
-			LOGGER.debug("Input was not a list 'all-cdk' or 'all-cdk-3d' - trying as a single descriptor");
+			LOGGER.debug("Input was not a list-type ()'all-cdk' or 'all-cdk-3d') - trying as a single descriptor");
 
 			String[] splits = text.split(ParameterUtils.SUB_PARAM_SPLITTER);
 

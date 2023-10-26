@@ -499,6 +499,78 @@ public class TestPrecompute extends CLIBaseTest {
 	}
 
 	@Test
+	public void testCustomHeaderTooManyCols() throws Exception {
+		File preFirst = TestUtils.createTempFile("datafile", ".csr.jar");
+
+		CSVCmpdData withDescriptors = TestResources.Cls.getAMES_126_chem_desc_no_header();
+		String headerTooLong = TestResources.Cls.AMES_126_chem_header_line + ",SomeExtraColumn";
+
+		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
+		exit.checkAssertionAfterwards(new AssertSysErrContainsString("inconsistent", "header", "fields", "verify"));
+		
+		mockMain(new String[] {
+				Precompute.CMD_NAME,
+				"-td", withDescriptors.format(), "delim="+withDescriptors.delim(),"header="+headerTooLong, withDescriptors.uri().toString(),
+				"-pr", withDescriptors.property(),
+				"--labels", getLabelsArg(withDescriptors.labels()),
+				"-mo", preFirst.getAbsolutePath(),
+				"-mn", "dasf",
+				"--time"
+		}
+		);
+		// printLogs();
+	}
+
+	@Test
+	public void testCustomHeaderTooFewCols() throws Exception {
+		File preFirst = TestUtils.createTempFile("datafile", ".csr.jar");
+
+		CSVCmpdData withDescriptors = TestResources.Cls.getAMES_126_chem_desc_no_header();
+		String headerOriginal = TestResources.Cls.AMES_126_chem_header_line;
+		// Skips the 'cdk_title' field
+		String headerTooShort = "smiles," +  headerOriginal.split(",", 3)[2];
+		headerOriginal.split(headerTooShort, -2);
+
+		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
+		exit.checkAssertionAfterwards(new AssertSysErrContainsString("inconsistent", "header", "fields", "verify"));
+		
+		mockMain(new String[] {
+				Precompute.CMD_NAME,
+				"-td", withDescriptors.format(), "delim="+withDescriptors.delim(),"header="+headerTooShort, withDescriptors.uri().toString(),
+				"-pr", withDescriptors.property(),
+				"--labels", getLabelsArg(withDescriptors.labels()),
+				"-mo", preFirst.getAbsolutePath(),
+				"-mn", "dasf",
+				"--time"
+		}
+		);
+		// printLogs();
+	}
+
+	@Test
+	public void testPTPIssuesCustomHeader() throws Exception {
+		File preFirst = TestUtils.createTempFile("datafile", ".csr.jar");
+		
+		CSVCmpdData withDescriptors = TestResources.Cls.getAMES_126_chem_desc_no_header();
+		String header = TestResources.Cls.AMES_126_chem_header_line;
+
+		mockMain(Precompute.CMD_NAME, "--echo", 
+			"--train-data", "csv",
+			"delim="+withDescriptors.delim(),
+			"header="+header,
+			"smilesCol=Smiles",
+			withDescriptors.uri().toString(),
+			"--model-type", "classification", "--property",withDescriptors.property(), 
+			"--labels="+getLabelsArg(withDescriptors.labels()), 
+			"--model-out", 
+			preFirst.getAbsolutePath(), 
+			"--descriptors", 
+			"signatures"
+			);
+		// printLogs();
+	}
+
+	@Test
 	public void testUserSuppliedDescriptorsALL_EXCEPT() throws Exception {
 		File preFirst = TestUtils.createTempFile("datafile", ".csr.jar");
 
@@ -509,14 +581,20 @@ public class TestPrecompute extends CLIBaseTest {
 				Precompute.CMD_NAME,
 				"-td", withDescriptors.format(), "delim="+withDescriptors.delim(),"header="+header, withDescriptors.uri().toString(),
 				"-pr", withDescriptors.property(),
-				"--descriptors", "usersupplied:sortingOrder=revers-alphabetical:properties=all,-cdk_Title,-Molecular Signature,-\"Ames test categorisation\",-bpol", "signatures:1:3",
+				"--descriptors", "usersupplied:sortingOrder=revers-alphabetical:properties=all,-smiles,-cdk_Title,-Molecular Signature,-Ames test categorisation,-bpol", "signatures:1:3",
 				"--labels", getLabelsArg(withDescriptors.labels()),
 				"-mo", preFirst.getAbsolutePath(),
 				"-mn", "dasf",
 				"--time"
 		}
 		);
-		
+
+		// ChemDataset ds = ModelSerializer.loadDataset(preFirst.toURI(), null);
+
+		// List<String> features = ds.getFeatureNames(false);
+		// for (String f : features){
+		// 	SYS_ERR.println(f);
+		// }
 
 		ChemDataset precomp = ModelSerializer.loadDataset(preFirst.toURI(), null);
 		List<ChemDescriptor> descriptorsList = precomp.getDescriptors();
@@ -537,8 +615,8 @@ public class TestPrecompute extends CLIBaseTest {
 				}
 			}
 		}
-		Assert.assertTrue(containsNaN);
-		Assert.assertTrue(containsMissingVals);
+		Assert.assertFalse(containsNaN);
+		Assert.assertFalse(containsMissingVals);
 		Assert.assertTrue(Comparators.isInOrder(descriptorsList.get(0).getFeatureNames(), Ordering.natural().reverse()));
 		//		printLogs();
 	}
@@ -874,7 +952,7 @@ public class TestPrecompute extends CLIBaseTest {
 
 		mockMain(new String[] {
 				Precompute.CMD_NAME,
-				"-td", regDuplicate.format(), regDuplicate.uri().toString(), //CSVFile.FORMAT_NAME, getURI("/resources/smiles_files/duplicates_synt_data.smi").getPath(),
+				"-td", regDuplicate.format(), regDuplicate.uri().toString(),
 				"-mt", PRECOMPUTE_REGRESSION,
 				"--property", regDuplicate.property(),
 				"-mo", outputModel.getAbsolutePath(),
@@ -1136,12 +1214,10 @@ public class TestPrecompute extends CLIBaseTest {
 	@Test
 	public void testUserDefinedHeader() throws Exception {
 		File precompModelFile = TestUtils.createTempFile("pre", ".jar");
-//		LoggerUtils.setDebugMode(SYS_OUT);
 		CSVCmpdData noHeader = TestResources.Reg.getSolubility_10_no_header_multicol();
 		
 		mockMain(Precompute.CMD_NAME,
 				"--train-data", noHeader.format(), "header=SMILES,FLAG,COMMENT", noHeader.uri().toString(),
-				// "--labels",getLabelsArg(noHeader.labels()),
 				"-mt", PRECOMPUTE_REGRESSION,
 				"--property", "FLAG",
 				"-mo", precompModelFile.getAbsolutePath(),

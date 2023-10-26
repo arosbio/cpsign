@@ -197,6 +197,10 @@ public class MolAndActivityConverter implements Iterator<Pair<IAtomContainer, Do
 				loadNextClassification();
 			else
 				loadNextRegression();
+		} catch (IllegalArgumentException e) {
+			LOGGER.debug("Failed with illegal-arg exception - some invalid arguments given by user", e);
+			// Pass along exception 
+			throw e;
 		} catch (Exception e) {
 			LOGGER.debug("Failed initializing MolAndActivityConverter", e);
 			throw new IllegalArgumentException("Could not generate any valid records from input data");

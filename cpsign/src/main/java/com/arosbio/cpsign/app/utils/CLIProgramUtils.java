@@ -632,7 +632,7 @@ public class CLIProgramUtils {
 	
 	/**
 	* Main method for precomputing data from chemical files 
-	* @param sp dataset to add to
+	* @param dataset dataset to add to
 	* @param isClassification if it should be classification data 
 	* @param trainFile standard training data
 	* @param modelExclusiveTrainFile training data exclusively used for model training
@@ -645,7 +645,7 @@ public class CLIProgramUtils {
 	* @param maxNumAllowedFailures the maximum number of allowed failures during processing
 	*
 	*/
-	public static void loadData(final ChemDataset sp, final boolean isClassification, final ChemFile trainFile,
+	public static void loadData(final ChemDataset dataset, final boolean isClassification, final ChemFile trainFile,
 	final ChemFile modelExclusiveTrainFile, final ChemFile calibExclusiveTrainFile, final String endpoint, final List<String> labels,
 	final Object program, 
 	final CLIConsole console, final boolean listFailed, 
@@ -678,7 +678,7 @@ public class CLIProgramUtils {
 		
 		
 		// Initialize the descriptors
-		sp.initializeDescriptors();
+		dataset.initializeDescriptors();
 		LOGGER.debug("Initialized descriptors");
 		List<FailedRecord> allFailedRecords = new ArrayList<>();
 		ChemFile currentFile = null; // ref to the input file currently processing (for generating error message)
@@ -689,13 +689,13 @@ public class CLIProgramUtils {
 				currentFile = trainFile;
 				console.print("Reading train file and calculating descriptors... ", PrintMode.NORMAL);
 				pb.addAdditionalStep();
-				sp.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(numAllowedFailsLeft) : ProgressTracker.createNoEarlyStopping());
-				loadData(sp, trainFile, endpoint, nl, RecordType.NORMAL, console, listFailed);
+				dataset.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(numAllowedFailsLeft) : ProgressTracker.createNoEarlyStopping());
+				loadData(dataset, trainFile, endpoint, nl, RecordType.NORMAL, console, listFailed);
 				// update the remaining number of allowed failures
-				numAllowedFailsLeft -= sp.getProgressTracker().getNumFailures();
+				numAllowedFailsLeft -= dataset.getProgressTracker().getNumFailures();
 				numDatasetsUsed++;
-				if (sp.getProgressTracker().getNumFailures()>0){
-					allFailedRecords.addAll(sp.getProgressTracker().getFailures());
+				if (dataset.getProgressTracker().getNumFailures()>0){
+					allFailedRecords.addAll(dataset.getProgressTracker().getFailures());
 				}
 				pb.stepProgress();
 			}
@@ -706,14 +706,14 @@ public class CLIProgramUtils {
 				pb.addAdditionalStep();
 				console.print("Reading calibration exclusive train file and calculating descriptors... ",
 				PrintMode.NORMAL);
-				sp.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(numAllowedFailsLeft) : ProgressTracker.createNoEarlyStopping());
-				loadData(sp, calibExclusiveTrainFile, endpoint, nl, RecordType.CALIBRATION_EXCLUSIVE, console,
+				dataset.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(numAllowedFailsLeft) : ProgressTracker.createNoEarlyStopping());
+				loadData(dataset, calibExclusiveTrainFile, endpoint, nl, RecordType.CALIBRATION_EXCLUSIVE, console,
 				listFailed);
 				// update the remaining number of allowed failures
-				numAllowedFailsLeft -= sp.getProgressTracker().getNumFailures();
+				numAllowedFailsLeft -= dataset.getProgressTracker().getNumFailures();
 				numDatasetsUsed++;
-				if (sp.getProgressTracker().getNumFailures()>0){
-					allFailedRecords.addAll(sp.getProgressTracker().getFailures());
+				if (dataset.getProgressTracker().getNumFailures()>0){
+					allFailedRecords.addAll(dataset.getProgressTracker().getFailures());
 				}
 				pb.stepProgress();
 			}
@@ -723,28 +723,31 @@ public class CLIProgramUtils {
 				currentFile = modelExclusiveTrainFile;
 				pb.addAdditionalStep();
 				console.print("Reading modeling exclusive train file and calculating descriptors... ", PrintMode.NORMAL);
-				sp.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(numAllowedFailsLeft) : ProgressTracker.createNoEarlyStopping());
-				loadData(sp, modelExclusiveTrainFile, endpoint, nl, RecordType.MODELING_EXCLUSIVE, console, listFailed);
+				dataset.setProgressTracker(usingEarlyStopping ? ProgressTracker.createStopAfter(numAllowedFailsLeft) : ProgressTracker.createNoEarlyStopping());
+				loadData(dataset, modelExclusiveTrainFile, endpoint, nl, RecordType.MODELING_EXCLUSIVE, console, listFailed);
 				
 				numDatasetsUsed++;
-				if (sp.getProgressTracker().getNumFailures()>0){
-					allFailedRecords.addAll(sp.getProgressTracker().getFailures());
+				if (dataset.getProgressTracker().getNumFailures()>0){
+					allFailedRecords.addAll(dataset.getProgressTracker().getFailures());
 				}
 				pb.stepProgress();
 			}
+		} catch (IllegalArgumentException e){
+			console.println(ProgressInfoTexts.FAILED_TAG, PrintMode.NORMAL);
+			console.failWithArgError(e.getMessage());
 		} catch (Exception e){
 			console.println(ProgressInfoTexts.FAILED_TAG, PrintMode.NORMAL);
-			allFailedRecords.addAll(sp.getProgressTracker().getFailures()); // Add failures from the current file
+			allFailedRecords.addAll(dataset.getProgressTracker().getFailures()); // Add failures from the current file
 			LOGGER.debug("Failed parsing in chemical input data, will try to compile a good error message");
-			new UserInputErrorResolver(console, sp.getNumRecords(), currentFile, allFailedRecords, sp, endpoint, nl, maxNumAllowedFailures, listFailed)
+			new UserInputErrorResolver(console, dataset.getNumRecords(), currentFile, allFailedRecords, dataset, endpoint, nl, maxNumAllowedFailures, listFailed)
 				.failWithError();
 		}
 		
 		if (nl != null) {
-			Map<Double, Integer> labelFreq = sp.getLabelFrequencies();
+			Map<Double, Integer> labelFreq = dataset.getLabelFrequencies();
 			List<String> nonFoundLabels = new ArrayList<>();
 			for (String label : labels) {
-				double labAsNumeric = (double) sp.getTextualLabels().getValue(label);
+				double labAsNumeric = (double) dataset.getTextualLabels().getValue(label);
 				if (!labelFreq.containsKey(labAsNumeric) || labelFreq.get(labAsNumeric) <= 0) {
 					nonFoundLabels.add(label);
 				}
@@ -760,13 +763,13 @@ public class CLIProgramUtils {
 		if (numDatasetsUsed > 1) {
 			StringBuilder sb = new StringBuilder();
 			sb.append("Total number of molecules=");
-			sb.append(sp.getNumRecords());
-			int numSigs = getNumSignaturesPreTransformations(sp);
+			sb.append(dataset.getNumRecords());
+			int numSigs = getNumSignaturesPreTransformations(dataset);
 			if (numSigs > 0) {
 				sb.append(", total number of signatures=");
 				sb.append(numSigs);
 			}
-			int numAdditional = getNumNonSignaturesDescriptorsPreTrans(sp);
+			int numAdditional = getNumNonSignaturesDescriptorsPreTrans(dataset);
 			if (numAdditional > 0) {
 				sb.append(", total number of additional features=");
 				sb.append(numAdditional);
@@ -806,6 +809,9 @@ public class CLIProgramUtils {
 			
 		} catch (EarlyLoadingStopException e){
 			// Pass along
+			throw e;
+		} catch (IllegalArgumentException e) {
+			LOGGER.debug("Failed with argument error - this should be the relevant error message");
 			throw e;
 		} catch (Exception e) {
 			LOGGER.debug("Could not initiate the MolAndActivityConverter for data type {}",type);
@@ -913,7 +919,7 @@ public class CLIProgramUtils {
 	public static void appendFailedMolsInfo(StringBuilder sb, Collection<FailedRecord> records) {
 		List<FailedRecord> sortedUnique = CollectionUtils.getUniqueAndSorted(records);
 		if (!sortedUnique.isEmpty()){
-			sb.append("Failed records (indices starts at 0):");
+			sb.append("%nFailed records (indices starts at 0):");
 		}
 		for (FailedRecord r : sortedUnique) {
 			sb.append("%n - Record ");
@@ -1813,7 +1819,7 @@ public class CLIProgramUtils {
 			if (correctFormat){
 				LOGGER.debug("Found that the specified format seems to match what we deduce it to be: {}",actualFormat);
 				if (actualFormat == ChemIOFormat.CSV){
-					// Only the CSV fomrat that have settings that makes sense
+					// Only the CSV format that have settings that makes sense
 					// 4.1 - do we have the correct delimiter?
 					CSVFile file = (CSVFile) inputFile;
 					try {
@@ -1846,10 +1852,10 @@ public class CLIProgramUtils {
 						// verify there is a valid SMILES column
 						if (file.getSMILESColumnHeader()!=null){
 							// If explicit header set
-							String explictHeader = file.getSMILESColumnHeader();
+							String explicitHeader = file.getSMILESColumnHeader();
 							boolean smilesHeaderFound = false;
 							for (String h : userDefHeader){
-								if (h.equals(explictHeader)){
+								if (h.equals(explicitHeader)){
 									smilesHeaderFound = true;
 									break;
 								}
@@ -1857,7 +1863,7 @@ public class CLIProgramUtils {
 							if (!smilesHeaderFound){
 								// NO header found
 								errMessage.append("%nA custom header was set for CSV input, as well as an explicit header for SMILES - but header (")
-									.append(explictHeader).append(") was not found in the given headers: ")
+									.append(explicitHeader).append(") was not found in the given headers: ")
 									.append(StringUtils.join(", ",userDefHeader))
 									.append(".%nPlease set the correct header that contains the SMILES structures.%n");
 								return errMessage.toString();

@@ -84,7 +84,7 @@ public class TestTCPClassification extends CLIBaseTest {
 		
 //		printLogs();
 
-		// Predict erronious input file, without issues it should work OK
+		// Predict erroneous input file, without issues it should work OK
 		CSVCmpdData predFile = Reg.getErroneous();
 		mockMain(Predict.CMD_NAME,
 				"-m", modelFile.getAbsolutePath(),
@@ -93,7 +93,7 @@ public class TestTCPClassification extends CLIBaseTest {
 				);
 		// printLogs();
 
-		// Predict erronious input file  but not allow any errors - the call should fail
+		// Predict erroneous input file  but not allow any errors - the call should fail
 		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
 		exit.checkAssertionAfterwards(new AssertSysErrContainsString("invalid", "arguments"));
 		exit.checkAssertionAfterwards(new AssertSysOutContainsString("chem", "structure", "error"));

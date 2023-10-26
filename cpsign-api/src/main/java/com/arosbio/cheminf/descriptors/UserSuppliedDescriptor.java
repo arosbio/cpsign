@@ -147,7 +147,7 @@ public class UserSuppliedDescriptor implements ChemDescriptor, Described, Aliase
 	public void setPropertyNames(List<String> properties) throws IllegalStateException {
 		if (descriptorInitialized) {
 			LOGGER.debug("Tried setting new property names but descriptor has been initialized already");
-			throw new IllegalStateException("ChemDescriptor has been initalized - no more changes allowed");
+			throw new IllegalStateException("ChemDescriptor has been initialized - no more changes allowed");
 		}
 		propertiesUsedAsDescriptors.clear();
 		propertiesUsedAsDescriptors.addAll(properties);
@@ -373,7 +373,7 @@ public class UserSuppliedDescriptor implements ChemDescriptor, Described, Aliase
 		for (int i=0; i<propertiesUsedAsDescriptors.size(); i++) {
 			String prop = propertiesUsedAsDescriptors.get(i);
 			if (!molProperties.containsKey(prop)) {
-				LOGGER.debug("Property '" +prop + "' not found in the molecule, setting as MissingValueFeature");
+				LOGGER.debug("Property '{}' not found in the molecule, setting as MissingValueFeature", prop);
 				if (allowMissingValues)
 					features.add(new MissingValueFeature(i));
 				else
@@ -384,7 +384,7 @@ public class UserSuppliedDescriptor implements ChemDescriptor, Described, Aliase
 				try {
 					features.add(new SparseFeatureImpl(i, TypeUtils.asDouble(value)));
 				} catch (NumberFormatException e) {
-					LOGGER.debug("Property " + prop + " could not be converted to a numerical value, was: " + value);
+					LOGGER.debug("Property {} could not be converted to a numerical value, was: {}",prop, value);
 					if (allowMissingValues)
 						features.add(new MissingValueFeature(i));
 					else
@@ -461,7 +461,7 @@ public class UserSuppliedDescriptor implements ChemDescriptor, Described, Aliase
 			throws IOException, InvalidKeyException {
 		try (InputStream istream = source.getInputStream(path+'/' + META_FILE_NAME)){
 			Map<String,Object> props = MetaFileUtils.readPropertiesFromStream(istream);
-			LOGGER.debug("Loaded UserSuppliedDescriptor properties: " + props);
+			LOGGER.debug("Loaded UserSuppliedDescriptor properties: {}", props);
 			if (! props.containsKey(DESCRIPTOR_PROPERTIES_LIST_KEY)) {
 				LOGGER.debug("UserSuppliedDescriptor descriptor not properly saved, cannot load the descriptor (doesn't contain the mapping {{}}",DESCRIPTOR_PROPERTIES_LIST_KEY);
 				throw new IOException("Failed loading ChemDescriptor");
