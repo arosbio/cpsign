@@ -32,17 +32,30 @@ public class MathUtils {
 
 	public static double DEFAULT_EPS = 0.00001;
 	
+	public static boolean equals(double v1, double v2) {
+		return equals(v1, v2, DEFAULT_EPS);
+	}
+
 	public static boolean equals(double v1, double v2, double eps) {
+		// If both values are finite valued
+		if (Double.isFinite(v1) && Double.isFinite(v2)){
+			return Math.abs(v1-v2) < eps;
+		} else if (Double.isFinite(v1) != Double.isFinite(v2)){
+			// if one is finite and the other is not - clearly not the same
+			return false;
+		}
+		// Here if both are infinity or NaN valued
 		if (Double.isNaN(v1) && Double.isNaN(v2))
 			return true;
 		if (Double.isInfinite(v1) && Double.isInfinite(v2)) {
 			return (v1>0 && v2>0) ||(v1<0 && v2<0); 
 		}
-		return Math.abs(v1-v2) < 0.00001;
+		// Means one is NaN and the other is +/- inf
+		return false;
 	}
 
 	@SuppressWarnings("null")
-	public static boolean equals(Double d1, Double d2){
+	public static boolean equalsDouble(Double d1, Double d2){
 		if (d1 == null && d2 == null)
 			return true;
 		if (d1 == null && d2 != null)
@@ -70,6 +83,18 @@ public class MathUtils {
 		else {
 			return n * fact(n-1);
 		}
+	}
+
+	public static boolean containsNanOrInf(double... values){
+		// if empty
+		if (values.length ==0)
+			return false;
+		for (int i=0;i<values.length;i++){
+			if (!Double.isFinite(values[i])){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public static Pair<Double,Double> roundTo3significantFigures(Pair<Double,Double> val){

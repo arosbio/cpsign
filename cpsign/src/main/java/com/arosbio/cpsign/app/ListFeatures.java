@@ -15,6 +15,7 @@ import java.io.Writer;
 import java.net.URI;
 import java.security.InvalidKeyException;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -23,7 +24,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.arosbio.cheminf.data.ChemDataset;
+import com.arosbio.cheminf.data.ChemDataset.NamedFeatureInfo;
+import com.arosbio.cheminf.descriptors.ChemDescriptor;
+import com.arosbio.cheminf.descriptors.SignaturesDescriptor;
 import com.arosbio.cheminf.io.ModelSerializer;
+import com.arosbio.commons.MathUtils;
 import com.arosbio.cpsign.app.params.mixins.EchoMixin;
 import com.arosbio.cpsign.app.params.mixins.EncryptionMixin;
 import com.arosbio.cpsign.app.params.mixins.LogfileMixin;
@@ -38,6 +43,7 @@ import com.arosbio.io.ForcedSystemOutWriter;
 import com.arosbio.ml.io.ModelIO.ModelType;
 import com.github.cliftonlabs.json_simple.JsonArray;
 import com.github.cliftonlabs.json_simple.Jsoner;
+import com.google.common.collect.ImmutableMap;
 
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Mixin;
@@ -110,6 +116,11 @@ public class ListFeatures implements RunnableCmd {
 	@Mixin
 	private EchoMixin echo;
 
+	@Option(names = {"-v", "--verbose"}, 
+			description = "Verbose mode. Calculates descriptive stats about each feature as well as checks for missing features - only possible for precomputed dataset",
+			required = false)
+	public boolean verboseMode;
+
 	/*****************************************
 	 * END OF OPTIONS
 	 *****************************************/
@@ -131,6 +142,13 @@ public class ListFeatures implements RunnableCmd {
 
 		// load data
 		ChemDataset cp = loadData();
+
+		// Cannot run verbose mode when not having data 
+		if (verboseMode && cp.getNumRecords() == 0){
+			console.printStdErr("Cannot run in -v|--verbose mode for trained models, where training data is no longer saved - revering to non-verbose mode", 
+				PrintMode.SILENT);
+			verboseMode = false;
+		}
 
 
 		// Print features
@@ -182,13 +200,33 @@ public class ListFeatures implements RunnableCmd {
 
 	}
 
-	private void printFeatures(ChemDataset cp) {
+	private void printFeatures(ChemDataset data) {
 
-		List<String> feats = cp.getFeatureNames(includeSignatures);
+		List<String> feats = data.getFeatureNames(includeSignatures);
 
 		if (feats.isEmpty() && ! includeSignatures) {
-			console.printlnWrapped("%nNo features could be loaded, perhaps only signatures are used, try to run with the " + 
-		CLIProgramUtils.getParamName(this, "includeSignatures", "INCLUDE_SIGNATURES") + " flag", PrintMode.NORMAL);
+			LOGGER.debug("No features could be loaded and was set to not print signatures, checking if signatures descriptor is used");
+			List<ChemDescriptor> descriptors = data.getDescriptors();
+			if (descriptors.get(descriptors.size()-1) instanceof SignaturesDescriptor){
+				// Signatures were used
+				if (descriptors.size()>1){
+					LOGGER.debug("more than the signatures descriptor is used - probably due to transformations being applied prior to this step");
+					console.printlnWrapped("%nNo features were loaded, perhaps data transformations prior to this step has removed other descriptors. If you wish to display the signatures, add the " + 
+						CLIProgramUtils.getParamName(this, "includeSignatures", "INCLUDE_SIGNATURES") + " flag.", 
+							PrintMode.SILENT);
+				} else {
+					// Only signatures were used
+					console.printlnWrapped("%nNo features were loaded, only signatures descriptor was used for this data set, add the " + 
+						CLIProgramUtils.getParamName(this, "includeSignatures", "INCLUDE_SIGNATURES") + " flag if you wish to display all generated signatures", 
+							PrintMode.SILENT);
+				}
+
+			} else {
+				LOGGER.debug("No features could be loaded - must be a bug or issue with software compatibility and serialization format");
+				console.printlnWrapped("%nNo features could be loaded, this is likely a software bug or incompatibility of serialization format - was this an old model?", 
+					PrintMode.SILENT);
+			}
+			
 			return;
 		} else if (feats.isEmpty()) {
 			console.printlnWrapped("%nNo features could be loaded", PrintMode.NORMAL);
@@ -208,19 +246,37 @@ public class ListFeatures implements RunnableCmd {
 				resultsWriter = new ForcedSystemOutWriter(false);
 			}
 
-
-			switch (resultOutputFormat.outputFormat) {
-			case JSON:
-				printAsJSON(feats, resultsWriter);
-				break;
-			case CSV:
-				printAsCSV(CSVFormat.DEFAULT.builder().setDelimiter(',').setRecordSeparator(System.lineSeparator()).build(), feats, resultsWriter);
-				break;
-			case TEXT:
-			case TSV:
-			default:
-				printAsCSV(CSVFormat.DEFAULT.builder().setDelimiter('\t').setRecordSeparator(System.lineSeparator()).build(), feats, resultsWriter);
-				break;
+			if (verboseMode){
+				// Get the feature info first
+				List<NamedFeatureInfo> featureInfos = data.getFeaturesInfo(includeSignatures);
+				switch (resultOutputFormat.outputFormat) {
+				case JSON:
+					printVerboseAsJSON(featureInfos, resultsWriter);
+					break;
+				case CSV:
+					printVerboseAsCSV(CSVFormat.DEFAULT.builder().setDelimiter(',').setRecordSeparator(System.lineSeparator()).build(), featureInfos, resultsWriter);
+					break;
+				case TEXT:
+				case TSV:
+				default:
+					printVerboseAsCSV(CSVFormat.DEFAULT.builder().setDelimiter('\t').setRecordSeparator(System.lineSeparator()).build(), featureInfos, resultsWriter);
+					break;
+				}
+			}
+			else {
+				switch (resultOutputFormat.outputFormat) {
+				case JSON:
+					printAsJSON(feats, resultsWriter);
+					break;
+				case CSV:
+					printAsCSV(CSVFormat.DEFAULT.builder().setDelimiter(',').setRecordSeparator(System.lineSeparator()).build(), feats, resultsWriter);
+					break;
+				case TEXT:
+				case TSV:
+				default:
+					printAsCSV(CSVFormat.DEFAULT.builder().setDelimiter('\t').setRecordSeparator(System.lineSeparator()).build(), feats, resultsWriter);
+					break;
+				}
 			}
 
 		} catch (IOException e) {
@@ -240,7 +296,13 @@ public class ListFeatures implements RunnableCmd {
 	}
 
 	private static final String FEATURE_INDEX_HEADER = "Index";
-	private static final String FEATURE_NAME_HEADER = "Feature";
+	private static final String FEATURE_NAME_HEADER = "Feature name";
+	private static final String MIN_VALUE_HEADER = "Min value";
+	private static final String MAX_VALUE_HEADER = "Max value";
+	private static final String MEAN_VALUE_HEADER = "Mean value";
+	private static final String MEDIAN_VALUE_HEADER = "Median value";
+	private static final String CONTAIN_NAN_HEADER = "Contains missing values";
+
 
 	private void printAsCSV(CSVFormat format, List<String> features, Writer writer) throws IOException {
 		try (CSVPrinter printer = new CSVPrinter(writer, format)){
@@ -257,10 +319,51 @@ public class ListFeatures implements RunnableCmd {
 
 	}
 
+	private void printVerboseAsCSV(CSVFormat format, List<NamedFeatureInfo> features, Writer writer) throws IOException {
+		try (CSVPrinter printer = new CSVPrinter(writer, format)){
+
+			// Header
+			printer.printRecord(FEATURE_INDEX_HEADER, FEATURE_NAME_HEADER, MIN_VALUE_HEADER,MAX_VALUE_HEADER,MEAN_VALUE_HEADER,MEDIAN_VALUE_HEADER,CONTAIN_NAN_HEADER);
+
+			// Features
+			for (NamedFeatureInfo info : features){
+				printer.printRecord(info.index,info.featureName,
+				MathUtils.roundTo3significantFigures(info.minValue),
+				MathUtils.roundTo3significantFigures(info.maxValue),
+				MathUtils.roundTo3significantFigures(info.meanValue),
+				MathUtils.roundTo3significantFigures(info.medianValue)
+				,info.containsNaN);
+			}
+			printer.flush();
+		}
+
+	}
+
 	private void printAsJSON(List<String> features, Writer writer) throws IOException {
 		writer.write(Jsoner.prettyPrint(new JsonArray(features).toJson()));
 		writer.write(System.lineSeparator());
 		writer.flush();
+	}
+
+	private void printVerboseAsJSON(List<NamedFeatureInfo> infoList, Writer writer) throws IOException {
+		JsonArray array = new JsonArray();
+		for (NamedFeatureInfo info : infoList){
+			array.add(getMapping(info));
+		}
+		writer.write(Jsoner.prettyPrint(array.toJson()));
+		writer.write(System.lineSeparator());
+		writer.flush();
+	}
+
+	private static Map<String,Object> getMapping(final NamedFeatureInfo info){
+		return ImmutableMap.of(FEATURE_INDEX_HEADER, info.index,
+			FEATURE_NAME_HEADER,info.featureName,
+			MIN_VALUE_HEADER,MathUtils.roundTo3significantFigures(info.minValue),
+			MAX_VALUE_HEADER,MathUtils.roundTo3significantFigures(info.maxValue),
+			MEAN_VALUE_HEADER,MathUtils.roundTo3significantFigures(info.meanValue),
+			MEDIAN_VALUE_HEADER,MathUtils.roundTo3significantFigures(info.medianValue),
+			CONTAIN_NAN_HEADER, info.containsNaN);
+
 	}
 
 }

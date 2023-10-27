@@ -21,15 +21,19 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
+import org.apache.commons.math3.util.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.arosbio.commons.GlobalConfig;
+import com.arosbio.commons.MathUtils;
 import com.arosbio.commons.mixins.HasProperties;
 import com.arosbio.data.io.DataSerializationFormat;
 import com.arosbio.data.io.LIBSVMFormat;
@@ -91,6 +95,51 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 		 * Data part of <b>calibration-exclusive</b> is added to the calibration-sets <b><i>only</i></b>. Never used for testing or added to proper-training sets.
 		 */
 		CALIBRATION_EXCLUSIVE 
+	}
+
+	public static class FeatureInfo implements Comparable<FeatureInfo> {
+		public final int index;
+		public final double minValue;
+		public final double maxValue;
+		public final double meanValue;
+		public final double medianValue;
+		public final boolean containsNaN;
+
+		protected FeatureInfo(final int index, 
+			final double minValue, 
+			final double maxValue, 
+			final double meanValue,
+			final double medianValue,
+			final boolean containsNaN){
+				this.index = index;
+				this.minValue = minValue;
+				this.maxValue = maxValue;
+				this.meanValue = meanValue;
+				this.medianValue = medianValue;
+				this.containsNaN = containsNaN;
+			}
+
+		@Override
+		public int compareTo(FeatureInfo o) {
+			return index - o.index;
+		}
+
+		public String toString(){
+			return String.format(Locale.ENGLISH,"%5d: [%4.2f..%5.2f], mean=%.2f, median=%.2f, contains missing values: %b",
+				index,minValue,maxValue,meanValue,medianValue,containsNaN);
+		}
+
+		public boolean equals(Object o){
+			if (!(o instanceof FeatureInfo))
+				return false;
+			FeatureInfo i = (FeatureInfo) o;
+			return index == i.index && 
+				MathUtils.equals(minValue, i.minValue) && 
+				MathUtils.equals(maxValue, i.maxValue) && 
+				MathUtils.equals(meanValue, i.meanValue) && 
+				MathUtils.equals(medianValue, i.medianValue) && 
+				containsNaN == i.containsNaN; 
+		}
 	}
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(Dataset.class);
@@ -666,6 +715,17 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 			return columnValues;
 		}
 
+		public double[] extractColumnArray(int column){
+			if (isEmpty()){
+				return new double[0];
+			}
+			double[] values = new double[size()];
+			for (int i=0;i<values.length; i++) {
+				values[i] = get(i).getFeatures().getFeature(column);
+			}
+			return values;
+		}
+
 	}
 
 
@@ -809,6 +869,89 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 	 */
 	public int getNumFeatures(){
 		return getNumAttributes();
+	}
+
+
+	/**
+	 * Gathers info about all features, such as min, max, median etc
+	 * @return a {@link #FeatureInfo} with descriptive statistics 
+	 * @throws IllegalStateException If no data is loaded 
+	 */
+	public List<FeatureInfo> getFeaturesInfo() throws IllegalStateException {
+		if (isEmpty())
+			throw new IllegalStateException("No data loaded");
+		List<FeatureInfo> info = new ArrayList<>(getNumAttributes());
+		for (int col=0; col<getNumAttributes(); col++){
+			Pair<DescriptiveStatistics,Boolean> columResult = getFeatureStats(col);
+			DescriptiveStatistics stats = columResult.getFirst(); 
+			info.add(new FeatureInfo(col, 
+				stats.getMin(), 
+				stats.getMax(), 
+				stats.getMean(), 
+				stats.getPercentile(50), // median
+				columResult.getSecond()));
+		}
+		return info;
+	}
+
+	private Pair<DescriptiveStatistics,Boolean> getFeatureStats(int column){
+		boolean containsNaN = false;
+		DescriptiveStatistics stats = new DescriptiveStatistics();
+		if (dataset != null){
+			boolean tmp = addColumn(dataset, stats, column);
+			if (tmp){
+				containsNaN = tmp;
+			}
+		}
+		if (modelingExclusive != null){
+			boolean tmp = addColumn(modelingExclusive, stats, column);
+			if (tmp){
+				containsNaN = tmp;
+			}
+		}
+		if (calibrationExclusive != null){
+			boolean tmp = addColumn(calibrationExclusive, stats, column);
+			if (tmp){
+				containsNaN = tmp;
+			}
+		}
+		return new Pair<>(stats,containsNaN);
+	}
+
+	private boolean addColumn(Dataset.SubSet data, DescriptiveStatistics stats, int column){
+		boolean containsNaN = false;
+		for (DataRecord record : data){
+			double v = record.getFeatures().getFeature(column);
+			if (Double.isFinite(v)){
+				stats.addValue(v);
+			} else {
+				containsNaN = true;
+			}
+		}
+		return containsNaN;
+	}
+
+
+
+	public double[] extractColumnArray(int column){
+		double[] columnValues = new double[getNumRecords()];
+		int nextEmpty=0;
+		if (dataset != null){
+			double[] tmp = dataset.extractColumnArray(column);
+			System.arraycopy(tmp, 0, columnValues, nextEmpty, tmp.length);
+			nextEmpty += tmp.length;
+		}
+		if (modelingExclusive != null){
+			double[] tmp = modelingExclusive.extractColumnArray(column);
+			System.arraycopy(tmp, 0, columnValues, nextEmpty, tmp.length);
+			nextEmpty += tmp.length;
+		}
+		if (calibrationExclusive != null){
+			double[] tmp = calibrationExclusive.extractColumnArray(column);
+			System.arraycopy(tmp, 0, columnValues, nextEmpty, tmp.length);
+		}
+		return columnValues;
+
 	}
 
 	/**

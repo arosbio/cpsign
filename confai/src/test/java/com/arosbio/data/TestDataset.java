@@ -13,16 +13,20 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.InvalidKeyException;
+import java.util.Arrays;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.arosbio.commons.logging.LoggerUtils;
+import com.arosbio.data.Dataset.FeatureInfo;
 import com.arosbio.io.DataSink;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.TestUtils;
+import com.arosbio.testutils.TestDataLoader;
 import com.arosbio.testutils.TestEnv;
 
 @Category(UnitTest.class)
@@ -57,6 +61,75 @@ public class TestDataset extends TestEnv {
 		} catch(IllegalStateException e){}
 	}
 	
+	@Test
+	public void testGetFeatureInfo() throws Exception {
+		Dataset clfData = TestDataLoader.loadDataset(TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS_20);
+		List<FeatureInfo> info = clfData.getFeaturesInfo();
+		clfData = TestDataLoader.loadDataset(TestResources.SVMLIGHTFiles.CLASSIFICATION_2CLASS_20_MISSING_VALUES);
+		List<FeatureInfo> missingDataInfo = clfData.getFeaturesInfo();
 
+		Assert.assertEquals(info.size(), missingDataInfo.size());
+		for (int i=0; i<info.size(); i++){
+			FeatureInfo f1 = info.get(i);
+			FeatureInfo f2 = missingDataInfo.get(i);
+			Assert.assertEquals(f1.index, f2.index); // exact match
+			
+			// allow 15% difference if contains NaNs, otherwise should be identical
+			double allowedPercentageDiff = f2.containsNaN ? .15 : 1e-8; 
+			
+			TestUtils.assertSimilar(f1.minValue, f2.minValue,allowedPercentageDiff);
+			TestUtils.assertSimilar(f1.maxValue, f2.maxValue,allowedPercentageDiff);
+			TestUtils.assertSimilar(f1.meanValue, f2.meanValue,allowedPercentageDiff*3); // mean value more influenced 
+			TestUtils.assertSimilar(f1.medianValue, f2.medianValue,allowedPercentageDiff);
+
+		}
+
+		// Toy size version
+		Dataset ds = new Dataset();
+		try{
+			ds.getFeaturesInfo();
+			Assert.fail("no data - no feature info to get");
+		} catch (IllegalStateException e){}
+
+		ds.getDataset().add(new DataRecord(1d, new SparseVector(Arrays.asList(new SparseFeatureImpl(0,.3),new SparseFeatureImpl(3,5)))));
+		// 0:0.3, (1:0), (2:0), 3:5
+		info = ds.getFeaturesInfo();
+		Assert.assertEquals("4 features (2 implicit zeros) - list should be of length 4",4, info.size());
+
+		Assert.assertTrue(info.get(0).equals(new FeatureInfo(0, .3, .3, .3, .3, false)));
+		Assert.assertTrue(info.get(1).equals(new FeatureInfo(1, 0, 0, 0, 0, false)));
+		Assert.assertTrue(info.get(2).equals(new FeatureInfo(2, 0, 0, 0, 0, false)));
+		Assert.assertTrue(info.get(3).equals(new FeatureInfo(3, 5, 5, 5, 5, false)));
+
+
+		ds.getModelingExclusiveDataset().add(new DataRecord(1d, new SparseVector(Arrays.asList(new SparseFeatureImpl(0,.5),new MissingValueFeature(2),new SparseFeatureImpl(3,-1)))));
+		// 0:0.3, (1:0), (2:0), 3:5
+		// 0:0.5, (1:0), 3:NaN, 3:-1
+		info = ds.getFeaturesInfo();
+		Assert.assertEquals("4 features (1 implicit zero) - list should be of length 4",4, info.size());
+
+		Assert.assertTrue(info.get(0).equals(new FeatureInfo(0, .3, .5, .4, .4, false)));
+		Assert.assertTrue(info.get(1).equals(new FeatureInfo(1, 0, 0, 0, 0, false)));
+		Assert.assertTrue(info.get(2).equals(new FeatureInfo(2, 0, 0, 0, 0, true)));
+		Assert.assertTrue(info.get(3).equals(new FeatureInfo(3, -1, 5, 2, 2, false)));
+
+
+		ds.getCalibrationExclusiveDataset().add(new DataRecord(1d, new SparseVector(Arrays.asList(new MissingValueFeature(0),new SparseFeatureImpl(1,3),new SparseFeatureImpl(2,1),new SparseFeatureImpl(3,-11)))));
+		// 0:0.3, (1:0), (2:0), 3:5
+		// 0:0.5, (1:0), 3:NaN, 3:-1
+		// 0:NaN, (1:3), 3:1, 3:-11
+		info = ds.getFeaturesInfo();
+		Assert.assertEquals("4 features - list should be of length 4",4, info.size());
+
+		Assert.assertTrue(info.get(0).equals(new FeatureInfo(0, .3, .5, .4, .4, true)));
+		Assert.assertTrue(info.get(1).equals(new FeatureInfo(1, 0, 3, 1, 0, false)));
+		Assert.assertTrue(info.get(2).equals(new FeatureInfo(2, 0, 1, .5, .5, true)));
+		Assert.assertTrue(info.get(3).equals(new FeatureInfo(3, -11, 5, -7d/3, -1, false)));
+		// Assert.assertEquals(3, info.size());
+		// Assert.assertEquals(3, info.size());
+		// Assert.assertEquals(3, info.size());
+		// Assert.assertEquals(3, info.size());
+
+	}
 
 }

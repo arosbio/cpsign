@@ -33,6 +33,8 @@ public class TestResources {
 		public static final URL CLASSIFICATION_2CLASS = getURL(BINARY_CLF_FOLDER+"spambase.svmlight");
 		/** 20 instances, 57 features, labels 1.0=9, 0.0=11 */
 		public static final URL CLASSIFICATION_2CLASS_20 = getURL(BINARY_CLF_FOLDER+"spambase_20.svmlight");
+		/** The same as {@link #CLASSIFICATION_2CLASS_20} but with features 49 and 56 having some missing values encoded as NaN */
+		public static final URL CLASSIFICATION_2CLASS_20_MISSING_VALUES = getURL(BINARY_CLF_FOLDER+"spambase_20_missing_values.svmlight");
 		/** 100 instances, 57 features, labels 1.0=46, 0.0=54 */
 		public static final URL CLASSIFICATION_2CLASS_100 = getURL(BINARY_CLF_FOLDER+"spambase_100.svmlight");
 		/** 4601 instances, 57 features, labels 1.0=1813, -1.0=2788, same as {@link #CLASSIFICATION_2CLASS_PATH} but with other labels */

@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -67,7 +68,7 @@ import com.arosbio.ml.io.impl.PropertyNameSettings;
 import com.google.common.collect.ImmutableList;
 
 /**
- * A {@link ChemDataset} wrapps a {@link com.arosbio.data.Dataset Dataset} and a list of {@link com.arosbio.cheminf.descriptors.ChemDescriptor ChemDescriptors} 
+ * A {@link ChemDataset} wraps a {@link com.arosbio.data.Dataset Dataset} and a list of {@link com.arosbio.cheminf.descriptors.ChemDescriptor ChemDescriptors} 
  * that link a specific attribute to a specific descriptor. The {@link ChemDataset} adds utility functionality for cheminformatics, such as converting {@link IAtomContainer}
  * instances into numerical records using the descriptors. Adding new records is done using one of the <code>add(..)</code>
  * methods, which can either add a single molecule at a time or multiple ones.
@@ -119,6 +120,42 @@ public final class ChemDataset extends Dataset {
 	// ---------------------------------------------------------------------
 	// STATIC STUFF
 	// ---------------------------------------------------------------------
+
+	public static class NamedFeatureInfo extends FeatureInfo {
+
+		public final String featureName;
+
+		NamedFeatureInfo(String name, int index, double minValue, double maxValue, double meanValue, double medianValue,
+				boolean containsNaN) {
+			super(index, minValue, maxValue, meanValue, medianValue, containsNaN);
+			Objects.requireNonNull(name, "name cannot be null");
+			this.featureName = name;
+		}
+
+		static NamedFeatureInfo nameIt(FeatureInfo info, String name){
+			return new NamedFeatureInfo(name, info.index, info.minValue, info.maxValue, info.meanValue, info.medianValue, info.containsNaN);
+		}
+
+		public String toString(){
+			return String.format(Locale.ENGLISH,"%-10s(%5d): [%4.2f..%5.2f], mean=%.2f, median=%.2f, contains missing values: %b",
+				featureName,index,minValue,maxValue,meanValue,medianValue,containsNaN);
+		}
+
+		public boolean equals(Object o){
+			if (! (o instanceof NamedFeatureInfo)){
+				return false;
+			}
+			// Check everything equals in superclass
+			if (! super.equals(o)){
+				return false;
+			}
+
+			NamedFeatureInfo i = (NamedFeatureInfo) o;
+
+			return featureName.equals(i.featureName);
+		}
+
+	}
 
 	private static String getShortErrMsg(Exception e){
 		// If no message was provided - give the name of the exception class instead - might provide some insight
@@ -333,6 +370,47 @@ public final class ChemDataset extends Dataset {
 		}
 	}
 
+	public List<NamedFeatureInfo> getFeaturesInfo(boolean includeSignatures) throws IllegalStateException {
+		List<NamedFeatureInfo> info = new ArrayList<>();
+		
+		// get info from superclass
+		List<FeatureInfo> unNamed = null;
+		try {
+			unNamed = super.getFeaturesInfo();	
+		} catch (IllegalStateException e){
+			throw new IllegalStateException("No data loaded - could be post model training when data has been discarded");
+		}
+		
+		// get the feature names
+		List<String> featureNames = getFeatureNames(includeSignatures);
+
+		if (unNamed.size() < featureNames.size()){
+			LOGGER.debug("featureNames where larger ({}) than the raw feature info ({}) - something is invalid",
+				featureNames.size(),unNamed.size());
+			throw new IllegalStateException("Something went wrong in feature info calculation");
+		}
+
+		if (unNamed.size() > featureNames.size()){
+			if (includeSignatures){
+				LOGGER.debug("the raw feature info is longer ({}) than the feature names ({}) even though signatures where included - they should have been of equal length!", 
+					unNamed.size(), featureNames.size());
+				throw new IllegalStateException("Something went wrong in feature info calculation");
+			}
+			LOGGER.debug("Gathering feature info without including signatures");
+			// Remove the feature info from signatures 
+			unNamed.subList(featureNames.size(), unNamed.size()).clear();
+			if (unNamed.size() != featureNames.size())
+				throw new IllegalStateException("wong!!");
+		}
+
+		for (int i=0; i<unNamed.size(); i++){
+			info.add(NamedFeatureInfo.nameIt(unNamed.get(i),featureNames.get(i)));
+		}
+
+		LOGGER.debug("Gathered feature information for {} instances", info.size());
+		return info;
+	}
+
 	private void forceRecalculateFeatureNamesIncludingSignatures() {
 		List<String> tmp = new ArrayList<>();
 
@@ -525,7 +603,7 @@ public final class ChemDataset extends Dataset {
 				return ((HACFilter)f).getMinHAC();
 			}
 		}
-		return 0; // if no HAC fiter, no threshold applied
+		return 0; // if no HAC filter, no threshold applied
 	}
 
 	public ChemDataset withFilters(List<ChemFilter> filters){
@@ -568,7 +646,7 @@ public final class ChemDataset extends Dataset {
 		if (descriptors == null && descriptors.isEmpty())
 			return false;
 
-		for (ChemDescriptor d: descriptors) {
+		for (ChemDescriptor d : descriptors) {
 			if (!d.isReady())
 				return false;
 		}
@@ -582,7 +660,7 @@ public final class ChemDataset extends Dataset {
 
 	public void initializeDescriptors() {
 		boolean tmp3D = false;
-		for (ChemDescriptor d: descriptors) {
+		for (ChemDescriptor d : descriptors) {
 			d.initialize();
 			if ( !tmp3D )
 				tmp3D = d.requires3DCoordinates();
@@ -1025,7 +1103,7 @@ public final class ChemDataset extends Dataset {
 	 * @return DescriptorCalcInfo with information about how many compounds was added and possibly failed compounds
 	 * @throws IllegalStateException If the Descriptors are not initialized yet
 	 * @throws IllegalArgumentException If there was no valid molecules that could be added to this {@link ChemDataset}
-	 * @throws EarlyLoadingStopException If parsing stops due to too many failed recods, see {@link #setProgressTracker(ProgressTracker)}
+	 * @throws EarlyLoadingStopException If parsing stops due to too many failed records, see {@link #setProgressTracker(ProgressTracker)}
 	 */
 	public DescriptorCalcInfo add(Iterator<Pair<IAtomContainer, Double>> data, 
 			RecordType type) 
@@ -1042,14 +1120,15 @@ public final class ChemDataset extends Dataset {
 	 * @return DescriptorCalcInfo with information about how many compounds was added and possibly failed compounds
 	 * @throws IllegalStateException If the Descriptors are not initialized yet
 	 * @throws IllegalArgumentException If there was no valid molecules that could be added to this {@link ChemDataset}
-	 * @throws EarlyLoadingStopException If parsing stops due to too many failed recods, see {@link #setProgressTracker(ProgressTracker)}
+	 * @throws EarlyLoadingStopException If parsing stops due to too many failed records, see {@link #setProgressTracker(ProgressTracker)}
 	 */
 	public DescriptorCalcInfo add(Iterator<Pair<IAtomContainer, Double>> data, 
 			RecordType type, int recordStartIndex) 
 					throws IllegalStateException, IllegalArgumentException, EarlyLoadingStopException {
 
 		if (!isReady()) {
-			throw new IllegalStateException("Descriptors not initialized yet!");
+			LOGGER.debug("descriptors were not initialized, initializing them now");
+			initializeDescriptors();
 		}
 
 		DescriptorCalcInfo.Builder state = new DescriptorCalcInfo.Builder();
@@ -1415,6 +1494,7 @@ public final class ChemDataset extends Dataset {
 		super.loadTransformersFromSource(src);
 
 		loadMetaData(src, path);
+		initializeDescriptors();
 	}
 
 	protected void loadDescriptorsFromSource(DataSource source, EncryptionSpecification spec) 
@@ -1451,8 +1531,8 @@ public final class ChemDataset extends Dataset {
 
 		// Init the descriptors
 		if (!properties.containsKey(PropertyNameSettings.DESCRIPTORS_LIST_KEY)) {
-			LOGGER.debug("No descriptors list found in properties file, something is wronng");
-			throw new IOException("Chemial dataset meta-file could not be read properly");
+			LOGGER.debug("No descriptors list found in properties file, something is wrong");
+			throw new IOException("Chemical dataset meta-file could not be read properly");
 		}
 		@SuppressWarnings("unchecked")
 		List<String> descriptorsList = (List<String>) properties.get(PropertyNameSettings.DESCRIPTORS_LIST_KEY);

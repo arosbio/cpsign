@@ -55,7 +55,7 @@ import com.arosbio.chem.io.in.SDFReader;
 import com.arosbio.chem.io.in.SDFile;
 import com.arosbio.chem.io.out.CSVWriter;
 import com.arosbio.cheminf.data.ChemDataset.DescriptorCalcInfo;
-import com.arosbio.cheminf.data.TestChemDataset.ComparisonLP;
+import com.arosbio.cheminf.data.ChemDataset.NamedFeatureInfo;
 import com.arosbio.cheminf.descriptors.ChemDescriptor;
 import com.arosbio.cheminf.descriptors.DescriptorFactory;
 import com.arosbio.cheminf.descriptors.SignaturesDescriptor;
@@ -82,6 +82,7 @@ import com.arosbio.tests.TestResources.CmpdData;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.TestUtils;
 import com.arosbio.testutils.MockFailingDescriptor;
+import com.arosbio.testutils.TestChemDataLoader;
 import com.arosbio.testutils.UnitTestBase;
 import com.google.common.collect.Sets;
 
@@ -482,8 +483,6 @@ public class TestChemDataset extends UnitTestBase {
 
 		// First run the old sg
 		Long start = System.currentTimeMillis();
-		//		ChemDatasetDeprecated sp = new ChemDatasetDeprecated(0,5);
-		//		sp.fromSDF(stream1, property, labels, true);
 		Long timeOld = System.currentTimeMillis() - start;
 		stream1.close();
 
@@ -944,6 +943,63 @@ public class TestChemDataset extends UnitTestBase {
 			Assert.assertEquals(json.numValidRecords(), info.getNumSuccessfullyAdded());
 			Assert.assertEquals(json.numInvalidRecords(), info.getFailedRecords().size());
 		}
+	}
+
+	@Test
+	public void testFeaturesInfo() throws Exception {
+		// Only signatures 
+		ChemDataset data = TestChemDataLoader.loadDataset(TestResources.Cls.getAMES_126());
+		List<NamedFeatureInfo> info = data.getFeaturesInfo(false);
+		Assert.assertEquals(0, info.size());
+		info = data.getFeaturesInfo(true);
+		Assert.assertEquals(data.getNumAttributes(), info.size());
+		List<String> fNames = data.getDescriptors().get(0).getFeatureNames();
+		Assert.assertEquals(fNames.size(), info.size());
+		for (NamedFeatureInfo f : info){
+			Assert.assertEquals(fNames.get(f.index), f.featureName);
+		}
+		
+		// With no signatures (CDK features)
+		DescriptorFactory fac = DescriptorFactory.getInstance();
+		ChemDescriptor[] descs = new ChemDescriptor[]{fac.getDescriptorFuzzyMatch("AminoAcidCountDescriptor"),
+			fac.getDescriptorFuzzyMatch("WeightDescriptor"),
+			fac.getDescriptorFuzzyMatch("SmallRingDescriptor"),
+			fac.getDescriptorFuzzyMatch("ALOGPDescriptor"),
+			fac.getDescriptorFuzzyMatch("BPolDescriptor")};
+		data = TestChemDataLoader.loadDatasetWithInfo(TestResources.Cls.getAMES_10(), descs).getLeft();
+		info = data.getFeaturesInfo(false);
+		Assert.assertEquals(data.getNumAttributes(), info.size());
+		fNames = data.getFeatureNames(false); 
+		Assert.assertEquals(fNames.size(), info.size());
+		for (NamedFeatureInfo f : info){
+			Assert.assertEquals(fNames.get(f.index), f.featureName);
+		}
+
+		// With no signatures (user-defined ones form a CSV file)
+		fNames = Arrays.asList("bpol","nRings3","nRings4","ALogp2","nAromBlocks","nA","nC","ALogP","nD","nE","nF","nG","nH","nI","nAromRings");
+		data = TestChemDataLoader.loadDatasetWithInfo(TestResources.Cls.getAMES_10(), 
+			new UserSuppliedDescriptor(new ArrayList<>(fNames))).getLeft();
+		info = data.getFeaturesInfo(false);
+		Assert.assertEquals(data.getNumAttributes(), info.size());
+		Assert.assertEquals(fNames.size(), info.size());
+		for (NamedFeatureInfo f : info){
+			Assert.assertEquals(fNames.get(f.index).toUpperCase(), f.featureName);
+		}
+
+		// Combination of signatures and user-defined from CSV
+		data = TestChemDataLoader.loadDatasetWithInfo(TestResources.Cls.getAMES_10(), 
+			new UserSuppliedDescriptor(new ArrayList<>(fNames)),new SignaturesDescriptor()).getLeft();
+		info = data.getFeaturesInfo(false);
+		Assert.assertTrue(info.size() < data.getNumAttributes());
+
+		info = data.getFeaturesInfo(true);
+		Assert.assertEquals(data.getNumAttributes(), info.size());
+		fNames = data.getFeatureNames(true); 
+		Assert.assertEquals(fNames.size(), info.size());
+		for (NamedFeatureInfo f : info){
+			Assert.assertTrue(fNames.get(f.index).equalsIgnoreCase(f.featureName));
+		}
+
 	}
 	
 

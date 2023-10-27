@@ -16,12 +16,16 @@ import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
 import org.openscience.cdk.interfaces.IAtomContainer;
 
+import com.arosbio.chem.io.in.CSVFile;
+import com.arosbio.chem.io.in.ChemFileIterator;
+import com.arosbio.chem.io.in.EarlyLoadingStopException;
 import com.arosbio.chem.io.in.MolAndActivityConverter;
 import com.arosbio.chem.io.in.SDFReader;
 import com.arosbio.chem.io.in.SDFile;
 import com.arosbio.cheminf.data.ChemDataset;
 import com.arosbio.cheminf.descriptors.ChemDescriptor;
 import com.arosbio.cheminf.descriptors.DescriptorFactory;
+import com.arosbio.cheminf.descriptors.UserSuppliedDescriptor;
 import com.arosbio.cheminf.io.ModelSerializer;
 import com.arosbio.data.NamedLabels;
 import com.arosbio.ml.io.ModelInfo;
@@ -104,7 +108,7 @@ public class PrecomputedDatasets {
 
 	public static class Classification {
 
-		private static File precompClassAmes, precompClassAmesWithTransformAndCDK, precomp3class, tooSmall, missingData;
+		private static File precompClassAmes, precompClassAmesWithTransformAndCDK, precomp3class, tooSmall, missingData, missingDataChemFeats;
 		
 		public static int customStartH =0, customEndH = 2;
 
@@ -210,8 +214,36 @@ public class PrecomputedDatasets {
 			return missingData;
 		}
 
+		public static File getMissingDataChemDescs() throws Exception {
+			if (missingDataChemFeats != null)
+				return missingDataChemFeats;
+			
+			missingDataChemFeats = TestUtils.createTempFile("missing-data-DS-2", ".jar");
+
+			UserSuppliedDescriptor descriptor = new UserSuppliedDescriptor("all,-Smiles,-cdk_Title,-Molecular Signature,-Ames test categorisation");
+
+			// List<ChemDescriptor> descs = DescriptorFactory.getCDKDescriptorsNo3D();
+			// Take some random descriptors, including the failing one
+			ChemDataset ds = new ChemDataset(descriptor); //new MockFailingDescriptor(),descs.get(0),descs.get(3),descs.get(5),descs.get(10));
+			ds.initializeDescriptors();
+			// ds.initializeDescriptors();
+			CmpdData file = TestResources.Cls.getAMES_126_chem_desc();
+			try (ChemFileIterator is = new CSVFile(file.uri()).setDelimiter(',').getIterator();
+				MolAndActivityConverter conv = MolAndActivityConverter.Builder.classificationConverter(is, file.property(), new NamedLabels(file.labelsStr())).build()){
+					ds.add(conv);
+			} catch (EarlyLoadingStopException e){
+				System.err.println(e.getFailedRecords());
+			}
+
+			System.err.println(ds.getFeatureNames(false));
+			ModelSerializer.saveDataset(ds, new ModelInfo("missing data"), missingDataChemFeats, null);
+			
+			return missingDataChemFeats;
+		}
 
 	}
+
+
 
 	/**
 	 * Create a precomputed JAR file for usage in other tests

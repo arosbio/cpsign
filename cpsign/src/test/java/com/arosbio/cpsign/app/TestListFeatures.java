@@ -51,7 +51,6 @@ public class TestListFeatures extends CLIBaseTest {
 		} catch(JoranException e){ Assert.fail();}
 	}
 	
-	
 	@Test
 	public void testMissingArgs() throws Exception {
 		exit.expectSystemExitWithStatus(ExitStatus.USER_ERROR.code);
@@ -67,20 +66,34 @@ public class TestListFeatures extends CLIBaseTest {
 		mockMain(new String[] {
 				ListFeatures.CMD_NAME,
 				"-rf", ""+CLIParameters.TextOutputType.CSV,
-				"-m", PreTrainedModels.ACP_CLF_LIBLINEAR.toString(), //CHEM_ACP_CLF_LIBLINEAR_PATH,
+				"-m", PreTrainedModels.ACP_CLF_LIBLINEAR.toString(),
 				"--echo",
 		});
-//		printLogs();
+		// printLogs();
+	}
+
+	@Test
+	public void testTrainedModelVerbose() throws Exception {
+		mockMain(new String[] {
+				ListFeatures.CMD_NAME,
+				"-rf", ""+CLIParameters.TextOutputType.CSV,
+				"-m", PreTrainedModels.ACP_CLF_LIBLINEAR.toString(),
+				"--echo",
+				"--include-signatures",
+				"-v"
+		});
+		Assert.assertTrue(systemErrRule.getLog().length()>10); // Should print in system err about --verbose mode
+		Assert.assertTrue(systemOutRule.getLog().length()>10000); // Very long ~11k lines of CSV
 	}
 	
 	@Test
 	public void testListStdModelWithSignatures() throws Exception {
-		File of = TestUtils.createTempFile("outupt", ".csv");
+		File of = TestUtils.createTempFile("output", ".csv");
 		
 		mockMain(new String[] {
 				ListFeatures.CMD_NAME,
 				"-rf", ""+CLIParameters.TextOutputType.TSV,
-				"-m", PreTrainedModels.ACP_CLF_LIBLINEAR.toString(),//CHEM_ACP_CLF_LIBLINEAR_PATH,
+				"-m", PreTrainedModels.ACP_CLF_LIBLINEAR.toString(),
 				"--include-signatures",
 				"--echo",
 				"-ro", of.getAbsolutePath(),
@@ -110,8 +123,8 @@ public class TestListFeatures extends CLIBaseTest {
 		});
 		
 //		printLogs();
-		
-		File of = TestUtils.createTempFile("outupt", ".csv"); //new File("/Users/staffan/Desktop/output.csv"); //
+		clearLogs();
+		File of = TestUtils.createTempFile("output", ".csv"); 
 		
 		mockMain(new String[] {
 				ListFeatures.CMD_NAME,
@@ -121,12 +134,38 @@ public class TestListFeatures extends CLIBaseTest {
 				"--echo",
 				"-ro", of.getAbsolutePath(),
 		});
-//		printLogs();
+		// printLogs();
 		List<String> lines = FileUtils.readLines(of, STANDARD_CHARSET);
-//		for(String l : lines)
-//			SYS_ERR.println(l);
+		// for(String l : lines)
+		// 	SYS_ERR.println(l);
 		Assert.assertEquals(51, lines.size()); // keep 50 + 1 header line
 		
+		// Try verbose mode
+		clearLogs();
+		of = TestUtils.createTempFile("output", ".csv"); 
+		
+		mockMain(new String[] {
+				ListFeatures.CMD_NAME,
+				"-rf", ""+CLIParameters.TextOutputType.TSV,
+				"-m", preFile.getAbsolutePath(),
+				"--include-signatures",
+				"--echo",
+				"-ro", of.getAbsolutePath(),
+				"-v"
+		});
+		// printLogs();
+		List<String> verboseLines = FileUtils.readLines(of, STANDARD_CHARSET);
+
+		// for(String l : verboseLines)
+		// 	SYS_ERR.println(l);
+		Assert.assertEquals(51, verboseLines.size()); // keep 50 + 1 header line
+
+		// Check that the initial part of the lines are identical, but verbose should be longer..
+		for (int i = 0; i<lines.size(); i++){
+			Assert.assertTrue(verboseLines.get(i).startsWith(lines.get(i)));
+			Assert.assertTrue(verboseLines.get(i).length()*1.25>lines.get(i).length());
+		}
+
 //		for(String l : lines)
 //			SYS_ERR.println(l);
 		

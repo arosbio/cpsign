@@ -66,7 +66,7 @@ public class StandardPValue implements PValueCalculator {
 
 		if (confidence > ((double)scores.size())/(scores.size()+1)){
 			if (! hasDebuggedConfTooHigh){
-				LOGGER.debug("A higher confidence ({}) than supported by the size of calibration set was requrested, the prediction will be [-Inf, Inf] for all predictions of this confidence level",confidence);
+				LOGGER.debug("A higher confidence ({}) than supported by the size of calibration set was requested, the prediction will be [-Inf, Inf] for all predictions of this confidence level",confidence);
 				hasDebuggedConfTooHigh = true;
 			}
 			return Double.POSITIVE_INFINITY;
@@ -81,18 +81,6 @@ public class StandardPValue implements PValueCalculator {
 
 	}
 
-
-	//	double significance = 1 - confidence;
-	//
-	//	if (significance < 1d/(scores.size()+1)) {
-	//		LOGGER.debug("A higher confidence than supported by the size of calibration set was requrested, the prediction will be [-Inf, Inf]!");
-	//		return Double.POSITIVE_INFINITY;
-	//	}
-	//
-	//	int index = Math.min(
-	//			scores.size()-1,
-	//			(int) Math.floor(significance * (scores.size()+1))-1);
-	//	return scores.get(index);
 
 	@Override
 	public double getPvalue(double ncs) throws IllegalStateException {

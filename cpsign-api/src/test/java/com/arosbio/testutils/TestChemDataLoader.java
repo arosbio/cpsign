@@ -23,6 +23,8 @@ import com.arosbio.chem.io.in.ProgressTracker;
 import com.arosbio.chem.io.in.SDFile;
 import com.arosbio.cheminf.data.ChemDataset;
 import com.arosbio.cheminf.data.ChemDataset.DescriptorCalcInfo;
+import com.arosbio.cheminf.descriptors.ChemDescriptor;
+import com.arosbio.cheminf.descriptors.SignaturesDescriptor;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.Dataset.SubSet;
 import com.arosbio.data.NamedLabels;
@@ -111,10 +113,14 @@ public class TestChemDataLoader {
 	public static ChemDataset loadDataset(CmpdData data) throws IOException {
 		return loadDatasetWithInfo(data).getLeft();
 	}
-	
+
 	public static Pair<ChemDataset,DescriptorCalcInfo> loadDatasetWithInfo(CmpdData data)throws IOException {
+		return loadDatasetWithInfo(data, new SignaturesDescriptor());
+	}
+	
+	public static Pair<ChemDataset,DescriptorCalcInfo> loadDatasetWithInfo(CmpdData data, ChemDescriptor... descriptors)throws IOException {
 		
-		ChemDataset d = new ChemDataset();
+		ChemDataset d = new ChemDataset(descriptors);
 		d.initializeDescriptors();
 		
 		// Get an iterator of the correct type

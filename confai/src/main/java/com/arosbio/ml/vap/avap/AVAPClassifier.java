@@ -311,7 +311,7 @@ public final class AVAPClassifier extends PredictorBase implements AVAP, Classif
 			intervalWidths = new ArrayList<>(predictors.size()),
 			oneMinusP0 = new ArrayList<>(predictors.size());
 
-		boolean firstIteration=true; // Check if inital stuff needs to be set
+		boolean firstIteration=true; // Check if initial stuff needs to be set
 
 		for (IVAPClassifier ivap : predictors.values()){
 			Map<Integer, Pair<Double,Double>> interval = ivap.predict(example);

@@ -203,9 +203,10 @@ public class TestUtils {
 	public static void assertSimilar(double val1, double val2, double percentage) {
 		if (val1==val2)
 			return;
+		double maxVal = Math.max(val1, val2);
 			
-		Assert.assertTrue(""+val1+" and " + val2 + " differing with more than " + percentage + " percent",Math.abs(val1-val2)/val2 <= percentage);
-		Assert.assertTrue(Math.abs(val2-val1)/val1 <= percentage);
+		Assert.assertTrue(""+val1+" and " + val2 + " differing with more than " + percentage + " percent",(Math.abs(val1-val2)/maxVal) <= percentage);
+		Assert.assertTrue((Math.abs(val2-val1)/maxVal) <= percentage);
 	}
 	
 	
