@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -38,6 +39,7 @@ import com.arosbio.cheminf.data.ChemDataset;
 import com.arosbio.cheminf.data.ChemDataset.DescriptorCalcInfo;
 import com.arosbio.cheminf.descriptors.SignaturesDescriptor;
 import com.arosbio.cheminf.descriptors.SignaturesDescriptor.SignatureType;
+import com.arosbio.cheminf.descriptors.UserSuppliedDescriptor;
 import com.arosbio.cheminf.filter.HACFilter;
 import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.Version;
@@ -733,6 +735,41 @@ public class TestSaveLoadModel extends UnitTestBase {
 		}
 
 	}
+
+	@Test
+	public void testUserDefinedDescriptors() throws Exception {
+
+		List<String> originalFeatureNames = Arrays.asList("bpol","nRings3","nRings4","ALogp2","nAromBlocks","nA","nC","ALogP","nD","nE","nF","nG","nH","nI","nAromRings");
+		ChemDataset data = TestChemDataLoader.loadDatasetWithInfo(TestResources.Cls.getAMES_126_chem_desc(), 
+			new UserSuppliedDescriptor(new ArrayList<>(originalFeatureNames))).getLeft();
+
+		// Feature names should be preserved 
+		TestUtils.assertEqualsIgnoreCase(originalFeatureNames, data.getFeatureNames(false));
+
+		// Save and load it
+		File savedData = TestUtils.createTempFile("data", ".jar");
+		ModelSerializer.saveDataset(data,new ModelInfo("data"),savedData,null);
+		ChemDataset loaded = ModelSerializer.loadDataset(savedData.toURI(), null);
+
+		// Check feature names are preserved 
+		TestUtils.assertEqualsIgnoreCase(originalFeatureNames, loaded.getFeatureNames(false));
+
+		// Train model
+		ChemCPClassifier icp = new ChemCPClassifier(new ACPClassifier(new NegativeDistanceToHyperplaneNCM(new LinearSVC()), new RandomSampling(1, .2)));
+		icp.setDataset(loaded);
+		icp.train();
+
+		// Save/load it
+		File savedModel = TestUtils.createTempFile("data", ".jar");
+		ModelSerializer.saveModel(icp, savedModel, null);
+		ChemCPClassifier loadedICP = (ChemCPClassifier) ModelSerializer.loadChemPredictor(savedModel.toURI(), null);
+
+		// Check feature names are preserved 
+		TestUtils.assertEqualsIgnoreCase(originalFeatureNames, loadedICP.getFeatureNames(false));
+
+	}
+
+
 
 
 	public static void assertEquals(ChemDataset model1, ChemDataset model2) throws Exception {

@@ -138,6 +138,12 @@ public class TestUtils {
 		assertEquals(m, m2,0.00001);
 	}
 	
+	public static void assertEqualsIgnoreCase(List<String> l1, List<String> l2){
+		Assert.assertEquals("Lists must have same length to equal",l1.size(), l2.size());
+		for (int i = 0; i< l1.size(); i++){
+			Assert.assertTrue(l1.get(i).equalsIgnoreCase(l2.get(i)));
+		}
+	}
 	/**
 	 * Assert that two maps match completely, floating point values allowed 
 	 * difference thresholded to {@code diff}

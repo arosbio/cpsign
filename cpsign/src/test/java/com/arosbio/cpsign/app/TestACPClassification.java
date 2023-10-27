@@ -31,6 +31,7 @@ import org.junit.experimental.categories.Category;
 import com.arosbio.cheminf.ChemCPClassifier;
 import com.arosbio.cheminf.data.ChemDataset;
 import com.arosbio.cheminf.descriptors.ChemDescriptor;
+import com.arosbio.cheminf.descriptors.DescriptorFactory;
 import com.arosbio.cheminf.descriptors.SignaturesDescriptor;
 import com.arosbio.cheminf.descriptors.fp.MACCS;
 import com.arosbio.cheminf.io.ModelSerializer;
@@ -40,6 +41,7 @@ import com.arosbio.commons.TypeUtils;
 import com.arosbio.commons.logging.LoggerUtils;
 import com.arosbio.cpsign.app.PrecomputedDatasets.Classification;
 import com.arosbio.cpsign.app.params.CLIParameters.ChemOutputType;
+import com.arosbio.data.Dataset;
 import com.arosbio.ml.TrainingsetValidator;
 import com.arosbio.ml.algorithms.svm.C_SVC;
 import com.arosbio.ml.algorithms.svm.LinearSVC;
@@ -51,6 +53,7 @@ import com.arosbio.ml.cp.nonconf.classification.InverseProbabilityNCM;
 import com.arosbio.ml.cp.nonconf.classification.NCMMondrianClassification;
 import com.arosbio.ml.cp.nonconf.classification.ProbabilityMarginNCM;
 import com.arosbio.ml.io.ModelIO;
+import com.arosbio.ml.io.ModelInfo;
 import com.arosbio.ml.sampling.FoldedSampling;
 import com.arosbio.ml.sampling.SingleSample;
 import com.arosbio.tests.TestResources;
@@ -210,7 +213,52 @@ public class TestACPClassification extends CLIBaseTest {
 				);
 		Assert.fail();
 
+	}
+
+	@Test
+	public void testTrainWhenHavingMissingValues2() throws Exception {
+		File modelFile = TestUtils.createTempFile("model", ".jar");
+		File precomputedData = TestUtils.createTempFile("data", ".jar");
+
+		DescriptorFactory factory = DescriptorFactory.getInstance();
+
+		ChemDataset data = TestChemDataLoader.loadDatasetWithInfo(TestResources.Cls.getAMES_10(), 
+			new SignaturesDescriptor(),
+			factory.getDescriptor("AminoAcidCountDescriptor"),
+			factory.getDescriptor("ALOGPDescriptor"),
+			factory.getDescriptor("HBondAcceptorCountDescriptor"),
+			factory.getDescriptor("HBondDonorCountDescriptor")
+			).getLeft();
+
+		// add some missing value features
+		SYS_ERR.println("Num non-signature features: " + data.getFeatureNames(false).size());
+		SYS_ERR.println(data.getFeatureNames(false));
+		data.getDataset().get(0).getFeatures().withFeature(2,Double.NaN);
+		data.getDataset().get(3).getFeatures().withFeature(2,Double.NaN);
+		data.getDataset().get(7).getFeatures().withFeature(5,Double.NaN);
+		Assert.assertTrue(data.containsMissingFeatures());
+
+		// Save it to file
+		ModelSerializer.saveDataset(data, new ModelInfo("10 recs with missing values"), precomputedData, null);
+
+
+		// PrecomputedDatasets.Classification.getAmesCDKDescAndTransformations();
 		
+		
+		// Train - here it should fail!
+		expectExit(ExitStatus.USER_ERROR);
+		exit.checkAssertionAfterwards(new PrintSysOutput(true));
+		exit.checkAssertionAfterwards(new AssertSysErrContainsString("missing", "data", "feature"));
+		mockMain(new String[] {
+				Train.CMD_NAME,
+				"-ds", precomputedData.toString(),
+				"-mo", modelFile.getAbsolutePath(),
+				"-mn", "dasf",
+				"--time"
+		}
+				);
+		Assert.fail();
+
 	}
 
 	@Test

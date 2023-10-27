@@ -26,6 +26,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -1236,11 +1237,11 @@ public class CLIProgramUtils {
 		List<Integer> featIndices = new ArrayList<>(feature2numNan.keySet());
 		Collections.sort(featIndices); // Sort indices so they are in the same order as was given
 		
-		StringBuilder sb = new StringBuilder("Found feature").append(featIndices.size()>1 ? "s" : "").append(" with missing values in the data:%n");
+		StringBuilder sb = new StringBuilder("Found feature").append(featIndices.size()>1 ? "s" : "").append(" with missing values in the data%nIndex (feature name) : occurrences%n").append(StringUtils.replicate('-', 34));
 		for (int index : featIndices){
-			sb.append(" - ").append(featureNames.get(index)). append(": ").append(feature2numNan.get(index)).append(" missing value(s)%n");
+			sb.append(String.format(Locale.ENGLISH,"%n - %3d (%s) : %d",index,featureNames.get(index),feature2numNan.get(index)));
 		}
-		sb.append("Please remove/impute these before running modeling.");
+		sb.append("%nPlease remove/impute these before running modeling.");
 		
 		if (failIfPresent){
 			console.failWithArgError(sb.toString());
