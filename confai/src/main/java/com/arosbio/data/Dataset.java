@@ -874,7 +874,7 @@ public class Dataset implements Cloneable, HasProperties, Saveable {
 
 	/**
 	 * Gathers info about all features, such as min, max, median etc
-	 * @return a {@link #FeatureInfo} with descriptive statistics 
+	 * @return a {@link com.arosbio.data.Dataset.FeatureInfo FeatureInfo} with descriptive statistics 
 	 * @throws IllegalStateException If no data is loaded 
 	 */
 	public List<FeatureInfo> getFeaturesInfo() throws IllegalStateException {
