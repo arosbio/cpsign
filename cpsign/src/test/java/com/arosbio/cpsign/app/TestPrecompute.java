@@ -78,11 +78,11 @@ public class TestPrecompute extends CLIBaseTest {
 		int numInPropTrainFile=17, numInCalibTrainFile=9;
 
 		// Make some files for exclusive use
-		tempPropExclusive = TestUtils.createTempFile("solubility.prop", ".smiles");
-		tempCalibExclusive = TestUtils.createTempFile("solubility.calib", ".smiles");
+		tempPropExclusive = TestUtils.createTempFile("solubility.prop", ".tsv");
+		tempCalibExclusive = TestUtils.createTempFile("solubility.calib", ".tsv");
 
 		// Empty files that should give errors
-		emptyFile = TestUtils.createTempFile("solubility.prop", ".smiles");
+		emptyFile = TestUtils.createTempFile("solubility.prop", ".tsv");
 		CSVCmpdData solu_500 = TestResources.Reg.getSolubility_500();
 
 		try(
@@ -654,7 +654,7 @@ public class TestPrecompute extends CLIBaseTest {
 		try{
 			mockMain(new String[] {
 					Precompute.CMD_NAME,
-					"-td" , CSVFile.FORMAT_NAME, solu500.uri().toString(),
+					"-td" , solu500.format(), solu500.uri().toString(),
 					"-pr", solu10.property(), 
 					"-mt", PRECOMPUTE_REGRESSION,
 					"--descriptors", "signatures:1:3",
@@ -676,7 +676,7 @@ public class TestPrecompute extends CLIBaseTest {
 		File preNoTransform = TestUtils.createTempFile("datafile_no_transform", ".csr.jar");
 		mockMain(new String[] {
 				Precompute.CMD_NAME,
-				"-td" , CSVFile.FORMAT_NAME, solu500.uri().toString(),
+				"-td" , solu500.format(), solu500.uri().toString(),
 				"-pr", solu10.property(), 
 				"-mt", PRECOMPUTE_REGRESSION,
 				"--descriptors", "signatures:1:3",
@@ -752,9 +752,9 @@ public class TestPrecompute extends CLIBaseTest {
 
 		mockMain(new String[] {
 				Precompute.CMD_NAME,
-				"-td" , CSVFile.FORMAT_NAME, solu10.uri().toString(),
+				"-td" , solu10.format(), solu10.uri().toString(),
 				"-pr", solu10.property(), 
-				"-md", CSVFile.FORMAT_NAME, tempPropExclusive.getAbsolutePath(),
+				"-md", "tsv", tempPropExclusive.getAbsolutePath(),
 				"-mt", PRECOMPUTE_REGRESSION,
 				"--descriptors", "signatures:1:2",
 				"-mo", outputModel.getAbsolutePath(),
@@ -773,9 +773,9 @@ public class TestPrecompute extends CLIBaseTest {
 		try{
 			mockMain(new String[] {
 					Precompute.CMD_NAME,
-					"-td" , CSVFile.FORMAT_NAME, solu10.uri().toString(),
+					"-td" , solu10.format(), solu10.uri().toString(),
 					"-pr", solu10.property(), 
-					"-cd", CSVFile.FORMAT_NAME, tempCalibExclusive.getAbsolutePath(),
+					"-cd", solu10.format(), tempCalibExclusive.getAbsolutePath(),
 					"-mt", PRECOMPUTE_REGRESSION,
 					"--descriptors", "signatures:1:2",
 					"-mo", outputModel.getAbsolutePath(),
@@ -796,10 +796,10 @@ public class TestPrecompute extends CLIBaseTest {
 		try{
 			mockMain(new String[] {
 					Precompute.CMD_NAME,
-					"-td" , CSVFile.FORMAT_NAME,solu10.uri().toString(),
+					"-td" , solu10.format(),solu10.uri().toString(),
 					"-pr", solu10.property(), 
-					"-md", CSVFile.FORMAT_NAME, tempPropExclusive.getAbsolutePath(),
-					"-cd", CSVFile.FORMAT_NAME, tempCalibExclusive.getAbsolutePath(),
+					"-md", solu10.format(), tempPropExclusive.getAbsolutePath(),
+					"-cd", solu10.format(), tempCalibExclusive.getAbsolutePath(),
 					"-mt", PRECOMPUTE_REGRESSION,
 					"--descriptors", "signatures:1:2",
 					"-mo", outputModel.getAbsolutePath(),
@@ -829,9 +829,9 @@ public class TestPrecompute extends CLIBaseTest {
 		exit.checkAssertionAfterwards(new AssertSysOutContainsString(emptyFile.getAbsolutePath(), "empty"));
 		mockMain(new String[] {
 				Precompute.CMD_NAME,
-				"-td" , CSVFile.FORMAT_NAME, solu10.uri().toString(),
+				"-td" , solu10.format(), solu10.uri().toString(),
 				"-pr", solu10.property(), 
-				"-md", SDFile.FORMAT_NAME, emptyFile.getAbsolutePath(),
+				"-md", solu10.format(), emptyFile.getAbsolutePath(),
 				"-mt", PRECOMPUTE_REGRESSION,
 				"--descriptors", "signatures:1:2",
 				"-mo", outputModel.getAbsolutePath(),
@@ -853,7 +853,7 @@ public class TestPrecompute extends CLIBaseTest {
 		// =====================================
 		mockMain(new String[] {
 				Precompute.CMD_NAME,
-				"-td" , CSVFile.FORMAT_NAME,solu10.uri().toString(),
+				"-td" , solu10.format(),solu10.uri().toString(),
 				"-pr", solu10.property(), 
 				"-cd", SDFile.FORMAT_NAME, emptyFile.getAbsolutePath(),
 				"-mt", PRECOMPUTE_REGRESSION,

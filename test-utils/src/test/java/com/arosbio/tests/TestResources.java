@@ -79,7 +79,7 @@ public class TestResources {
 		public static final String MULTI_CLS_FOLDER = CHEM_FOLDER + "multiclass/";
 
 		public static enum Format {
-			CSV("csv"), SDF("sdf"), JSON("json");
+			CSV("csv"), TSV("tsv"), SDF("sdf"), JSON("json");
 
 			public String fmt;
 			private Format(String fmt){
@@ -231,7 +231,7 @@ public class TestResources {
 			}
 
 			private Builder(URL url, String property, int nValid, int nInvalid, List<?> labels, boolean isClassification, boolean isRegression){
-				super(url,Format.CSV, property, nValid, nInvalid, labels, isClassification, isRegression);
+				super(url, Format.CSV, property, nValid, nInvalid, labels, isClassification, isRegression);
 			}
 
 			public static Builder classification(URL url, String property, int nValid, int nInvalid, List<?> labels){
@@ -244,6 +244,8 @@ public class TestResources {
 
 			public Builder delim(char delim){
 				this.delim = delim;
+				if (delim=='\t')
+					super.fmt = Format.TSV;
 				return getThis();
 			}
 

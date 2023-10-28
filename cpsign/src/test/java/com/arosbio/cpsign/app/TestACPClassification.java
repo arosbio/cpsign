@@ -41,7 +41,6 @@ import com.arosbio.commons.TypeUtils;
 import com.arosbio.commons.logging.LoggerUtils;
 import com.arosbio.cpsign.app.PrecomputedDatasets.Classification;
 import com.arosbio.cpsign.app.params.CLIParameters.ChemOutputType;
-import com.arosbio.data.Dataset;
 import com.arosbio.ml.TrainingsetValidator;
 import com.arosbio.ml.algorithms.svm.C_SVC;
 import com.arosbio.ml.algorithms.svm.LinearSVC;
@@ -231,8 +230,6 @@ public class TestACPClassification extends CLIBaseTest {
 			).getLeft();
 
 		// add some missing value features
-		SYS_ERR.println("Num non-signature features: " + data.getFeatureNames(false).size());
-		SYS_ERR.println(data.getFeatureNames(false));
 		data.getDataset().get(0).getFeatures().withFeature(2,Double.NaN);
 		data.getDataset().get(3).getFeatures().withFeature(2,Double.NaN);
 		data.getDataset().get(7).getFeatures().withFeature(5,Double.NaN);
@@ -247,7 +244,7 @@ public class TestACPClassification extends CLIBaseTest {
 		
 		// Train - here it should fail!
 		expectExit(ExitStatus.USER_ERROR);
-		exit.checkAssertionAfterwards(new PrintSysOutput(true));
+		// exit.checkAssertionAfterwards(new PrintSysOutput(true));
 		exit.checkAssertionAfterwards(new AssertSysErrContainsString("missing", "data", "feature"));
 		mockMain(new String[] {
 				Train.CMD_NAME,

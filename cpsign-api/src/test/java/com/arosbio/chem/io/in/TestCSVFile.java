@@ -56,7 +56,7 @@ public class TestCSVFile extends UnitTestBase{
 		FileUtils.write(csvFile, "Cc1ccc(Br)cc1-c1cc(Nc2ccc(Br)cc2)nc(N)n1	1	0.982	Comment", StandardCharsets.UTF_8);
 
 		// Try with too few headers - this _should_ fail
-		CSVFile f = new CSVFile(csvFile.toURI()).setUserDefinedHeader("SMILES","FLAG");
+		CSVFile f = new CSVFile(csvFile.toURI()).setDelimiter('\t').setUserDefinedHeader("SMILES","FLAG");
 		Assert.assertEquals(1, f.countNumRecords());
 		try {
 			CSVChemFileReader it = f.getIterator();
@@ -67,7 +67,7 @@ public class TestCSVFile extends UnitTestBase{
 		}
 		
 		// Try with too many headers (i.e. some records miss some values, this we pass)
-		f = new CSVFile(csvFile.toURI()).setUserDefinedHeader("SMILES","FLAG", "Some property", "comments", "something not there", "another col");
+		f = new CSVFile(csvFile.toURI()).setDelimiter('\t').setUserDefinedHeader("SMILES","FLAG", "Some property", "comments", "something not there", "another col");
 		Assert.assertEquals(1, f.countNumRecords());
 		try {
 			ChemFileIterator it = f.getIterator();
@@ -85,7 +85,7 @@ public class TestCSVFile extends UnitTestBase{
 		FileUtils.write(csvFile, "Cc1ccc(Br)cc1-c1cc(Nc2ccc(Br)cc2)nc(N)n1	1", StandardCharsets.UTF_8);
 
 //		LoggerUtils.setDebugMode(System.out);
-		CSVFile f = new CSVFile(csvFile.toURI()).setUserDefinedHeader("SMILES","FLAG"); //.setSmilesColumnHeader(smilesColumn)
+		CSVFile f = new CSVFile(csvFile.toURI()).setDelimiter('\t').setUserDefinedHeader("SMILES","FLAG"); //.setSmilesColumnHeader(smilesColumn)
 				//.convert("my-flag", Arrays.asList("csv", "header:SMILES,FLAG", csvFile.getAbsolutePath()));
 		//		System.err.println(f.getProperties());
 		Assert.assertEquals(1, f.countNumRecords());
@@ -106,7 +106,7 @@ public class TestCSVFile extends UnitTestBase{
 		Assert.assertFalse(it.hasNext());
 
 		// Instead of replacing the header - we can set an explicit smiles-header instead
-		f = new CSVFile(csvFile.toURI()).setSmilesColumnHeader("chemical structure").setSkipFirstRow(true); 
+		f = new CSVFile(csvFile.toURI()).setDelimiter('\t').setSmilesColumnHeader("chemical structure").setSkipFirstRow(true); 
 		//UserDefinedHeader("SMILES","FLAG"); //ChemFileConverter.convert("my-flag", Arrays.asList("csv", "smiles_col:chemical structure", "skip_header:T", csvFile.getAbsolutePath()));
 //		System.err.println(f.getProperties());
 		Assert.assertEquals(1, f.countNumRecords());

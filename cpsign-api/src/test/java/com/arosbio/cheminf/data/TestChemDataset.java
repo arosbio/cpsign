@@ -225,7 +225,7 @@ public class TestChemDataset extends UnitTestBase {
 		sp.add(new SDFile(ames_mini.uri()).getIterator(),ames_mini.property(), ames_labels);
 		int numSigs = getSignatures(sp).size();
 
-		Iterator<IAtomContainer> mols = new CSVFile(solu_10.uri()).getIterator();
+		Iterator<IAtomContainer> mols = new CSVFile(solu_10.uri()).setDelimiter(solu_10.delim()).getIterator();
 		Pair<List<FeatureVector>,DescriptorCalcInfo> sm = sp.convertToFeatureVector(mols);
 //		List<List<SparseFeature>> sm = sp.convertToSparseFeatures(mols);
 		//		System.out.println(sm);
@@ -234,7 +234,7 @@ public class TestChemDataset extends UnitTestBase {
 		Assert.assertEquals("Number of signatures should not change",numSigs,getSignatures(sp).size());
 
 
-		Iterator<IAtomContainer> mols2 = new CSVFile(solu_10.uri()).getIterator();
+		Iterator<IAtomContainer> mols2 = new CSVFile(solu_10.uri()).setDelimiter(solu_10.delim()).getIterator();
 		List<IAtomContainer> molsList = new ArrayList<>();
 
 		while(mols2.hasNext()){
@@ -386,9 +386,9 @@ public class TestChemDataset extends UnitTestBase {
 			} else if(dtype == DataType.SDF){
 				spn.add(new SDFile(datafile).getIterator(), property);
 			} else if(dtype == DataType.CSV && isClassification){
-				spn.add(new CSVFile(datafile).getIterator(), property, new NamedLabels(labels));
+				spn.add(new CSVFile(datafile).setDelimiter('\t').getIterator(), property, new NamedLabels(labels));
 			} else if(dtype == DataType.CSV){
-				spn.add(new CSVFile(datafile).getIterator(), property);
+				spn.add(new CSVFile(datafile).setDelimiter('\t').getIterator(), property);
 			} else if (dtype == DataType.LIBSVM){
 				try(InputStream dataStream = datafile.toURL().openStream()){
 					spn.getDataset().readRecords(dataStream);
@@ -686,7 +686,7 @@ public class TestChemDataset extends UnitTestBase {
 		ChemDataset cp = new ChemDataset(startHeight, endHeight);
 		cp.initializeDescriptors();
 		CSVCmpdData solu100 = TestResources.Reg.getSolubility_100();
-		CSVFile csv= new CSVFile(solu100.uri());
+		CSVFile csv= new CSVFile(solu100.uri()).setDelimiter(solu100.delim());
 
 		try (CSVChemFileReader molsIter = csv.getIterator()){
 			cp.add(molsIter, solu100.property());
@@ -762,7 +762,7 @@ public class TestChemDataset extends UnitTestBase {
 	
 	@Test
 	public void testSalts() throws Exception {
-		CSVFile csv= new CSVFile(solu_10.uri());
+		CSVFile csv= new CSVFile(solu_10.uri()).setDelimiter(solu_10.delim());
 		
 		try (CSVChemFileReader molsIter = csv.getIterator()){
 			IAtomContainer mol = molsIter.next();
@@ -803,7 +803,7 @@ public class TestChemDataset extends UnitTestBase {
 		Assert.assertEquals(descSet, new HashSet<>(cp.getDescriptors()));
 //		LoggerUtils.setDebugMode(SYS_OUT);
 //		SYS_ERR.println(getURIFromFullPath(RegressionSolubility.SOLUBILITY_10_FILE_PATH));
-		CSVFile csv= new CSVFile(solu_10.uri());
+		CSVFile csv= new CSVFile(solu_10.uri()).setDelimiter(solu_10.delim());
 //		LoggerUtils.addStreamAppenderToRootLogger(SYS_ERR);
 		try (CSVChemFileReader molsIter = csv.getIterator()){
 			cp.add(molsIter, solu_10.property());

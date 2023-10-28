@@ -1848,7 +1848,7 @@ public class CLIProgramUtils {
 						return errMessage.toString();
 					}
 					// 4.2 user defined header
-					String[] userDefHeader = file.getUserDefinedheader(); 
+					String[] userDefHeader = file.getUserDefinedHeader(); 
 					if (userDefHeader != null){
 						// verify there is a valid SMILES column
 						if (file.getSMILESColumnHeader()!=null){

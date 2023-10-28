@@ -91,6 +91,7 @@ import com.arosbio.ml.sampling.SingleSample;
 import com.arosbio.ml.vap.avap.AVAPClassifier;
 import com.arosbio.ml.vap.ivap.IVAPClassifier;
 import com.arosbio.tests.TestResources;
+import com.arosbio.tests.TestResources.CSVCmpdData;
 import com.arosbio.tests.TestResources.CmpdData;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.GzipEncryption;
@@ -105,7 +106,7 @@ import com.arosbio.testutils.UnitTestBase;
 public class TestSaveLoadModel extends UnitTestBase {
 
 	final CmpdData clfData = TestResources.Cls.getAMES_126();
-	final CmpdData regData = TestResources.Reg.getSolubility_10();
+	final CSVCmpdData regData = TestResources.Reg.getSolubility_10();
 
 	final boolean storeAsTmp=true, linearKernel=true, CCP = false, encrypt=true, useStereoSignatures=false;
 	final int ccpFolds = 6;
@@ -307,7 +308,7 @@ public class TestSaveLoadModel extends UnitTestBase {
 		else if (alg instanceof EpsilonSVR)
 			((EpsilonSVR)alg).setC(newC);
 
-		signacp.addRecords(new CSVFile(regData.uri()).getIterator(),regData.property());
+		signacp.addRecords(new CSVFile(regData.uri()).setDelimiter(regData.delim()).getIterator(),regData.property());
 
 		// Should not be able to save as JAR if no trained models
 		try{
@@ -371,10 +372,10 @@ public class TestSaveLoadModel extends UnitTestBase {
 		ChemCPRegressor signacp = new ChemCPRegressor(modelimpl);
 		
 		// Prop train
-		signacp.addRecords(new CSVFile(regData.uri()).getIterator(),regData.property(), RecordType.MODELING_EXCLUSIVE);
+		signacp.addRecords(new CSVFile(regData.uri()).setDelimiter(regData.delim()).getIterator(),regData.property(), RecordType.MODELING_EXCLUSIVE);
 		
 		// Calib
-		signacp.addRecords(new CSVFile(regData.uri()).getIterator(),regData.property(), RecordType.CALIBRATION_EXCLUSIVE);
+		signacp.addRecords(new CSVFile(regData.uri()).setDelimiter(regData.delim()).getIterator(),regData.property(), RecordType.CALIBRATION_EXCLUSIVE);
 		
 		Assert.assertTrue(signacp.getDataset().getDataset().isEmpty());
 		
@@ -395,7 +396,7 @@ public class TestSaveLoadModel extends UnitTestBase {
 
 		ChemCPRegressor signacp = new ChemCPRegressor();
 
-		signacp.addRecords(new CSVFile(regData.uri()).getIterator(),regData.property());
+		signacp.addRecords(new CSVFile(regData.uri()).setDelimiter(regData.delim()).getIterator(),regData.property());
 		signacp.getDataset().apply(new DropColumnSelector(1, 4, 5), new VarianceBasedSelector(new SelectionCriterion(Criterion.REMOVE_ZEROS)));
 
 		File tmpPrecom = TestUtils.createTempFile("precomp", ".jar");
@@ -514,7 +515,7 @@ public class TestSaveLoadModel extends UnitTestBase {
 
 		ChemCPRegressor signacp = new ChemCPRegressor(modelimpl);
 
-		signacp.addRecords(new CSVFile(regData.uri()).getIterator(), regData.property());
+		signacp.addRecords(new CSVFile(regData.uri()).setDelimiter(regData.delim()).getIterator(), regData.property());
 
 		// Split everything up into 3 datasets
 		ChemDataset prob = signacp.getDataset();
@@ -625,7 +626,7 @@ public class TestSaveLoadModel extends UnitTestBase {
 		sp.withFilters(new HACFilter().withMinHAC(minHac));
 		sp.initializeDescriptors();
 
-		DescriptorCalcInfo info = sp.add(new CSVFile(regData.uri()).getIterator(),regData.property());
+		DescriptorCalcInfo info = sp.add(new CSVFile(regData.uri()).setDelimiter(regData.delim()).getIterator(),regData.property());
 		System.err.println(info);
 		ModelInfo mInfo =  new ModelInfo("modelName"); 
 

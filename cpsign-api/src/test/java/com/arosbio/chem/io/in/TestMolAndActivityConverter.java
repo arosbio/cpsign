@@ -36,7 +36,7 @@ public class TestMolAndActivityConverter extends UnitTestBase {
 		ProgressTracker tracker = ProgressTracker.createStopAfter(5);
 		// 19 lines of records, 1 not OK at all, 1 line with missing value
 		CSVCmpdData data = TestResources.Cls.getErroneous();
-		try(MolAndActivityConverter molAct = MolAndActivityConverter.Builder.classificationConverter(new CSVFile(data.uri()).getIterator(), 
+		try(MolAndActivityConverter molAct = MolAndActivityConverter.Builder.classificationConverter(new CSVFile(data.uri()).setDelimiter(data.delim()).getIterator(), 
 			data.property(), 
 			new NamedLabels(data.labelsStr())).progressTracker(tracker).build();){
 

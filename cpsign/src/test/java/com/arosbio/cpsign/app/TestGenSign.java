@@ -113,7 +113,7 @@ public class TestGenSign extends CLIBaseTest {
 		systemOutRule.clearLog();
 		mockMain(new String[]{ 
 				"gensign",
-				"-i",CSVFile.FORMAT_NAME, csv.uri().toString(),
+				"-i",csv.format(), csv.uri().toString(),
 				"--silent"
 		});
 

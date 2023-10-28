@@ -31,11 +31,12 @@ import com.arosbio.commons.config.CharConfig;
 import com.arosbio.commons.config.Configurable;
 import com.arosbio.commons.config.StringConfig;
 import com.arosbio.commons.config.StringListConfig;
+import com.arosbio.commons.mixins.Aliased;
 import com.arosbio.commons.mixins.Described;
 import com.arosbio.commons.mixins.Named;
 import com.arosbio.io.UriUtils;
 
-public class CSVFile implements ChemFile, Named, Described, Configurable {
+public class CSVFile implements ChemFile, Named, Aliased, Described, Configurable {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(CSVFile.class);
 	private static final List<String> CONF_SMILES_COL = Arrays.asList("smilesCol", "smilesHeader", "smilesColHeader"),
@@ -47,12 +48,13 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 			CONF_BOM = Arrays.asList("bom");
 	
 	public static final String FORMAT_NAME = "CSV";
+	public static final String FORMAT_ALIAS = "TSV";
 	public static final String FORMAT_DESCRIPTION = 
 			"Character Separated Values, allows to configure to fit the majority of CSV formats. The molecule must be formatted as a valid SMILES string in one of the columns of the CSV.";
 	
 	private URI uri;
 
-	private char delimiter = '\t';
+	private char delimiter = ',';
 	private String recordSeparator = System.lineSeparator();
 	private boolean ignoreEmptyLines = true;
 	private Character commentMarker = null;
@@ -109,7 +111,7 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 		this.userSpecifiedHeader = header;
 		return this;
 	}
-	public String[] getUserDefinedheader(){
+	public String[] getUserDefinedHeader(){
 		return this.userSpecifiedHeader;
 	}
 
@@ -170,7 +172,6 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 		prop.put("recordSeparator", recordSeparator);
 		prop.put("ignoreEmptyLines", ignoreEmptyLines);
 		prop.put("commentMarker", commentMarker);
-		// prop.put("includesBOM", false);
 		if (userSpecifiedHeader != null)
 			prop.put("givenHeader", Arrays.asList(userSpecifiedHeader));
 		if (skipFirstRow != null)
@@ -252,6 +253,11 @@ public class CSVFile implements ChemFile, Named, Described, Configurable {
 	@Override
 	public String getName() {
 		return FORMAT_NAME;
+	}
+
+	@Override
+	public String[] getAliases(){
+		return new String[]{FORMAT_ALIAS};
 	}
 	
 	@Override

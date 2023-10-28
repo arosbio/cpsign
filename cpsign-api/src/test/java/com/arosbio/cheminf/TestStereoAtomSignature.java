@@ -31,7 +31,6 @@ import com.arosbio.commons.Stopwatch;
 import com.arosbio.data.NamedLabels;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.TestResources.CSVCmpdData;
-import com.arosbio.tests.TestResources.CmpdData;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.testutils.UnitTestBase;
 
@@ -51,13 +50,13 @@ public class TestStereoAtomSignature extends UnitTestBase {
 
 	@Test
 	public void testGenerateFromFile() throws Exception {
-		CmpdData data = TestResources.Reg.getSolubility_10();
+		CSVCmpdData data = TestResources.Reg.getSolubility_10();
 
 		SignaturesDescriptor desc = new SignaturesDescriptor();
 		desc.setSignaturesType(SignatureType.STEREO);
 		ChemDataset sp = new ChemDataset(desc);
 		sp.initializeDescriptors();
-		sp.add(new CSVFile(data.uri()).getIterator(), data.property());
+		sp.add(new CSVFile(data.uri()).setDelimiter(data.delim()).getIterator(), data.property());
 		
 		Set<String> sigs = new HashSet<>(toSet(desc.getSignatures()));
 		if (printSigs){
@@ -74,7 +73,7 @@ public class TestStereoAtomSignature extends UnitTestBase {
 		desc2.setSignaturesType(SignatureType.STEREO);
 		ChemDataset sp2 = new ChemDataset(desc2);
 		sp2.initializeDescriptors();
-		sp2.add(new CSVFile(data.uri()).getIterator(), data.property());
+		sp2.add(new CSVFile(data.uri()).setDelimiter(data.delim()).getIterator(), data.property());
 		Set<String> sigs2 = toSet(desc2.getSignatures());
 		
 		Set<String> difference1_2 = new HashSet<String>(sigs);
@@ -200,13 +199,13 @@ public class TestStereoAtomSignature extends UnitTestBase {
 		Stopwatch watch = new Stopwatch();
 		
 		watch.start();
-		spNormal.add(new CSVFile(cas.uri()).getIterator(), cas.property(), new NamedLabels(cas.labelsStr()));
+		spNormal.add(new CSVFile(cas.uri()).setDelimiter(cas.delim()).getIterator(), cas.property(), new NamedLabels(cas.labelsStr()));
 //		spNormal.fromChemFile(getURI(testFile), "class", Arrays.asList("0", "1"));
 		watch.stop();
 		System.out.println(watch.elapsedTimeMillis());
 
 		watch.start();
-		spStereo.add(new CSVFile(cas.uri()).getIterator(), cas.property(), new NamedLabels(cas.labelsStr()));
+		spStereo.add(new CSVFile(cas.uri()).setDelimiter(cas.delim()).getIterator(), cas.property(), new NamedLabels(cas.labelsStr()));
 //		spStereo.fromChemFile(getURI(testFile), "class", Arrays.asList("0", "1"));
 		watch.stop();
 		System.out.println(watch.elapsedTimeMillis());

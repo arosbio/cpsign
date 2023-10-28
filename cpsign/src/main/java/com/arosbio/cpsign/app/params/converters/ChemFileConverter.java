@@ -263,62 +263,15 @@ public class ChemFileConverter implements IParameterConsumer {
 		}
 		return arg;
 	}
-	/*
-	private Pair<URI,String> popUntilURI(Stack<String> args, List<String> extraConfigArgsToFill)
-			throws IllegalArgumentException {
-
-		String previousArgument=null;
-		while (args.size() > 0) {
-			String val = args.pop();
-
-			// Check if URI - then we're finished
-			try {
-				// Here we stop popping of the argument stack
-				return Pair.with(UriUtils.getURI(val), val);
-			} catch (IOException |IllegalArgumentException e) {
-				LOGGER.debug("Checked arg {}: not valid URI so keep checking..",val);
-			}
-
-			if (val.startsWith("-")) {
-				// next argument was a new flag - put the argument back on stack and exit
-				args.push(val);
-				break; 
-			}
-
-			// Add to extra arguments
-			extraConfigArgsToFill.add(val);
-
-			// Set as previous argument - used for giving better user-error
-			previousArgument = val;
-		}
-
-		// If we end up here - there was no valid URI/path found
-		LOGGER.debug("Found no valid URI or path - invalid input of user");
-		if (previousArgument == null) {
-			// No argument given at all
-			throw new IllegalArgumentException("No URI or path given, the correct syntax is: " + CORRECT_SYNTAX);
-		}
-		throw new IllegalArgumentException("'"+ previousArgument + "' is not a valid URI or path");
-
-	}
-	 */
-
-
-	//	private static String listToString(List<String> args) {
-	//		StringBuffer b = new StringBuffer();
-	//		for (String arg: args) {
-	//			b.append(arg);
-	//			b.append(' ');
-	//		}
-	//		return b.toString();
-	//	}
+	
 
 	private static ChemFile getFormat(URI uri, String format, int index) {
 		format = format.toLowerCase();
 		switch (format) {
 		case "csv":
-		case "tsv":
 			return new CSVFile(uri);
+		case "tsv":
+			return new CSVFile(uri).setDelimiter('\t');
 		case "sdf":
 			return new SDFile(uri);
 		case "json":

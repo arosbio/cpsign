@@ -126,8 +126,9 @@ public class TestACPRegressionCrossValidation extends UnitTestBase{
 
 	public void TestACPRegressionCV(ChemCPRegressor signCCP, CmpdData dataset) throws Exception{
 
-		if (dataset.format().equalsIgnoreCase("csv")) {
-			signCCP.addRecords(new CSVFile(dataset.uri()).getIterator(), dataset.property());
+		if (dataset instanceof CSVCmpdData) {
+			CSVCmpdData csv = (CSVCmpdData) dataset;
+			signCCP.addRecords(new CSVFile(dataset.uri()).setDelimiter(csv.delim()).getIterator(), dataset.property());
 		} else {
 			signCCP.addRecords(new SDFile(dataset.uri()).getIterator(), dataset.property());
 		}

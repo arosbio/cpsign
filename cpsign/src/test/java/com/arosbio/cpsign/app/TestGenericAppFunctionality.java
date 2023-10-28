@@ -495,10 +495,7 @@ public class TestGenericAppFunctionality extends CLITestReqOutputDir {
 	public void testIntsList() throws Exception {
 		List<Integer> trueList = Arrays.asList(1,2,3,4);
 		TestArgs a = new TestArgs();
-		//		JCommander jc = JCommander.newBuilder()
-		//			    .addObject(a)
-		////			    .addConverterFactory(new Factory())
-		//			    .build();
+
 		new CommandLine(a).parseArgs("--ints", "1 2 3 4");
 		Assert.assertEquals(trueList, a.ints);
 
