@@ -23,6 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.xml.transform.Transformer;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -47,7 +49,6 @@ import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.MathUtils;
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.Dataset.SubSet;
-import com.arosbio.data.transform.Transformer;
 import com.arosbio.data.transform.feature_selection.DropColumnSelector;
 import com.arosbio.data.transform.feature_selection.DropMissingDataSelector;
 import com.arosbio.data.transform.format.MakeDenseTransformer;
@@ -104,7 +105,6 @@ public class TestACPRegression extends UnitTestBase {
 	public void init(){
 		spec = new GzipEncryption("some password and salt");
 		spec2 = new GzipEncryption("another password and different salt");
-		//		cpsign=factory.createSignaturesCPClassification(factory.createTCPLibLinear(), 1, 3);
 		// spec = EncryptionSpecFactory.getSpec("password", "salt");
 		// spec2 = EncryptionSpecFactory.getSpec("another password", "adslfköma");
 	}
@@ -124,7 +124,7 @@ public class TestACPRegression extends UnitTestBase {
 //		LoggerUtils.setDebugMode(SYS_ERR);
 		CSVCmpdData solu100 = TestResources.Reg.getSolubility_100();
 
-		CSVFile trainData = new CSVFile(solu100.uri());
+		CSVFile trainData = new CSVFile(solu100.uri()).setDelimiter(solu100.delim());
 		sigACP1.addRecords(trainData.getIterator(), solu100.property());
 		
 		System.out.println("original size: " + sigACP1.getDataset());
@@ -234,7 +234,7 @@ public class TestACPRegression extends UnitTestBase {
 		libsvmacp.setStrategy(new RandomSampling(nrModels, calibrationRatio));
 		ChemCPRegressor acp = new ChemCPRegressor(libsvmacp, 1, 3);
 
-		acp.addRecords(new CSVFile(csv.uri()).getIterator(), csv.property()); 
+		acp.addRecords(new CSVFile(csv.uri()).setDelimiter(csv.delim()).getIterator(), csv.property()); 
 
 		acp.train();
 
@@ -274,7 +274,7 @@ public class TestACPRegression extends UnitTestBase {
 		ACPRegressor libsvmacp = new ACPRegressor(new NormalizedNCM(alg, alg.clone()), new RandomSampling(nrModels, calibrationRatio));
 		ChemCPRegressor acp = new ChemCPRegressor(libsvmacp, 1, 3);
 
-		acp.getDataset().add(new CSVFile(csv.uri()).getIterator(), csv.property());
+		acp.getDataset().add(new CSVFile(csv.uri()).setDelimiter(csv.delim()).getIterator(), csv.property());
 		ChemDataset problem = acp.getDataset();
 		SubSet[] splittedProblem = problem.getDataset().clone().splitStatic(20); // Keep the first 20 for testing, the rest is used for training
 		problem.getDataset().setRecords(splittedProblem[1] );
@@ -282,7 +282,7 @@ public class TestACPRegression extends UnitTestBase {
 
 		acp.train();
 
-		Iterator<IAtomContainer> mols = new CSVFile(csv.uri()).getIterator();
+		Iterator<IAtomContainer> mols = new CSVFile(csv.uri()).setDelimiter(csv.delim()).getIterator();
 
 		IAtomContainer mol;
 		int numMols=0, numFaulty0_5=0, numFaulty0_1=0, numFaulty0_9=0;
@@ -402,7 +402,7 @@ public class TestACPRegression extends UnitTestBase {
 
 		ChemCPRegressor reg = new ChemCPRegressor();
 		reg.setDataset(new ChemDataset(new SignaturesDescriptor(1, 3)));
-		reg.addRecords(new CSVFile(solu100.uri()).getIterator(), solu100.property());
+		reg.addRecords(new CSVFile(solu100.uri()).setDelimiter(solu100.delim()).getIterator(), solu100.property());
 
 		// Plain - save
 		ByteArrayOutputStream baos_plain_sigs = new ByteArrayOutputStream();
@@ -465,7 +465,7 @@ public class TestACPRegression extends UnitTestBase {
 		ChemCPRegressor reg = new ChemCPRegressor(
 			new ACPRegressor(new NormalizedNCM(new LinearSVR(), null),
 						new FoldedSampling(nrModels)), 1, 3);
-		reg.addRecords(new CSVFile(solu.uri()).getIterator(), solu.property());
+		reg.addRecords(new CSVFile(solu.uri()).setDelimiter(solu.delim()).getIterator(), solu.property());
 		reg.train();
 		File bndFile = TestUtils.createTempFile("model", ".jar");
 		ModelSerializer.saveModel(reg, bndFile, null);
@@ -585,7 +585,7 @@ public class TestACPRegression extends UnitTestBase {
 		
 		acp.getDataset().setDescriptors(descs);
 
-		acp.addRecords(new CSVFile(solu100.uri()).getIterator(), solu100.property());
+		acp.addRecords(new CSVFile(solu100.uri()).setDelimiter(solu100.delim()).getIterator(), solu100.property());
 		
 		acp.getDataset().apply(new DropMissingDataSelector(),new RobustScaler(),new VectorNormalizer());
 
