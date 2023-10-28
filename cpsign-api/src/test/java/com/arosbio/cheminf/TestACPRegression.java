@@ -23,8 +23,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.transform.Transformer;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,6 +47,7 @@ import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.MathUtils;
 import com.arosbio.data.DataRecord;
 import com.arosbio.data.Dataset.SubSet;
+import com.arosbio.data.transform.Transformer;
 import com.arosbio.data.transform.feature_selection.DropColumnSelector;
 import com.arosbio.data.transform.feature_selection.DropMissingDataSelector;
 import com.arosbio.data.transform.format.MakeDenseTransformer;
