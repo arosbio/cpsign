@@ -40,8 +40,8 @@ public class LOOSplitter implements DataSplitter {
     
     private LOOSplitter(final Builder b, final Dataset data) {
         Objects.requireNonNull(data, "data must not be null");
-        calibrationData = data.getCalibrationExclusiveDataset().clone();
-        modelExclusiveData = data.getModelingExclusiveDataset().clone();
+        calibrationData = data.getCalibrationExclusiveDataset();
+        modelExclusiveData = data.getModelingExclusiveDataset();
         this.seed = b.seed;
         
         shuffledRecords = new ArrayList<>(data.getDataset());
@@ -137,8 +137,8 @@ public class LOOSplitter implements DataSplitter {
 
         Dataset trainingData = new Dataset()
             .withDataset(new SubSet(trainingSet))
-            .withCalibrationExclusiveDataset(calibrationData.clone())
-            .withModelingExclusiveDataset(modelExclusiveData.clone());
+            .withCalibrationExclusiveDataset(calibrationData)
+            .withModelingExclusiveDataset(modelExclusiveData);
 
         LOGGER.debug("Using {} examples for training and {} example(s) for testing (not counting model-exclusive or calibration-exclusive data)",
             trainingSet.size(), testSet.size());

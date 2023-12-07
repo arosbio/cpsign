@@ -174,12 +174,12 @@ public class LibLinear {
 	 */
 
 	public static Problem createLibLinearTrainProblem(
-			List<DataRecord> trainingset) {
-		LOGGER.debug("trainingset.size={}", trainingset.size());
-		int maxFeatIndex = DataUtils.getMaxFeatureIndex(trainingset) + 1; // +1 for indices starting at 1 instead of 0 
+			List<DataRecord> trainingSet) {
+		LOGGER.debug("trainingSet.size={}", trainingSet.size());
+		int maxFeatIndex = DataUtils.getMaxFeatureIndex(trainingSet) + 1; // +1 for indices starting at 1 instead of 0
 		int biasColumn = maxFeatIndex+1;
 		Problem trainProblem = new Problem();
-		trainProblem.l = trainingset.size();
+		trainProblem.l = trainingSet.size();
 		trainProblem.n = biasColumn; // add 1 for bias term 
 		trainProblem.x = new Feature[trainProblem.l][];
 		trainProblem.y = new double[trainProblem.l];
@@ -188,9 +188,9 @@ public class LibLinear {
 		try {
 			for (int ex=0; ex < trainProblem.l; ex++) {
 				// Copy the target value
-				trainProblem.y[ex] = trainingset.get(ex).getLabel();
+				trainProblem.y[ex] = trainingSet.get(ex).getLabel();
 				// Convert the feature vector
-				trainProblem.x[ex] = createFeatureArray(trainingset.get(ex).getFeatures(),biasColumn);
+				trainProblem.x[ex] = createFeatureArray(trainingSet.get(ex).getFeatures(),biasColumn);
 			}
 		} catch (MissingDataException e) {
 			LOGGER.debug("Failed setting up LibLinear problem due to missing data: ",e);

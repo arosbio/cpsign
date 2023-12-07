@@ -134,7 +134,7 @@ public class FoldedSplitter implements DataSplitter {
         this.shuffle = b.shuffle;
         this.numRepeats = b.numRepeats;
         this.seed = b.seed;
-        this.dataClone = data.cloneDataOnly();
+        this.dataClone = data;
 
         if (stratify){
             // do the stratification of data once, also verifies input is not of regression type
@@ -172,7 +172,7 @@ public class FoldedSplitter implements DataSplitter {
     private List<List<DataRecord>> getFoldsForRep(int forRep) {
         long seedForRep = getSeedForRep(forRep);
         LOGGER.debug("generating folds for repetition {} using stratify={}, shuffle={}, seed={}",
-            forRep, stratify, shuffle,seedForRep);
+            forRep, stratify, shuffle, seedForRep);
         
         if (stratify) {
 
@@ -287,8 +287,8 @@ public class FoldedSplitter implements DataSplitter {
 
         // Copy over the calibration and modeling exclusive data sets
         Dataset first = new Dataset()
-            .withCalibrationExclusiveDataset(dataClone.getCalibrationExclusiveDataset().clone()) 
-            .withModelingExclusiveDataset(dataClone.getModelingExclusiveDataset().clone());
+            .withCalibrationExclusiveDataset(dataClone.getCalibrationExclusiveDataset())
+            .withModelingExclusiveDataset(dataClone.getModelingExclusiveDataset());
 
         List<DataRecord> firstDataOnly = new ArrayList<>(dataClone.getDataset().size());
         List<DataRecord> second = theFolds.get(fold);

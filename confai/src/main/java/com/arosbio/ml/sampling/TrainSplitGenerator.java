@@ -22,7 +22,8 @@ public interface TrainSplitGenerator extends Iterator<TrainSplit>{
 	 */
 	public TrainSplit get(int index) throws NoSuchElementException;
 	
+	public int getMinSplitIndex();
+
 	public int getMaxSplitIndex();
 	
-	public int getMinSplitIndex();
 }

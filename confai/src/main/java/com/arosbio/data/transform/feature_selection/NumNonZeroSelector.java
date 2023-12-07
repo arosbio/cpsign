@@ -49,14 +49,14 @@ public class NumNonZeroSelector extends ColumnTransformer implements FeatureSele
 	private static final Logger LOGGER = LoggerFactory.getLogger(NumNonZeroSelector.class);
 	private static final int DEFAULT_MIN_OCC_THRESHOLD = 2;
 
-	private int minOccuranceThreshold = DEFAULT_MIN_OCC_THRESHOLD;
+	private int minOccurrenceThreshold = DEFAULT_MIN_OCC_THRESHOLD;
 
 	private List<Integer> toRemove;
 	private boolean inPlace = true;
 	private transient TransformInfo info;
 
 	/**
-	 * Uses 2 as <code>minNumOccurance</code>, i.e. removing features that is only encountered in a single record
+	 * Uses 2 as <code>minNumOccurrence</code>, i.e. removing features that is only encountered in a single record
 	 */
 	public NumNonZeroSelector() {
 	}
@@ -64,13 +64,13 @@ public class NumNonZeroSelector extends ColumnTransformer implements FeatureSele
 	/**
 	 * {@link NumNonZeroSelector} removes columns that has less than <code>threshold</code> number
 	 * of non-zero features
-	 * @param minNumOccurance min number of occurences for a single feature 
+	 * @param minNumOccurrence min number of occurrences for a single feature 
 	 */
-	public NumNonZeroSelector(int minNumOccurance) {
-		if (minNumOccurance < 1)
-			this.minOccuranceThreshold = DEFAULT_MIN_OCC_THRESHOLD;
+	public NumNonZeroSelector(int minNumOccurrence) {
+		if (minNumOccurrence < 1)
+			this.minOccurrenceThreshold = DEFAULT_MIN_OCC_THRESHOLD;
 		else
-			this.minOccuranceThreshold = minNumOccurance;
+			this.minOccurrenceThreshold = minNumOccurrence;
 	}
 
 	@Override
@@ -110,7 +110,7 @@ public class NumNonZeroSelector extends ColumnTransformer implements FeatureSele
 	}
 
 	public int getThreshold() {
-		return minOccuranceThreshold;
+		return minOccurrenceThreshold;
 	}
 
 	@Override
@@ -145,7 +145,7 @@ public class NumNonZeroSelector extends ColumnTransformer implements FeatureSele
 		}
 
 		for (int col : getColumns().getColumns(maxFeatIndex) ) {
-			if (counts[col]< minOccuranceThreshold)
+			if (counts[col]< minOccurrenceThreshold)
 				toRemove.add(col);
 		}
 	}
@@ -155,7 +155,7 @@ public class NumNonZeroSelector extends ColumnTransformer implements FeatureSele
 
 		// The indices to compute for
 		List<Integer> indices = getColumns().getColumns(maxFeatIndex);
-		int maxIndex = indices.get(indices.size()-1); // This list should always be sorted!Collections.max(indices);
+		int maxIndex = indices.get(indices.size()-1); // This list should always be sorted!
 
 		// Loop through all of them and make the counts
 		Map<Integer,Integer> counts = new HashMap<>();
@@ -170,7 +170,7 @@ public class NumNonZeroSelector extends ColumnTransformer implements FeatureSele
 		}
 
 		for (Map.Entry<Integer, Integer> colCount : counts.entrySet() ) {
-			if (colCount.getValue()< minOccuranceThreshold)
+			if (colCount.getValue()< minOccurrenceThreshold)
 				toRemove.add(colCount.getKey());
 		}
 	}
@@ -190,7 +190,7 @@ public class NumNonZeroSelector extends ColumnTransformer implements FeatureSele
 		for (Double d : featureValues) {
 			if (d != null && !d.isNaN() && ! d.equals(0d))
 				numNonZero++;
-			if (numNonZero>= minOccuranceThreshold)
+			if (numNonZero>= minOccurrenceThreshold)
 				return false;
 		}
 
@@ -268,7 +268,7 @@ public class NumNonZeroSelector extends ColumnTransformer implements FeatureSele
 
 	@Override
 	public NumNonZeroSelector clone() {
-		NumNonZeroSelector clone = new NumNonZeroSelector(minOccuranceThreshold);
+		NumNonZeroSelector clone = new NumNonZeroSelector(minOccurrenceThreshold);
 		clone.setColumns(getColumns().clone());
 		if (toRemove != null)
 			clone.toRemove = new ArrayList<>(toRemove);
@@ -289,7 +289,7 @@ public class NumNonZeroSelector extends ColumnTransformer implements FeatureSele
 		Map<String,Object> unUsedParams = new HashMap<>();
 		for (Map.Entry<String, Object> p : params.entrySet()) {
 			if (p.getKey().equalsIgnoreCase("threshold")) {
-				minOccuranceThreshold = TypeUtils.asInt(p.getValue());
+				minOccurrenceThreshold = TypeUtils.asInt(p.getValue());
 			} else {
 				unUsedParams.put(p.getKey(), p.getValue());
 			}
