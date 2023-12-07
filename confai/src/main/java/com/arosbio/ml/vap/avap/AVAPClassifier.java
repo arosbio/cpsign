@@ -261,7 +261,6 @@ public final class AVAPClassifier extends PredictorBase implements AVAP, Classif
 			IVAPClassifier ivap = new IVAPClassifier(scoringAlgorithm.clone());
 			TrainSplit nextDataset = splits.next();
 			ivap.train(nextDataset);
-			nextDataset.clear(); //explicitly clear all memory
 			predictors.put(i, ivap);
 			LOGGER.debug(" - Trained model {}/{}",(i+1), nrModels);
 			i++;
@@ -285,7 +284,6 @@ public final class AVAPClassifier extends PredictorBase implements AVAP, Classif
 			throw new IllegalArgumentException("Cannot train index " + index + ", only allowed indexes are [0,"+(strategy.getNumSamples()-1)+"]");
 		}
 		ivap.train(split);
-		split.clear(); //explicitly clear all memory
 		predictors.put(index, ivap);
 
 	}

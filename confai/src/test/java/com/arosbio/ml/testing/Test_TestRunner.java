@@ -49,7 +49,7 @@ public class Test_TestRunner extends TestEnv {
 		try {
 			TestRunner runner = new TestRunner.Builder(new KFoldCV(NUM_CV_FOLDS, seed)).build();
 			List<Metric> mets = runner.evaluateRegressor(TestDataLoader.getInstance().getDataset(false, true), 
-					new LinearSVR(), //new LibLinear(LIB_LIN_REG_PARAMS),
+					new LinearSVR(),
 					Arrays.asList((SingleValuedMetric)new RMSE()));
 
 			Assert.assertEquals(1, mets.size());

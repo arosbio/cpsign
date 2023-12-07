@@ -323,7 +323,6 @@ public final class ACPRegressor extends PredictorBase implements ACP, ConformalR
 			ICPRegressor icp = icpImplementation.clone();
 			TrainSplit nextDataset = splits.next();
 			icp.train(nextDataset);
-			nextDataset.clear(); //explicitly clear all memory
 			predictors.put(i, icp);
 			LOGGER.debug(" - Trained model {}/{}",(i+1),nrModels);
 			i++;
@@ -357,7 +356,6 @@ public final class ACPRegressor extends PredictorBase implements ACP, ConformalR
 			throw new IllegalArgumentException("Cannot train index " + index + ", only allowed indexes are [0,"+(strategy.getNumSamples()-1)+"]");
 		}
 		icp.train(split);
-		split.clear(); //explicitly clear all memory
 		predictors.put(index, icp);
 		LOGGER.debug(" - Trained model {}/{}",(index+1),getStrategy().getNumSamples());
 

@@ -333,7 +333,6 @@ public final class ACPClassifier extends PredictorBase implements ACP, Conformal
 			ICPClassifier icp = icpImplementation.clone();
 			TrainSplit nextDataset = splits.next();
 			icp.train(nextDataset);
-			nextDataset.clear(); //explicitly clear all memory
 			predictors.put(i, icp);
 			LOGGER.debug(" - Trained model {}/{}",(i+1), nrModels);
 			i++;
@@ -359,7 +358,6 @@ public final class ACPClassifier extends PredictorBase implements ACP, Conformal
 			throw new IllegalArgumentException("Cannot train index " + index + ", only allowed indexes are [0,"+(strategy.getNumSamples()-1)+"]");
 		}
 		icp.train(split);
-		split.clear(); //explicitly clear all memory
 		predictors.put(index, icp);
 
 	}

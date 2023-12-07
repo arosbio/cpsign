@@ -56,21 +56,31 @@ public class TrainSplitWrapper implements TrainSplitGenerator {
 
     private static TrainSplit convert(DataSplit input){
         // Put together the proper training set
-        List<DataRecord> proper = new ArrayList<>();
-        proper.addAll(input.getFirst().getDataset());
-        if (!input.getFirst().getModelingExclusiveDataset().isEmpty()){
+        List<DataRecord> proper = null; 
+        if (input.getFirst().getModelingExclusiveDataset().isEmpty()){
+            proper = input.getFirst().getDataset();
+        } else {
+            // Here we need to a copy of the data
+            proper = new ArrayList<>(input.getFirst().getDataset().size() + input.getFirst().getModelingExclusiveDataset().size());
+            proper.addAll(input.getFirst().getDataset());
             proper.addAll(input.getFirst().getModelingExclusiveDataset());
             // Now need to shuffle again
             Collections.shuffle(proper, new Random(input.getSeed()));
         }
+        
         // Put together the calibration set
-        List<DataRecord> calibration = new ArrayList<>(input.getSecond());
-        if (! input.getFirst().getCalibrationExclusiveDataset().isEmpty()){
+        List<DataRecord> calibration = null; 
+        if (input.getFirst().getCalibrationExclusiveDataset().isEmpty()){
+            calibration = input.getSecond();
+        } else {
+            // Here we need to copy data
+            calibration = new ArrayList<>(input.getSecond().size() + input.getFirst().getCalibrationExclusiveDataset().size());
+            calibration.addAll(input.getSecond());
             calibration.addAll(input.getFirst().getCalibrationExclusiveDataset());
             // Now need to shuffle again
             Collections.shuffle(calibration, new Random(input.getSeed()));
         }
-
+        
         return new TrainSplit(proper, calibration,input.getObservedLabelSpace());
     }
     

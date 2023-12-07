@@ -10,10 +10,12 @@
 package com.arosbio.ml.sampling;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Random;
 
 import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.mixins.Described;
@@ -101,8 +103,10 @@ public class SingleSample implements SamplingStrategy, Described {
 		private boolean hasNext = true;
 		
 		public SingleSampleIterator(Dataset p, long seed) {
-			this.properTrainSet = p.getModelingExclusiveDataset().clone().shuffle(seed);
-			this.calibrationSet = p.getCalibrationExclusiveDataset().clone().shuffle(seed);
+			this.properTrainSet = new ArrayList<>(p.getModelingExclusiveDataset());
+			Collections.shuffle(properTrainSet, new Random(seed));
+			this.calibrationSet = new ArrayList<>(p.getCalibrationExclusiveDataset());
+			Collections.shuffle(calibrationSet, new Random(seed));
 
 			// Find the regression label space once in case we should
 			try {

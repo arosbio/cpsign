@@ -20,4 +20,5 @@ public interface MultiSampling extends SamplingStrategy {
 	 * @throws IllegalArgumentException If the {@code num} parameter is invalid
 	 */
 	public MultiSampling withNumSamples(int num) throws IllegalArgumentException;
+	
 }

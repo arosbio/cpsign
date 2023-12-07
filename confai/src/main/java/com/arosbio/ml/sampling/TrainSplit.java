@@ -50,13 +50,6 @@ public class TrainSplit {
 		this.observedLabelSpace = minMaxLabelSpace;
 	}
 	
-	/**
-	 * Frees all memory
-	 */
-	public void clear(){
-		properTrainingSet.clear();
-		calibrationSet.clear();
-	}
 
 	public List<DataRecord> getProperTrainingSet() {
 		return properTrainingSet;

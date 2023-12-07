@@ -220,10 +220,15 @@ public class FoldedSplitter implements DataSplitter {
             return folds;
 
         } else {
-            List<DataRecord> recs = new ArrayList<>(dataClone.getDataset());
-
-            if (shuffle)
+            List<DataRecord> recs = null; 
+            if (shuffle) {
+                // Copy only in case we need to shuffle
+                recs = new ArrayList<>(dataClone.getDataset());
                 Collections.shuffle(recs, new Random(seedForRep));
+            } else {
+                recs = dataClone.getDataset();
+            }
+                
             return CollectionUtils.getDisjunctSets(recs, numFolds, false);
         }
 
