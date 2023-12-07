@@ -85,7 +85,7 @@ public class KeepMinLabel implements DuplicatesResolverTransformer {
 		
 		Set<DuplicateEntry> dups = DuplicateResolvingUtils.findDuplicates(transformed);
 		
-		for (DuplicateEntry entry: dups) {
+		for (DuplicateEntry entry : dups) {
 			entry.getRemainingRecord().setLabel(Collections.min(entry.getLabels()));
 		}
 		

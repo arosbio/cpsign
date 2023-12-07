@@ -106,7 +106,7 @@ public class RemoveContradictoryRecords implements DuplicatesResolverTransformer
 		Set<DuplicateEntry> dups = DuplicateResolvingUtils.findDuplicates(transformed);
 
 
-		for (DuplicateEntry entry: dups) {
+		for (DuplicateEntry entry : dups) {
 			double min=Collections.min(entry.getLabels()); 
 			double max=Collections.max(entry.getLabels());
 

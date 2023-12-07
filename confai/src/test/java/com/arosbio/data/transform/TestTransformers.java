@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 
@@ -57,6 +58,8 @@ import com.arosbio.data.SparseFeatureImpl;
 import com.arosbio.data.SparseVector;
 import com.arosbio.data.io.LIBSVMFormat;
 import com.arosbio.data.transform.Transformer.TransformInfo;
+import com.arosbio.data.transform.duplicates.DuplicateResolvingUtils;
+import com.arosbio.data.transform.duplicates.DuplicateResolvingUtils.DuplicateEntry;
 import com.arosbio.data.transform.duplicates.DuplicatesResolverTransformer;
 import com.arosbio.data.transform.duplicates.InterDatasetDuplicatesResolver;
 import com.arosbio.data.transform.duplicates.KeepFirstRecord;
@@ -294,7 +297,7 @@ public class TestTransformers extends TestEnv {
 
 		@Test
 		public void testKeep_last_first_mean_Record() throws Exception {
-			SubSet dLast = TestDataLoader.getInstance().getDataset(true, false).getDataset().clone();
+			SubSet dLast = TestDataLoader.getInstance().getDataset(true, false).getDataset();
 			SubSet dFirst = dLast.clone();
 			SubSet dClone = dLast.clone();
 
@@ -310,6 +313,124 @@ public class TestTransformers extends TestEnv {
 			// Should result in the same size
 			Assert.assertEquals(dClone.size(), dLast.size());
 		}
+
+		@Test
+		public void testDuplicateUtils() throws Exception {
+			doCheckEqualOutput(TestDataLoader.getInstance().getDataset(true, false).getDataset());
+			doCheckEqualOutput(TestDataLoader.getInstance().getDataset(false, false).getDataset());
+
+
+			doCheckEqualOutput(new MakeDenseTransformer().fitAndTransform(TestDataLoader.getInstance().getDataset(true, false).getDataset()));
+			doCheckEqualOutput(new MakeDenseTransformer().fitAndTransform(TestDataLoader.getInstance().getDataset(false, false).getDataset()));
+
+		}
+
+		public void doCheckEqualOutput(SubSet data){
+			SubSet clone = data.clone();
+			Stopwatch wHash=new Stopwatch().start();
+			Set<DuplicateEntry> dups2 = DuplicateResolvingUtils.findDuplicates(clone);
+			wHash.stop();
+			Stopwatch wOld=new Stopwatch().start();
+			Set<DuplicateEntry> dups1 = findDuplicatesN2(data);
+			wOld.stop();
+			// System.err.println("new: " + wHash + ", old: " + wOld);
+
+			Assert.assertTrue(DataUtils.equals(data, clone));
+			Assert.assertEquals(dups1.size(), dups2.size());
+		}
+
+		/**
+		 * <b>Old implementation</b> used a O(N*N) algorithm, replaced by hashed version. This 
+		 * is only kept for back-to-back testing of the new algorithm.
+		 * Finds duplicates - keeps the first occurrence but substitutes the label with Double.NaN,
+		 * the remaining duplicates are removed from the list of records and only their labels
+		 * are returned in the {@link DuplicateEntry} that is returned 
+		 * @param records the records
+		 * @return set of duplicates
+		 */
+		public static Set<DuplicateEntry> findDuplicatesN2(List<DataRecord> records){
+			Set<DuplicateEntry> result = new HashSet<>();
+
+
+			// Outer loop
+			for (int i=0; i<records.size()-1; i++) {
+				// new list for every new potential feature
+				List<Double> foundYs = new ArrayList<>();
+
+				DataRecord currRec = records.get(i);
+
+				foundYs.add(currRec.getLabel());
+
+				// Inner loop of the remaining part of the dataset
+				for (int j=i+1; j<records.size(); j++){
+					if (records.get(j).getFeatures().equals(currRec.getFeatures())){
+						// Found matching features
+						foundYs.add(records.get(j).getLabel());
+						records.remove(j);
+						j--; // re-do current index as list has shifted 
+					}
+				}
+
+				// Only have to care if we found a duplicate
+				if (foundYs.size() > 1){
+					// Set NaN to make sure this is updated in the Transformer after this
+					currRec.setLabel(Double.NaN);
+					result.add(new DuplicateEntry(currRec, foundYs));
+				}
+
+			} // end outer loop
+
+			return result;
+		}
+
+		/**
+		 * Finds duplicates - keeps the first occurrence but substitutes the label with Double.NaN,
+		 * the remaining duplicates are removed from the list of records and only their labels
+		 * are returned in the {@link DuplicateEntry} that is returned 
+		 * @param records the records
+		 * @return set of duplicates
+		 */
+		public static Set<DuplicateEntry> findDuplicatesKeepLastN2(List<DataRecord> records){
+			Set<DuplicateEntry> result = new HashSet<>();
+
+
+			// Outer loop - loop backwards
+			for (int i=records.size()-1; i>0; i--) {
+				// new list for every new potential label
+				List<Double> foundYs = new ArrayList<>();
+
+				DataRecord currRec = records.get(i); 
+
+				foundYs.add(currRec.getLabel());
+				List<Integer> recIndicesToRm = new ArrayList<>();
+
+				// Inner loop of the remaining part of the dataset (backwards as well)
+				for (int j=i-1; j>=0; j--){
+					if (records.get(j).getFeatures().equals(currRec.getFeatures())){
+						// Found matching features
+						foundYs.add(records.get(j).getLabel());
+						recIndicesToRm.add(j);
+					}
+				}
+
+				// Remove the indices (they are reverse-order so indices are not scrambled)
+				for (int rmIndex : recIndicesToRm) {
+					records.remove(rmIndex);
+				}
+
+				// Only have to care if we found a duplicate
+				if (foundYs.size() > 1){
+					// Set NaN to make sure this is updated in the Transformer after this
+					currRec.setLabel(Double.NaN);
+					result.add(new DuplicateEntry(currRec, foundYs));
+					i -= recIndicesToRm.size(); 
+				}
+
+			} // end outer loop
+
+			return result;
+		}
+
 
 	}
 
@@ -1464,5 +1585,6 @@ public class TestTransformers extends TestEnv {
 	 * drop-missing-data-feats (transform): 0 ms, diff rm: 0
 	 * 
 	 */
+
 
 }

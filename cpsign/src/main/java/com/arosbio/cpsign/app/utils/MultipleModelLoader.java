@@ -58,6 +58,7 @@ public class  MultipleModelLoader implements Iterator<Object>{
 		Object loaded = null;
 		try {
 			t = ModelSerializer.getType(lastLoadedURI);
+			LOGGER.debug("attempting to load new model of type {}", t);
 			
 			if (t == ModelType.CHEM_PREDICTOR){
 				loaded = ModelSerializer.loadChemPredictor(lastLoadedURI,spec);

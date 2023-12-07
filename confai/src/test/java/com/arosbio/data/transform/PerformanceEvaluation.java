@@ -13,16 +13,26 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.Stopwatch;
+import com.arosbio.data.DataRecord;
+import com.arosbio.data.DataUtils;
 import com.arosbio.data.Dataset;
+import com.arosbio.data.Dataset.SubSet;
+import com.arosbio.data.DenseFloatVector;
+import com.arosbio.data.FeatureVector;
+import com.arosbio.data.transform.duplicates.DuplicateResolvingUtils;
+import com.arosbio.data.transform.duplicates.DuplicateResolvingUtils.DuplicateEntry;
 import com.arosbio.data.transform.feature_selection.L1_SVC_Selector;
 import com.arosbio.data.transform.feature_selection.L2_SVC_Selector;
 import com.arosbio.data.transform.feature_selection.L2_SVR_Selector;
@@ -491,5 +501,39 @@ CP regression calibration plot builder
 		doTest(getPredictorReg(), getLargeRegProblem(), Arrays.asList(new MinMaxScaler(), new VarianceBasedSelector()), "Min-Max + Variance based");
 	}
 	
+
+	/*
+	 * Comparing using 	CLASSIFICATION_7CLASS_LARGE (581012 records)
+	 * Hashed it in 1 h 14 min, found 0 entries 
+	 * Finished original one, in 2 h 54 min, found 0 entries
+	 * === After tweaks:
+	 * Hashed it in 360 ms, found 0 entries 
+	 */
+	@Test
+	public void testSpeedUpDuplicateResolving() throws Exception {
+		SubSet data = TestDataLoader.loadSubset(TestResources.SVMLIGHTFiles.CLASSIFICATION_7CLASS_LARGE); //CLASSIFICATION_7CLASS_LARGE); CLASSIFICATION_3CLASS
+		int originalSize = data.size();
+		SubSet clone = data.clone();
+		
+		Stopwatch watchHash = new Stopwatch().start();
+
+		Set<DuplicateEntry> dups2 = DuplicateResolvingUtils.findDuplicates(clone);
+		watchHash.stop();
+		System.err.printf("Hashed it in %s, found %d entries %n",watchHash, dups2.size());
+		System.err.println("removed: " + (originalSize-data.size()));
+
+		// Stopwatch watch = new Stopwatch().start();
+		// Set<DuplicateEntry> duplicates =  DuplicateResolvingUtils.findDuplicates(data);
+		// watch.stop();
+		// System.err.printf("Finished original one, in %s, found %d entries%n",watch,duplicates.size());
+
+		// Assert.assertEquals(data.size(), clone.size());
+		// Assert.assertTrue(DataUtils.equals(data, clone));
+
+
+
+		// FeatureVector v = new DenseFloatVector(new float[]{.4f,.5f,.1f,6.1f});
+		// System.err.println(v.hashCode());
+	}
 
 }

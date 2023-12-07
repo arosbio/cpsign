@@ -89,7 +89,7 @@ public class KeepFirstRecord implements DuplicatesResolverTransformer {
 		
 		Set<DuplicateEntry> dups = DuplicateResolvingUtils.findDuplicates(transformed);
 		
-		for (DuplicateEntry entry: dups) {
+		for (DuplicateEntry entry : dups) {
 			entry.getRemainingRecord().setLabel(entry.getLabels().get(0));
 		}
 		

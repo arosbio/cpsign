@@ -9,22 +9,27 @@
  */
 package com.arosbio.data;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.arosbio.commons.Stopwatch;
 import com.arosbio.data.Dataset.SubSet;
 import com.arosbio.data.FeatureVector.Feature;
 import com.arosbio.data.transform.format.MakeDenseTransformer;
 import com.arosbio.data.transform.scale.Standardizer;
+import com.arosbio.tests.TestResources;
 import com.arosbio.testutils.TestDataLoader;
 import com.google.common.collect.BoundType;
 import com.google.common.collect.Range;
@@ -480,6 +485,25 @@ public class TestFeatureVectors {
 		
 		// After transformations
 		Assert.assertTrue(DataUtils.equals(dense, d));
+		
+	}
+
+	@Test
+	public void testHashing() throws IOException{
+		SubSet data = TestDataLoader.loadSubset(TestResources.SVMLIGHTFiles.CLASSIFICATION_7CLASS_LARGE);
+		Stopwatch w = new Stopwatch().start();
+		Map<Integer,List<DataRecord>> hashed = new HashMap<>();
+		for (DataRecord r : data){
+			int h = r.getFeatures().hashCode();
+			if (!hashed.containsKey(h)){
+				hashed.put(h, new ArrayList<>());
+			}
+			hashed.get(h).add(r);
+		}
+		w.stop();
+		Assert.assertTrue(hashed.size()>data.size()*.1);
+		// System.err.println("Hashed it in: " + w);
+		// System.err.println("Created: " + hashed.size() + " buckets for the size: " + data.size());
 		
 	}
 

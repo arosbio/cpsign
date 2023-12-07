@@ -86,10 +86,11 @@ public class KeepLastRecord implements DuplicatesResolverTransformer {
 		SubSet transformed = inPlace ? data : data.clone();
 		int initialSize = transformed.size();
 		
-		Set<DuplicateEntry> dups = DuplicateResolvingUtils.findDuplicatesKeepLast(transformed);
+		// TODO is this correct?
+		Set<DuplicateEntry> dups = DuplicateResolvingUtils.findDuplicates(transformed);
 		
-		for (DuplicateEntry entry: dups) {
-			entry.getRemainingRecord().setLabel(entry.getLabels().get(0));
+		for (DuplicateEntry entry : dups) {
+			entry.getRemainingRecord().setLabel(entry.getLabels().get(entry.getLabels().size()-1)); // Take the last found value
 		}
 		
 		info = new TransformInfo(initialSize-transformed.size(), dups.size());
