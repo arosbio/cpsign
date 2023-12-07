@@ -30,6 +30,9 @@ public interface FeatureVector extends Iterable<FeatureVector.Feature> {
 	 *
 	 */
 	public static interface Feature {
+
+		/** prime number used in hash method, multiply with the index */
+		static final int PRIME_MULTIPLIER = 43; 
 		
 		/**
 		 * Getter for the index of the feature, <b>note:</b> indices starts at 0!
@@ -51,6 +54,10 @@ public interface FeatureVector extends Iterable<FeatureVector.Feature> {
 		 * @return an identical copy of the current instance
 		 */
 		public Feature clone();
+
+		public static int hashCode(Feature f){
+			return PRIME_MULTIPLIER * f.getIndex() + Double.hashCode(f.getValue());
+		}
 	}
 
 	/**

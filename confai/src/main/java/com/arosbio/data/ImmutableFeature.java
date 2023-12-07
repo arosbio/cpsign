@@ -12,6 +12,7 @@ package com.arosbio.data;
 import com.arosbio.data.FeatureVector.Feature;
 
 class ImmutableFeature implements Feature {
+
 	private final int index;
 	private final double value;
 	
@@ -33,4 +34,9 @@ class ImmutableFeature implements Feature {
 	public ImmutableFeature clone() {
 		return new ImmutableFeature(index, value);
 	}
+
+	public int hashCode() {
+		return Feature.hashCode(this);
+	}
+	
 }

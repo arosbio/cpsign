@@ -146,12 +146,9 @@ public class DenseVector implements FeatureVector {
 					throw new NoSuchElementException("No more items in iterator");
 				try {
 					return new ImmutableFeature(currentIndex, vector[currentIndex]);
-				}finally {
+				} finally {
 					currentIndex++;
 				}
-//				SparseFeature f = new SparseFeatureImpl(currentIndex, vector[currentIndex]);
-//				currentIndex++;
-//				return f;
 			}
 
 		};
@@ -292,6 +289,24 @@ public class DenseVector implements FeatureVector {
 
 		vector = tmp;
 
+	}
+
+	/** Max number of features to consider in hash method */
+	private static final int HASH_N = 10; 
+	/** Prime number to avoid hash collisions */
+    private static final int PRIME_MULTIPLIER = 31;
+	private static final int PRIME_MULTIPLIER_FEATURE = 43; 
+
+	@Override
+	public int hashCode(){
+		int hash = 0;
+		int maxN = Math.min(HASH_N, vector.length);
+
+		for (int i=0; i<maxN; i++){
+			hash  = PRIME_MULTIPLIER * hash + (i * PRIME_MULTIPLIER_FEATURE) * Double.hashCode(vector[i]);
+		}
+		
+		return hash;
 	}
 
 }

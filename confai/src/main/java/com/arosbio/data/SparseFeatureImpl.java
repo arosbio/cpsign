@@ -10,6 +10,7 @@
 package com.arosbio.data;
 
 import com.arosbio.commons.MathUtils;
+import com.arosbio.data.FeatureVector.Feature;
 
 /**
  * 
@@ -18,7 +19,7 @@ import com.arosbio.commons.MathUtils;
  *
  */
 public class SparseFeatureImpl implements SparseFeature {
-
+	
 	private int index;
 	private double value;
 
@@ -76,13 +77,7 @@ public class SparseFeatureImpl implements SparseFeature {
 
 	@Override
 	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + index;
-		long temp;
-		temp = Double.doubleToLongBits(value);
-		result = prime * result + (int) (temp ^ (temp >>> 32));
-		return result;
+		return Feature.hashCode(this);
 	}
 
 	@Override

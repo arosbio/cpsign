@@ -19,7 +19,7 @@ import com.arosbio.data.FeatureVector.Feature;
  *
  */
 public interface SparseFeature extends Comparable<SparseFeature>, Feature {
-	
+
 	/**
 	 * Getter for the current index of the feature
 	 * @return the feature index
@@ -60,4 +60,5 @@ public interface SparseFeature extends Comparable<SparseFeature>, Feature {
 	public String toString();
 	
 	public SparseFeature clone();
+
 }

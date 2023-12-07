@@ -9,6 +9,8 @@
  */
 package com.arosbio.data;
 
+import com.arosbio.data.FeatureVector.Feature;
+
 public class MissingValueFeature implements SparseFeature {
 	
 	private int index;
@@ -85,6 +87,10 @@ public class MissingValueFeature implements SparseFeature {
 	
 	public String toString() {
 		return index + ":NaN";
+	}
+
+	public int hashCode() {
+		return Feature.hashCode(this);
 	}
 
 }

@@ -336,4 +336,21 @@ public class SparseVector implements FeatureVector {
 		}
 	}
 
+	/** Max number of features to consider in hash method */
+	private static final int HASH_N = 10; 
+	/** Prime number to avoid hash collisions */
+    private static final int PRIME_MULTIPLIER = 31;
+
+	@Override
+	public int hashCode(){
+		int hash = 0;
+		int maxN = Math.min(HASH_N, vector.size());
+
+		for (int i = 0; i<maxN; i++){
+			hash  = PRIME_MULTIPLIER * hash + Feature.hashCode(vector.get(i));
+		}
+		
+		return hash;
+	}
+
 }
