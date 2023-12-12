@@ -12,7 +12,6 @@ package com.arosbio.commons.logging;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.net.URL;
 import java.util.Iterator;
 
 import org.apache.commons.io.FileUtils;
@@ -293,22 +292,20 @@ public class LoggerUtils {
 		LoggerContext loggerContext = rootLogger.getLoggerContext();
 
 		ContextInitializer ci = new ContextInitializer(loggerContext);
-		URL url = ci.findURLOfDefaultConfigurationFile(true);
-		loggerContext.reset();
-		ci.configureByResource(url);
+		ci.autoConfig();
+		
 	}
 	
 	public static void reloadLogger() {
 	    LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
 
 	    ContextInitializer ci = new ContextInitializer(loggerContext);
-	    URL url = ci.findURLOfDefaultConfigurationFile(true);
 
 	    try {
 	        JoranConfigurator configurator = new JoranConfigurator();
 	        configurator.setContext(loggerContext);
 	        loggerContext.reset();
-	        configurator.doConfigure(url);
+			ci.autoConfig();
 	    } catch (JoranException je) {
 	        // StatusPrinter will handle this
 	    }
