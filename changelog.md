@@ -1,5 +1,9 @@
 # Change log for CPSign versions
 
+### 2.0.0 RC7 :
+- Massive improvement in runtime for duplicate resolving transformations - e.g. new cpLogD with 2.2M compounds took 19.5 hours with old algorithm and now less than 1 second using the same machine. 
+- Update slf4j and logback deps due to dependabot alert for new vulnerability. 
+
 ### 2.0.0 RC6 :
 #### Potentially breaking changes
 - Enforce consistent number of columns in CSV files, will cause failures unless every line has the same number of columns as the header row. This may be a breaking change for some files but will likely produce more robust results.
