@@ -204,8 +204,18 @@ public class SparseVector implements FeatureVector {
 
 		if (o instanceof SparseVector) {
 			SparseVector v = (SparseVector) o;
-
-			return vector.equals(v.vector);
+			// Custom check for equality 
+			if (vector.size() != v.vector.size()){
+				return false;
+			}
+			// Loop backwards - first features are more common, later features are 
+			// more likely to differ between molecules
+			for (int i=vector.size()-1; i>=0; i--){
+				if (! vector.get(i).equals(v.vector.get(i))){
+					return false;
+				}
+			}
+			return true;
 		} 
 
 		return false;

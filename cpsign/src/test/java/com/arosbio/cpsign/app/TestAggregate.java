@@ -245,7 +245,7 @@ public class TestAggregate extends CLIBaseTest{
 		Assert.assertEquals("Only trained partially",SPLITS_SECOND, ((ACPRegressor)acpreg2.getPredictor()).getPredictors().keySet());
 		Assert.assertFalse(acpreg2.getPredictor().isTrained());
 		Assert.assertTrue(((ACPRegressor) acpreg2.getPredictor()).isPartiallyTrained());
-		ModelSerializer.saveModel(acpreg2, trainedReg2, spec);
+		ModelSerializer.saveModel(acpreg2, trainedReg2, null);
 
 		// different implementation
 		acpreg2.setPredictor(new ACPRegressor(
@@ -620,10 +620,12 @@ public class TestAggregate extends CLIBaseTest{
 		mockMain(new String[]{
 				"aggregate",
 				(FAIL_FAST? "": "-af"),
-				"-m", trainedClass1.getAbsolutePath(), precompReg1.getAbsolutePath(), trainedReg1.getAbsolutePath(), trainedClass1.getAbsolutePath(), trainedReg2.getAbsolutePath(), precompClass_diff_labels.getAbsolutePath(),
+				"-m", trainedReg1.getAbsolutePath(), trainedClass1.getAbsolutePath(), precompReg1.getAbsolutePath(),  trainedClass1.getAbsolutePath(), trainedReg2.getAbsolutePath(), precompClass_diff_labels.getAbsolutePath(),
 				"-mn", "valid",
 				"-mo", modelOut.getAbsolutePath(),
 		});
+
+		// printLogs();
 
 	}
 
