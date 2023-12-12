@@ -6,6 +6,7 @@ with the signatures molecular descriptor and SVM. <br>
 
 ## Table of Contents <!-- omit in toc -->
 - [Introduction](#introduction)
+    - [Further reading](#further-reading)
 - [License](#license)
 - [How to run CPSign](#how-to-run-cpsign)
     - [CLI/terminal](#running-from-cli)
@@ -23,7 +24,11 @@ with the signatures molecular descriptor and SVM. <br>
 
 
 ## Introduction
-CPSign is a machine learning and QSAR software package written purely in Java, leveraging the popular [LIBSVM](https://github.com/cjlin1/libsvm) and [LIBLINEAR](https://github.com/bwaldvogel/liblinear-java) packages for machine learning and the [Chemistry Development Kit (CDK)](https://cdk.github.io/) for handling chemistry. CPSign allows directly reading in molecular data in CSV format (requiring SMILES for molecular structure) or SDF (v2000 and v3000), computing descriptors and building machine learning models. The generated model files contain all information for later predicting new compounds without having to manually compute descriptors and apply data transformations. CPSign implements the inductive [Conformal Prediction](http://www.alrw.net/) algorithms ICP and ACP (or their more recent name; Split Conformal Predictors) for both classification and regression problems, as well as transductive conformal prediction (TCP) and [Cross Venn-ABERS](http://www.alrw.net/articles/13.pdf) probabilistic prediction for binary classification problems. Being written in Java makes it platform-independent, and the LIBLINEAR/LIBSVM methods runs on CPU which makes it easy to run without requiring any special hardware. 
+CPSign is a machine learning and cheminformatics software package written purely in Java, leveraging the popular [LIBSVM](https://github.com/cjlin1/libsvm) and [LIBLINEAR](https://github.com/bwaldvogel/liblinear-java) packages for machine learning and the [Chemistry Development Kit (CDK)](https://cdk.github.io/) for handling chemistry. CPSign allows directly reading in molecular data in CSV format (requiring SMILES for molecular structure) or SDF (v2000 and v3000), computing descriptors and building machine learning models. The generated model files contain all information for later predicting new compounds without having to manually compute descriptors and apply data transformations. CPSign implements the inductive [Conformal Prediction](http://www.alrw.net/) algorithms ICP and ACP (or their more recent name; Split Conformal Predictors) for both classification and regression problems, as well as transductive conformal prediction (TCP) and [Cross Venn-ABERS](http://www.alrw.net/articles/13.pdf) probabilistic prediction for binary classification problems. Being written in Java makes it platform-independent, and the LIBLINEAR/LIBSVM methods runs on CPU which makes it easy to run without requiring any special hardware. 
+
+### Further reading
+- CPSign is now available as a preprint at bioRxiv: [CPSign - Conformal Prediction for Cheminformatics Modeling](https://www.biorxiv.org/content/10.1101/2023.11.21.568108v1). 
+- CPSign has a [Readthedocs](https://cpsign.readthedocs.io/) web page with user documentation.
 
 ## License
 CPSign is dual licensed, where the user can choose between the [GNU General Public License](http://www.gnu.org/licenses/gpl-3.0.html) with additional terms (which can be found at the [Aros Bio website](https://arosbio.com/cpsign/license)) or a [commercial license](license/META-INF/comm-license.txt). See further details at the [Aros Bio website](https://arosbio.com/cpsign/license).
@@ -36,12 +41,12 @@ To run CPSign from the CLI you need both the CPSign code and all the required de
 ```
 java -jar <path-to-jar> <arguments>
 ```
-Which also supports adding any releavant JVM parameters. For Unix-based platforms the JAR supports running it as an executable file, but GitHub strips execute-privileges from the file when downloading it. If the user adds execute privilege (e.g., `"chmod +x <file>"`) then CPSign can be run using;
+Which supports adding any relevant JVM parameters. For Unix-based platforms the JAR supports running it as an executable file, but GitHub strips execute-privileges from the file when downloading it. If the user adds execute privilege (e.g., `"chmod +x <file>"`) then CPSign can be run using;
 ```
 ./<path-to-jar> <arguments>
 ```
 
-Working with CPSign from the CLI the general workflow is running the following programs: `precompute`, `train`, `test`/`validate`, with the optional step of performing hyper-parameter tuning using either `tune-scorer` or `tune`. More information is found on the [CPSign web-page](https://arosbio.com/cpsign/docs/latest/).
+Working with CPSign from the CLI the general workflow is running the following programs: `precompute`, `train`, `test`/`validate`, with the optional step of performing hyper-parameter tuning using either `tune-scorer` or `tune`. More information is found on the [CPSign readthedocs](https://cpsign.readthedocs.io/).
 
 
 
@@ -74,15 +79,15 @@ In order to minimize memory footprint, the project has been split up into severa
 Note: The documentation of CPSign is located in a separate [CPSign docs repo](https://github.com/arosbio/cpsign_docs).
 
 ## Java version
-CPSign is written and developed on Java 11, but can with a few changes compile and run on Java 8. __Note__: the tests for the [cpsign](cpsign/README.md) project relies on the [System Rules](https://stefanbirkner.github.io/system-rules/) library, which in turn uses the deprecated (from Java 17) `SecurityManager` interface - causing either an excessive amount of error logs or completely fails, depending on which Java version 17-19 that you use. However, cpsign can still be built and run using the latest versions of Java.
+CPSign is written and developed on Java 11, but can with a few changes compile and run on Java 8. __Note__: the tests for the [cpsign](cpsign/README.md) project relies on the [System Rules](https://stefanbirkner.github.io/system-rules/) library, which in turn uses the deprecated (from Java 17) `SecurityManager` interface - causing either an excessive amount of error logs or completely fails, depending on which Java version (17 or later) that you use. However, cpsign can still be built and run using the latest versions of Java.
 
 ## Changelog
-A changelog can now be found in [changlog](changelog.md).
+A changelog can now be found in [changelog](changelog.md).
 
 ## Extension packages
 
 ### Plot_utils
-In order to visualize the predictions from the conformal predictors we have created a python library for this task, located at [GitHub Plot_utils](https://github.com/pharmbio/plot_utils), building ontop of the Matplotlib and numpy libraries. This way visualizations can be customized easily and in a high abstraction level. We have also created functions for loading results from CPSign to make it easy for users to evaluate their predictive models. Example figures generated using Plot_utils for displaying the prediction intervals at a single confidence level;
+In order to visualize the predictions from the conformal predictors we have created a python library for this task, located at [GitHub Plot_utils](https://github.com/pharmbio/plot_utils), building on top of the Matplotlib and numpy libraries. This way visualizations can be customized easily and in a high abstraction level. We have also created functions for loading results from CPSign to make it easy for users to evaluate their predictive models. Example figures generated using Plot_utils for displaying the prediction intervals at a single confidence level;
 
 ![Regression prediction intervals](figures/reg_intervals.png)
 
@@ -92,11 +97,11 @@ and the distribution of prediction sets depending on the confidence level, which
 More examples of figures and metrics that can be calculated are shown in the [jupyter notebooks](https://github.com/pharmbio/plot_utils/tree/master/python), which also detail how to work with results from CPSign. 
 
 ### Micro services
-CPSign predictive models can be deployed as micro services using the [Predict services extension](https://github.com/arosbio/cpsign_predict_services), which exposes a REST interface for each deployed model. The servers can optionally be exteneded with a drawing interface:
+CPSign predictive models can be deployed as micro services using the [Predict services extension](https://github.com/arosbio/cpsign_predict_services), which exposes a REST interface for each deployed model. The servers can optionally be extended with a drawing interface:
 
 ![Micro server Draw GUI](figures/rest_gui.png)
 
-Where molecules can be inserted and altered in the JSME editor in the upper left corner and the atom-constributions are rendered in the bottom figure. Further information can be found in the dedicated repository (https://github.com/arosbio/cpsign_predict_services).
+Where molecules can be inserted and altered in the JSME editor in the upper left corner and the atom-contributions are rendered in the bottom figure. Further information can be found in the dedicated repository (https://github.com/arosbio/cpsign_predict_services).
 
 ### DeepLearning4J extension
 CPSign can be extended with custom extensions for, e.g., chemical descriptors and machine learning models. We have created such an extension for including deep neural networks as underlying machine learning model: [CPSign-DL4J](https://github.com/arosbio/cpsign-dl4). This extension requires building the extension for your intended platform/hardware and is more dependent on hyper-parameter tuning in order to achieve good predictive performance. The [DeepLearning4J](https://deeplearning4j.konduit.ai/) package requires running native code and is considerably larger than the other packages included in CPSign, and is thus not included in the standard version of CPSign. 
