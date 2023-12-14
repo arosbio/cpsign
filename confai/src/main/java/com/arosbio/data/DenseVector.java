@@ -292,7 +292,7 @@ public class DenseVector implements FeatureVector {
 	}
 
 	/** Max number of features to consider in hash method */
-	private static final int HASH_N = 10; 
+	private static final int HASH_N = 50; 
 	/** Prime number to avoid hash collisions */
     private static final int PRIME_MULTIPLIER = 31;
 	private static final int PRIME_MULTIPLIER_FEATURE = 43; 

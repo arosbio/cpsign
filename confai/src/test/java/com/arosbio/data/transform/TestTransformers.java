@@ -216,56 +216,17 @@ public class TestTransformers extends TestEnv {
 
 		Dataset p = TestDataLoader.getInstance().getDataset(true, true);
 
-		// System.err.println(p.getDataset().toLibSVMFormat());
-		// int numColTrans=0;
 		int numTrans = 0;
 		while (trans.hasNext()) {
 			Transformer t = trans.next();
 
 			doTestSaveLoadTransformer(t, p.clone());
-			// if (t instanceof ColumnTransformer) {
-			// if (numColTrans==0)
-			// ((ColumnTransformer) t).setColumns(new ColumnSpec(Range.closed(1, 5)));
-			// else if (numColTrans == 1)
-			// ((ColumnTransformer) t).setColumns(new ColumnSpec(8,7,3));
-			// else if (numColTrans == 2)
-			// ((ColumnTransformer) t).setColumns(new ColumnSpec(Arrays.asList(8,7,3)));
-			// else
-			// ((ColumnTransformer) t).setColumns(new ColumnSpec(Range.all()));
-			// numColTrans++;
-			// }
-			//// System.err.println("Applying " + t.getNames());
-			// p.apply(t);
+			
 			numTrans++;
 
-			// if (t instanceof MinMaxScaler) {
-			// System.err.println(p.getDataset().toLibSVMFormat());
-			// }
 		}
 		Assert.assertTrue(numTrans > 5);
 
-		// System.out.println(p.getDataset().toLibSVMFormat());
-		// File theFile = TestEnvironmentSetup.createTempFile("data", "jar");
-		//
-		// try (JarDataSink sink = new JarDataSink(new JarOutputStream(new
-		// FileOutputStream(theFile)))){
-		// p.saveToDataSink(sink, null, null);
-		// }
-		//// System.err.println("Finished saving to jar");
-		//
-		//// LoggerUtils.setDebugMode(System.out);
-		//
-		// Dataset loaded = new Dataset();
-		// try (JarDataSource src = new JarDataSource(new JarFile(theFile))){
-		// loaded.loadFromDataSource(src, null);
-		// }
-		//// System.err.println("Finished loading " + loaded.getTransformers().size() +
-		// " transformers");
-		//
-		// Assert.assertTrue(loaded.getTransformers().size() >= 3);
-		// for (Transformer t : loaded.getTransformers()) {
-		// System.err.println("Loaded transformer: " + t);
-		// }
 
 	}
 
@@ -323,6 +284,25 @@ public class TestTransformers extends TestEnv {
 			doCheckEqualOutput(new MakeDenseTransformer().fitAndTransform(TestDataLoader.getInstance().getDataset(true, false).getDataset()));
 			doCheckEqualOutput(new MakeDenseTransformer().fitAndTransform(TestDataLoader.getInstance().getDataset(false, false).getDataset()));
 
+			// Check for DenseVector input
+			SubSet sparseData = TestDataLoader.getInstance().getDataset(true, false).getDataset();
+			SubSet denseData = new MakeDenseTransformer().transformInPlace(false).fitAndTransform(sparseData);
+			// Check for sparse
+			Stopwatch wSparse = new Stopwatch().start();
+			Set<DuplicateEntry> dupsSparse = DuplicateResolvingUtils.findDuplicates(sparseData);
+			wSparse.stop();
+
+			// Check for dense
+			Stopwatch wDense = new Stopwatch().start();
+			Set<DuplicateEntry> dupsDense = DuplicateResolvingUtils.findDuplicates(denseData);
+			wDense.stop();
+
+			// SYS_ERR.println("TIME SPARSE: "+wSparse + " ; TIME DENSE: "+ wDense);
+			Assert.assertEquals(dupsSparse.size(), dupsDense.size());
+			// Make it sparse again in order to compare equality
+			SubSet sparseAgain = new MakeSparseTransformer().fitAndTransform(denseData);
+			// SYS_ERR.println(sparseAgain.size() + " : " + sparseData.size());
+			Assert.assertTrue(DataUtils.equals(sparseData, sparseAgain));
 		}
 
 		public void doCheckEqualOutput(SubSet data){

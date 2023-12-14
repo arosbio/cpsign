@@ -19,10 +19,14 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.arosbio.data.DataRecord;
 
 public class DuplicateResolvingUtils {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(DuplicateResolvingUtils.class);
 
 	/**
 	 * The <code>DuplicateEntry</code> class keeps track of a DataRecord that 
@@ -37,7 +41,6 @@ public class DuplicateResolvingUtils {
 			this.object = object;
 			this.foundLabels = labels;
 		}
-
 		public DataRecord getRemainingRecord() {
 			return object;
 		}
@@ -63,7 +66,7 @@ public class DuplicateResolvingUtils {
 	 * 
 	 */
 	public static Set<DuplicateEntry> findDuplicates(List<DataRecord> records){
-
+		LOGGER.debug("Running find duplicates algorithm, initial records size: {}", records.size());
 		// Do one pass of hashing through the full dataset
 		Map<Integer, List<Pair<Integer,DataRecord>>> hashedData = new HashMap<>(records.size());
 		for (int i = 0; i<records.size(); i++){
@@ -75,7 +78,7 @@ public class DuplicateResolvingUtils {
 			List<Pair<Integer,DataRecord>> recs = hashedData.get(hash);
 			recs.add(Pair.of(i, r));
 		}
-
+		LOGGER.debug("Finished hashing pass, generated hash size: {}", hashedData.size());
 		
 		Set<DuplicateEntry> duplicates = new HashSet<>();
 		List<Integer> indicesToRemove = new ArrayList<>();
@@ -89,6 +92,8 @@ public class DuplicateResolvingUtils {
 			duplicates.addAll(duplicatesAndIndices.getLeft());
 			indicesToRemove.addAll(duplicatesAndIndices.getRight());
 		}
+
+		LOGGER.debug("Finished pass over hash, will remove {} indices", indicesToRemove.size());
 
 		// Sort and remove all extra duplicates 
 		Collections.sort(indicesToRemove, Comparator.reverseOrder());
