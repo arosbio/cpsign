@@ -286,7 +286,7 @@ public class TestTransformers extends TestEnv {
 
 			// Check for DenseVector input
 			SubSet sparseData = TestDataLoader.getInstance().getDataset(true, false).getDataset();
-			SubSet denseData = new MakeDenseTransformer().transformInPlace(false).fitAndTransform(sparseData);
+			SubSet denseData = new MakeDenseTransformer().useDoublePrecision(true).transformInPlace(false).fitAndTransform(sparseData);
 			// Check for sparse
 			Stopwatch wSparse = new Stopwatch().start();
 			Set<DuplicateEntry> dupsSparse = DuplicateResolvingUtils.findDuplicates(sparseData);
@@ -299,10 +299,11 @@ public class TestTransformers extends TestEnv {
 
 			// SYS_ERR.println("TIME SPARSE: "+wSparse + " ; TIME DENSE: "+ wDense);
 			Assert.assertEquals(dupsSparse.size(), dupsDense.size());
+
 			// Make it sparse again in order to compare equality
-			SubSet sparseAgain = new MakeSparseTransformer().fitAndTransform(denseData);
+			SubSet sparseAgain = new MakeSparseTransformer().transformInPlace(false).fitAndTransform(denseData);
 			// SYS_ERR.println(sparseAgain.size() + " : " + sparseData.size());
-			Assert.assertTrue(DataUtils.equals(sparseData, sparseAgain));
+			Assert.assertTrue(DataUtils.equals(sparseData, sparseAgain,1e-5));
 		}
 
 		public void doCheckEqualOutput(SubSet data){

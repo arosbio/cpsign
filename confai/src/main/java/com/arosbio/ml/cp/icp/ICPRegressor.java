@@ -169,9 +169,6 @@ public class ICPRegressor implements ICP, RegressionPredictor {
 		return false;
 	}
 
-	/* (non-Javadoc)
-	 * @see com.arosbio.ml.cp.icp.ICPRegressor#getNonconformityMeasure()
-	 */
 	@Override
 	public NCMRegression getNCM(){
 		return ncm;

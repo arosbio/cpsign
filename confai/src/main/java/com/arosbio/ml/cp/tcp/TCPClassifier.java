@@ -151,17 +151,19 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 
 	@Override
 	public int getNumObservationsUsed() {
-		return originalData.getNumRecords();
+		return isTrained() ? originalData.getNumRecords() : 0;
 	}
 
 	@Override
 	public Map<String, Object> getProperties() {
 		Map<String, Object> props = new HashMap<>();
-		props.putAll(ncm.getProperties()); // this should include everything to recreate the NCM implementation
+		if (ncm != null)
+			props.putAll(ncm.getProperties()); // this should include everything to recreate the NCM implementation
 		props.put(PropertyNameSettings.ML_TYPE_KEY, PredictorType.TCP_CLASSIFICATION.getId());
 		props.put(PropertyNameSettings.ML_TYPE_NAME_KEY, PredictorType.TCP_CLASSIFICATION.getName());
 		props.put(PropertyNameSettings.IS_CLASSIFICATION_KEY, true);
 		props.put(PropertyNameSettings.ML_SEED_VALUE_KEY, seed);
+		props.put(PropertyNameSettings.NUM_OBSERVATIONS_KEY, getNumObservationsUsed());
 		props.put(PValueCalculator.PVALUE_CALCULATOR_NAME_KEY, pValueCalculator.getName());
 		props.put(PValueCalculator.PVALUE_CALCULATOR_ID_KEY, pValueCalculator.getID());
 		if (pValueCalculator.getRNGSeed() != null)

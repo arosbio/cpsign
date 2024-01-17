@@ -471,52 +471,6 @@ public class ModelSerializer extends ConfAISerializer {
 
 
 
-	// /**
-	//  * Loads a JARSaveable, which can be any of the types {@link CompletePredictor}, {@link ChemDataset} or {@link ChemPredictor}.
-	//  * @param uri file to load from
-	//  * @param spec encryption spec, or {@code null} if data not encrypted
-	//  * @return a {@link com.arosbio.io.interfaces.JARSaveable JARSaveable} object
-	//  * @throws IOException cannot read from {@code uri}
-	//  * @throws InvalidKeyException if data is encrypted and either missing or faulty {@code spec} was given
-	//  */
-	// public static JARSaveable load(URI uri, EncryptionSpecification spec) 
-	// 		throws IOException, InvalidKeyException {
-
-	// 	try (
-	// 			URIUnpacker unpacker = new URIUnpacker(uri);
-	// 			){
-	// 		return load(unpacker.getSrc(), spec);
-	// 	}
-
-	// }
-
-	// public static JARSaveable load(DataSource src, EncryptionSpecification spec) 
-	// 		throws IOException, InvalidKeyException {
-
-	// 	// Load properties
-	// 	Map<String,Object> properties = getCPSignProperties(src);
-
-	// 	// Get the different sections
-	// 	Map<String,Object> props = validatePropertiesAndFlatten(properties);
-
-	// 	ModelType mt = ModelType.getType(props);
-
-	// 	switch(mt){
-	// 		case CHEM_PREDICTOR:
-	// 		return loadChemPredictor(src, props, spec);
-	// 		case PLAIN_PREDICTOR:
-	// 		return loadSparsePredictor(src, props, spec);
-	// 		case PRECOMPUTED_DATA:
-	// 		return loadPrecomputedData(src, props, spec);
-	// 		default:
-	// 		LOGGER.debug("Model JAR of unknown type");
-	// 		throw new IllegalArgumentException("Could not parse input file");
-	// 	}
-
-	// }
-
-
-
 	public static ChemDataset loadDataset(URI uri, EncryptionSpecification spec) 
 			throws InvalidKeyException, IOException {
 		try (

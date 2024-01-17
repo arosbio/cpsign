@@ -457,11 +457,11 @@ public class ICPClassifier implements ICP, ClassificationPredictor {
 		// p-value calculator
 		if (props.containsKey(PValueCalculator.PVALUE_CALCULATOR_ID_KEY)) {
 			int id = TypeUtils.asInt(props.get(PValueCalculator.PVALUE_CALCULATOR_ID_KEY));
-			LOGGER.debug("Retreiving pvalue-calculator based on ID: {}", id);
+			LOGGER.debug("Retrieving pvalue-calculator based on ID: {}", id);
 			pValueCalculator = FuzzyServiceLoader.load(PValueCalculator.class, id);
 		} else if (props.containsKey(PValueCalculator.PVALUE_CALCULATOR_NAME_KEY)) {
 			String name = props.get(PValueCalculator.PVALUE_CALCULATOR_NAME_KEY).toString();
-			LOGGER.debug("Retreiving pvalue-calculator based on name: {}", name);
+			LOGGER.debug("Retrieving pvalue-calculator based on name: {}", name);
 			pValueCalculator = FuzzyServiceLoader.load(PValueCalculator.class, name);
 		} else {
 			LOGGER.debug("No pvalue-calculator info saved in model-file, using the default one");

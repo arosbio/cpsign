@@ -294,8 +294,11 @@ public final class ACPClassifier extends PredictorBase implements ACP, Conformal
 	public Map<String, Object> getProperties() {
 		Map<String,Object> props = new HashMap<>();
 		props.putAll(strategy.getProperties());
-		if (icpImplementation != null)
+		if (!predictors.isEmpty()){
+			props.putAll(predictors.values().iterator().next().getProperties());
+		} else if (icpImplementation != null){
 			props.putAll(icpImplementation.getProperties());
+		}
 		props.put(PropertyNameSettings.ML_SEED_VALUE_KEY, seed);
 		props.put(PropertyNameSettings.ML_TYPE_KEY, PredictorType.ACP_CLASSIFICATION.getId());
 		props.put(PropertyNameSettings.ML_TYPE_NAME_KEY, PredictorType.ACP_CLASSIFICATION.getName());

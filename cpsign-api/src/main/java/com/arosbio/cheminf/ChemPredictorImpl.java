@@ -146,14 +146,18 @@ public abstract class ChemPredictorImpl implements ChemPredictor {
 	@Override
 	public Map<String,Object> getProperties() {
 		Map<String,Object> props = new HashMap<>();
-		props.put(PropertyNameSettings.DATA_NESTING_KEY, data.getProperties());
+		Map<String,Object> dataProps =  data.getProperties();
 		props.putAll(info.getProperties());
 
 		if (getPredictor() != null){
 			Map<String,Object> predictorProps = getPredictor().getProperties();
 			props.put(PropertyNameSettings.PREDICTOR_NESTING_KEY, predictorProps);
+			int numObs = getPredictor().getNumObservationsUsed();
+			if (numObs > 0 && (int)dataProps.get(PropertyNameSettings.NUM_OBSERVATIONS_KEY) == 0){
+				dataProps.put(PropertyNameSettings.NUM_OBSERVATIONS_KEY, numObs);
+			}
 		}
-
+		props.put(PropertyNameSettings.DATA_NESTING_KEY, dataProps);
 		props.put(PropertyNameSettings.LOW_PERCENTILE_KEY, lowPercentile);
 		props.put(PropertyNameSettings.HIGH_PERCENTILE_KEY, highPercentile);
 		return props;

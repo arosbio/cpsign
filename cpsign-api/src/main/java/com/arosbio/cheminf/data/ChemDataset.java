@@ -427,7 +427,7 @@ public final class ChemDataset extends Dataset {
 		if (trans != null && !trans.isEmpty()) {
 			for (Transformer t : trans) {
 				if (t instanceof FeatureSelector) {
-					List<Integer> toRm =new ArrayList<>(((FeatureSelector) t).getFeatureIndicesToRemove());
+					List<Integer> toRm = new ArrayList<>(((FeatureSelector) t).getFeatureIndicesToRemove());
 					if (toRm.isEmpty())
 						continue;
 					// Sort it in reverse order - to remove from the end->start (otherwise indices change)
@@ -674,16 +674,29 @@ public final class ChemDataset extends Dataset {
 	}
 
 	public int getNumAttributes() {
-		// If the list is not empty - we need to take the transformations into account
-		if (!getTransformers().isEmpty()) {
-			return super.getNumAttributes();
+		// If not initialized - return 0
+		if (!isInitialized()){
+			return 0;
 		}
-		// Else we simply sum up the the lengths of all descriptors 
+
+		// Otherwise count the number of features
 		int count = 0;
 		for (ChemDescriptor d : descriptors) {
 			count += d.getLength();
 		}
+
+		// If the transformers list is not empty - we need to take these into account
+		List<Transformer> transf = getTransformers();
+		if (! transf.isEmpty()) {
+			for (Transformer t : transf){
+				if (t instanceof FeatureSelector){
+					count -= ((FeatureSelector)t).getFeatureIndicesToRemove().size();
+				}
+			}
+		}
+
 		return count;
+		
 	}
 
 	public Map<Double, Integer> getLabelFrequencies(){
@@ -1482,6 +1495,8 @@ public final class ChemDataset extends Dataset {
 		}
 
 		loadMetaData(src, path);
+
+		initializeDescriptors();
 	}
 
 	public void loadStateExceptRecords(DataSource src, String path, EncryptionSpecification spec)

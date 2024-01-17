@@ -286,8 +286,13 @@ public final class ACPRegressor extends PredictorBase implements ACP, ConformalR
 	public Map<String, Object> getProperties() {
 		Map<String,Object> params = new HashMap<>();
 		params.putAll(strategy.getProperties());
-		if (icpImplementation != null && icpImplementation.getNCM() != null)
-			params.putAll(icpImplementation.getNCM().getProperties());
+		if (!predictors.isEmpty()){
+			params.putAll(predictors.values().iterator().next().getProperties());
+		} else if (icpImplementation != null){
+			params.putAll(icpImplementation.getProperties());
+		}
+		// if (icpImplementation != null && icpImplementation.getNCM() != null)
+		// 	params.putAll(icpImplementation.getNCM().getProperties());
 		params.put(PropertyNameSettings.ML_SEED_VALUE_KEY, seed);
 		params.put(PropertyNameSettings.ML_TYPE_KEY, PredictorType.ACP_REGRESSION.getId());
 		params.put(PropertyNameSettings.ML_TYPE_NAME_KEY, PredictorType.ACP_REGRESSION.getName());

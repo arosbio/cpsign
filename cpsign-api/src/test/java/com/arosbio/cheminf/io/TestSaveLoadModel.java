@@ -227,7 +227,7 @@ public class TestSaveLoadModel extends UnitTestBase {
 		if(storeAsTmp)
 			modelFile = TestUtils.createTempFile("acp.class.svm.model", "");
 		else{
-			String path = "/tmp/models/acp_class_libsvm.osgi";
+			String path = "/tmp/models/acp_class_libsvm.jar";
 			modelFile = new File(path);
 			modelFile.getParentFile().mkdirs();
 			try{
@@ -309,7 +309,7 @@ public class TestSaveLoadModel extends UnitTestBase {
 			((EpsilonSVR)alg).setC(newC);
 
 		signacp.addRecords(new CSVFile(regData.uri()).setDelimiter(regData.delim()).getIterator(),regData.property());
-
+		int numRecords = signacp.getDataset().size();
 		// Should not be able to save as JAR if no trained models
 		try{
 			ModelSerializer.saveModel(signacp, new File("/tmp/plugin.jar"), null);
@@ -359,6 +359,7 @@ public class TestSaveLoadModel extends UnitTestBase {
 		Assert.assertTrue(icpLoaded.getPValueCalculator() instanceof SplineInterpolatedPValue);
 		
 		Assert.assertEquals(regData.property(), loadedSignAcp.getProperty());
+		Assert.assertEquals(numRecords,Integer.parseInt(ModelIO.getModelInfo(modelFile.toURI(),true).get("Observations used")));
 
 	}
 	

@@ -196,6 +196,9 @@ public final class AVAPClassifier extends PredictorBase implements AVAP, Classif
 	public Map<String,Object> getProperties() {
 		Map<String,Object> params = new HashMap<>();
 		params.putAll(strategy.getProperties());
+		if (predictors!=null && !predictors.isEmpty()){
+			params.putAll(predictors.values().iterator().next().getProperties());
+		}
 		params.put(PropertyNameSettings.ML_SEED_VALUE_KEY, seed);
 		params.put(PropertyNameSettings.PREDICTOR_ML_ALG_INFO_KEY, scoringAlgorithm.getProperties());
 		params.put(PropertyNameSettings.ML_TYPE_KEY, PredictorType.VAP_CLASSIFICATION.getId());
