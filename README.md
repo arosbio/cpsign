@@ -87,7 +87,7 @@ A changelog can now be found in [changelog](changelog.md).
 ## Extension packages
 
 ### Plot_utils
-In order to visualize the predictions from the conformal predictors we have created a python library for this task, located at [GitHub Plot_utils](https://github.com/pharmbio/plot_utils), building on top of the Matplotlib and numpy libraries. This way visualizations can be customized easily and in a high abstraction level. We have also created functions for loading results from CPSign to make it easy for users to evaluate their predictive models. Example figures generated using Plot_utils for displaying the prediction intervals at a single confidence level;
+In order to visualize the predictions and predictive performance from the conformal predictors we have created a python library for this task, located at [GitHub Plot_utils](https://github.com/pharmbio/plot_utils), building on top of the Matplotlib and numpy libraries. This way visualizations can be customized easily and in a high abstraction level. We have also created functions for loading results from CPSign to make it easy for users to evaluate their predictive models. Example figures generated using Plot_utils for displaying the prediction intervals at a single confidence level;
 
 ![Regression prediction intervals](figures/reg_intervals.png)
 

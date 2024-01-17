@@ -2,7 +2,8 @@
 
 ### 2.0.0 RC7 :
 - Massive improvement in runtime for duplicate resolving transformations - e.g. new cpLogD with 2.2M compounds took 19.5 hours with old algorithm and now less than 1 second using the same machine. 
-- Update slf4j and logback deps due to dependabot alert for new vulnerability. 
+- Update slf4j and logback deps due to dependabot alert for new vulnerability.
+- Improve output of CLI `model-info` after multiple save/load of a model, as the "data" nesting previously would have 0 as number of observations (no training examples saved in serialized models) - now overwriting with the info from the predictor.
 
 ### 2.0.0 RC6 :
 #### Potentially breaking changes
