@@ -9,11 +9,15 @@
  */
 package com.arosbio.cpsign.app;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -28,6 +32,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.arosbio.chem.io.in.CSVChemFileReader;
+import com.arosbio.chem.io.in.CSVFile;
 import com.arosbio.cheminf.ChemCPClassifier;
 import com.arosbio.cheminf.data.ChemDataset;
 import com.arosbio.cheminf.descriptors.ChemDescriptor;
@@ -41,6 +47,8 @@ import com.arosbio.commons.TypeUtils;
 import com.arosbio.commons.logging.LoggerUtils;
 import com.arosbio.cpsign.app.PrecomputedDatasets.Classification;
 import com.arosbio.cpsign.app.params.CLIParameters.ChemOutputType;
+import com.arosbio.data.NamedLabels;
+import com.arosbio.data.Dataset.RecordType;
 import com.arosbio.ml.TrainingsetValidator;
 import com.arosbio.ml.algorithms.svm.C_SVC;
 import com.arosbio.ml.algorithms.svm.LinearSVC;
@@ -1224,5 +1232,70 @@ public class TestACPClassification extends CLIBaseTest {
 		// printLogs();
 	}
 
+	@Test
+	public void testWithExclusiveDatasets() throws Exception {
+		// Set up exclusive files 
+		int numInModelExclFile=50, numInCalibExclFile=10;
+
+		// Make some files for exclusive use
+		File tempModelExclusive = TestUtils.createTempFile("cox2.prop", ".tsv");
+		File tempCalibExclusive = TestUtils.createTempFile("cox2.calib", ".tsv");
+
+		CSVCmpdData cox_2 = TestResources.Cls.getCox2();
+
+		try(
+				Reader reader = new InputStreamReader(cox_2.url().openStream());
+				BufferedReader buffReader = new BufferedReader(reader);
+
+				BufferedWriter bw_calib = new BufferedWriter(new FileWriter(tempCalibExclusive));
+				BufferedWriter bw_prop = new BufferedWriter(new FileWriter(tempModelExclusive));
+				){
+
+			// Get the header
+			String header = buffReader.readLine();
+
+			// write the first numInPropTrainFile into model-exclusive
+			bw_prop.write(header);
+			bw_prop.newLine();
+			for(int i=0; i<numInModelExclFile; i++){
+				bw_prop.write(buffReader.readLine());
+				bw_prop.newLine();
+			}
+
+			// next numInCalibTrainFile lines in calib-exclusive
+			bw_calib.write(header);
+			bw_calib.newLine();
+			for(int i=0; i<numInCalibExclFile; i++){
+				bw_calib.write(buffReader.readLine());
+				bw_calib.newLine();
+			}
+		}
+
+		// Precompute dataset
+		ChemDataset dataset = new ChemDataset();
+		dataset.initializeDescriptors();
+		CSVFile modelExcl = new CSVFile(tempModelExclusive.toURI()).setDelimiter(cox_2.delim());
+		try (CSVChemFileReader reader = modelExcl.getIterator()){
+			dataset.add(reader,cox_2.property(),new NamedLabels(cox_2.labelsStr()),RecordType.MODELING_EXCLUSIVE);
+		}
+
+		CSVFile calibExcl = new CSVFile(tempCalibExclusive.toURI()).setDelimiter(cox_2.delim());
+		try (CSVChemFileReader reader = calibExcl.getIterator()){
+			dataset.add(reader,cox_2.property(),new NamedLabels(cox_2.labelsStr()),RecordType.CALIBRATION_EXCLUSIVE);
+		} 
+
+		// Save it so it can be used by CLI `train`
+		File precompData = TestUtils.createTempFile("data", ".jar");
+		ModelSerializer.saveDataset(dataset, new ModelInfo("exclusive data"), precompData, null);
+
+		File trainedModel = TestUtils.createTempFile("model", ".jar");
+		mockMain(Train.CMD_NAME,
+			"-ds",precompData.getAbsolutePath(),
+			"-pt", "acp-class",
+			// "--labels", getLabelsArg(cox_2.labels()),
+			"-mo", trainedModel.getAbsolutePath(),
+			"-ss", "predefined");
+		// printLogs();
+	}
 
 }

@@ -474,7 +474,7 @@ public class CPSignApp implements IVersionProvider {
 				return stripServiceLoaderMessage(ex.getMessage());
 
 			} else {
-				// If the top level message dosn't contain that "arg[..]" stuff we should use
+				// If the top level message doesn't contain that "arg[..]" stuff we should use
 				// the top level message!
 				return stripServiceLoaderMessage(paramEx.getMessage());
 			}

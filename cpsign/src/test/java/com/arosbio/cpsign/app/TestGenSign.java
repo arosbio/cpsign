@@ -15,7 +15,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
-import com.arosbio.chem.io.in.CSVFile;
 import com.arosbio.chem.io.in.SDFile;
 import com.arosbio.commons.logging.LoggerUtils;
 import com.arosbio.cpsign.out.OutputNamingSettings.JSON;

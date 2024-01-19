@@ -533,27 +533,30 @@ public class CLIProgramUtils {
 	public static void printInfoAboutDataset(ChemDataset sp, CLIConsole cons) {
 		StringBuilder sb = new StringBuilder("Loaded precomputed data set with ");
 		SubSet ds = sp.getDataset();
-		sb.append(ds.size());
-		sb.append(" records and ");
-		sb.append(sp.getNumAttributes());
-		sb.append(" features.");
+		if (!ds.isEmpty()){
+			// only write number of 'normal' records if there are any
+			sb.append(ds.size()).append(" records and ");
+		}
+		// always write number of features
+		sb.append(sp.getNumAttributes()).append(" features.");
+
 		if (sp.getCalibrationExclusiveDataset().size()>0) {
-			LOGGER.debug("SubSet contains "+sp.getCalibrationExclusiveDataset().size()+" calibration-exclusive records");
-			sb.append(" SubSet also includes ");
-			sb.append(sp.getCalibrationExclusiveDataset().size());
-			sb.append(" records marked exclusively for calibration.");
+			LOGGER.debug("SubSet contains {} calibration-exclusive records",sp.getCalibrationExclusiveDataset().size());
+			sb.append(" The dataset contains ")
+				.append(sp.getCalibrationExclusiveDataset().size())
+				.append(" records marked exclusively for model calibration.");
 		}
 		if (sp.getModelingExclusiveDataset().size()>0) {
-			LOGGER.debug("SubSet contains "+sp.getModelingExclusiveDataset().size()+" modeling-exclusive records");
-			sb.append(" SubSet also includes ");
-			sb.append(sp.getModelingExclusiveDataset().size());
-			sb.append(" records marked exclusively for scoring-model training.");
+			LOGGER.debug("SubSet contains {} modeling-exclusive records",sp.getModelingExclusiveDataset().size());
+			sb.append(" The dataset contains ")
+				.append(sp.getModelingExclusiveDataset().size())
+				.append(" records marked exclusively for training the scoring-model(s).");
 		}
 		if (sp.getTextualLabels() != null && !sp.getTextualLabels().isEmpty()) {
-			LOGGER.debug("labels=" + sp.getLabels());
+			LOGGER.debug("labels={}", sp.getLabels());
 			// classification - print info about how many of each label
 			sb.append(" Occurrences of each class: ");
-			Map<Double, Integer> dsFreq = ds.getLabelFrequencies();
+			Map<Double, Integer> dsFreq = sp.getLabelFrequencies();
 			NamedLabels nl = sp.getTextualLabels();
 			
 			int i = 0;
@@ -575,7 +578,7 @@ public class CLIProgramUtils {
 	
 	public static void loadData(ChemPredictor predictor, URI precompModel, ChemFile trainFile,
 	ChemFile modelExclusiveTrainFile, ChemFile calibExclusiveTrainFile, String endpoint, List<String> labels,
-	EncryptionSpecification spec, RunnableCmd program, CLIConsole console, boolean listFailed, // int minHAC,
+	EncryptionSpecification spec, RunnableCmd program, CLIConsole console, boolean listFailed,
 	int maxNumAllowedFailures) {
 		
 		CLIProgressBar pb = getPB(program); 

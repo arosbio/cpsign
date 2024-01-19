@@ -9,8 +9,13 @@
  */
 package com.arosbio.cpsign.app;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +27,8 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import com.arosbio.chem.io.in.CSVChemFileReader;
+import com.arosbio.chem.io.in.CSVFile;
 import com.arosbio.cheminf.ChemCPRegressor;
 import com.arosbio.cheminf.data.ChemDataset;
 import com.arosbio.cheminf.descriptors.CDKPhysChemWrapper;
@@ -34,6 +41,7 @@ import com.arosbio.commons.FuzzyServiceLoader;
 import com.arosbio.commons.TypeUtils;
 import com.arosbio.cpsign.app.PrecomputedDatasets.Regression;
 import com.arosbio.cpsign.out.OutputNamingSettings.JSON;
+import com.arosbio.data.Dataset.RecordType;
 import com.arosbio.ml.TrainingsetValidator;
 import com.arosbio.ml.algorithms.Regressor;
 import com.arosbio.ml.algorithms.impl.DefaultMLParameterSettings;
@@ -44,6 +52,7 @@ import com.arosbio.ml.cp.acp.ACPRegressor;
 import com.arosbio.ml.cp.nonconf.NCM;
 import com.arosbio.ml.cp.nonconf.regression.NCMRegression;
 import com.arosbio.ml.io.ModelIO;
+import com.arosbio.ml.io.ModelInfo;
 import com.arosbio.ml.io.impl.PropertyFileStructure;
 import com.arosbio.ml.sampling.FoldedSampling;
 import com.arosbio.tests.TestResources;
@@ -754,6 +763,71 @@ public class TestACPRegression extends CLIBaseTest {
 				"-co","0.8");
 		
 //		printLogs();
+	}
+
+	@Test
+	public void testWithExclusiveDatasets() throws Exception {
+		// Set up exclusive files 
+		int numInModelExclFile=50, numInCalibExclFile=10;
+
+		// Make some files for exclusive use
+		File tempModelExclusive = TestUtils.createTempFile("solubility.prop", ".tsv");
+		File tempCalibExclusive = TestUtils.createTempFile("solubility.calib", ".tsv");
+
+		CSVCmpdData solu_500 = TestResources.Reg.getSolubility_500();
+
+		try(
+				Reader reader = new InputStreamReader(solu_500.url().openStream());
+				BufferedReader buffReader = new BufferedReader(reader);
+
+				BufferedWriter bw_calib = new BufferedWriter(new FileWriter(tempCalibExclusive));
+				BufferedWriter bw_prop = new BufferedWriter(new FileWriter(tempModelExclusive));
+				){
+
+			// Get the header
+			String header = buffReader.readLine();
+
+			// write the first numInPropTrainFile into model-exclusive
+			bw_prop.write(header);
+			bw_prop.newLine();
+			for(int i=0; i<numInModelExclFile; i++){
+				bw_prop.write(buffReader.readLine());
+				bw_prop.newLine();
+			}
+
+			// next numInCalibTrainFile lines in calib-exclusive
+			bw_calib.write(header);
+			bw_calib.newLine();
+			for(int i=0; i<numInCalibExclFile; i++){
+				bw_calib.write(buffReader.readLine());
+				bw_calib.newLine();
+			}
+		}
+
+		// Precompute dataset
+		ChemDataset dataset = new ChemDataset();
+		dataset.initializeDescriptors();
+		CSVFile modelExcl = new CSVFile(tempModelExclusive.toURI()).setDelimiter(solu_500.delim());
+		try (CSVChemFileReader reader = modelExcl.getIterator()){
+			dataset.add(reader,solu_500.property(),RecordType.MODELING_EXCLUSIVE);
+		}
+
+		CSVFile calibExcl = new CSVFile(tempCalibExclusive.toURI()).setDelimiter(solu_500.delim());
+		try (CSVChemFileReader reader = calibExcl.getIterator()){
+			dataset.add(reader,solu_500.property(),RecordType.CALIBRATION_EXCLUSIVE);
+		} 
+
+		// Save it so it can be used by CLI `train`
+		File precompData = TestUtils.createTempFile("data", ".jar");
+		ModelSerializer.saveDataset(dataset, new ModelInfo("exclusive data"), precompData, null);
+
+		File trainedModel = TestUtils.createTempFile("model", ".jar");
+		mockMain(Train.CMD_NAME,
+			"-ds",precompData.getAbsolutePath(),
+			"-pt", "acp-regression",
+			"-mo", trainedModel.getAbsolutePath(),
+			"-ss", "predefined", "--verbose");
+		// printLogs();
 	}
 
 }
