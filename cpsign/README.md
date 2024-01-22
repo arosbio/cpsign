@@ -13,7 +13,14 @@ CPSign is the final sub-module of this repository and include all other maven mo
 
 The CLI can be executed as a normal JAR file using: 
 
-`java -jar cpsign-[version].jar [command] [arguments]`
+```
+java -jar cpsign-[version].jar [command] [arguments]
+```
+
+If using the fatjar downloaded from GitHub, if execute privileges are set on the file it can also be run using the really-executable JAR type call (as a standard executable file):
+```
+./cpsign-[version]-fatjar.jar [command] [arguments]`
+```
 
 
 ### Accepted program commands
