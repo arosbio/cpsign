@@ -199,6 +199,7 @@ public class CPSignApp implements IVersionProvider {
 
 		try {
 			AnsiConsole.systemInstall();
+			GlobalConfig.getInstance().setAnsiAvailable(CLIConsole.getInstance().ansiON());
 			CPSignApp app = new CPSignApp();
 			CommandLine cmd = new CommandLine(app);
 

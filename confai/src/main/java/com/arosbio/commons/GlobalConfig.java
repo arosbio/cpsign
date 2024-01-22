@@ -40,6 +40,7 @@ public class GlobalConfig {
 	private long RNG_seed;
 	private int maxNumClasses=10;
 	private boolean memSave = false;
+	private boolean ansiAvailable = false;
 	
 	private GlobalConfig() {
 		RNG_seed = System.currentTimeMillis();
@@ -75,10 +76,18 @@ public class GlobalConfig {
 		this.memSave = memSave;
 	}
 
+	public boolean isAnsiAvailable() {
+		return ansiAvailable;
+	}
+
+	public void setAnsiAvailable(boolean isAvail){
+		this.ansiAvailable = isAvail;
+	}
+
 	public static class Defaults {
 		
 		public static enum PredictorType {
-			ACP_CLASSIFICATION	(1, "ACP_Classification", "Aggegated conformal classifier (ACP)"),
+			ACP_CLASSIFICATION	(1, "ACP_Classification", "Aggregated conformal classifier (ACP)"),
 			ACP_REGRESSION		(2, "ACP_Regression", "Aggregated conformal regressor (ACP)"),
 			TCP_CLASSIFICATION	(3, "TCP_Classification", "Transductive conformal classifier (TCP)"),
 			TCP_REGRESSION		(4, "TCP_Regression","TCP regression - doesn't exist"),

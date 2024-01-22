@@ -175,16 +175,25 @@ public class RandomSampling implements MultiSampling {
 
 	@Override
 	public List<ConfigParameter> getConfigParameters() {
+		boolean addAnsi = GlobalConfig.getInstance().isAnsiAvailable();
 		return Arrays.asList(
 			new IntegerConfig.Builder(Arrays.asList(CONFIG_NUM_SAMPLES_PARAM_NAMES), DEFAULT_NUM_SAMPLES)
 				.range(Range.atLeast(1)).build(),
 			new NumericConfig.Builder(Arrays.asList(CONFIG_CALIBRATION_RATIO_PARAM_NAMES), DEFAULT_CALIBRATION_RATIO)
 				.range(Range.open(0d, 1d))
-				.description("Use a ratio of how many training examples should be used for calibration. Note: cannot be given at the same time as the @|bold " + CONFIG_NUM_CALIBRATION_INSTANCES_PARAM_NAMES[0] + "|@ parameter.")
+				.description(
+					new StringBuilder("Use a ratio of how many training examples should be used for calibration. Note: cannot be given at the same time as the ")
+					.append(addAnsi ? "@|bold ": "")
+					.append(CONFIG_NUM_CALIBRATION_INSTANCES_PARAM_NAMES[0]).append(addAnsi ? "|@ parameter." : " parameter.")
+					.toString())
 				.build(),
 			new IntegerConfig.Builder(Arrays.asList(CONFIG_NUM_CALIBRATION_INSTANCES_PARAM_NAMES),null)
 				.range(Range.atLeast(TrainingsetValidator.getInstance().MIN_NUM_CALIBRATION_INSTANCES))
-				.description("Use an explicit number of training examples for calibration. Note: cannot be given at the same time as the @|bold " + CONFIG_CALIBRATION_RATIO_PARAM_NAMES[0] + "|@ parameter.")
+				.description(
+					new StringBuilder("Use an explicit number of training examples for calibration. Note: cannot be given at the same time as the ")
+					.append(addAnsi? "@|bold ":"")
+					.append(CONFIG_CALIBRATION_RATIO_PARAM_NAMES[0]).append(addAnsi? "|@ parameter.":" parameter." )
+					.toString())
 				.build()
 			);
 	}
