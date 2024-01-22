@@ -18,13 +18,13 @@ import com.arosbio.commons.StringUtils;
 import picocli.CommandLine.ITypeConverter;
 import picocli.CommandLine.TypeConversionException;
 
-public class ColorConverter implements ITypeConverter<Color> { //, IParameterValidator {
+public class ColorConverter implements ITypeConverter<Color> {
 
 	@Override
 	public Color convert(String text) {
 		try {
 			return ColorFactory.web(StringUtils.stripQuotesAndEscape(text));
-		} catch(IllegalArgumentException e){
+		} catch (IllegalArgumentException e){
 			throw new TypeConversionException("\""+text+"\" cannot be parsed into a valid color, only a single color name or hex-encoded (0xAABBCC or \\#AABBCC) color accepted");
 		}
 	}

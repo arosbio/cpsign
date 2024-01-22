@@ -9,7 +9,11 @@
  */
 package com.arosbio.cpsign.app.params.converters;
 
+import java.util.Arrays;
+
 import org.beryx.awt.color.ColorFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.arosbio.color.gradient.ColorGradient;
 import com.arosbio.color.gradient.GradientFactory;
@@ -21,8 +25,11 @@ import picocli.CommandLine.TypeConversionException;
 
 public class ColorGradientConverter implements ITypeConverter<ColorGradient> {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(ColorGradientConverter.class);
+
 	@Override
 	public ColorGradient convert(String colorScheme) {
+		LOGGER.debug("Converting '{}' to color-scheme", colorScheme);
 		String cleaned = StringUtils.stripQuotesAndEscape(colorScheme);
 		// Here we're trying to get the standard Color Schemes
 		try {
@@ -39,6 +46,7 @@ public class ColorGradientConverter implements ITypeConverter<ColorGradient> {
 		// As a custom/string gradient
 		try {
 			String[] colors = cleaned.split(":");
+			LOGGER.debug("Multiple colors given, splitted into: {}", Arrays.toString(colors));
 			if (colors.length==2) {
 				return GradientFactory.getCustom2Points(ColorFactory.web(colors[0]), ColorFactory.web(colors[1]));
 			} else if (colors.length == 3) {
