@@ -377,6 +377,9 @@ public class CDKPhysChemWrapper implements ChemDescriptor, Described {
 	}
 
 	public String toString() {
+		if (!isReady()){
+			return "CDKDescriptor: "+getName();
+		}
 		return "CDKDescriptor: "+getProperties();
 	}
 

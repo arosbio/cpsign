@@ -344,6 +344,9 @@ public class UserSuppliedDescriptor implements ChemDescriptor, Described, Aliase
 	}
 
 	public String toString() {
+		if (!isReady()){
+			return DESCRIPTOR_NAME;
+		}
 		return "User-supplied descriptors with properties="+propertiesUsedAsDescriptors;
 	}
 

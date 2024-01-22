@@ -326,6 +326,9 @@ public class SignaturesDescriptor implements ChemDescriptor, Described, Aliased 
 	}
 
 	public String toString() {
+		if (! isReady()){
+			return DESCRIPTOR_NAME;
+		}
 		StringBuilder sb = new StringBuilder("SignaturesDescriptor properties=").append(getProperties());
 		if (!signaturesHelper.isEmpty())	{
 			sb.append(", with ").append(signaturesHelper.size()).append(" signatures");

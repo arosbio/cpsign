@@ -468,8 +468,8 @@ public final class ACPClassifier extends PredictorBase implements ACP, Conformal
 
 		// for each ICP - write it
 		int i=0;
-		for (Entry<Integer, ICPClassifier> ivap: predictors.entrySet()){
-			ivap.getValue().saveToDataSink(sink, acpDir+ICP_BASE_FILE_NAME+'.'+ivap.getKey(), spec);
+		for (Entry<Integer, ICPClassifier> icp : predictors.entrySet()){
+			icp.getValue().saveToDataSink(sink, acpDir+ICP_BASE_FILE_NAME+'.'+icp.getKey(), spec);
 			i++;
 		}
 		LOGGER.debug("Written {} ICP models to jar",i);

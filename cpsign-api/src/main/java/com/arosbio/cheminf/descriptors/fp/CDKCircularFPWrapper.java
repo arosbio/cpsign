@@ -170,7 +170,7 @@ public abstract class CDKCircularFPWrapper implements FPDescriptor {
 		String base = getName();
 		List<String> names = new ArrayList<>(length);
 		for (int i=0;i<length; i++) {
-			names.add(base + "_"+i);
+			names.add(base + '_'+i);
 		}
 		return names;
 	}
@@ -208,12 +208,12 @@ public abstract class CDKCircularFPWrapper implements FPDescriptor {
 	public void saveDescriptorToSink(DataSink sink, String basePath, EncryptionSpecification spec)
 			throws IOException, InvalidKeyException, IllegalStateException {
 		if (! isReady()) {
-			LOGGER.debug("Attempted to save descriptor {}, but it is not initalized yet",getClass().getName());
+			LOGGER.debug("Attempted to save descriptor {}, but it is not initialized yet",getClass().getName());
 			throw new IllegalStateException("ChemDescriptor not initialized - cannot be saved");
 		}
-		try (OutputStream ostream = sink.getOutputStream(basePath+"/"+META_FILE_NAME)){
+		try (OutputStream ostream = sink.getOutputStream(basePath+'/'+META_FILE_NAME)){
 			Map<String,Object> props = getProperties();
-			LOGGER.debug("Writing CDKCircularFPWrapper properties to meta.json: " + props);
+			LOGGER.debug("Writing CDKCircularFPWrapper properties to meta.json: {}", props);
 			MetaFileUtils.writePropertiesToStream(ostream, props);
 		} catch (IOException e) {
 			LOGGER.debug("Failed writing properties for CDKCircularFPWrapper-descriptor: {}", getName(),e);
@@ -226,7 +226,7 @@ public abstract class CDKCircularFPWrapper implements FPDescriptor {
 	public void loadDescriptorFromSource(DataSource source, String path, EncryptionSpecification spec)
 			throws IOException, InvalidKeyException {
 
-		try (InputStream istream = source.getInputStream(path+"/" + META_FILE_NAME)){
+		try (InputStream istream = source.getInputStream(path+'/' + META_FILE_NAME)){
 			Map<String,Object> props = MetaFileUtils.readPropertiesFromStream(istream);
 			LOGGER.debug("Loaded CDK-CircularFPWrapper properties: {}", props);
 
@@ -249,7 +249,7 @@ public abstract class CDKCircularFPWrapper implements FPDescriptor {
 			}
 			
 			initialize(fpCls);
-			LOGGER.debug("Initalized descriptor {}",getName());
+			LOGGER.debug("Initialized descriptor {}",getName());
 		}
 
 	}
