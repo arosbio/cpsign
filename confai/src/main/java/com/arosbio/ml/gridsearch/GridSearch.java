@@ -138,8 +138,8 @@ public class GridSearch {
 
 	/**
 	 * This is a callback interface, similar to {@link ProgressCallback} but has the option to return an action 
-	 * given the current state - i.e. to stop execution (or continue) so that the JVM doesn't need to be stoped, 
-	 * and e.g. the parameter grid or other things can be altered programatically.
+	 * given the current state - i.e. to stop execution (or continue) so that the JVM doesn't need to be stopped, 
+	 * and e.g. the parameter grid or other things can be altered programmatically.
 	 */
 	public static interface ProgressMonitor {
 
@@ -160,7 +160,7 @@ public class GridSearch {
 
 	/**
 	 * This is a class holding information about the current progress when running {@link GridSearch},
-	 * this can be recieved by registering a {@link ProgressMonitor} when instantiating the {@link GridSearch}
+	 * this can be received by registering a {@link ProgressMonitor} when instantiating the {@link GridSearch}
 	 * class.
 	 */
 	public static class ProgressInfo {
@@ -179,7 +179,7 @@ public class GridSearch {
 			return numTotalGridPoints;
 		}
 		/**
-		 * Get the number of processed grid points (i.e. combinations of hyperparameters)
+		 * Get the number of processed grid points (i.e. combinations of hyper-parameters)
 		 * @return the number of grid points that has been tested
 		 */
 		public int getNumProcessedGridPoints(){
