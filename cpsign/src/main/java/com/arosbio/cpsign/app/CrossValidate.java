@@ -191,7 +191,7 @@ public class CrossValidate implements RunnableCmd, SupportsProgressBar {
 		pb.stepProgress();
 		timer.endSection();
 
-		// FINISH PROGAM
+		// FINISH PROGRAM
 		pb.finish();
 		timer.endProgram();
 		console.println("", PrintMode.NORMAL);

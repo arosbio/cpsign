@@ -270,8 +270,6 @@ public class TestValidate extends CLIBaseTest{
 				"-rf", format,
 				"--echo",
 				"--verbose",
-				
-				
 		});
 		// Thread.sleep(100);
 

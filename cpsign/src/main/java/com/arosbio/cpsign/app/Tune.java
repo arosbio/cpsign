@@ -30,6 +30,7 @@ import com.arosbio.cheminf.ChemPredictor;
 import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.FuzzyServiceLoader;
 import com.arosbio.commons.GlobalConfig;
+import com.arosbio.commons.TypeUtils;
 import com.arosbio.commons.config.Configurable.ConfigParameter;
 import com.arosbio.cpsign.app.params.CLIParameters;
 import com.arosbio.cpsign.app.params.converters.EmptyFileConverter;
@@ -99,6 +100,7 @@ import com.arosbio.ml.testing.utils.EvaluationUtils;
 import com.arosbio.ml.vap.avap.AVAPClassifier;
 
 import picocli.CommandLine.Command;
+import picocli.CommandLine.ITypeConverter;
 import picocli.CommandLine.Mixin;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -152,6 +154,10 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 	@Mixin
 	private PredictorMixinClasses.AllPTMixin predictorSection;
 
+	// The grid to test
+	@Mixin
+	private TuneGridMixin gridMixin;
+
 	// Grid search params
 	@Option(names = {"-op", "--opt-metric"}, 
 			description = 
@@ -179,37 +185,58 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 			)
 	private String optimizationString = "1";
 
-	@Mixin
-	private TuneGridMixin gridMixin;
-
-	// CV - params
-	@Mixin
-	private TestingStrategyMixin testStrat = new TestingStrategyMixin();
-
 	@Option(names = { "-co", "--confidence" }, 
 			description = "Confidence used in the model evaluation, allowed range [0..1]%n"+
 					ParameterUtils.DEFAULT_VALUE_LINE,
 					defaultValue="0.8",
+					converter = ConfidenceConverter.class,
 					paramLabel = ArgumentType.NUMBER)
-	public void setCVconf(double conf) {
-		if (conf < 0 || conf >1)
-			throw new TypeConversionException("confidence must be in the range [0..1]");
-		cvConfidence = conf;
-	}
 	private double cvConfidence = 0.8;
+
+	private static class ConfidenceConverter implements ITypeConverter<Double> {
+		@Override
+		public Double convert(String text) {
+			double conf = -1;
+			try {
+				conf = TypeUtils.asDouble(text);
+			} catch (Exception e){
+				throw new TypeConversionException("confidence must be a value in the range [0..1]");
+			}
+			if (conf < 0 || conf >1)
+				throw new TypeConversionException("confidence must be in the range [0..1]");
+			return conf;
+		}
+	}
 
 	@Option(names={"--tolerance"}, 
 			description = "Allowed tolerance for validity of the generated models, allowed range [0..1]%n"+
 					ParameterUtils.DEFAULT_VALUE_LINE,
 					defaultValue = "0.1",
+					converter = ToleranceConverter.class,
 					paramLabel = ArgumentType.NUMBER
 			)
-	public void setTolerance(double tol) {
-		if (tol < 0 || tol >1)
-			throw new TypeConversionException("tolerance must be in the range [0..1]");
-		cvTolerance = tol;
-	}
 	private double cvTolerance = 0.1;
+	private static class ToleranceConverter implements ITypeConverter<Double> {
+		@Override
+		public Double convert(String text) {
+			double conf = -1;
+			try {
+				conf = TypeUtils.asDouble(text);
+			} catch (Exception e){
+				throw new TypeConversionException("tolerance must be a value in the range [0..1]");
+			}
+			if (conf < 0 || conf >1)
+				throw new TypeConversionException("tolerance must be in the range [0..1]");
+			return conf;
+		}
+	}
+	
+
+	// CV - params
+	@Mixin
+	private TestingStrategyMixin testStrat = new TestingStrategyMixin();
+
+	
 
 	// Transformer section
 	@Mixin
