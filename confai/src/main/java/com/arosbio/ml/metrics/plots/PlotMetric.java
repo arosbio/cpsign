@@ -18,7 +18,7 @@ import com.google.common.collect.ImmutableList;
 
 public interface PlotMetric extends Metric {
 	
-	public static final List<Double> DEFAULT_EVALUATION_POINTS = ImmutableList.of(0.,.1,.2,.3,.4,.5,.6,.7,.8,.9,1.);
+	public static final List<Double> DEFAULT_EVALUATION_POINTS = ImmutableList.of(0.,.1,.2,.3,.4,.5,.6,.7,.8,.9,.99);
 
 	public Plot2D buildPlot();
 	
@@ -37,11 +37,11 @@ public interface PlotMetric extends Metric {
 	public static List<Double> sortAndValidateList(List<Double> points){
 		if (points==null || points.isEmpty())
 			throw new IllegalArgumentException("Evaluation points cannot be empty");
-		List<Double> sortedlist = new ArrayList<>(points);
-		Collections.sort(sortedlist);
-		if (sortedlist.get(0) < 0 || sortedlist.get(sortedlist.size()-1)>1)
+		List<Double> sortedList = new ArrayList<>(points);
+		Collections.sort(sortedList);
+		if (sortedList.get(0) < 0 || sortedList.get(sortedList.size()-1)>1)
 			throw new IllegalArgumentException("Evaluation points must be in the range [0..1]");
-		return sortedlist;
+		return sortedList;
 	}
 	
 }
