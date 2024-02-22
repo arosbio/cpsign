@@ -37,7 +37,7 @@ import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.MetricFactory;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.metrics.cp.CPAccuracy;
-import com.arosbio.ml.metrics.cp.regression.CPRegressionCalibrationPlotBuilder;
+import com.arosbio.ml.metrics.cp.ModelCalibration;
 import com.arosbio.ml.metrics.cp.regression.CPRegressionEfficiencyPlotBuilder;
 import com.arosbio.ml.metrics.plots.MergedPlot;
 import com.arosbio.ml.metrics.plots.Plot2D;
@@ -263,7 +263,7 @@ public class TestACPRegressionValidity extends TestEnv{
 
 		TestRunner runner  = new TestRunner.Builder(new KFoldCV(k)).build();
 
-		PlotMetric calib = new CPRegressionCalibrationPlotBuilder();
+		PlotMetric calib = new ModelCalibration();
 		PlotMetric efficiency = new CPRegressionEfficiencyPlotBuilder();
 		SingleValuedMetric r2 = new R2();
 		SingleValuedMetric rmse = new RMSE();

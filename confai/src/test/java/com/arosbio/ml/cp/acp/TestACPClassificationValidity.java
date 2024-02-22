@@ -39,7 +39,7 @@ import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.MetricFactory;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.metrics.cp.CalibrationPlot;
-import com.arosbio.ml.metrics.cp.classification.CPClassificationCalibrationPlotBuilder;
+import com.arosbio.ml.metrics.cp.ModelCalibration;
 import com.arosbio.ml.metrics.cp.classification.MultiLabelPredictionsPlotBuilder;
 import com.arosbio.ml.metrics.cp.classification.ObservedFuzziness;
 import com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder;
@@ -125,7 +125,7 @@ public class TestACPClassificationValidity extends TestEnv {
 		
 		TestRunner tester = new TestRunner.Builder(new RandomSplit()).build();
 		
-		CPClassificationCalibrationPlotBuilder calibMetric = new CPClassificationCalibrationPlotBuilder(CollectionUtils.listRange(0, 1, 0.01));
+		ModelCalibration calibMetric = new ModelCalibration(CollectionUtils.listRange(0, 1, 0.01));
 		tester.evaluate(p, new ACPClassifier(icp, new RandomSampling(1, DEFAULT_CALIBRATION_RATIO)), Arrays.asList(calibMetric));
 		
 		CalibrationPlot plt = calibMetric.buildPlot();
@@ -269,7 +269,7 @@ public class TestACPClassificationValidity extends TestEnv {
 
 		TestRunner runner  = new TestRunner.Builder(new KFoldCV(k)).build();
 
-		PlotMetric calib = new CPClassificationCalibrationPlotBuilder();
+		PlotMetric calib = new ModelCalibration();
 		PlotMetric single = new SingleLabelPredictionsPlotBuilder();
 		PlotMetric multi = new MultiLabelPredictionsPlotBuilder();
 		Metric obsFuzz = new ObservedFuzziness();

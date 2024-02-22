@@ -38,9 +38,9 @@ import com.arosbio.ml.metrics.cp.CPAccuracy;
 import com.arosbio.ml.metrics.cp.CalibrationPlot;
 import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
 import com.arosbio.ml.metrics.cp.EfficiencyPlot;
+import com.arosbio.ml.metrics.cp.ModelCalibration;
 import com.arosbio.ml.metrics.cp.classification.AverageC;
 import com.arosbio.ml.metrics.cp.classification.BalancedObservedFuzziness;
-import com.arosbio.ml.metrics.cp.classification.CPClassificationCalibrationPlotBuilder;
 import com.arosbio.ml.metrics.cp.classification.MultiLabelPredictionsPlotBuilder;
 import com.arosbio.ml.metrics.cp.classification.ObservedFuzziness;
 import com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictions;
@@ -48,7 +48,6 @@ import com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictions
 import com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder;
 import com.arosbio.ml.metrics.cp.classification.UnobservedConfidence;
 import com.arosbio.ml.metrics.cp.classification.UnobservedCredibility;
-import com.arosbio.ml.metrics.cp.regression.CPRegressionCalibrationPlotBuilder;
 import com.arosbio.ml.metrics.cp.regression.CPRegressionEfficiencyPlotBuilder;
 import com.arosbio.ml.metrics.cp.regression.ConfidenceGivenPredictionIntervalWidth;
 import com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth;
@@ -1355,8 +1354,7 @@ public class TestMetrics {
 		@Test
 		public void CPClassificationCalibrationPlotBuilder() {
 			List<Double> confs = Arrays.asList(0.6, 0.7, 0.8, 0.9);
-			CPClassificationCalibrationPlotBuilder b = new CPClassificationCalibrationPlotBuilder(
-					confs);
+			ModelCalibration b = new ModelCalibration(confs);
 
 			Assert.assertEquals(confs, b.getEvaluationPoints());
 
@@ -1565,8 +1563,7 @@ public class TestMetrics {
 			List<Double> confs = new ArrayList<>(Arrays.asList(0.9, 0.7, 0.8, 0.6));
 			Collections.sort(confs);
 
-			CPRegressionCalibrationPlotBuilder b = new CPRegressionCalibrationPlotBuilder(
-					confs);
+			ModelCalibration b = new ModelCalibration(confs);
 
 			// First
 			Map<Double, Range<Double>> predIntervals = new HashMap<>();
@@ -1616,7 +1613,7 @@ public class TestMetrics {
 			Assert.assertEquals(0, b.getNumExamples());
 
 			// Clone
-			CPRegressionCalibrationPlotBuilder m2 = b.clone();
+			ModelCalibration m2 = b.clone();
 			Assert.assertEquals(confs, m2.getEvaluationPoints());
 			Assert.assertEquals(0, m2.getNumExamples());
 		}

@@ -24,7 +24,7 @@ import com.arosbio.ml.cp.acp.ACPClassifier;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.metrics.cp.CPAccuracy;
-import com.arosbio.ml.metrics.cp.classification.CPClassificationCalibrationPlotBuilder;
+import com.arosbio.ml.metrics.cp.ModelCalibration;
 import com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictions;
 import com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictions;
 import com.arosbio.ml.testing.KFoldCV;
@@ -112,7 +112,7 @@ public class TestACPClassificationCV extends TestEnv {
 		List<Metric> cvRes = cv.evaluate(TestDataLoader.getInstance().getDataset(true, false), lacp);
 
 		System.out.println("CV-res: " + cvRes);
-		Assert.assertTrue(getAccuracy(cvRes, CONFIDENCE, new CPClassificationCalibrationPlotBuilder())>= (CONFIDENCE-0.5)); // allow for some worse, it should just give that accuracy on average
+		Assert.assertTrue(getAccuracy(cvRes, CONFIDENCE, new ModelCalibration())>= (CONFIDENCE-0.5)); // allow for some worse, it should just give that accuracy on average
 
 	}
 

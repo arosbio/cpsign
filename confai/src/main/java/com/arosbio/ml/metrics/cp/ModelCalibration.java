@@ -1,13 +1,4 @@
-/*
- * Copyright (C) Aros Bio AB.
- *
- * CPSign is an Open Source Software that is dual licensed to allow you to choose a license that best suits your requirements:
- *
- * 1) GPLv3 (GNU General Public License Version 3) with Additional Terms, including an attribution clause as well as a limitation to use the software for commercial purposes.
- *
- * 2) CPSign Proprietary License that allows you to use CPSign for commercial activities, such as in a revenue-generating operation or environment, or integrate CPSign in your proprietary software without worrying about disclosing the source code of your proprietary software, which is required if you choose to use the software under GPLv3 license. See arosbio.com/cpsign/commercial-license for details.
- */
-package com.arosbio.ml.metrics.cp.classification;
+package com.arosbio.ml.metrics.cp;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,45 +9,44 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.arosbio.commons.mixins.Aliased;
 import com.arosbio.data.NamedLabels;
 import com.arosbio.ml.cp.PValueTools;
 import com.arosbio.ml.metrics.LabelsMixin;
-import com.arosbio.ml.metrics.cp.CalibrationPlot;
+import com.arosbio.ml.metrics.cp.classification.CPClassifierMetric;
+import com.arosbio.ml.metrics.cp.regression.CPRegressionMultiMetric;
 import com.arosbio.ml.metrics.plots.Plot2D.X_Axis;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Range;
 
-public class CPClassificationCalibrationPlotBuilder implements PlotMetric, LabelsMixin, CPClassifierMetric {
+public class ModelCalibration implements LabelsMixin, CPClassifierMetric, CPRegressionMultiMetric, Aliased {
 
 	public static final String METRIC_NAME = "Calibration plot";
+    public static final String METRIC_ALIAS = "Model calibration";
 
 	private static final X_Axis X_AXIS = X_Axis.CONFIDENCE;
 	private static final String Y_AXIS = "Accuracy";
 
 	private List<Double> confidences = new ArrayList<>();
-	// Overall counter
+	/** Counter for overall and regression */
 	private Map<Double, Counter> counters = new HashMap<>();
-	// Mondrian counters - counting for each class
+	/** Mondrian counters - counting for each class (for classification only) */
 	private Map<Double, Map<Integer,Counter>> mondrianCounters = new HashMap<>();
 	private Set<Integer> encounteredLabels = new HashSet<>();
-	private int numExamples = 0;
+	private int numAddedPredictions = 0;
 
 	private NamedLabels labels;
 
-	public CPClassificationCalibrationPlotBuilder() {
+	public ModelCalibration() {
 		setEvaluationPoints(DEFAULT_EVALUATION_POINTS);
 	}
 
-	public CPClassificationCalibrationPlotBuilder(List<Double> confidenceLevels) {
+	public ModelCalibration(List<Double> confidenceLevels) {
 		setEvaluationPoints(confidenceLevels);
 	}
 
-	@Override
-	public boolean supportsMulticlass() {
-		return true;
-	}
-
-	private static class Counter {
+    private static class Counter {
 
 		private final Integer label;
 		private int numExamples, numCorrects;
@@ -72,7 +62,7 @@ public class CPClassificationCalibrationPlotBuilder implements PlotMetric, Label
 			this.label = label;
 		}
 
-		public void addPrediction(Integer trueLabel, Collection<Integer> predictedLabels) {
+		private void addClassificationPrediction(Integer trueLabel, Collection<Integer> predictedLabels) {
 			if (
 					label == null  // Overall counter
 					|| 
@@ -84,6 +74,13 @@ public class CPClassificationCalibrationPlotBuilder implements PlotMetric, Label
 			} 
 		}
 
+        private void addRegressionPrediction(double trueLabel,Range<Double> ci){
+            numExamples++;
+            if (ci.contains(trueLabel)){
+                numCorrects++;
+            }
+        }
+
 		public double getAccuracy() {
 			if (numExamples ==0)
 				return Double.NaN;
@@ -91,10 +88,26 @@ public class CPClassificationCalibrationPlotBuilder implements PlotMetric, Label
 		}
 	}
 
+    @Override
+	public String getName() {
+		return METRIC_NAME;
+	}
+
+    @Override
+    public String[] getAliases(){
+        return new String[]{METRIC_ALIAS};
+    }
+	@Override
+	public boolean supportsMulticlass() {
+		return true;
+	}
+
+	
+
 	@Override
 	public CalibrationPlot buildPlot() {
 
-		if (numExamples <= 0)
+		if (numAddedPredictions <= 0)
 			throw new IllegalStateException("No predictions added - cannot generate a calibration plot");
 
 		List<Number> overallAccuracies = new ArrayList<>();
@@ -104,37 +117,50 @@ public class CPClassificationCalibrationPlotBuilder implements PlotMetric, Label
 			overallAccuracies.add(counters.get(conf).getAccuracy());
 		}
 
-		// Mondrian accuracies
-		Map<Integer, List<Number>> mondrianAccuracies = new HashMap<>();
-		for (int lab : encounteredLabels) {
-			mondrianAccuracies.put(lab, new ArrayList<>());
-		}
-		for (double conf : confidences) {
-			
-			for (int lab : encounteredLabels) {
-				mondrianAccuracies.get(lab)
-				.add(
-						mondrianCounters.get(conf).get(lab).getAccuracy()
-						);
-			}
-
-		}
+		
 
 		Map<String,List<Number>> plotValues = new LinkedHashMap<>();
 		List<Number> confAsNumber = new ArrayList<>(confidences);
 		plotValues.put(X_AXIS.label(), confAsNumber);
 		plotValues.put(Y_AXIS, overallAccuracies);
-		for (Map.Entry<Integer, List<Number>> label : mondrianAccuracies.entrySet()) {
-			String lab = (labels!=null? labels.getLabel(label.getKey()): ""+label.getKey());
-			plotValues.put(String.format("%s(%s)", Y_AXIS,lab), 
-					label.getValue());
-		}
 
-		CalibrationPlot plot = new CalibrationPlot(plotValues,X_AXIS, Y_AXIS);
-		plot.setNumExamplesUsed(numExamples); // all of them has the same number of examples
+        // Mondrian accuracies
+        if (!mondrianCounters.values().iterator().next().isEmpty()){
+            Map<Integer, List<Number>> mondrianAccuracies = new HashMap<>();
+            for (int lab : encounteredLabels) {
+                mondrianAccuracies.put(lab, new ArrayList<>());
+            }
+            for (double conf : confidences) {
+                for (int lab : encounteredLabels) {
+                    mondrianAccuracies.get(lab)
+                    .add(
+                            mondrianCounters.get(conf).get(lab).getAccuracy()
+                            );
+                }
+            }
+            for (Map.Entry<Integer, List<Number>> label : mondrianAccuracies.entrySet()) {
+                String lab = (labels!=null? labels.getLabel(label.getKey()): ""+label.getKey());
+                plotValues.put(String.format("%s(%s)", Y_AXIS,lab), 
+                        label.getValue());
+            }
+        }
+
+		CalibrationPlot plot = new CalibrationPlot(plotValues,X_AXIS,Y_AXIS);
+		plot.setNumExamplesUsed(numAddedPredictions); // all of them has the same number of examples
 		return plot;
 	}
 
+    // REGRESSION 
+    @Override
+	public void addPrediction(double trueLabel, Map<Double, Range<Double>> predictedIntervals) {
+        for (double conf : predictedIntervals.keySet()){
+            Counter c = counters.get(conf);
+            c.addRegressionPrediction(trueLabel, predictedIntervals.get(conf));
+        }
+        numAddedPredictions++;
+	}
+
+    // CLASSIFICATION
 	@Override
 	public void addPrediction(int trueLabel, Map<Integer, Double> pValues) {
 		encounteredLabels.add(trueLabel);
@@ -143,36 +169,30 @@ public class CPClassificationCalibrationPlotBuilder implements PlotMetric, Label
 			Set<Integer> predSet = PValueTools.getPredictionSet(pValues, conf);
 			
 			// Overall stats
-			counters.get(conf).addPrediction(trueLabel, predSet);
+			counters.get(conf).addClassificationPrediction(trueLabel, predSet);
 
 			// Mondrian stats
 			if (!mondrianCounters.get(conf).containsKey(trueLabel)) {
 				mondrianCounters.get(conf).put(trueLabel, Counter.forLabel(trueLabel));
 			}
-			mondrianCounters.get(conf).get(trueLabel).addPrediction(trueLabel, predSet);
+			mondrianCounters.get(conf).get(trueLabel).addClassificationPrediction(trueLabel, predSet);
 		}
 
-		numExamples++;
+		numAddedPredictions++;
 
 	}
 
 
 	@Override
 	public int getNumExamples() {
-		if (counters.isEmpty())
-			return 0;
-
-		return counters.values().iterator().next().numExamples;
+        return numAddedPredictions;
 	}
 
-	@Override
-	public String getName() {
-		return METRIC_NAME;
-	}
+	
 	
 	@Override
-	public CPClassificationCalibrationPlotBuilder clone() {
-		CPClassificationCalibrationPlotBuilder clone = new CPClassificationCalibrationPlotBuilder(confidences);
+	public ModelCalibration clone() {
+		ModelCalibration clone = new ModelCalibration(confidences);
 		if (labels != null)
 			clone.labels = labels.clone();
 		return clone;
@@ -182,7 +202,7 @@ public class CPClassificationCalibrationPlotBuilder implements PlotMetric, Label
 	public void clear() {
 		setEvaluationPoints(confidences);
 		encounteredLabels.clear();
-		numExamples=0;
+		numAddedPredictions=0;
 	}
 
 	@Override
