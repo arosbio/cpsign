@@ -53,7 +53,7 @@ import com.arosbio.ml.cp.nonconf.classification.NCMMondrianClassification;
 import com.arosbio.ml.io.MetaFileUtils;
 import com.arosbio.ml.io.impl.PropertyNameSettings;
 import com.arosbio.ml.metrics.SingleValuedMetric;
-import com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictions;
+import com.arosbio.ml.metrics.cp.classification.ObservedFuzziness;
 
 public final class TCPClassifier extends PredictorBase implements TCP, ConformalClassifier {
 
@@ -111,7 +111,7 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 
 	@Override
 	public SingleValuedMetric getDefaultOptimizationMetric() {
-		return new ProportionSingleLabelPredictions();
+		return new ObservedFuzziness();
 	}
 
 	@Override
