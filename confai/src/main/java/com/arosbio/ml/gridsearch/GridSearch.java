@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 
 import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.LazyListsPermutationIterator;
-import com.arosbio.commons.MathUtils;
 import com.arosbio.commons.Stopwatch;
 import com.arosbio.commons.StringUtils;
 import com.arosbio.commons.config.Configurable;
@@ -51,11 +50,13 @@ import com.arosbio.ml.cp.ConformalPredictor;
 import com.arosbio.ml.gridsearch.utils.GSResComparator;
 import com.arosbio.ml.interfaces.Predictor;
 import com.arosbio.ml.metrics.Metric;
-import com.arosbio.ml.metrics.MetricAggregation;
 import com.arosbio.ml.metrics.MetricFactory;
 import com.arosbio.ml.metrics.SingleValuedMetric;
-import com.arosbio.ml.metrics.cp.CPAccuracy;
+import com.arosbio.ml.metrics.cp.CalibrationPlot;
 import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
+import com.arosbio.ml.metrics.cp.ModelCalibration;
+import com.arosbio.ml.metrics.plots.PlotMetric;
+import com.arosbio.ml.metrics.plots.PlotMetricAggregation;
 import com.arosbio.ml.testing.KFoldCV;
 import com.arosbio.ml.testing.TestRunner;
 import com.arosbio.ml.testing.TestingStrategy;
@@ -202,9 +203,9 @@ public class GridSearch {
 
 		private final Map<String, Object> parameters;
 		private final double result;
-		private final SingleValuedMetric optimizationType;
+		private final Metric optimizationType;
 		private final long runtimeMS;
-		private final List<SingleValuedMetric> secondaryMetrics;
+		private final List<Metric> secondaryMetrics;
 		private final EvalStatus status;
 		private final String errorMessage;
 
@@ -221,15 +222,15 @@ public class GridSearch {
 		static class Builder {
 			private Map<String, Object> parameters;
 			private double result;
-			private SingleValuedMetric optimizationType;
+			private Metric optimizationType;
 			private long runtimeMS;
-			private List<SingleValuedMetric> secondaryMetrics;
+			private List<Metric> secondaryMetrics;
 			private EvalStatus status;
 			private String errorMessage;
 
 			public static Builder success(Map<String, Object> params, 
 					double optimizationResult, 
-					SingleValuedMetric type,
+					Metric type,
 					long runtime) {
 					
 				Builder b = new Builder();
@@ -242,7 +243,7 @@ public class GridSearch {
 			}
 
 			public static Builder failed(Map<String, Object> params, 
-					SingleValuedMetric optMetric, 
+					Metric optMetric, 
 					EvalStatus status,
 					String error) {
 				Builder b = new Builder();
@@ -253,7 +254,7 @@ public class GridSearch {
 				return b;
 			}
 
-			public Builder secondary(List<SingleValuedMetric> metrics){
+			public Builder secondary(List<Metric> metrics){
 				this.secondaryMetrics = metrics;
 				return this;
 			}
@@ -268,11 +269,11 @@ public class GridSearch {
 			return status;
 		}
 
-		public SingleValuedMetric getOptimizationMetric() {
+		public Metric getOptimizationMetric() {
 			return optimizationType;
 		}
 
-		public List<SingleValuedMetric> getSecondaryMetrics() {
+		public List<Metric> getSecondaryMetrics() {
 			return secondaryMetrics;
 		}
 
@@ -317,8 +318,8 @@ public class GridSearch {
 	// testing settings
 	private final TestingStrategy testStrategy;
 	private final boolean calcMeanAndSD;
-	private final SingleValuedMetric explicitMetric;
-	private final List<SingleValuedMetric> secondaryMetrics;
+	private final Metric explicitMetric;
+	private final List<Metric> secondaryMetrics;
 
 	private final double confidence;
 	private final double tolerance;
@@ -352,8 +353,8 @@ public class GridSearch {
 	public static class Builder {
 		private TestingStrategy testStrategy = new KFoldCV(); 
 		private boolean computeMeanAndSD = true;
-		private SingleValuedMetric optMetric;
-		private List<SingleValuedMetric> secondaryMetrics;
+		private Metric optMetric;
+		private List<Metric> secondaryMetrics;
 		private Writer customWriter;
 		private double confidence = ConfidenceDependentMetric.DEFAULT_CONFIDENCE;
 		private double tolerance = 0.05;
@@ -398,7 +399,7 @@ public class GridSearch {
 		 * @param metric the metric
 		 * @return the same Builder object
 		 */
-		public Builder evaluationMetric(SingleValuedMetric metric) {
+		public Builder evaluationMetric(Metric metric) {
 			this.optMetric = metric;
 			return this;
 		}
@@ -410,12 +411,12 @@ public class GridSearch {
 		 * @param metrics a list of metrics
 		 * @return the reference of the calling instance (fluid API)
 		 */
-		public Builder secondaryMetrics(List<SingleValuedMetric> metrics) {
+		public Builder secondaryMetrics(List<Metric> metrics) {
 			this.secondaryMetrics = new ArrayList<>(metrics);
 			return this;
 		}
 
-		public List<SingleValuedMetric> secondaryMetrics() {
+		public List<Metric> secondaryMetrics() {
 			return this.secondaryMetrics;
 		}
 
@@ -491,15 +492,15 @@ public class GridSearch {
 
 	}
 
-	public SingleValuedMetric getEvaluationMetric() {
+	public Metric getEvaluationMetric() {
 		return explicitMetric;
 	}
 
-	public SingleValuedMetric getOptimizationMetric() {
+	public Metric getOptimizationMetric() {
 		return explicitMetric;
 	}
 
-	public List<SingleValuedMetric> getSecondaryMetrics() {
+	public List<Metric> getSecondaryMetrics() {
 		return secondaryMetrics;
 	}
 
@@ -750,7 +751,7 @@ public class GridSearch {
 			throw new IllegalArgumentException("TestingStrategy must be set");
 		testStrategy.getNumberOfSplitsAndValidate(problem);
 
-		SingleValuedMetric optimizationMetric = explicitMetric != null ? explicitMetric
+		Metric optimizationMetric = explicitMetric != null ? explicitMetric
 				: predictor.getDefaultOptimizationMetric();
 		if (parameterGrid == null)
 			throw new IllegalArgumentException("Parameter grid was empty!");
@@ -763,20 +764,22 @@ public class GridSearch {
 		boolean foundValidResult = false;
 
 		// Metrics
-		List<SingleValuedMetric> metrics = getAllMetrics(optimizationMetric);
+		List<Metric> metrics = getAllMetrics(optimizationMetric);
 
 		// Add accuracy-metric if CP & Add confidence as field
 		if (predictor instanceof ConformalPredictor) {
 			// Check so it's not added already
 			boolean isPresent = false;
 			for (Metric m : metrics) {
-				if (m instanceof CPAccuracy) {
+				if (m instanceof ModelCalibration) {
+					// override the confidence level if set
+					((ModelCalibration)m).setEvaluationPoints(Arrays.asList(confidence));
 					isPresent = true;
 					break;
 				}
 			}
 			if (!isPresent) {
-				metrics.add(new CPAccuracy(confidence));
+				metrics.add(new ModelCalibration(Arrays.asList(confidence)));
 			}
 		}
 
@@ -850,9 +853,9 @@ public class GridSearch {
 					// Update results
 					if (paramResult != null){
 						GSResult.Builder builder = (currentStatus != EvalStatus.FAILED
-								? GSResult.Builder.success(currentParams, ((SingleValuedMetric) paramResult.get(0)).getScore(),
-										((SingleValuedMetric) paramResult.get(0)), timer.elapsedTimeMillis())
-								: GSResult.Builder.failed(currentParams, ((SingleValuedMetric) paramResult.get(0)), currentStatus,
+								? GSResult.Builder.success(currentParams, getScore(paramResult.get(0)),
+										paramResult.get(0), timer.elapsedTimeMillis())
+								: GSResult.Builder.failed(currentParams, paramResult.get(0), currentStatus,
 										errorMsg));
 						if (paramResult.size() > 1) {
 							builder.secondary(getSecondaryMetrics(paramResult));
@@ -939,7 +942,7 @@ public class GridSearch {
 			throw new IllegalArgumentException("TestingStrategy must be set");
 		testStrategy.getNumberOfSplitsAndValidate(data);
 
-		SingleValuedMetric optimizationMetric = null;
+		Metric optimizationMetric = null;
 		if (explicitMetric != null) {
 			optimizationMetric = explicitMetric;
 		} else {
@@ -952,7 +955,7 @@ public class GridSearch {
 			}
 		}
 		if (optimizationMetric == null){
-			throw new IllegalArgumentException("No metric given to optimize hyperparameters for");
+			throw new IllegalArgumentException("No metric given to optimize hyper-parameters for");
 		}
 		if (parameterGrid == null){
 			throw new IllegalArgumentException("Parameter grid was empty!");
@@ -964,7 +967,7 @@ public class GridSearch {
 				alg.getClass(), optimizationMetric.getName(), parameterGrid);
 
 		// Metrics
-		List<SingleValuedMetric> metrics = getAllMetrics(optimizationMetric);
+		List<Metric> metrics = getAllMetrics(optimizationMetric);
 		boolean foundValid = false;
 
 		verifyMetricsOfCorrectType(metrics, alg);
@@ -993,7 +996,7 @@ public class GridSearch {
 
 			Map<String, Object> currentParams = new HashMap<>();
 			List<Metric> paramResult = null;
-			List<SingleValuedMetric> inputMetrics = null;
+			List<Metric> inputMetrics = null;
 			String errorMsg = null;
 
 			while (paramsIterator.hasNext()) {
@@ -1033,19 +1036,14 @@ public class GridSearch {
 					// Update results
 					GSResult.Builder builder = errorMsg == null && paramResult != null
 							? GSResult.Builder.success(currentParams,
-									((SingleValuedMetric) paramResult.get(0)).getScore(),
-									((SingleValuedMetric) paramResult.get(0)),
+									getScore(paramResult.get(0)),
+									paramResult.get(0),
 									timer.elapsedTimeMillis())
 							: GSResult.Builder.failed(currentParams, optimizationMetric, EvalStatus.FAILED, errorMsg);
 
 					// Set secondary metrics
 					if (paramResult != null && paramResult.size() > 1) {
-						List<SingleValuedMetric> secondary = new ArrayList<>();
-						for (Metric m : paramResult.subList(1, paramResult.size())) {
-							if (m instanceof SingleValuedMetric)
-								secondary.add((SingleValuedMetric) m);
-						}
-						builder.secondary(secondary);
+						builder.secondary(paramResult.subList(1, paramResult.size()));
 					} else if (inputMetrics!= null && inputMetrics.size() > 1) {
 						// If the run failed, the paramResult == null
 						builder.secondary(inputMetrics.subList(1, inputMetrics.size()));
@@ -1127,10 +1125,10 @@ public class GridSearch {
 		}
 	}
 
-	private List<SingleValuedMetric> getSecondaryMetrics(List<?> ms) {
+	private List<Metric> getSecondaryMetrics(List<?> ms) {
 		if (ms == null || ms.size() < 2)
 			return new ArrayList<>();
-		List<SingleValuedMetric> s = new ArrayList<>();
+		List<Metric> s = new ArrayList<>();
 		for (int i = 1; i < ms.size(); i++) {
 			if (ms.get(i) instanceof SingleValuedMetric) {
 				s.add((SingleValuedMetric) ms.get(i));
@@ -1139,22 +1137,32 @@ public class GridSearch {
 		return s;
 	}
 
+	private static double getScore(Metric m){
+		if (m instanceof SingleValuedMetric){
+			return ((SingleValuedMetric)m).getScore();
+		} else if (m instanceof PlotMetric){
+			return ((PlotMetric)m).buildPlot().getCurves().get(((PlotMetric)m).getPrimaryMetricName()).get(0).doubleValue();
+		} 
+		LOGGER.debug("Failed getting the score - it was neither a SingleValuedMetric nor PlotMetric - unsupported!");
+		throw new RuntimeException("Illegal state in grid-search");
+	}
+
 	private EvalStatus getStatus(Predictor predictor, List<? extends Metric> paramResult) {
 		if (predictor instanceof VennABERSPredictor) {
 			// Always valid - no way of telling it's not
 			return EvalStatus.VALID;
-		} else if (getAccuracy(paramResult) - confidence > -tolerance) {
+		} else if (getAccuracy(paramResult, confidence) - confidence > -tolerance) {
 			return EvalStatus.VALID;
 		} 
 		// Otherwise it was invalid
 		return EvalStatus.NOT_VALID;
 	}
 
-	private static void verifyMetricsOfCorrectType(List<SingleValuedMetric> metrics, Predictor predictor)
+	private static void verifyMetricsOfCorrectType(List<Metric> metrics, Predictor predictor)
 			throws IllegalArgumentException {
 		List<String> notOKmetrics = new ArrayList<>();
 
-		for (SingleValuedMetric m : metrics) {
+		for (Metric m : metrics) {
 			if (!EvaluationUtils.validateMetrics(predictor,m)) {
 				notOKmetrics.add(m.getName());
 			}
@@ -1169,11 +1177,11 @@ public class GridSearch {
 		}
 	}
 
-	private static void verifyMetricsOfCorrectType(List<SingleValuedMetric> metrics, MLAlgorithm alg)
+	private static void verifyMetricsOfCorrectType(List<Metric> metrics, MLAlgorithm alg)
 			throws IllegalArgumentException {
 		List<String> notOKmetrics = new ArrayList<>();
 
-		for (SingleValuedMetric m : metrics) {
+		for (Metric m : metrics) {
 			if (!TestRunner.metricSupportedByAlgorithm(m, alg)) {
 				notOKmetrics.add(m.getName());
 			}
@@ -1186,47 +1194,71 @@ public class GridSearch {
 		}
 	}
 
-	private static double getAccuracy(List<? extends Metric> metrics) {
+	private static double getAccuracy(List<? extends Metric> metrics, double confidence) {
 		for (Metric m : metrics) {
-			if (m instanceof CPAccuracy) {
-				return ((CPAccuracy) m).getScore();
-			} else if (m instanceof MetricAggregation) {
-				SingleValuedMetric underlyingMetric = ((MetricAggregation<?>) m).spawnNewMetricInstance();
-				if (underlyingMetric instanceof CPAccuracy) {
-					return ((MetricAggregation<?>) m).getScore();
+			if (m instanceof ModelCalibration) {
+				return getAccuracy((ModelCalibration) m, confidence);
+			} else if (m instanceof PlotMetricAggregation) {
+				if ( ((PlotMetricAggregation)m).spawnNewMetricInstance() instanceof ModelCalibration){
+					// we want this one
+					CalibrationPlot calib = (CalibrationPlot) ((PlotMetricAggregation)m).buildPlot();
+					return calib.getAccuracy(confidence);
 				}
-			}
+			} 
+
 		}
+		LOGGER.debug("No ModelCalibration metric found - cannot calculate the accuracy for the current run");
 		return -1;
 	}
+	private static double getAccuracy(ModelCalibration metric, double conf){
+		return ((ModelCalibration) metric).buildPlot().getAccuracy(conf);
+	}
 
-	private static List<SingleValuedMetric> cloneMetrics(List<SingleValuedMetric> list) {
-		List<SingleValuedMetric> clones = new ArrayList<>(list.size());
-		for (SingleValuedMetric m : list)
+	private static List<Metric> cloneMetrics(List<Metric> list) {
+		List<Metric> clones = new ArrayList<>(list.size());
+		for (Metric m : list)
 			clones.add(m.clone());
 		return clones;
 	}
 
 	
-
-	private List<SingleValuedMetric> getAllMetrics(SingleValuedMetric opt) {
-		List<SingleValuedMetric> l = new ArrayList<>();
+	/**
+	 * Cleans all metrics and makes sure to only use the fixed confidence level (if applicable)
+	 * @param opt
+	 * @return
+	 */
+	private List<Metric> getAllMetrics(Metric opt) {
+		List<Metric> l = new ArrayList<>();
 		l.add(opt);
+		// Check correct type of metric
+		Metric clone = opt.clone();
+		if (clone instanceof PlotMetric){
+			List<Double> evalPoints = ((PlotMetric)clone).getEvaluationPoints();
+			if (evalPoints.size() != 1){
+				LOGGER.debug("Given optimization metric with faulty number of evaluation points ({}), should only be 1! Overwriting with evaluation point = {}", 
+					evalPoints.size(),confidence);
+				((PlotMetric)clone).setEvaluationPoints(Arrays.asList(confidence));
+			}
+		}
 		if (secondaryMetrics != null) {
-			for (SingleValuedMetric m : secondaryMetrics) {
-				if (m.getClass().equals(opt.getClass())) {
-					// If same class - check confidence is different - otherwise skip it
-					if (m instanceof ConfidenceDependentMetric) {
-						double c1 = ((ConfidenceDependentMetric) m).getConfidence();
-						double c2 = ((ConfidenceDependentMetric) opt).getConfidence();
-
-						if (!MathUtils.equals(c1, c2)) {
-							l.add(m);
-						}
-					}
-				} else {
+			for (Metric m : secondaryMetrics) {
+				// only add if a new type of metric
+				if (! m.getClass().equals(opt.getClass())) {
 					l.add(m);
 				}
+
+				// 	// If same class - check confidence is different - otherwise skip it
+				// 	if (m instanceof ConfidenceDependentMetric) {
+				// 		double c1 = ((ConfidenceDependentMetric) m).getConfidence();
+				// 		double c2 = ((ConfidenceDependentMetric) opt).getConfidence();
+
+				// 		if (!MathUtils.equals(c1, c2)) {
+				// 			l.add(m);
+				// 		}
+				// 	}
+				// } else {
+				// 	l.add(m);
+				// }
 			}
 		}
 		return l;

@@ -76,6 +76,14 @@ public class PlotMetricAggregation implements PlotMetric {
 		return totalCount;
 	}
 
+	public Set<String> getYLabels(){
+		return type.getYLabels();
+	}
+
+	public String getPrimaryMetricName(){
+		return type.getPrimaryMetricName();
+	}
+
 	@Override
 	public void clear() {
 		results.clear();

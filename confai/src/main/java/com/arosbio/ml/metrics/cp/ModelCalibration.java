@@ -38,6 +38,7 @@ public class ModelCalibration implements LabelsMixin, CPClassifierMetric, CPRegr
 
 	private NamedLabels labels;
 
+	
 	public ModelCalibration() {
 		setEvaluationPoints(DEFAULT_EVALUATION_POINTS);
 	}
@@ -102,10 +103,32 @@ public class ModelCalibration implements LabelsMixin, CPClassifierMetric, CPRegr
 		return true;
 	}
 
+	public String getPrimaryMetricName(){
+		return Y_AXIS;
+	}
+
+	public Set<String> getYLabels(){
+		Set<String> yLabels = new HashSet<>();
+		yLabels.add(Y_AXIS);
+		if (encounteredLabels != null && !encounteredLabels.isEmpty()){
+			for (int label : encounteredLabels){
+				yLabels.add(fmtYLabelMondrian(label));
+			}
+		} else if (labels != null){
+			for (int label : labels.getLabels().keySet()){
+				yLabels.add(fmtYLabelMondrian(label));
+			}
+		}
+		return yLabels;
+	}
 	
+	private String fmtYLabelMondrian(Integer label){
+		String lab = (labels!=null? labels.getLabel(label): ""+label);
+		return String.format("%s(%s)", Y_AXIS,lab);
+	}
 
 	@Override
-	public CalibrationPlot buildPlot() {
+	public CalibrationPlot buildPlot() throws IllegalStateException {
 
 		if (numAddedPredictions <= 0)
 			throw new IllegalStateException("No predictions added - cannot generate a calibration plot");
@@ -115,9 +138,7 @@ public class ModelCalibration implements LabelsMixin, CPClassifierMetric, CPRegr
 		// Overall accuracies
 		for (double conf : confidences) {
 			overallAccuracies.add(counters.get(conf).getAccuracy());
-		}
-
-		
+		}		
 
 		Map<String,List<Number>> plotValues = new LinkedHashMap<>();
 		List<Number> confAsNumber = new ArrayList<>(confidences);
@@ -139,8 +160,7 @@ public class ModelCalibration implements LabelsMixin, CPClassifierMetric, CPRegr
                 }
             }
             for (Map.Entry<Integer, List<Number>> label : mondrianAccuracies.entrySet()) {
-                String lab = (labels!=null? labels.getLabel(label.getKey()): ""+label.getKey());
-                plotValues.put(String.format("%s(%s)", Y_AXIS,lab), 
+                plotValues.put(fmtYLabelMondrian(label.getKey()), 
                         label.getValue());
             }
         }
@@ -153,7 +173,7 @@ public class ModelCalibration implements LabelsMixin, CPClassifierMetric, CPRegr
     // REGRESSION 
     @Override
 	public void addPrediction(double trueLabel, Map<Double, Range<Double>> predictedIntervals) {
-        for (double conf : predictedIntervals.keySet()){
+        for (double conf : confidences){
             Counter c = counters.get(conf);
             c.addRegressionPrediction(trueLabel, predictedIntervals.get(conf));
         }

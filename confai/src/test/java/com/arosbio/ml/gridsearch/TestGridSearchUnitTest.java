@@ -63,12 +63,12 @@ import com.arosbio.ml.gridsearch.GridSearch.ProgressInfo;
 import com.arosbio.ml.gridsearch.GridSearch.ProgressMonitor;
 import com.arosbio.ml.interfaces.ClassificationPredictor;
 import com.arosbio.ml.interfaces.Predictor;
+import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.MetricFactory;
-import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.metrics.classification.BinaryBrierScore;
 import com.arosbio.ml.metrics.classification.ROC_AUC;
-import com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictions;
-import com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictions;
+import com.arosbio.ml.metrics.cp.classification.MultiLabelPredictionsPlotBuilder;
+import com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder;
 import com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth;
 import com.arosbio.ml.metrics.cp.regression.MedianPredictionIntervalWidth;
 import com.arosbio.ml.metrics.regression.MAE;
@@ -135,14 +135,12 @@ public class TestGridSearchUnitTest extends TestEnv {
 		ACPClassifier acp = new ACPClassifier(new NegativeDistanceToHyperplaneNCM(new LinearSVC()),
 				new RandomStratifiedSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
 
-		doTestGridSearchNCMEstimator(acp, new ProportionSingleLabelPredictions(CV_CONF));
+		doTestGridSearchNCMEstimator(acp, new SingleLabelPredictionsPlotBuilder(Arrays.asList(CV_CONF)));
 
-		// compileBestParamsAtFile(acp);
-		
 	}
 
 
-	public void doTestGridSearchNCMEstimator(Predictor pred, SingleValuedMetric metric) throws Exception {
+	public void doTestGridSearchNCMEstimator(Predictor pred, Metric metric) throws Exception {
 
 		Dataset prob = TestDataLoader.getInstance().getDataset(pred instanceof ClassificationPredictor, true);
 
@@ -179,7 +177,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		}
 	}
 
-	public void doTestGridSearch(Predictor pred, SingleValuedMetric faultyMetric, SingleValuedMetric trueMetric,
+	public void doTestGridSearch(Predictor pred, Metric faultyMetric, Metric trueMetric,
 			boolean usesGamma)
 			throws Exception {
 		
@@ -327,7 +325,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 				new RandomStratifiedSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
 		doTestGridSearch(acp,
 				new MedianPredictionIntervalWidth(CV_CONF),
-				new ProportionSingleLabelPredictions(CV_CONF),
+				new SingleLabelPredictionsPlotBuilder(Arrays.asList(CV_CONF)),// new ProportionSingleLabelPredictions(CV_CONF),
 				true);
 
 		// compileBestParamsAtFile(acp);
@@ -357,7 +355,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		// LoggerUtils.setDebugMode(SYS_ERR);
 
 		doTestGridSearch(acp,
-				new ProportionMultiLabelPredictions(CV_CONF),
+				new MultiLabelPredictionsPlotBuilder(Arrays.asList(CV_CONF)), //new ProportionMultiLabelPredictions(CV_CONF),
 				new MeanPredictionIntervalWidth(CV_CONF),
 				true);
 		// compileBestParamsAtFile(acp);
@@ -377,7 +375,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		// SYS_ERR.println("rng seed: " + CPSignSettings.getInstance().getRNGSeed());
 
 		doTestGridSearch(acp,
-				new ProportionMultiLabelPredictions(CV_CONF),
+				new MultiLabelPredictionsPlotBuilder(Arrays.asList(CV_CONF)), // new ProportionMultiLabelPredictions(CV_CONF),
 				new ROC_AUC(),
 				false);
 
@@ -432,7 +430,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		grid.put("c", Arrays.asList(.5, 10., 100.));
 		GridSearch gs = new GridSearch.Builder()
 				.testStrategy(new KFoldCV(3))
-				.secondaryMetrics(MetricFactory.filterToSingleValuedMetrics(MetricFactory.getMetrics(svr, false)))
+				.secondaryMetrics(MetricFactory.getMetrics(svr, false)) //MetricFactory.filterToSingleValuedMetrics(
 				.loggingWriter(new SystemOutWriter()).build();
 
 		GridSearchResult res = gs.search(ds, svr, grid);
@@ -488,7 +486,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		grid.put("gamma", Arrays.asList(0.01,0.001,0.0001));
 		GridSearch gs = new GridSearch.Builder()
 				.testStrategy(new RandomSplit())
-				.secondaryMetrics(MetricFactory.filterToSingleValuedMetrics(MetricFactory.getMetrics(svr, false)))
+				.secondaryMetrics(MetricFactory.getMetrics(svr, false)) //MetricFactory.filterToSingleValuedMetrics(
 				.loggingWriter(new SystemOutWriter())
 				.maxNumResults(-1)
 				.build();
@@ -510,7 +508,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		grid.put("c", Arrays.asList(.5, 10., 100.));
 		GridSearch gs = new GridSearch.Builder()
 				.testStrategy(new KFoldCV(2))
-				.secondaryMetrics(MetricFactory.filterToSingleValuedMetrics(MetricFactory.getMetrics(svc, false)))
+				.secondaryMetrics(MetricFactory.getMetrics(svc, false)) //MetricFactory.filterToSingleValuedMetrics(
 				.loggingWriter(new SystemOutWriter())
 				.build();
 
@@ -532,7 +530,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		grid.put("gamma", Arrays.asList(0.01,0.001,0.0001));
 		GridSearch gs = new GridSearch.Builder()
 				.testStrategy(new RandomSplit())
-				.secondaryMetrics(MetricFactory.filterToSingleValuedMetrics(MetricFactory.getMetrics(svc, false)))
+				.secondaryMetrics(MetricFactory.getMetrics(svc, false)) //MetricFactory.filterToSingleValuedMetrics(
 				.loggingWriter(new SystemOutWriter())
 				.build();
 
@@ -708,7 +706,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		grid.put("c", Arrays.asList(1, 2, .5, 10., 100.));
 		GridSearch gs = new GridSearch.Builder()
 				.testStrategy(new RandomSplit())
-				.secondaryMetrics(MetricFactory.filterToSingleValuedMetrics(MetricFactory.getMetrics(acp, false)))
+				.secondaryMetrics(MetricFactory.getMetrics(acp, false)) //MetricFactory.filterToSingleValuedMetrics(
 				.register(new MyProgressCallback())
 				.register(new MyEarlyStoppingMonitor(3))
 				.loggingWriter(new SystemOutWriter())
@@ -729,7 +727,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		grid.put("c", Arrays.asList(.5, 10., 100.));
 		GridSearch gs = new GridSearch.Builder()
 				.testStrategy(new RandomSplit())
-				.secondaryMetrics(MetricFactory.filterToSingleValuedMetrics(MetricFactory.getMetrics(svc, false)))
+				.secondaryMetrics(MetricFactory.getMetrics(svc, false)) //MetricFactory.filterToSingleValuedMetrics(
 				.register(new MyProgressCallback())
 				.register(new MyEarlyStoppingMonitor(2))
 				.loggingWriter(new SystemOutWriter())

@@ -34,17 +34,13 @@ import com.arosbio.ml.metrics.classification.NPV;
 import com.arosbio.ml.metrics.classification.Precision;
 import com.arosbio.ml.metrics.classification.ROC_AUC;
 import com.arosbio.ml.metrics.classification.Recall;
-import com.arosbio.ml.metrics.cp.CPAccuracy;
 import com.arosbio.ml.metrics.cp.CalibrationPlot;
-import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
 import com.arosbio.ml.metrics.cp.EfficiencyPlot;
 import com.arosbio.ml.metrics.cp.ModelCalibration;
 import com.arosbio.ml.metrics.cp.classification.AverageC;
 import com.arosbio.ml.metrics.cp.classification.BalancedObservedFuzziness;
 import com.arosbio.ml.metrics.cp.classification.MultiLabelPredictionsPlotBuilder;
 import com.arosbio.ml.metrics.cp.classification.ObservedFuzziness;
-import com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictions;
-import com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictions;
 import com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder;
 import com.arosbio.ml.metrics.cp.classification.UnobservedConfidence;
 import com.arosbio.ml.metrics.cp.classification.UnobservedCredibility;
@@ -52,7 +48,9 @@ import com.arosbio.ml.metrics.cp.regression.CPRegressionEfficiencyPlotBuilder;
 import com.arosbio.ml.metrics.cp.regression.ConfidenceGivenPredictionIntervalWidth;
 import com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth;
 import com.arosbio.ml.metrics.cp.regression.MedianPredictionIntervalWidth;
+import com.arosbio.ml.metrics.plots.Plot2D;
 import com.arosbio.ml.metrics.plots.Plot2D.X_Axis;
+import com.arosbio.ml.metrics.plots.PlotMetric;
 import com.arosbio.ml.metrics.regression.MAE;
 import com.arosbio.ml.metrics.regression.R2;
 import com.arosbio.ml.metrics.regression.RMSE;
@@ -165,6 +163,19 @@ public class TestMetrics {
 	private static void assertNone(SingleValuedMetric m) {
 		Assert.assertTrue(Double.isNaN(m.getScore()));
 		Assert.assertEquals(0, m.getNumExamples());
+	}
+
+	private static void assertNone(PlotMetric m){
+		Assert.assertEquals(0, m.getNumExamples());
+		try {
+			Plot2D plt = m.buildPlot();
+			Assert.fail("Empty plot metric should fail when trying to build: " + plt.curvesAsJSONString());
+		} catch (IllegalStateException e){}
+	}
+
+	private static double getScoreAssumeSinglePoint(PlotMetric m){
+		Assert.assertEquals(1, m.getEvaluationPoints().size());
+		return m.buildPlot().getCurves().get(m.getPrimaryMetricName()).get(0).doubleValue(); 
 	}
 
 	@Category(UnitTest.class)
@@ -942,87 +953,93 @@ public class TestMetrics {
 
 		@Test
 		public void CPAccuracy_regression() {
-			CPAccuracy m = new CPAccuracy();
+			double conf = 0.77;
+			ModelCalibration m = new ModelCalibration(Arrays.asList(conf));
+
 			assertNone(m);
 
-			m.setConfidence(.77);
-			Assert.assertEquals(.77, m.getConfidence(),0.00001);
+			// m.setConfidence(.77);
+			
+			Assert.assertEquals(conf, m.getEvaluationPoints().get(0),0.00001);
 
 			// First correct
-			m.addPrediction(1., Range.closed(.9, 1.1));
-			Assert.assertEquals(1., m.getScore(),0.00001);
+			m.addPrediction(1., Map.of(.77, Range.closed(.9, 1.1)));
+			Assert.assertEquals(1., getScoreAssumeSinglePoint(m),0.00001);
 			Assert.assertEquals(1, m.getNumExamples());
 			
 			// Second incorrect
-			m.addPrediction(2., Range.closed(.9, 1.1));
-			Assert.assertEquals(.5, m.getScore(),0.00001);
+			m.addPrediction(2., Map.of(conf,Range.closed(.9, 1.1)));
+			Assert.assertEquals(.5, getScoreAssumeSinglePoint(m),0.00001);
 			Assert.assertEquals(2, m.getNumExamples());
 
 			// Third correct
-			m.addPrediction(1.09, Range.closed(.9, 1.1));
-			Assert.assertEquals(2./3, m.getScore(),0.00001);
+			m.addPrediction(1.09, Map.of(conf,Range.closed(.9, 1.1)));
+			Assert.assertEquals(2./3, getScoreAssumeSinglePoint(m),0.00001);
 			Assert.assertEquals(3, m.getNumExamples());
 
 			// Forth incorrect
-			m.addPrediction(10., Range.closed(7.9, 9.1));
-			Assert.assertEquals(.5, m.getScore(),0.00001);
+			m.addPrediction(10., Map.of(conf,Range.closed(7.9, 9.1)));
+			Assert.assertEquals(.5, getScoreAssumeSinglePoint(m),0.00001);
 			Assert.assertEquals(4, m.getNumExamples());
 
 			// CLONE
-			CPAccuracy clone = m.clone();
+			ModelCalibration clone = m.clone();
+			// CPAccuracy clone = m.clone();
 			assertNone(clone);
-			clone.addPrediction(1., Range.closed(.9, 1.1));
-			clone.addPrediction(2., Range.closed(.9, 1.1));
-			clone.addPrediction(1.09, Range.closed(.9, 1.1));
-			clone.addPrediction(10., Range.closed(7.9, 9.1));
-			Assert.assertEquals(.5, clone.getScore(),0.00001);
+			clone.addPrediction(1., Map.of(conf,Range.closed(.9, 1.1)));
+			clone.addPrediction(2., Map.of(conf,Range.closed(.9, 1.1)));
+			clone.addPrediction(1.09, Map.of(conf,Range.closed(.9, 1.1)));
+			clone.addPrediction(10., Map.of(conf,Range.closed(7.9, 9.1)));
+			Assert.assertEquals(.5, getScoreAssumeSinglePoint(m),0.00001);
 
 			// Clear
 			m.clear();
 			assertNone(m);
-			m.addPrediction(1., Range.closed(.9, 1.1));
-			m.addPrediction(2., Range.closed(.9, 1.1));
-			m.addPrediction(1.09, Range.closed(.9, 1.1));
-			m.addPrediction(10., Range.closed(7.9, 9.1));
-			Assert.assertEquals(.5, m.getScore(),0.00001);
+			m.addPrediction(1., Map.of(conf,Range.closed(.9, 1.1)));
+			m.addPrediction(2., Map.of(conf,Range.closed(.9, 1.1)));
+			m.addPrediction(1.09, Map.of(conf,Range.closed(.9, 1.1)));
+			m.addPrediction(10., Map.of(conf,Range.closed(7.9, 9.1)));
+			Assert.assertEquals(.5, getScoreAssumeSinglePoint(m),0.00001);
 		}
 
 		@Test
 		public void CPAccuracy_clf() {
-			CPAccuracy m = new CPAccuracy();
+			ModelCalibration m = new ModelCalibration(Arrays.asList(.88));
+			// PlotToSingleWrapper<ModelCalibration> m = new PlotToSingleWrapper<>(underlying, .88);
 			assertNone(m);
 
-			m.setConfidence(.88);
-			Assert.assertEquals(.88, m.getConfidence(),0.00001);
+			// Assert.assertEquals(1, m.getEvaluationPoints().size());
+
+			Assert.assertEquals(.88, m.getEvaluationPoints().get(0),0.00001);
 
 			// First correct
 			m.addPrediction(0, toMap(.22, .1));
-			Assert.assertEquals(1., m.getScore(),0.00001);
+			Assert.assertEquals(1., getScoreAssumeSinglePoint(m),0.00001);
 			Assert.assertEquals(1, m.getNumExamples());
 			
 			// Second incorrect
 			m.addPrediction(1, toMap(.1,.1));
-			Assert.assertEquals(.5, m.getScore(),0.00001);
+			Assert.assertEquals(.5, getScoreAssumeSinglePoint(m),0.00001);
 			Assert.assertEquals(2, m.getNumExamples());
 
 			// Third correct
 			m.addPrediction(1, toMap(.05,.7));
-			Assert.assertEquals(2./3, m.getScore(),0.00001);
+			Assert.assertEquals(2./3, getScoreAssumeSinglePoint(m),0.00001);
 			Assert.assertEquals(3, m.getNumExamples());
 
 			// Forth incorrect
 			m.addPrediction(0, toMap(.08,.5));
-			Assert.assertEquals(.5, m.getScore(),0.00001);
+			Assert.assertEquals(.5, getScoreAssumeSinglePoint(m),0.00001);
 			Assert.assertEquals(4, m.getNumExamples());
 
 			// CLONE
-			CPAccuracy clone = m.clone();
+			ModelCalibration clone = m.clone();
 			assertNone(clone);
 			clone.addPrediction(0, toMap(.22, .1));
 			clone.addPrediction(1, toMap(.1,.1));
 			clone.addPrediction(1, toMap(.05,.7));
 			clone.addPrediction(0, toMap(.08,.5));
-			Assert.assertEquals(.5, clone.getScore(),0.00001);
+			Assert.assertEquals(.5, getScoreAssumeSinglePoint(m),0.00001);
 
 			// Clear
 			m.clear();
@@ -1031,7 +1048,7 @@ public class TestMetrics {
 			m.addPrediction(1, toMap(.1,.1));
 			m.addPrediction(1, toMap(.05,.7));
 			m.addPrediction(0, toMap(.08,.5));
-			Assert.assertEquals(.5, m.getScore(),0.00001);
+			Assert.assertEquals(.5, getScoreAssumeSinglePoint(m),0.00001);
 		}
 			
 			
@@ -1076,10 +1093,9 @@ public class TestMetrics {
 		}
 
 		@Test
-		public void AverageC(){
-			AverageC m = new AverageC();
+		public void AverageC_asSingleValue(){
+			AverageC m = new AverageC(Arrays.asList(.8));
 			assertNone(m);
-			Assert.assertEquals(ConfidenceDependentMetric.DEFAULT_CONFIDENCE, m.getConfidence(), 0.0001);
 
 			// -------------------
 			// The 2 class problem
@@ -1088,20 +1104,21 @@ public class TestMetrics {
 			// 1
 			m.addPrediction(0, Pvalues.y_pred.get(0));
 			Assert.assertEquals(1, m.getNumExamples());
-			Assert.assertEquals(1, m.getScore(), 0.001);
+			Assert.assertEquals(1, getScoreAssumeSinglePoint(m), 0.001);
 			// 2
 			m.addPrediction(0, Pvalues.y_pred.get(1));
 			Assert.assertEquals(2, m.getNumExamples());
-			Assert.assertEquals(1.5, m.getScore(), 0.001);
+			Assert.assertEquals(1.5, getScoreAssumeSinglePoint(m), 0.001);
 			// 3
 			m.addPrediction(0, Pvalues.y_pred.get(2));
 			Assert.assertEquals(3, m.getNumExamples());
-			Assert.assertEquals(4./3, m.getScore(), 0.001);
+			Assert.assertEquals(4./3, getScoreAssumeSinglePoint(m), 0.001);
 
 			// Clone
 			AverageC m2 = m.clone();
 			assertNone(m2);
-			m2.setConfidence(.9);
+			m2 = new AverageC(Arrays.asList(0.9));
+			// m2.setEvaluationPoints(ImmutableList.of(.9));
 
 			// -------------------
 			// The 3 class problem
@@ -1110,15 +1127,15 @@ public class TestMetrics {
 			// 1
 			m2.addPrediction(0, Pvalues3class.y_pred.get(0));
 			Assert.assertEquals(1, m2.getNumExamples());
-			Assert.assertEquals(3, m2.getScore(), 0.001);
+			Assert.assertEquals(3, getScoreAssumeSinglePoint(m2), 0.001);
 			// 2
 			m2.addPrediction(0, Pvalues3class.y_pred.get(1));
 			Assert.assertEquals(2, m2.getNumExamples());
-			Assert.assertEquals(2., m2.getScore(), 0.001);
+			Assert.assertEquals(2., getScoreAssumeSinglePoint(m2), 0.001);
 			// 3
 			m2.addPrediction(0, Pvalues3class.y_pred.get(2));
 			Assert.assertEquals(3, m2.getNumExamples());
-			Assert.assertEquals(7./3, m2.getScore(), 0.001);
+			Assert.assertEquals(7./3, getScoreAssumeSinglePoint(m2), 0.001);
 		}
 
 		@Test
@@ -1247,6 +1264,7 @@ public class TestMetrics {
 			Assert.assertEquals(0.94, m.getScore(), 0.001);
 		}
 
+		/*
 		@Test
 		public void ProportionMultiLabelPredictions() {
 			ProportionMultiLabelPredictions m = new ProportionMultiLabelPredictions();
@@ -1350,6 +1368,7 @@ public class TestMetrics {
 			Assert.assertEquals(Pvalues3class.n_examples, m.getNumExamples());
 			Assert.assertEquals(1. / 3, m.getScore(), 0.0000001); // one multi, one single, one empty
 		}
+		 */
 
 		@Test
 		public void CPClassificationCalibrationPlotBuilder() {

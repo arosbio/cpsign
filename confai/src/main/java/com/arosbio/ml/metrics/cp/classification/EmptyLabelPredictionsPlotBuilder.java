@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.arosbio.commons.MathUtils;
 import com.arosbio.ml.cp.PValueTools;
@@ -45,7 +46,39 @@ public class EmptyLabelPredictionsPlotBuilder implements PlotMetric, CPClassifie
 	public String toString() {
 		return PlotMetric.toString(this);
 	}
+
+	@Override
+	public void setEvaluationPoints(List<Double> points) {
+		List<Double> sortedPoints = PlotMetric.sortAndValidateList(points);
+		
+		numEmptyPredictions = new LinkedHashMap<>();
+		numExamples = new LinkedHashMap<>();
+		for (double p : sortedPoints) {
+			numEmptyPredictions.put(p,0);
+			numExamples.put(p, 0);
+		}
+	}
+
+	@Override
+	public List<Double> getEvaluationPoints() {
+		return new ArrayList<>(numExamples.keySet());
+	}
+
+	@Override
+	public Set<String> getYLabels() {
+		return Set.of(METRIC_NAME);
+	}
 	
+	@Override
+	public String getPrimaryMetricName() {
+		return Y_AXIS;
+	}
+	
+	@Override
+	public boolean goalIsMinimization() {
+		return true;
+	}
+
 	@Override
 	public boolean supportsMulticlass() {
 		return true;
@@ -106,25 +139,6 @@ public class EmptyLabelPredictionsPlotBuilder implements PlotMetric, CPClassifie
 		numExamples.clear();
 	}
 	
-	@Override
-	public boolean goalIsMinimization() {
-		return true;
-	}
-	
-	@Override
-	public void setEvaluationPoints(List<Double> points) {
-		List<Double> sortedPoints = PlotMetric.sortAndValidateList(points);
-		
-		numEmptyPredictions = new LinkedHashMap<>();
-		numExamples = new LinkedHashMap<>();
-		for (double p : sortedPoints) {
-			numEmptyPredictions.put(p,0);
-			numExamples.put(p, 0);
-		}
-	}
 
-	@Override
-	public List<Double> getEvaluationPoints() {
-		return new ArrayList<>(numExamples.keySet());
-	}
+	
 }

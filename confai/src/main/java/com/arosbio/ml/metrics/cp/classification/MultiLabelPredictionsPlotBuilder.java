@@ -15,17 +15,20 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import com.arosbio.commons.mixins.Aliased;
 import com.arosbio.ml.cp.PValueTools;
 import com.arosbio.ml.metrics.cp.EfficiencyPlot;
 import com.arosbio.ml.metrics.plots.Plot2D.X_Axis;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 
-public class MultiLabelPredictionsPlotBuilder implements PlotMetric, CPClassifierMetric {
+public class MultiLabelPredictionsPlotBuilder implements PlotMetric, CPClassifierMetric, Aliased {
 	
 	public static final X_Axis X_AXIS = X_Axis.CONFIDENCE;
 	public static final String Y_AXIS = "Proportion multi-label prediction sets";
 	public static final String METRIC_NAME = Y_AXIS;
+	public static final String METRIC_ALIAS = "PropMultiLabel";
 
 	private Map<Double, Integer> numExamples = new HashMap<>();
 	private Map<Double, Integer> numMultiLabelPredictions = new HashMap<>();
@@ -42,26 +45,49 @@ public class MultiLabelPredictionsPlotBuilder implements PlotMetric, CPClassifie
 	public boolean supportsMulticlass() {
 		return true;
 	}
+
 	@Override
-	public EfficiencyPlot buildPlot() {
-
-		List<Double> confs = new ArrayList<>(numExamples.keySet());
-		
-		List<Number> efficiencies = new ArrayList<>();
-		Collections.sort(confs);
-
-		for (Double conf: confs) {
-			efficiencies.add(((double)numMultiLabelPredictions.getOrDefault(conf,0))/numExamples.get(conf));
-		}
-		
-		Map<String,List<Number>> plotValues = new HashMap<>();
-		plotValues.put(X_AXIS.label(), new ArrayList<>(confs));
-		plotValues.put(Y_AXIS, efficiencies);
-		
-		EfficiencyPlot plot = new EfficiencyPlot(plotValues, X_AXIS, Y_AXIS);
-		plot.setNumExamplesUsed(numExamples.values().iterator().next());
-		return plot;
+	public String getPrimaryMetricName() {
+		return Y_AXIS;
 	}
+
+	public String toString() {
+		return PlotMetric.toString(this);
+	}
+
+	@Override
+	public Set<String> getYLabels() {
+		return Set.of(METRIC_NAME);
+	}
+
+	@Override
+	public String[] getAliases() {
+		return new String[]{METRIC_ALIAS};
+	}
+
+	@Override
+	public boolean goalIsMinimization() {
+		return true;
+	}
+
+	@Override
+	public void setEvaluationPoints(List<Double> points) {
+		List<Double> sortedPoints = PlotMetric.sortAndValidateList(points);
+		
+		numExamples = new LinkedHashMap<>();
+		numMultiLabelPredictions = new LinkedHashMap<>();
+		for (double p: sortedPoints) {
+			numExamples.put(p, 0);
+			numMultiLabelPredictions.put(p, 0);
+		}
+	}
+
+	@Override
+	public List<Double> getEvaluationPoints() {
+		return new ArrayList<>(numExamples.keySet());
+	}
+	
+	
 	
 	@Override
 	public void addPrediction(int trueLabel, Map<Integer, Double> pValues) {
@@ -98,28 +124,28 @@ public class MultiLabelPredictionsPlotBuilder implements PlotMetric, CPClassifie
 	}
 	
 	@Override
-	public boolean goalIsMinimization() {
-		return true;
-	}
+	public EfficiencyPlot buildPlot() throws IllegalStateException {
 
-	@Override
-	public void setEvaluationPoints(List<Double> points) {
-		List<Double> sortedPoints = PlotMetric.sortAndValidateList(points);
-		
-		numExamples = new LinkedHashMap<>();
-		numMultiLabelPredictions = new LinkedHashMap<>();
-		for (double p: sortedPoints) {
-			numExamples.put(p, 0);
-			numMultiLabelPredictions.put(p, 0);
+		if (getNumExamples()<=0){
+			throw new IllegalStateException("Cannot build plot without evaluation data");
 		}
-	}
+				
+		List<Double> confs = new ArrayList<>(numExamples.keySet());
+		
+		List<Number> efficiencies = new ArrayList<>();
+		Collections.sort(confs);
 
-	@Override
-	public List<Double> getEvaluationPoints() {
-		return new ArrayList<>(numExamples.keySet());
+		for (Double conf: confs) {
+			efficiencies.add(((double)numMultiLabelPredictions.getOrDefault(conf,0))/numExamples.get(conf));
+		}
+		
+		Map<String,List<Number>> plotValues = new HashMap<>();
+		plotValues.put(X_AXIS.label(), new ArrayList<>(confs));
+		plotValues.put(Y_AXIS, efficiencies);
+		
+		EfficiencyPlot plot = new EfficiencyPlot(plotValues, X_AXIS, Y_AXIS);
+		plot.setNumExamplesUsed(numExamples.values().iterator().next());
+		return plot;
 	}
 	
-	public String toString() {
-		return PlotMetric.toString(this);
-	}
 }

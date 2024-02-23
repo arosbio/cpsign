@@ -19,7 +19,6 @@ com.arosbio.ml.metrics.regression.RMSE
 
 
 # CP 
-com.arosbio.ml.metrics.cp.CPAccuracy
 com.arosbio.ml.metrics.cp.ModelCalibration
 
 
@@ -30,9 +29,6 @@ com.arosbio.ml.metrics.cp.classification.ObservedFuzziness
 com.arosbio.ml.metrics.cp.classification.BalancedObservedFuzziness
 com.arosbio.ml.metrics.cp.classification.UnobservedConfidence
 com.arosbio.ml.metrics.cp.classification.UnobservedCredibility
-com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictions
-com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictions
-# com.arosbio.ml.metrics.cp.classification.CPClassificationCalibrationPlotBuilder
 com.arosbio.ml.metrics.cp.classification.EmptyLabelPredictionsPlotBuilder
 com.arosbio.ml.metrics.cp.classification.MultiLabelPredictionsPlotBuilder
 com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder
@@ -40,7 +36,6 @@ com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder
 
 # CP Regression
 com.arosbio.ml.metrics.cp.regression.ConfidenceGivenPredictionIntervalWidth
-# com.arosbio.ml.metrics.cp.regression.CPRegressionCalibrationPlotBuilder
 com.arosbio.ml.metrics.cp.regression.CPRegressionEfficiencyPlotBuilder
 com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth
 com.arosbio.ml.metrics.cp.regression.MedianPredictionIntervalWidth

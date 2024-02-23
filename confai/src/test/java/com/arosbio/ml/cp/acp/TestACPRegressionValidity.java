@@ -36,7 +36,6 @@ import com.arosbio.ml.cp.nonconf.regression.LogNormalizedNCM;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.MetricFactory;
 import com.arosbio.ml.metrics.SingleValuedMetric;
-import com.arosbio.ml.metrics.cp.CPAccuracy;
 import com.arosbio.ml.metrics.cp.ModelCalibration;
 import com.arosbio.ml.metrics.cp.regression.CPRegressionEfficiencyPlotBuilder;
 import com.arosbio.ml.metrics.plots.MergedPlot;
@@ -306,7 +305,7 @@ public class TestACPRegressionValidity extends TestEnv{
 		
 		List<Metric> metrics = MetricFactory.getACPRegressionMetrics();
 		MetricFactory.setEvaluationPoints(metrics, confs);
-		metrics.add(new CPAccuracy(0.75));
+		metrics.add(new ModelCalibration(Arrays.asList(0.75)));
 		
 		runner.evaluate(sp, acp, metrics);
 		

@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.arosbio.commons.MathUtils;
 import com.arosbio.ml.metrics.cp.EfficiencyPlot;
@@ -40,6 +41,8 @@ public class CPRegressionEfficiencyPlotBuilder implements CPRegressionMultiMetri
 	public CPRegressionEfficiencyPlotBuilder(List<Double> confidences) {
 		setEvaluationPoints(confidences);
 	}
+
+	
 
 	@Override
 	public void addPrediction(double trueLabel, Map<Double, Range<Double>> predictedIntervals) {
@@ -84,6 +87,11 @@ public class CPRegressionEfficiencyPlotBuilder implements CPRegressionMultiMetri
 	}
 
 	@Override
+	public String getPrimaryMetricName() {
+		return Y_AXIS;
+	}
+
+	@Override
 	public CPRegressionEfficiencyPlotBuilder clone() {
 		return new CPRegressionEfficiencyPlotBuilder(new ArrayList<>(intervalWidths.keySet()));
 	}
@@ -116,5 +124,12 @@ public class CPRegressionEfficiencyPlotBuilder implements CPRegressionMultiMetri
 	public String toString() {
 		return PlotMetric.toString(this);
 	}
+
+	@Override
+	public Set<String> getYLabels() {
+		return Set.of(METRIC_NAME);
+	}
+
+
 
 }

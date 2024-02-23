@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -183,6 +184,15 @@ public class VAPCalibrationPlotBuilder implements PlotMetric, VAPMetric {
 	@Override
 	public boolean supportsMulticlass() {
 		return false;
+	}
+
+	public Set<String> getYLabels(){
+		return Set.of(Y_AXIS,NUM_EX_PER_BIN_LABEL);
+	}
+	
+	@Override
+	public String getPrimaryMetricName(){
+		return Y_AXIS;
 	}
 	
 	public void setLabel(int label) throws IllegalStateException {

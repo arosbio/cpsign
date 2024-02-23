@@ -14,7 +14,7 @@ import java.util.Objects;
 
 import com.arosbio.ml.gridsearch.GridSearch.EvalStatus;
 import com.arosbio.ml.gridsearch.GridSearch.GSResult;
-import com.arosbio.ml.metrics.SingleValuedMetric;
+import com.arosbio.ml.metrics.Metric;
 
 /**
  * {@code GridSearchResult} holds the result of a Grid Search in the parameter space of hyperparameters (e.g. Cost and Gamma values). 
@@ -34,7 +34,7 @@ public class GridSearchResult {
 	/**
 	 * Should never be {@code null}
 	 */
-	private final SingleValuedMetric optimizationMetric; 
+	private final Metric optimizationMetric; 
 	/**
 	 * May be {@code null} when no error message was given
 	 */
@@ -43,16 +43,16 @@ public class GridSearchResult {
 	
 	private GridSearchResult(Builder b){
 		this.bestParameters = b.bestParameters;
-		this.optimizationMetric=b.optimizationMetric;
+		this.optimizationMetric = b.optimizationMetric;
 		this.optionalWarning = b.optionalWarning;
 	}
 
 	public static class Builder {
 		private List<GSResult> bestParameters;
-		private SingleValuedMetric optimizationMetric; 
+		private Metric optimizationMetric; 
 		private String optionalWarning;
 
-		public Builder(List<GSResult> results, SingleValuedMetric optMetric){
+		public Builder(List<GSResult> results, Metric optMetric){
 			this.bestParameters = Objects.requireNonNull(results);
 			if (results.isEmpty())
 				throw new IllegalArgumentException("Grid search results cannot be null");
@@ -68,7 +68,7 @@ public class GridSearchResult {
 	}
 	
 	
-	public SingleValuedMetric getOptimizationType() {
+	public Metric getOptimizationType() {
 		return optimizationMetric;
 	}
 	

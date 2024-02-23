@@ -22,11 +22,9 @@ import org.junit.experimental.categories.Category;
 
 import com.arosbio.ml.cp.acp.ACPClassifier;
 import com.arosbio.ml.metrics.Metric;
-import com.arosbio.ml.metrics.SingleValuedMetric;
-import com.arosbio.ml.metrics.cp.CPAccuracy;
 import com.arosbio.ml.metrics.cp.ModelCalibration;
-import com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictions;
-import com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictions;
+import com.arosbio.ml.metrics.cp.classification.MultiLabelPredictionsPlotBuilder;
+import com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder;
 import com.arosbio.ml.testing.KFoldCV;
 import com.arosbio.ml.testing.TestRunner;
 import com.arosbio.tests.suites.PerformanceTest;
@@ -74,7 +72,7 @@ public class TestACPClassificationCV extends TestEnv {
 		System.out.println("LibLinear CV GridSearch");
 		TestCrossValidation(true);
 
-		TestGridSearch(true, new ProportionMultiLabelPredictions(CONFIDENCE));
+		TestGridSearch(true, new MultiLabelPredictionsPlotBuilder(Arrays.asList(CONFIDENCE))); //new ProportionMultiLabelPredictions(CONFIDENCE));
 		if (PRINT_DEBUG) {
 			printLogs();
 		}
@@ -86,7 +84,7 @@ public class TestACPClassificationCV extends TestEnv {
 		System.out.println("LibLinear CV GridSearch Using Ratio SingleLabelPred");
 		TestCrossValidation(true);
 
-		TestGridSearch(true, new ProportionSingleLabelPredictions(CONFIDENCE));
+		TestGridSearch(true, new SingleLabelPredictionsPlotBuilder(Arrays.asList(CONFIDENCE))); //new ProportionSingleLabelPredictions(CONFIDENCE));
 		if (PRINT_DEBUG) {
 			printLogs();
 		}
@@ -95,8 +93,7 @@ public class TestACPClassificationCV extends TestEnv {
 	@Test
 	public void TestCVGridSearchLibSvmACP() throws Exception {
 		System.out.println("LibSvm CV GridSearch");
-		//		TestCrossValidation(new LibSvm(LIB_SVM_CLASS_PARAMS));
-		TestGridSearch(false, new ProportionMultiLabelPredictions(CONFIDENCE));
+		TestGridSearch(false, new MultiLabelPredictionsPlotBuilder(Arrays.asList(CONFIDENCE))); //new ProportionMultiLabelPredictions(CONFIDENCE));
 		if (PRINT_DEBUG) {
 			printLogs();
 		}
@@ -116,7 +113,7 @@ public class TestACPClassificationCV extends TestEnv {
 
 	}
 
-	public void TestGridSearch(boolean liblinear, SingleValuedMetric opt) throws Exception {
+	public void TestGridSearch(boolean liblinear, Metric opt) throws Exception {
 
 
 		//Wrap ICP in ACP
@@ -167,10 +164,10 @@ public class TestACPClassificationCV extends TestEnv {
 
 		//Do a CV again
 		TestRunner r = new TestRunner.Builder(new KFoldCV(NR_FOLDS, SEED)).evalPoints(Arrays.asList(CONFIDENCE)).build();
-		List<Metric> cvRes = r.evaluate(TestDataLoader.getInstance().getDataset(true, false), lacp, Arrays.asList(opt, new CPAccuracy(CONFIDENCE))); 
+		List<Metric> cvRes = r.evaluate(TestDataLoader.getInstance().getDataset(true, false), lacp, Arrays.asList(opt, new ModelCalibration())); 
 
 		System.out.println("CV-res opt vals: " + cvRes);
-		Assert.assertTrue(getAccuracy(cvRes, CONFIDENCE, new CPAccuracy(CONFIDENCE))>= (CONFIDENCE-0.5)); // allow for some worse, it should just give that accuracy on average
+		Assert.assertTrue(getAccuracy(cvRes, CONFIDENCE, new ModelCalibration(Arrays.asList(CONFIDENCE)))>= (CONFIDENCE-0.5)); // allow for some worse, it should just give that accuracy on average
 
 		// Given a static seed and all the same settings - we should get the same results!
 		Assert.assertEquals(gsres.getBestParameters().get(0).getResult(), getEfficiency(cvRes, CONFIDENCE, opt), 0.001);

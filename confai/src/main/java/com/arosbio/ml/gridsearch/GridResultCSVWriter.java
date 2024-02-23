@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
@@ -26,7 +27,9 @@ import com.arosbio.commons.Stopwatch;
 import com.arosbio.commons.TypeUtils;
 import com.arosbio.ml.gridsearch.GridSearch.EvalStatus;
 import com.arosbio.ml.gridsearch.GridSearch.GSResult;
+import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.SingleValuedMetric;
+import com.arosbio.ml.metrics.plots.PlotMetric;
 
 public class GridResultCSVWriter implements AutoCloseable {
 
@@ -128,13 +131,13 @@ public class GridResultCSVWriter implements AutoCloseable {
 		}
 
 		// Optimization metric first
-		headers.addAll(res.getOptimizationMetric().asMap().keySet());
+		headers.addAll(getHeaders(res.getOptimizationMetric()));
 
 		// Secondary metrics
 
 		if (res.getSecondaryMetrics()!=null && !res.getSecondaryMetrics().isEmpty()) {
-			for (SingleValuedMetric m: res.getSecondaryMetrics()) {
-				headers.addAll(m.asMap().keySet());
+			for (Metric m : res.getSecondaryMetrics()) {
+				headers.addAll(getHeaders(m));
 			}
 		}
 		if (settings.conf != null) {
@@ -148,6 +151,16 @@ public class GridResultCSVWriter implements AutoCloseable {
 		headers.add(CSV_ERROR_MSG_HEADER);
 
 		printer = new CSVPrinter(settings.output, settings.format.setHeader(headers.toArray(new String[0])).build());
+	}
+
+	private static Set<String> getHeaders(Metric m){
+		if (m instanceof PlotMetric){
+			return ((PlotMetric)m).getYLabels();
+		} else if (m instanceof SingleValuedMetric){
+			return ((SingleValuedMetric)m).asMap().keySet();
+		} 
+		LOGGER.debug("Metric of unsupported type: {}",m.getClass());
+		return Set.of();
 	}
 
 	public void printRecord(GSResult res) throws IOException {
@@ -164,7 +177,7 @@ public class GridResultCSVWriter implements AutoCloseable {
 		Map<String,Object> name2scores = new HashMap<>();
 		addMappings(name2scores, res.getOptimizationMetric());
 		if (res.getSecondaryMetrics() != null && !res.getSecondaryMetrics().isEmpty()) {
-			for (SingleValuedMetric m : res.getSecondaryMetrics()) {
+			for (Metric m : res.getSecondaryMetrics()) {
 				addMappings(name2scores, m);
 			}
 		}
@@ -225,14 +238,25 @@ public class GridResultCSVWriter implements AutoCloseable {
 		printer.flush();
 	}
 
-	private static void addMappings(Map<String,Object> target, SingleValuedMetric m) {
-		for (Map.Entry<String, ?> keyVal : m.asMap().entrySet()) {
-			Object val = keyVal.getValue();
-			if (val instanceof Double || val instanceof Float) {
-				val = MathUtils.roundToNSignificantFigures(TypeUtils.asDouble(keyVal.getValue()),NUM_SIGNIFICANT_FIGURES);
+	private static void addMappings(Map<String,Object> target, Metric m) {
+		if (m instanceof PlotMetric){
+			Map<String,List<Number>> plot = ((PlotMetric)m).buildPlot().getCurves();
+			Set<String> labels = ((PlotMetric)m).getYLabels();
+			for (String header : labels) {
+				if (plot.containsKey(header)){
+					target.put(header, plot.get(header).get(0)); // These PlotMetrics should only contain a single value (i.e. using a single confidence level)
+				}
 			}
-			target.put(keyVal.getKey(), val);
+		} else if (m instanceof SingleValuedMetric){
+			for (Map.Entry<String,?> keyVal : ((SingleValuedMetric)m).asMap().entrySet()){
+				Object val = keyVal.getValue();
+				if (val instanceof Double || val instanceof Float) {
+					val = MathUtils.roundToNSignificantFigures(TypeUtils.asDouble(keyVal.getValue()),NUM_SIGNIFICANT_FIGURES);
+				}
+				target.put(keyVal.getKey(), val);
+			}
 		}
+		
 	}
 
 	@Override

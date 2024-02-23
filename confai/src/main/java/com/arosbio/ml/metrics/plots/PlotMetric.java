@@ -12,6 +12,7 @@ package com.arosbio.ml.metrics.plots;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import com.arosbio.ml.metrics.Metric;
 import com.google.common.collect.ImmutableList;
@@ -20,13 +21,32 @@ public interface PlotMetric extends Metric {
 	
 	public static final List<Double> DEFAULT_EVALUATION_POINTS = ImmutableList.of(0.,.1,.2,.3,.4,.5,.6,.7,.8,.9,.99);
 
-	public Plot2D buildPlot();
+	public void setEvaluationPoints(List<Double> points);
+
+	public List<Double> getEvaluationPoints();
+
+	/**
+	 * Get the name of the primary metric, i.e. in case 
+	 * the PlotMetric generates several y-labels in the plot
+	 * @return the label of the primary metric
+	 */
+	public String getPrimaryMetricName();
+
+	/**
+	 * Get the y-labels when the plot is generated
+	 * @return a set of labels
+	 */
+	public Set<String> getYLabels();
+
+	/**
+	 * Build the plot for this metric
+	 * @return The {@link com.arosbio.ml.metrics.plots.Plot2D Plot2D} base on the given data
+	 * @throws IllegalStateException If no evaluation examples have been given yet
+	 */
+	public Plot2D buildPlot() throws IllegalStateException;
 	
 	public PlotMetric clone();
 	
-	public void setEvaluationPoints(List<Double> points);
-	public List<Double> getEvaluationPoints();
-
 	static String toString(PlotMetric m){
 		String n = m.getName();
 		if (n.toLowerCase().contains("plot"))

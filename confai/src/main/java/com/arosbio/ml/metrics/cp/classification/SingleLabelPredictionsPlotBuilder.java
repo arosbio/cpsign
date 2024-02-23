@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.arosbio.ml.cp.PValueTools;
 import com.arosbio.ml.metrics.cp.EfficiencyPlot;
@@ -45,24 +46,11 @@ public class SingleLabelPredictionsPlotBuilder implements PlotMetric, CPClassifi
 	}
 
 	@Override
-	public EfficiencyPlot buildPlot() {
-
-		List<Double> confs = new ArrayList<>(numExamples.keySet());
-		
-		List<Number> fraqSingleLabel = new ArrayList<>();
-		Collections.sort(confs);
-		for (Double conf: confs) {
-			fraqSingleLabel.add( ((double)numSingleLabelPredictions.getOrDefault(conf,0))/numExamples.get(conf));
-		}
-		
-		Map<String,List<Number>> plotValues = new HashMap<>();
-		plotValues.put(X_AXIS.label(), new ArrayList<>(confs));
-		plotValues.put(Y_AXIS, fraqSingleLabel);
-		
-		EfficiencyPlot plot = new EfficiencyPlot(plotValues, X_AXIS, Y_AXIS);
-		plot.setNumExamplesUsed(numExamples.values().iterator().next()); // all should have the same number
-		return plot;
+	public String getPrimaryMetricName() {
+		return Y_AXIS;
 	}
+
+	
 
 	@Override
 	public void addPrediction(int trueLabel, Map<Integer, Double> pValues) {
@@ -123,6 +111,35 @@ public class SingleLabelPredictionsPlotBuilder implements PlotMetric, CPClassifi
 	
 	public String toString() {
 		return PlotMetric.toString(this);
+	}
+
+	@Override
+	public Set<String> getYLabels() {
+		return Set.of(METRIC_NAME);
+	}
+
+	@Override
+	public EfficiencyPlot buildPlot() throws IllegalStateException {
+
+		if (getNumExamples() <= 0){
+			throw new IllegalStateException("Cannot build plot without evaluation data");
+		}
+
+		List<Double> confs = new ArrayList<>(numExamples.keySet());
+		
+		List<Number> fraqSingleLabel = new ArrayList<>();
+		Collections.sort(confs);
+		for (Double conf: confs) {
+			fraqSingleLabel.add( ((double)numSingleLabelPredictions.getOrDefault(conf,0))/numExamples.get(conf));
+		}
+		
+		Map<String,List<Number>> plotValues = new HashMap<>();
+		plotValues.put(X_AXIS.label(), new ArrayList<>(confs));
+		plotValues.put(Y_AXIS, fraqSingleLabel);
+		
+		EfficiencyPlot plot = new EfficiencyPlot(plotValues, X_AXIS, Y_AXIS);
+		plot.setNumExamplesUsed(numExamples.values().iterator().next()); // all should have the same number
+		return plot;
 	}
 
 }
