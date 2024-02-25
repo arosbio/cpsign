@@ -35,7 +35,6 @@ import com.arosbio.ml.metrics.classification.ProbabilisticMetric;
 import com.arosbio.ml.metrics.classification.ScoringClassifierMetric;
 import com.arosbio.ml.metrics.cp.classification.CPClassifierMetric;
 import com.arosbio.ml.metrics.cp.regression.CIWidthBasedMetric;
-import com.arosbio.ml.metrics.cp.regression.CPRegressionMetric;
 import com.arosbio.ml.metrics.cp.regression.CPRegressionMultiMetric;
 import com.arosbio.ml.metrics.regression.PointPredictionMetric;
 import com.arosbio.ml.metrics.vap.VAPMetric;
@@ -102,9 +101,7 @@ public class EvaluationUtils {
         Set<Double> confSet = new HashSet<>();
         Set<Double> intervalWidths = new HashSet<>();
         for (Metric builder: metrics) {
-            if (builder instanceof CPRegressionMetric) {
-                confSet.add(((CPRegressionMetric) builder).getConfidence());
-            } else if (builder instanceof CPRegressionMultiMetric) {
+            if (builder instanceof CPRegressionMultiMetric) {
                 confSet.addAll(((CPRegressionMultiMetric) builder).getEvaluationPoints());
             } else if (builder instanceof CIWidthBasedMetric) {
                 intervalWidths.add(((CIWidthBasedMetric) builder).getCIWidth());
@@ -126,10 +123,6 @@ public class EvaluationUtils {
             if (m instanceof PointPredictionMetric) {
                 // Simple metric only uses the point-prediction
                 ((PointPredictionMetric)m).addPrediction(example.getLabel(), prediction.getY_hat());
-            } else if (m instanceof CPRegressionMetric) {
-                // Find the confidence used for each given metric
-                ((CPRegressionMetric) m).addPrediction(example.getLabel(), 
-                        prediction.getInterval(((CPRegressionMetric) m).getConfidence()).getInterval());
             } else if (m instanceof CPRegressionMultiMetric) {
                 List<Double> currConfs = ((CPRegressionMultiMetric) m).getEvaluationPoints();
                 Map<Double,Range<Double>> predIntervals = new HashMap<>();
@@ -197,7 +190,7 @@ public class EvaluationUtils {
     private static final Class<?>[] CP_CLF_METRICS = new Class[]{CPClassifierMetric.class,
         ScoringClassifierMetric.class,PointClassifierMetric.class};
     private static final Class<?>[] CP_REG_METRICS = new Class[]{PointPredictionMetric.class,
-        CPRegressionMetric.class, CPRegressionMultiMetric.class, CIWidthBasedMetric.class};
+        CPRegressionMultiMetric.class, CIWidthBasedMetric.class};
     
     public static Class<?>[] getSupportedMetricClasses(Class<?> predictorCls) throws UnsupportedPredictorException {
         if (predictorCls.isAssignableFrom(ConformalClassifier.class)){

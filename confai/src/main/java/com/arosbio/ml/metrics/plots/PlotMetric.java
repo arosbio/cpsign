@@ -53,6 +53,12 @@ public interface PlotMetric extends Metric {
 			return String.format("%s builder", n);
 		return String.format("%s plot builder",n);
 	}
+
+	static void validateExamplesAdded(PlotMetric m) throws IllegalStateException {
+		if (m.getNumExamples() <= 0){
+			throw new IllegalStateException("No predictions added - cannot generate a metric plot");
+		}
+	}
 	
 	public static List<Double> sortAndValidateList(List<Double> points){
 		if (points==null || points.isEmpty())

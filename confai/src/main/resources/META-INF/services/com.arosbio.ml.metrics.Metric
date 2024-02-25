@@ -11,7 +11,6 @@ com.arosbio.ml.metrics.classification.NPV
 com.arosbio.ml.metrics.classification.ROC_AUC
 
 
-
 # Regression
 com.arosbio.ml.metrics.regression.MAE
 com.arosbio.ml.metrics.regression.R2
@@ -20,7 +19,6 @@ com.arosbio.ml.metrics.regression.RMSE
 
 # CP 
 com.arosbio.ml.metrics.cp.ModelCalibration
-
 
 
 # CP Classification
@@ -36,9 +34,8 @@ com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder
 
 # CP Regression
 com.arosbio.ml.metrics.cp.regression.ConfidenceGivenPredictionIntervalWidth
-com.arosbio.ml.metrics.cp.regression.CPRegressionEfficiencyPlotBuilder
-com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth
 com.arosbio.ml.metrics.cp.regression.MedianPredictionIntervalWidth
+com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth
 
 
 # VAP Classification

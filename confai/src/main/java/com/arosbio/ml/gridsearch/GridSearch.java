@@ -820,7 +820,8 @@ public class GridSearch {
 				currentStatus = EvalStatus.IN_PROGRESS;
 
 				try {
-					LOGGER.debug("Running grid point {}/{} with parameters: {}", paramsIterator.currentIndex,paramsIterator.numTotalCombinations, currentParams);
+					LOGGER.debug("Running grid point {}/{} with parameters: {}", 
+						paramsIterator.currentIndex,paramsIterator.numTotalCombinations, currentParams);
 					// Clone the metrics for this run
 					paramResult = cloneMetrics(metrics);
 					// Start timer, before things can fail
@@ -837,6 +838,7 @@ public class GridSearch {
 						foundValidResult = true;
 					}
 				} catch (MissingDataException e) {
+					currentStatus = EvalStatus.FAILED;
 					LOGGER.debug("Got MissingDataException in GridSearch - failing!");
 					throw new MissingDataException(
 							"Failed performing grid search of parameter values - input data contains missing features - please revise the pre-processing of data");
@@ -852,7 +854,7 @@ public class GridSearch {
 					timer.stop();
 					// Update results
 					if (paramResult != null){
-						GSResult.Builder builder = (currentStatus != EvalStatus.FAILED
+						GSResult.Builder builder = (currentStatus != EvalStatus.FAILED && currentStatus != EvalStatus.IN_PROGRESS 
 								? GSResult.Builder.success(currentParams, getScore(paramResult.get(0)),
 										paramResult.get(0), timer.elapsedTimeMillis())
 								: GSResult.Builder.failed(currentParams, paramResult.get(0), currentStatus,

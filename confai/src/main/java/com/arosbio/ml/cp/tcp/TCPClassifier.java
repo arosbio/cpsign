@@ -52,7 +52,7 @@ import com.arosbio.ml.cp.nonconf.calc.SmoothedPValue;
 import com.arosbio.ml.cp.nonconf.classification.NCMMondrianClassification;
 import com.arosbio.ml.io.MetaFileUtils;
 import com.arosbio.ml.io.impl.PropertyNameSettings;
-import com.arosbio.ml.metrics.SingleValuedMetric;
+import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.cp.classification.ObservedFuzziness;
 
 public final class TCPClassifier extends PredictorBase implements TCP, ConformalClassifier {
@@ -110,7 +110,7 @@ public final class TCPClassifier extends PredictorBase implements TCP, Conformal
 	 */
 
 	@Override
-	public SingleValuedMetric getDefaultOptimizationMetric() {
+	public Metric getDefaultOptimizationMetric() {
 		return new ObservedFuzziness();
 	}
 

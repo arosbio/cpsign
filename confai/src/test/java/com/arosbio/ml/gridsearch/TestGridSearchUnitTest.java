@@ -33,6 +33,7 @@ import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.MathUtils;
 import com.arosbio.commons.config.Configurable.ConfigParameter;
+import com.arosbio.commons.logging.LoggerUtils;
 import com.arosbio.data.DataUtils;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.Dataset.SubSet;
@@ -324,7 +325,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		ACPClassifier acp = new ACPClassifier(new NegativeDistanceToHyperplaneNCM(new C_SVC()),
 				new RandomStratifiedSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
 		doTestGridSearch(acp,
-				new MedianPredictionIntervalWidth(CV_CONF),
+				new MedianPredictionIntervalWidth(Arrays.asList(CV_CONF)),
 				new SingleLabelPredictionsPlotBuilder(Arrays.asList(CV_CONF)),// new ProportionSingleLabelPredictions(CV_CONF),
 				true);
 
@@ -339,7 +340,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		ACPRegressor acp = new ACPRegressor(new NormalizedNCM(new LinearSVR()),
 				new RandomSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
 
-		doTestGridSearchNCMEstimator(acp, new MedianPredictionIntervalWidth(CV_CONF));
+		doTestGridSearchNCMEstimator(acp, new MedianPredictionIntervalWidth(Arrays.asList(CV_CONF)));
 
 		// compileBestParamsAtFile(acp);
 		if (PRINT_GS_RES)
@@ -356,7 +357,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 
 		doTestGridSearch(acp,
 				new MultiLabelPredictionsPlotBuilder(Arrays.asList(CV_CONF)), //new ProportionMultiLabelPredictions(CV_CONF),
-				new MeanPredictionIntervalWidth(CV_CONF),
+				new MeanPredictionIntervalWidth(Arrays.asList(CV_CONF)),
 				true);
 		// compileBestParamsAtFile(acp);
 		if (PRINT_GS_RES)
@@ -390,7 +391,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 				new RandomStratifiedSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
 
 		doTestGridSearch(acp,
-				new MedianPredictionIntervalWidth(CV_CONF),
+				new MedianPredictionIntervalWidth(Arrays.asList(CV_CONF)),
 				new BinaryBrierScore(),
 				true);
 
@@ -676,6 +677,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 
 		// Try using Complete Predictor
 		ACPRegressor acp = getACPRegressionAbsDiff(true, true);
+		// LoggerUtils.setDebugMode(SYS_ERR);
 		try {
 			new GridSearch.Builder()
 					.loggingWriter(new OutputStreamWriter(System.out))

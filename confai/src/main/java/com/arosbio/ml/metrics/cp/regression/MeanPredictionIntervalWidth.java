@@ -10,58 +10,77 @@
 package com.arosbio.ml.metrics.cp.regression;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.arosbio.commons.MathUtils;
-import com.arosbio.commons.mixins.Aliased;
-import com.arosbio.commons.mixins.Described;
-import com.arosbio.ml.metrics.SingleValuedMetric;
-import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
-import com.google.common.collect.ImmutableMap;
+import com.arosbio.ml.metrics.cp.EfficiencyPlot;
+import com.arosbio.ml.metrics.plots.Plot2D.X_Axis;
+import com.arosbio.ml.metrics.plots.PlotMetric;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 
-public class MeanPredictionIntervalWidth implements SingleValuedMetric, 
-	CPRegressionMetric, Aliased, Described {
+public class MeanPredictionIntervalWidth implements CPRegressionMultiMetric {
 
-	public static final String METRIC_NAME = "Mean prediction-interval width";
+
+	public static final X_Axis X_AXIS = X_Axis.CONFIDENCE;
+	public static final String Y_AXIS = "Mean prediction interval width";
 	public static final String METRIC_ALIAS = "MeanPredWidth";
-	public final static String METRIC_DESCRIPTION = "The mean prediction interval width at a fixed confidence level. The metric should be minimized for the highest informational efficiency.";
+	public static final String METRIC_NAME = Y_AXIS;
 
-	private List<Double> intervalWidths = new ArrayList<>();
-	private double confidenceLevel;
+	private Map<Double, List<Double>> intervalWidths = new HashMap<>();
+	private int numExamples = 0;
 
 	public MeanPredictionIntervalWidth() {
-		this(ConfidenceDependentMetric.DEFAULT_CONFIDENCE);
+		setEvaluationPoints(DEFAULT_EVALUATION_POINTS);
 	}
-	
-	public MeanPredictionIntervalWidth(double confidenceLevel) {
-		this.confidenceLevel = confidenceLevel;
+
+	public MeanPredictionIntervalWidth(List<Double> confidences) {
+		setEvaluationPoints(confidences);
+	}
+
+	@Override
+	public void addPrediction(double trueLabel, Map<Double, Range<Double>> predictedIntervals) {
+		for (double conf : intervalWidths.keySet()){
+			try{
+				Range<Double> interval = predictedIntervals.get(conf);
+				double width = interval.upperEndpoint() - interval.lowerEndpoint();
+				intervalWidths.get(conf). // For this confidence
+					add(width);
+			} catch (NullPointerException npe){
+				throw new IllegalArgumentException("prediction did not contain an interval for confidence: " + conf);
+			}
+		}
+		numExamples++;			
+	}
+
+	@Override
+	public int getNumExamples() {
+		return numExamples;
 	}
 
 	@Override
 	public String getName() {
-		return METRIC_NAME;
-	}
-	
-	@Override
-	public String getDescription() {
-		return METRIC_DESCRIPTION;
+		return Y_AXIS;
 	}
 
 	@Override
-	public String[] getAliases() {
-		return new String[]{METRIC_ALIAS};
+	public String getPrimaryMetricName() {
+		return Y_AXIS;
 	}
-	
+
 	@Override
-	public int getNumExamples() {
-		return intervalWidths.size();
+	public MeanPredictionIntervalWidth clone() {
+		return new MeanPredictionIntervalWidth(new ArrayList<>(intervalWidths.keySet()));
 	}
 
 	@Override
 	public void clear() {
-		intervalWidths.clear();
+		setEvaluationPoints(new ArrayList<>(intervalWidths.keySet()));
 	}
 
 	@Override
@@ -70,42 +89,51 @@ public class MeanPredictionIntervalWidth implements SingleValuedMetric,
 	}
 
 	@Override
-	public void addPrediction(double trueLabel, Range<Double> predictedInterval) {
-		intervalWidths.add(predictedInterval.upperEndpoint()-predictedInterval.lowerEndpoint());
+	public void setEvaluationPoints(List<Double> points) {
+		List<Double> sortedPoints = PlotMetric.sortAndValidateList(points);
+		
+		intervalWidths = new LinkedHashMap<>();
+		for (double p: sortedPoints) {
+			intervalWidths.put(p, new ArrayList<>());
+		}
+		numExamples=0;
 	}
 
 	@Override
-	public double getConfidence() {
-		return confidenceLevel;
-	}
-	
-	public void setConfidence(double confidence) {
-		if (confidence< 0 || confidence > 1)
-			throw new IllegalArgumentException("Confidence must be in the range [0..1]");
-		if (!intervalWidths.isEmpty())
-			throw new IllegalStateException("Cannot change the confidence when predictions has been added");
-		this.confidenceLevel = confidence;
-	}
-
-	@Override
-	public double getScore() {
-		if (intervalWidths.isEmpty())
-			return Double.NaN;
-		return MathUtils.mean(intervalWidths);
-	}
-
-	@Override
-	public Map<String, ? extends Object> asMap() {
-		return ImmutableMap.of(METRIC_NAME,getScore());
-	}
-
-	@Override
-	public MeanPredictionIntervalWidth clone() {
-		return new MeanPredictionIntervalWidth(confidenceLevel);
+	public List<Double> getEvaluationPoints() {
+		return ImmutableList.copyOf(intervalWidths.keySet());
 	}
 
 	public String toString() {
-		return SingleValuedMetric.toString(this);
+		return PlotMetric.toString(this);
 	}
+
+	@Override
+	public Set<String> getYLabels() {
+		return Set.of(METRIC_NAME);
+	}
+
+	@Override
+	public EfficiencyPlot buildPlot() {
+		
+		PlotMetric.validateExamplesAdded(this);
+
+		List<Number> means = new ArrayList<>();
+		List<Double> confs = new ArrayList<>(intervalWidths.keySet());
+		Collections.sort(confs);
+
+		for (double conf : confs) {
+			means.add( MathUtils.mean(intervalWidths.get(conf)) );
+		}
+
+		Map<String,List<Number>> curves = new HashMap<>();
+		curves.put(X_AXIS.label(), new ArrayList<>(confs));
+		curves.put(Y_AXIS, means);
+
+		EfficiencyPlot plot = new EfficiencyPlot(curves, X_AXIS, Y_AXIS);
+		plot.setNumExamplesUsed(numExamples);
+		return plot;
+	}
+
 
 }

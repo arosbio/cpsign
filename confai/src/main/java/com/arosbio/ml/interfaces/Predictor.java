@@ -20,13 +20,13 @@ import com.arosbio.data.FeatureVector;
 import com.arosbio.data.SparseFeature;
 import com.arosbio.io.Saveable;
 import com.arosbio.ml.io.ModelInfo;
-import com.arosbio.ml.metrics.SingleValuedMetric;
+import com.arosbio.ml.metrics.Metric;
 
 public interface Predictor extends RequireRNGSeed, Saveable, ResourceAllocator, HasProperties, Configurable {
 	
 	public static final String CONFIG_SAMPLING_STRATEGY_PARAM_NAME = "samplingStrategy";
 	
-	public SingleValuedMetric getDefaultOptimizationMetric();
+	public Metric getDefaultOptimizationMetric();
 
 	public ModelInfo getModelInfo();
 

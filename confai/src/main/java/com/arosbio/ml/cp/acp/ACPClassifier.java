@@ -47,7 +47,7 @@ import com.arosbio.ml.cp.icp.ICPClassifier;
 import com.arosbio.ml.cp.nonconf.classification.NCMMondrianClassification;
 import com.arosbio.ml.io.MetaFileUtils;
 import com.arosbio.ml.io.impl.PropertyNameSettings;
-import com.arosbio.ml.metrics.SingleValuedMetric;
+import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.cp.classification.ObservedFuzziness;
 import com.arosbio.ml.sampling.RandomSampling;
 import com.arosbio.ml.sampling.SamplingStrategy;
@@ -132,7 +132,7 @@ public final class ACPClassifier extends PredictorBase implements ACP, Conformal
 	}
 	
 	@Override
-	public SingleValuedMetric getDefaultOptimizationMetric() {
+	public Metric getDefaultOptimizationMetric() {
 		return new ObservedFuzziness();
 	}
 

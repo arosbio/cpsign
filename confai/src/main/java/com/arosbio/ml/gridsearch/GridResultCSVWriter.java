@@ -52,7 +52,7 @@ public class GridResultCSVWriter implements AutoCloseable {
 	private List<String> headers;
 
 	// Keeping track of Rank
-	private double previousScoure = Double.NaN;
+	private double previousScore = Double.NaN;
 	private int rank = 0;
 
 	public static class Builder {
@@ -175,10 +175,13 @@ public class GridResultCSVWriter implements AutoCloseable {
 		
 		// Build up a Map of results
 		Map<String,Object> name2scores = new HashMap<>();
-		addMappings(name2scores, res.getOptimizationMetric());
-		if (res.getSecondaryMetrics() != null && !res.getSecondaryMetrics().isEmpty()) {
-			for (Metric m : res.getSecondaryMetrics()) {
-				addMappings(name2scores, m);
+		if (res.getStatus() == EvalStatus.VALID) {
+			addMappings(name2scores, res.getOptimizationMetric());
+			if (res.getSecondaryMetrics() != null && !res.getSecondaryMetrics().isEmpty()) {
+				for (Metric m : res.getSecondaryMetrics()) {
+					
+					addMappings(name2scores, m);
+				}
 			}
 		}
 
@@ -195,6 +198,10 @@ public class GridResultCSVWriter implements AutoCloseable {
 					record.add(msg);
 				else
 					record.add(NO_RESULT_INDICATOR);
+			} else if (h.equals(CSV_RUNTIME_HEADER)) {
+				record.add(Stopwatch.toNiceString(res.getRuntime()));
+			} else if (h.equals(CSV_RUNTIME_MS_HEADER)){
+				record.add(res.getRuntime());
 			} 
 			// Note: the headers are ordered, a failed combo should not contain any more than
 			// the above columns, and a '-' for the remaining cols
@@ -204,18 +211,14 @@ public class GridResultCSVWriter implements AutoCloseable {
 				if (res.getStatus() != EvalStatus.VALID || ! Double.isFinite(roundedScore)) {
 					record.add(NO_RESULT_INDICATOR);
 				} else {
-					if (roundedScore != previousScoure) {
+					if (roundedScore != previousScore) {
 						// Update rank
-						previousScoure = roundedScore;
+						previousScore = roundedScore;
 						rank++;
 					}
 					record.add(rank);
 				}
 
-			} else if (h.equals(CSV_RUNTIME_HEADER)) {
-				record.add(Stopwatch.toNiceString(res.getRuntime()));
-			} else if (h.equals(CSV_RUNTIME_MS_HEADER)){
-				record.add(res.getRuntime());
 			} else {
 				// Here - go through the map of results
 				boolean foundRec = false;

@@ -38,7 +38,7 @@ import com.arosbio.ml.cp.icp.ICPRegressor;
 import com.arosbio.ml.cp.nonconf.regression.LogNormalizedNCM;
 import com.arosbio.ml.cp.nonconf.regression.NormalizedNCM;
 import com.arosbio.ml.metrics.Metric;
-import com.arosbio.ml.metrics.cp.regression.CPRegressionEfficiencyPlotBuilder;
+import com.arosbio.ml.metrics.cp.regression.MedianPredictionIntervalWidth;
 import com.arosbio.ml.metrics.cp.regression.ConfidenceGivenPredictionIntervalWidth;
 import com.arosbio.ml.metrics.cp.regression.MedianPredictionIntervalWidth;
 import com.arosbio.ml.sampling.RandomSampling;
@@ -144,7 +144,7 @@ public class TestACPRegressionCV extends TestEnv {
 			.testStrategy(new KFoldCV(DEFUALT_NUM_CV_FOLDS, SEED))
 			.confidence(CV_CONFIDENCE)
 			.loggingWriter(writer)
-			.evaluationMetric(new MedianPredictionIntervalWidth(CV_CONFIDENCE))
+			.evaluationMetric(new MedianPredictionIntervalWidth(Arrays.asList(CV_CONFIDENCE)))
 			.build();
 
 		
@@ -169,7 +169,7 @@ public class TestACPRegressionCV extends TestEnv {
 
 		List<Metric> cvres = runner.evaluate(problem, lacp);
 
-		System.out.println("Efficiency: " + getEfficiency(cvres,conf, new CPRegressionEfficiencyPlotBuilder()));
+		System.out.println("Efficiency: " + getEfficiency(cvres,conf, new MedianPredictionIntervalWidth()));
 		//		assertTrue(cvres.getEfficiency()<15);
 
 	}
@@ -198,7 +198,7 @@ public class TestACPRegressionCV extends TestEnv {
 			.maxNumResults(-1)
 			.tolerance(.5)
 			.loggingWriter(new OutputStreamWriter(baos))
-			.evaluationMetric(new MedianPredictionIntervalWidth(CV_CONFIDENCE))
+			.evaluationMetric(new MedianPredictionIntervalWidth(Arrays.asList(CV_CONFIDENCE)))
 			.build();
 
 		Map<String,List<?>> grid = new HashMap<>();
@@ -252,7 +252,7 @@ public class TestACPRegressionCV extends TestEnv {
 			//Do a CV again
 			TestRunner runner = new TestRunner.Builder(new KFoldCV(NR_MODELS, SEED)).evalPoints(Arrays.asList(CV_CONFIDENCE)).build();
 			List<Metric> cvRes = runner.evaluate(problem, acp);
-			double efficiency = getEfficiency(cvRes, CV_CONFIDENCE, new CPRegressionEfficiencyPlotBuilder());
+			double efficiency = getEfficiency(cvRes, CV_CONFIDENCE, new MedianPredictionIntervalWidth());
 			System.out.printf("re-running CV giving efficiency: %s%n", efficiency);
 			Assert.assertTrue(efficiency<20); // TODO - was previously < 13
 
@@ -302,7 +302,7 @@ public class TestACPRegressionCV extends TestEnv {
 			.confidence(CV_CONFIDENCE)
 			.maxNumResults(-1)
 			.tolerance(1)
-			.evaluationMetric(new MedianPredictionIntervalWidth(CV_CONFIDENCE))
+			.evaluationMetric(new MedianPredictionIntervalWidth(Arrays.asList(CV_CONFIDENCE)))
 			.loggingWriter(new OutputStreamWriter(baos))
 			.build();
 
@@ -351,7 +351,7 @@ public class TestACPRegressionCV extends TestEnv {
 			//Do a CV again
 			TestRunner runner = new TestRunner.Builder(new KFoldCV(NR_MODELS, SEED)).evalPoints(Arrays.asList(CV_CONFIDENCE)).build();
 			List<Metric> cvRes = runner.evaluate(problem, acp); //acp.crossvalidate(problem, NR_MODELS, Arrays.asList(CV_CONFIDENCE));
-			double efficiency = getEfficiency(cvRes, CV_CONFIDENCE, new CPRegressionEfficiencyPlotBuilder());
+			double efficiency = getEfficiency(cvRes, CV_CONFIDENCE, new MedianPredictionIntervalWidth());
 			System.out.println("re-running CV giving efficiency: " + efficiency);
 			//			Assert.assertTrue(efficiency<20); // TODO - was previously < 13
 
