@@ -68,8 +68,8 @@ import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.MetricFactory;
 import com.arosbio.ml.metrics.classification.BinaryBrierScore;
 import com.arosbio.ml.metrics.classification.ROC_AUC;
-import com.arosbio.ml.metrics.cp.classification.MultiLabelPredictionsPlotBuilder;
-import com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder;
+import com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictionSets;
+import com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictionSets;
 import com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth;
 import com.arosbio.ml.metrics.cp.regression.MedianPredictionIntervalWidth;
 import com.arosbio.ml.metrics.regression.MAE;
@@ -136,7 +136,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		ACPClassifier acp = new ACPClassifier(new NegativeDistanceToHyperplaneNCM(new LinearSVC()),
 				new RandomStratifiedSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
 
-		doTestGridSearchNCMEstimator(acp, new SingleLabelPredictionsPlotBuilder(Arrays.asList(CV_CONF)));
+		doTestGridSearchNCMEstimator(acp, new ProportionSingleLabelPredictionSets(Arrays.asList(CV_CONF)));
 
 	}
 
@@ -326,7 +326,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 				new RandomStratifiedSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
 		doTestGridSearch(acp,
 				new MedianPredictionIntervalWidth(Arrays.asList(CV_CONF)),
-				new SingleLabelPredictionsPlotBuilder(Arrays.asList(CV_CONF)),// new ProportionSingleLabelPredictions(CV_CONF),
+				new ProportionSingleLabelPredictionSets(Arrays.asList(CV_CONF)),
 				true);
 
 		// compileBestParamsAtFile(acp);
@@ -356,7 +356,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		// LoggerUtils.setDebugMode(SYS_ERR);
 
 		doTestGridSearch(acp,
-				new MultiLabelPredictionsPlotBuilder(Arrays.asList(CV_CONF)), //new ProportionMultiLabelPredictions(CV_CONF),
+				new ProportionMultiLabelPredictionSets(Arrays.asList(CV_CONF)), 
 				new MeanPredictionIntervalWidth(Arrays.asList(CV_CONF)),
 				true);
 		// compileBestParamsAtFile(acp);
@@ -376,7 +376,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		// SYS_ERR.println("rng seed: " + CPSignSettings.getInstance().getRNGSeed());
 
 		doTestGridSearch(acp,
-				new MultiLabelPredictionsPlotBuilder(Arrays.asList(CV_CONF)), // new ProportionMultiLabelPredictions(CV_CONF),
+				new ProportionMultiLabelPredictionSets(Arrays.asList(CV_CONF)),
 				new ROC_AUC(),
 				false);
 

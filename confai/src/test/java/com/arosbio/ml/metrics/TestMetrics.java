@@ -39,9 +39,9 @@ import com.arosbio.ml.metrics.cp.EfficiencyPlot;
 import com.arosbio.ml.metrics.cp.ModelCalibration;
 import com.arosbio.ml.metrics.cp.classification.AverageC;
 import com.arosbio.ml.metrics.cp.classification.BalancedObservedFuzziness;
-import com.arosbio.ml.metrics.cp.classification.MultiLabelPredictionsPlotBuilder;
+import com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictionSets;
 import com.arosbio.ml.metrics.cp.classification.ObservedFuzziness;
-import com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder;
+import com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictionSets;
 import com.arosbio.ml.metrics.cp.classification.UnobservedConfidence;
 import com.arosbio.ml.metrics.cp.classification.UnobservedCredibility;
 import com.arosbio.ml.metrics.cp.regression.ConfidenceGivenPredictionIntervalWidth;
@@ -55,7 +55,7 @@ import com.arosbio.ml.metrics.regression.R2;
 import com.arosbio.ml.metrics.regression.RMSE;
 import com.arosbio.ml.metrics.vap.MeanVAPInterval;
 import com.arosbio.ml.metrics.vap.MedianVAPInterval;
-import com.arosbio.ml.metrics.vap.VAPCalibrationPlotBuilder;
+import com.arosbio.ml.metrics.vap.VAPCalibration;
 import com.arosbio.tests.suites.UnitTest;
 import com.arosbio.tests.utils.TestUtils;
 import com.google.common.collect.ImmutableList;
@@ -1431,7 +1431,7 @@ public class TestMetrics {
 		@Test
 		public void MultiLabelPredictionsPlotBuilder() {
 			List<Double> confs = Arrays.asList(0.6, 0.7, 0.8, 0.9);
-			MultiLabelPredictionsPlotBuilder m = new MultiLabelPredictionsPlotBuilder(
+			ProportionMultiLabelPredictionSets m = new ProportionMultiLabelPredictionSets(
 					confs);
 
 			// Add first
@@ -1469,7 +1469,7 @@ public class TestMetrics {
 			Assert.assertEquals(1. / 3, cp.getEfficiency(0.6), 0.0001);
 
 			// Clone
-			MultiLabelPredictionsPlotBuilder clone = m.clone();
+			ProportionMultiLabelPredictionSets clone = m.clone();
 			Assert.assertEquals(confs, clone.getEvaluationPoints());
 			Assert.assertEquals(0, clone.getNumExamples());
 
@@ -1482,7 +1482,7 @@ public class TestMetrics {
 		@Test
 		public void SingleLabelPredictionsPlotBuilder() {
 			List<Double> confs = Arrays.asList(.5, .8);
-			SingleLabelPredictionsPlotBuilder m = new SingleLabelPredictionsPlotBuilder();
+			ProportionSingleLabelPredictionSets m = new ProportionSingleLabelPredictionSets();
 			m.setEvaluationPoints(confs);
 
 			// Add first
@@ -1514,7 +1514,7 @@ public class TestMetrics {
 			Assert.assertEquals(1. / 3, cp.getEfficiency(0.5), 0.0001);
 
 			// Clone
-			SingleLabelPredictionsPlotBuilder clone = m.clone();
+			ProportionSingleLabelPredictionSets clone = m.clone();
 			Assert.assertEquals(confs, clone.getEvaluationPoints());
 			Assert.assertEquals(0, clone.getNumExamples());
 
@@ -1852,7 +1852,7 @@ public class TestMetrics {
 
 		@Test
 		public void VAPCalibrationPlotBuilder() {
-			VAPCalibrationPlotBuilder b = new VAPCalibrationPlotBuilder();
+			VAPCalibration b = new VAPCalibration();
 			List<Double> evalPoints = new ArrayList<>(b.getEvaluationPoints());
 			// List<Range<Double>> bins = b.getBins();
 			// System.err.println(bins);
@@ -1892,7 +1892,7 @@ public class TestMetrics {
 			cp = b.buildPlot();
 			// System.err.println(cp.getXvalues());
 			Assert.assertEquals(7, cp.getXvalues().size());
-			List<Number> instPerBin = cp.getCurves().get(VAPCalibrationPlotBuilder.NUM_EX_PER_BIN_LABEL);
+			List<Number> instPerBin = cp.getCurves().get(VAPCalibration.NUM_EX_PER_BIN_LABEL);
 			for (Number n : instPerBin){
 				Assert.assertEquals(1, n.intValue());
 			}
@@ -1901,7 +1901,7 @@ public class TestMetrics {
 			// int indx = cp.getXvalues().indexOf(0.55);
 			// Assert.assertEquals(1, cp.getCurves().get(VAPCalibrationPlotBuilder.NUM_EX_PER_BIN_LABEL).get(indx));
 
-			VAPCalibrationPlotBuilder clone = b.clone();
+			VAPCalibration clone = b.clone();
 			Assert.assertEquals(0, clone.getNumExamples());
 			Assert.assertEquals(evalPoints, clone.getEvaluationPoints());
 

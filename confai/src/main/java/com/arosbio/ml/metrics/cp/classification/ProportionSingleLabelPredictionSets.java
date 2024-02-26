@@ -16,27 +16,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.arosbio.commons.mixins.Aliased;
 import com.arosbio.ml.cp.PValueTools;
 import com.arosbio.ml.metrics.cp.EfficiencyPlot;
 import com.arosbio.ml.metrics.plots.Plot2D.X_Axis;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 
-public class SingleLabelPredictionsPlotBuilder implements PlotMetric, CPClassifierMetric {
+public class ProportionSingleLabelPredictionSets implements PlotMetric, CPClassifierMetric, Aliased {
 	
 	public static final X_Axis X_AXIS = X_Axis.CONFIDENCE;
 	public static final String Y_AXIS = "Proportion single-label prediction sets";
 	
 	public static final String METRIC_NAME = Y_AXIS;
+	public static final String METRIC_ALIAS = "PropSingleLabel";
 
 
 	private Map<Double, Integer> numExamples = new HashMap<>();
 	private Map<Double, Integer> numSingleLabelPredictions = new HashMap<>();
 	
-	public SingleLabelPredictionsPlotBuilder() {
+	public ProportionSingleLabelPredictionSets() {
 		setEvaluationPoints(DEFAULT_EVALUATION_POINTS);
 	}
 	
-	public SingleLabelPredictionsPlotBuilder(List<Double> evaluationPoints) {
+	public ProportionSingleLabelPredictionSets(List<Double> evaluationPoints) {
 		setEvaluationPoints(evaluationPoints);
 	}
 	
@@ -75,8 +77,13 @@ public class SingleLabelPredictionsPlotBuilder implements PlotMetric, CPClassifi
 	}
 
 	@Override
-	public SingleLabelPredictionsPlotBuilder clone() {
-		return new SingleLabelPredictionsPlotBuilder(new ArrayList<>(numExamples.keySet()));
+	public String[] getAliases() {
+		return new String[]{METRIC_ALIAS};
+	}
+
+	@Override
+	public ProportionSingleLabelPredictionSets clone() {
+		return new ProportionSingleLabelPredictionSets(new ArrayList<>(numExamples.keySet()));
 	}
 
 	@Override

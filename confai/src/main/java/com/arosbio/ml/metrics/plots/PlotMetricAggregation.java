@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import com.arosbio.commons.MathUtils;
 import com.arosbio.ml.metrics.plots.Plot2D.X_Axis;
-import com.arosbio.ml.metrics.vap.VAPCalibrationPlotBuilder;
+import com.arosbio.ml.metrics.vap.VAPCalibration;
 
 /**
  * This class handles aggregation of several metrics of a single type, e.g.
@@ -186,7 +186,7 @@ public class PlotMetricAggregation implements PlotMetric {
 		curves.put(xLabel.label(), xTicks);
 		// Go through remaining y-labels and compute mean and std
 		for (Map.Entry<String, Map<Number, DescriptiveStatistics>> kvSum : sums.entrySet()) {
-			if (kvSum.getKey().startsWith(VAPCalibrationPlotBuilder.NUM_EX_PER_BIN_LABEL)){
+			if (kvSum.getKey().startsWith(VAPCalibration.NUM_EX_PER_BIN_LABEL)){
 				// This is the number of examples per bin for CVAP calibration - use sum instead of mean+/-std
 				List<Number> numExamples = new ArrayList<>();
 				for (DescriptiveStatistics kv : kvSum.getValue().values()) {
@@ -241,7 +241,7 @@ public class PlotMetricAggregation implements PlotMetric {
 				// Make sure the list is of the correct length
 				List<Number> values = kv.getValue();
 				if (! xTicks.equals(currentXticks)){
-					if (kv.getKey().startsWith(VAPCalibrationPlotBuilder.NUM_EX_PER_BIN_LABEL)){
+					if (kv.getKey().startsWith(VAPCalibration.NUM_EX_PER_BIN_LABEL)){
 						// For numbers - fill with 0 occurrences, makes more sense than NaN
 						values = fillGaps(xTicks, currentXticks, values, 0);
 					} else {

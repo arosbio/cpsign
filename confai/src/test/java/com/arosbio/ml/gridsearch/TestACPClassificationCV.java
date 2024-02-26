@@ -23,8 +23,8 @@ import org.junit.experimental.categories.Category;
 import com.arosbio.ml.cp.acp.ACPClassifier;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.cp.ModelCalibration;
-import com.arosbio.ml.metrics.cp.classification.MultiLabelPredictionsPlotBuilder;
-import com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder;
+import com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictionSets;
+import com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictionSets;
 import com.arosbio.ml.testing.KFoldCV;
 import com.arosbio.ml.testing.TestRunner;
 import com.arosbio.tests.suites.PerformanceTest;
@@ -72,7 +72,7 @@ public class TestACPClassificationCV extends TestEnv {
 		System.out.println("LibLinear CV GridSearch");
 		TestCrossValidation(true);
 
-		TestGridSearch(true, new MultiLabelPredictionsPlotBuilder(Arrays.asList(CONFIDENCE))); //new ProportionMultiLabelPredictions(CONFIDENCE));
+		TestGridSearch(true, new ProportionMultiLabelPredictionSets(Arrays.asList(CONFIDENCE))); //new ProportionMultiLabelPredictions(CONFIDENCE));
 		if (PRINT_DEBUG) {
 			printLogs();
 		}
@@ -84,7 +84,7 @@ public class TestACPClassificationCV extends TestEnv {
 		System.out.println("LibLinear CV GridSearch Using Ratio SingleLabelPred");
 		TestCrossValidation(true);
 
-		TestGridSearch(true, new SingleLabelPredictionsPlotBuilder(Arrays.asList(CONFIDENCE))); //new ProportionSingleLabelPredictions(CONFIDENCE));
+		TestGridSearch(true, new ProportionSingleLabelPredictionSets(Arrays.asList(CONFIDENCE))); //new ProportionSingleLabelPredictions(CONFIDENCE));
 		if (PRINT_DEBUG) {
 			printLogs();
 		}
@@ -93,7 +93,7 @@ public class TestACPClassificationCV extends TestEnv {
 	@Test
 	public void TestCVGridSearchLibSvmACP() throws Exception {
 		System.out.println("LibSvm CV GridSearch");
-		TestGridSearch(false, new MultiLabelPredictionsPlotBuilder(Arrays.asList(CONFIDENCE))); //new ProportionMultiLabelPredictions(CONFIDENCE));
+		TestGridSearch(false, new ProportionMultiLabelPredictionSets(Arrays.asList(CONFIDENCE))); //new ProportionMultiLabelPredictions(CONFIDENCE));
 		if (PRINT_DEBUG) {
 			printLogs();
 		}

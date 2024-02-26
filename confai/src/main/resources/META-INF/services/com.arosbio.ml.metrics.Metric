@@ -27,9 +27,9 @@ com.arosbio.ml.metrics.cp.classification.ObservedFuzziness
 com.arosbio.ml.metrics.cp.classification.BalancedObservedFuzziness
 com.arosbio.ml.metrics.cp.classification.UnobservedConfidence
 com.arosbio.ml.metrics.cp.classification.UnobservedCredibility
-com.arosbio.ml.metrics.cp.classification.EmptyLabelPredictionsPlotBuilder
-com.arosbio.ml.metrics.cp.classification.MultiLabelPredictionsPlotBuilder
-com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder
+com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictionSets
+com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictionSets
+com.arosbio.ml.metrics.cp.classification.ProportionEmptyLabelPredictionSets
 
 
 # CP Regression
@@ -41,4 +41,4 @@ com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth
 # VAP Classification
 com.arosbio.ml.metrics.vap.MeanVAPInterval
 com.arosbio.ml.metrics.vap.MedianVAPInterval
-com.arosbio.ml.metrics.vap.VAPCalibrationPlotBuilder
+com.arosbio.ml.metrics.vap.VAPCalibration

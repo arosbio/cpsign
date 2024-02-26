@@ -24,9 +24,9 @@ import com.arosbio.ml.metrics.plots.Plot2D.X_Axis;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 import com.google.common.collect.Range;
 
-public class VAPCalibrationPlotBuilder implements PlotMetric, VAPMetric {
+public class VAPCalibration implements PlotMetric, VAPMetric {
 	
-	private static final Logger LOGGER = LoggerFactory.getLogger(VAPCalibrationPlotBuilder.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(VAPCalibration.class);
 	private static final X_Axis X_AXIS = X_Axis.EXPECTED_PROB;
 	private static final String Y_AXIS = "Observed frequency";
 	private static final int DEFAULT_NUM_BINS = 10;
@@ -71,7 +71,7 @@ public class VAPCalibrationPlotBuilder implements PlotMetric, VAPMetric {
 	 * in which the observed probability is calculated. These are created 
 	 * as non-overlapping bins
 	 */
-	public VAPCalibrationPlotBuilder() {
+	public VAPCalibration() {
 		this(DEFAULT_NUM_BINS,1d/DEFAULT_NUM_BINS);
 	}
 	
@@ -82,7 +82,7 @@ public class VAPCalibrationPlotBuilder implements PlotMetric, VAPMetric {
 	 * @param numBins Number of bins to use, allowed range [5..100]
 	 * @throws IllegalArgumentException In case {@code numBins} is outside of allowed range
 	 */
-	public VAPCalibrationPlotBuilder(int numBins) throws IllegalArgumentException {
+	public VAPCalibration(int numBins) throws IllegalArgumentException {
 		this(numBins, 1d/numBins);
 	}
 	
@@ -95,7 +95,7 @@ public class VAPCalibrationPlotBuilder implements PlotMetric, VAPMetric {
 	 * @param binWidth Width of each bin, (0..inf)
 	 * @throws IllegalArgumentException In case {@code numBins} or {@code binWidth} is outside of their allowed range
 	 */
-	public VAPCalibrationPlotBuilder(int numBins, double binWidth) throws IllegalArgumentException {
+	public VAPCalibration(int numBins, double binWidth) throws IllegalArgumentException {
 		setupEvalBins(numBins, binWidth);
 	}
 	
@@ -105,7 +105,7 @@ public class VAPCalibrationPlotBuilder implements PlotMetric, VAPMetric {
 	 * @param binMindpoints Midpoints of all calibration bins
 	 * @param binWidth Width of each bin
 	 */
-	public VAPCalibrationPlotBuilder(List<Double> binMindpoints, double binWidth) {
+	public VAPCalibration(List<Double> binMindpoints, double binWidth) {
 		setupEvalBins(binMindpoints, binWidth);
 	}
 	
@@ -113,7 +113,7 @@ public class VAPCalibrationPlotBuilder implements PlotMetric, VAPMetric {
 	 * Custom bins to use. Note that all Ranges must have finite endpoints at both sides.
 	 * @param calibrationBins Bins to use
 	 */
-	public VAPCalibrationPlotBuilder(List<Range<Double>> calibrationBins) {
+	public VAPCalibration(List<Range<Double>> calibrationBins) {
 		setupEvalBins(calibrationBins);
 	}
 
@@ -268,8 +268,8 @@ public class VAPCalibrationPlotBuilder implements PlotMetric, VAPMetric {
 	}
 
 	@Override
-	public VAPCalibrationPlotBuilder clone() {
-		VAPCalibrationPlotBuilder clone = new VAPCalibrationPlotBuilder(getBins());
+	public VAPCalibration clone() {
+		VAPCalibration clone = new VAPCalibration(getBins());
 		clone.label = label;
 		return clone;
 	}

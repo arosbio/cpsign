@@ -23,7 +23,7 @@ import com.arosbio.ml.metrics.cp.EfficiencyPlot;
 import com.arosbio.ml.metrics.plots.Plot2D.X_Axis;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 
-public class MultiLabelPredictionsPlotBuilder implements PlotMetric, CPClassifierMetric, Aliased {
+public class ProportionMultiLabelPredictionSets implements PlotMetric, CPClassifierMetric, Aliased {
 	
 	public static final X_Axis X_AXIS = X_Axis.CONFIDENCE;
 	public static final String Y_AXIS = "Proportion multi-label prediction sets";
@@ -33,12 +33,22 @@ public class MultiLabelPredictionsPlotBuilder implements PlotMetric, CPClassifie
 	private Map<Double, Integer> numExamples = new HashMap<>();
 	private Map<Double, Integer> numMultiLabelPredictions = new HashMap<>();
 
-	public MultiLabelPredictionsPlotBuilder() {
+	public ProportionMultiLabelPredictionSets() {
 		setEvaluationPoints(DEFAULT_EVALUATION_POINTS);
 	}
 	
-	public MultiLabelPredictionsPlotBuilder(List<Double> evaluationPoints) {
+	public ProportionMultiLabelPredictionSets(List<Double> evaluationPoints) {
 		setEvaluationPoints(evaluationPoints);
+	}
+
+	@Override
+	public String getName() {
+		return METRIC_NAME;
+	}
+
+	@Override
+	public String[] getAliases() {
+		return new String[]{METRIC_ALIAS};
 	}
 	
 	@Override
@@ -58,11 +68,6 @@ public class MultiLabelPredictionsPlotBuilder implements PlotMetric, CPClassifie
 	@Override
 	public Set<String> getYLabels() {
 		return Set.of(METRIC_NAME);
-	}
-
-	@Override
-	public String[] getAliases() {
-		return new String[]{METRIC_ALIAS};
 	}
 
 	@Override
@@ -109,13 +114,8 @@ public class MultiLabelPredictionsPlotBuilder implements PlotMetric, CPClassifie
 	}
 
 	@Override
-	public String getName() {
-		return METRIC_NAME;
-	}
-
-	@Override
-	public MultiLabelPredictionsPlotBuilder clone() {
-		return new MultiLabelPredictionsPlotBuilder(new ArrayList<>(numExamples.keySet()));
+	public ProportionMultiLabelPredictionSets clone() {
+		return new ProportionMultiLabelPredictionSets(new ArrayList<>(numExamples.keySet()));
 	}
 
 	@Override

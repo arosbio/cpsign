@@ -40,9 +40,9 @@ import com.arosbio.ml.metrics.MetricFactory;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.metrics.cp.CalibrationPlot;
 import com.arosbio.ml.metrics.cp.ModelCalibration;
-import com.arosbio.ml.metrics.cp.classification.MultiLabelPredictionsPlotBuilder;
+import com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictionSets;
 import com.arosbio.ml.metrics.cp.classification.ObservedFuzziness;
-import com.arosbio.ml.metrics.cp.classification.SingleLabelPredictionsPlotBuilder;
+import com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictionSets;
 import com.arosbio.ml.metrics.plots.MergedPlot;
 import com.arosbio.ml.metrics.plots.Plot2D;
 import com.arosbio.ml.metrics.plots.PlotMetric;
@@ -270,8 +270,8 @@ public class TestACPClassificationValidity extends TestEnv {
 		TestRunner runner  = new TestRunner.Builder(new KFoldCV(k)).build();
 
 		PlotMetric calib = new ModelCalibration();
-		PlotMetric single = new SingleLabelPredictionsPlotBuilder();
-		PlotMetric multi = new MultiLabelPredictionsPlotBuilder();
+		PlotMetric single = new ProportionSingleLabelPredictionSets();
+		PlotMetric multi = new ProportionMultiLabelPredictionSets();
 		Metric obsFuzz = new ObservedFuzziness();
 
 		List<Metric> metrics = Arrays.asList(calib, single, multi, obsFuzz);

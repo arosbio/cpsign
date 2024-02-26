@@ -18,29 +18,41 @@ import java.util.Map;
 import java.util.Set;
 
 import com.arosbio.commons.MathUtils;
+import com.arosbio.commons.mixins.Aliased;
 import com.arosbio.ml.cp.PValueTools;
 import com.arosbio.ml.metrics.cp.EfficiencyPlot;
 import com.arosbio.ml.metrics.plots.Plot2D.X_Axis;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 
-public class EmptyLabelPredictionsPlotBuilder implements PlotMetric, CPClassifierMetric {
+public class ProportionEmptyLabelPredictionSets implements PlotMetric, CPClassifierMetric, Aliased {
 	
 	public static final X_Axis X_AXIS = X_Axis.CONFIDENCE;
 	public static final String Y_AXIS = "Proportion empty-label prediction sets";
 	
 	public static final String METRIC_NAME = Y_AXIS;
+	public static final String METRIC_ALIAS = "PropEmptyLabel";
 
 
 	private Map<Double, Integer> numExamples = new HashMap<>();
 	private Map<Double, Integer> numEmptyPredictions = new HashMap<>();
 
 	
-	public EmptyLabelPredictionsPlotBuilder() {
+	public ProportionEmptyLabelPredictionSets() {
 		setEvaluationPoints(DEFAULT_EVALUATION_POINTS);
 	}
 	
-	public EmptyLabelPredictionsPlotBuilder(List<Double> evaluationPoints) {
+	public ProportionEmptyLabelPredictionSets(List<Double> evaluationPoints) {
 		setEvaluationPoints(evaluationPoints);
+	}
+
+	@Override
+	public String getName() {
+		return METRIC_NAME;
+	}
+
+	@Override
+	public String[] getAliases() {
+		return new String[]{METRIC_ALIAS};
 	}
 	
 	public String toString() {
@@ -123,14 +135,11 @@ public class EmptyLabelPredictionsPlotBuilder implements PlotMetric, CPClassifie
 		return (int) MathUtils.mean(numExamples.values());
 	}
 
-	@Override
-	public String getName() {
-		return METRIC_NAME;
-	}
+	
 
 	@Override
-	public EmptyLabelPredictionsPlotBuilder clone() {
-		return new EmptyLabelPredictionsPlotBuilder(new ArrayList<>(numExamples.keySet()));
+	public ProportionEmptyLabelPredictionSets clone() {
+		return new ProportionEmptyLabelPredictionSets(new ArrayList<>(numExamples.keySet()));
 	}
 
 	@Override
