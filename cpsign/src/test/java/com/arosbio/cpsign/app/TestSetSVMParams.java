@@ -11,6 +11,7 @@ package com.arosbio.cpsign.app;
 
 import java.io.File;
 
+import org.apache.commons.math3.util.MedianOf3PivotingStrategy;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -27,7 +28,7 @@ import com.arosbio.ml.algorithms.svm.C_SVC;
 import com.arosbio.ml.algorithms.svm.LinearSVC;
 import com.arosbio.ml.algorithms.svm.LinearSVR;
 import com.arosbio.ml.cp.nonconf.regression.LogNormalizedNCM;
-import com.arosbio.ml.metrics.cp.regression.CPRegressionEfficiencyPlotBuilder;
+import com.arosbio.ml.metrics.cp.regression.MedianPredictionIntervalWidth;
 import com.arosbio.tests.TestResources;
 import com.arosbio.tests.TestResources.CmpdData;
 import com.arosbio.tests.suites.CLITest;
@@ -308,8 +309,8 @@ public class TestSetSVMParams extends CLIBaseTest{
 		double rmse1 = TypeUtils.asDouble(json1.get("RMSE")); 
 		double rmse2 = TypeUtils.asDouble(json2.get("RMSE")); 
 		
-		double efficiency1 = TypeUtils.asDouble(getFirstValueInPlot(json1, CPRegressionEfficiencyPlotBuilder.Y_AXIS)); 
-		double efficiency2 = TypeUtils.asDouble(getFirstValueInPlot(json2, CPRegressionEfficiencyPlotBuilder.Y_AXIS)); 
+		double efficiency1 = TypeUtils.asDouble(getFirstValueInPlot(json1, MedianPredictionIntervalWidth.Y_AXIS)); 
+		double efficiency2 = TypeUtils.asDouble(getFirstValueInPlot(json2, MedianPredictionIntervalWidth.Y_AXIS)); 
 		
 		Assert.assertTrue(Math.abs(rmse1-rmse2)>0.12);
 		Assert.assertTrue("eff1: " + efficiency1 + "   eff2: " + efficiency2, Math.abs(efficiency1-efficiency2)>.25);

@@ -65,6 +65,7 @@ import com.arosbio.ml.gridsearch.GridSearchResult;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
+import com.arosbio.ml.metrics.plots.PlotMetric;
 import com.github.cliftonlabs.json_simple.JsonArray;
 import com.github.cliftonlabs.json_simple.JsonObject;
 import com.github.cliftonlabs.json_simple.Jsoner;
@@ -172,7 +173,7 @@ public class TuneUtils {
 			// Metrics
 			Map<String, Object> metrics = new LinkedHashMap<>();
 			// Optimization one first
-			metrics.putAll(res.getOptimizationMetric().asMap());
+			metrics.putAll(getMetricScores(res.getOptimizationMetric()));
 			// Secondary metrics
 			metrics.putAll(getSecondaryMetricsMapping(res));
 			// Round all values and add to JSON mapping
@@ -201,7 +202,7 @@ public class TuneUtils {
 	private static String compileResultsAsCSV(GridSearchResult results, CSVFormat format, CLIConsole console,
 			Double conf) {
 
-		List<SingleValuedMetric> mets = listAllMetrics(results);
+		List<Metric> mets = listAllMetrics(results);
 		boolean usesConfidence = checkIfUsesConf(mets);
 
 		StringBuilder resultsBuilder = new StringBuilder();
@@ -230,12 +231,19 @@ public class TuneUtils {
 		return resultsBuilder.toString();
 	}
 
-	private static int findLongestMetricName(Collection<SingleValuedMetric> metrics) {
+	private static int findLongestMetricName(Collection<Metric> metrics) {
 		int widest = BACKUP_TXT_FORMAT_WIDTH;
-		for (SingleValuedMetric m : metrics) {
-			for (String n : m.asMap().keySet()) {
-				widest = Math.max(widest, n.length());
+		for (Metric m : metrics) {
+			if (m instanceof SingleValuedMetric){
+				for (String n : ((SingleValuedMetric)m).asMap().keySet()) {
+					widest = Math.max(widest, n.length());
+				}
+			} else if (m instanceof PlotMetric){
+				for (String n : ((PlotMetric)m).getYLabels()) {
+					widest = Math.max(widest, n.length());
+				}
 			}
+			
 		}
 		return widest;
 	}
@@ -243,7 +251,7 @@ public class TuneUtils {
 	private static String compileResultsAsText(GridSearchResult results) {
 
 		// Width from map of optimization type
-		List<SingleValuedMetric> allMetrics = new ArrayList<>();
+		List<Metric> allMetrics = new ArrayList<>();
 		allMetrics.add(results.getBestParameters().get(0).getOptimizationMetric());
 		if (results.getBestParameters().get(0).getSecondaryMetrics() != null) {
 			allMetrics.addAll(results.getBestParameters().get(0).getSecondaryMetrics());
@@ -253,15 +261,15 @@ public class TuneUtils {
 		final int w = Math.max(widestParamName + 1, BACKUP_TXT_FORMAT_WIDTH); // width to splitting ':'
 		final String lineFormat = " - %-" + w + "s : %s%n";
 
-		StringBuilder resultBilder = new StringBuilder();
+		StringBuilder resultBuilder = new StringBuilder();
 		// Write info text to start with
-		resultBilder.append("Optimal parameters found by tune using ");
-		resultBilder.append(results.getOptimizationType().getName());
-		resultBilder.append(" as optimization metric:%n");
-		resultBilder.append(StringUtils.repeat('-', resultBilder.length() - 2));
-		resultBilder.append("%n");
+		resultBuilder.append("Optimal parameters found by tune using ");
+		resultBuilder.append(results.getOptimizationType().getName());
+		resultBuilder.append(" as optimization metric:%n");
+		resultBuilder.append(StringUtils.repeat('-', resultBuilder.length() - 2));
+		resultBuilder.append("%n");
 
-		Formatter f = new Formatter(resultBilder);
+		Formatter f = new Formatter(resultBuilder);
 
 		// Print result for every result
 		for (GSResult res : results.getBestParameters()) {
@@ -270,7 +278,7 @@ public class TuneUtils {
 				// Valid result!
 
 				// Optimization metric
-				for (Map.Entry<String, ?> kv : res.getOptimizationMetric().asMap().entrySet()) {
+				for (Map.Entry<String, ?> kv : getMetricScores(res.getOptimizationMetric()).entrySet()) {
 					if (kv.getValue() instanceof Double || kv.getValue() instanceof Float) {
 						f.format(lineFormat, kv.getKey(), MathUtils.roundToNSignificantFigures(
 								TypeUtils.asDouble(kv.getValue()), NUM_SIGN_DIGITS_IN_RESULT));
@@ -309,20 +317,59 @@ public class TuneUtils {
 				f.format(lineFormat, "Comment", res.getErrorMessage());
 
 			// Write a blank rows between results
-			resultBilder.append("%n");
+			resultBuilder.append("%n");
 		}
 
 		f.close();
 
-		return resultBilder.toString();
+		return resultBuilder.toString();
 
 	}
 
 	private static Map<String, Object> getSecondaryMetricsMapping(GSResult res) {
 		Map<String, Object> mapping = new LinkedHashMap<>();
 		if (res.getSecondaryMetrics() != null) {
-			for (SingleValuedMetric svm : res.getSecondaryMetrics()) {
-				mapping.putAll(svm.asMap());
+			for (Metric m : res.getSecondaryMetrics()) {
+				mapping.putAll(getMetricScores(m));
+				// if (m instanceof PlotMetric){
+				// 	Map<String,List<Number>> plot = ((PlotMetric)m).buildPlot().getCurves();
+				// 	Set<String> labels = ((PlotMetric)m).getYLabels();
+				// 	for (String header : labels) {
+				// 		if (plot.containsKey(header)){
+				// 			mapping.put(header, plot.get(header).get(0)); // These PlotMetrics should only contain a single value (i.e. using a single confidence level)
+				// 		}
+				// 	}
+				// } else if (m instanceof SingleValuedMetric){
+				// 	for (Map.Entry<String,?> keyVal : ((SingleValuedMetric)m).asMap().entrySet()){
+				// 		Object val = keyVal.getValue();
+				// 		if (val instanceof Double || val instanceof Float) {
+				// 			val = MathUtils.roundToNSignificantFigures(TypeUtils.asDouble(keyVal.getValue()),NUM_SIGN_DIGITS_IN_RESULT);
+				// 		}
+				// 		mapping.put(keyVal.getKey(), val);
+				// 	}
+				// }
+			}
+		}
+		return mapping;
+	}
+
+	private static Map<String,?> getMetricScores(Metric m){
+		Map<String,Object> mapping = new HashMap<>();
+		if (m instanceof PlotMetric){
+			Map<String,List<Number>> plot = ((PlotMetric)m).buildPlot().getCurves();
+			Set<String> labels = ((PlotMetric)m).getYLabels();
+			for (String header : labels) {
+				if (plot.containsKey(header)){
+					mapping.put(header, plot.get(header).get(0)); // These PlotMetrics should only contain a single value (i.e. using a single confidence level)
+				}
+			}
+		} else if (m instanceof SingleValuedMetric){
+			for (Map.Entry<String,?> keyVal : ((SingleValuedMetric)m).asMap().entrySet()){
+				Object val = keyVal.getValue();
+				if (val instanceof Double || val instanceof Float) {
+					val = MathUtils.roundToNSignificantFigures(TypeUtils.asDouble(keyVal.getValue()),NUM_SIGN_DIGITS_IN_RESULT);
+				}
+				mapping.put(keyVal.getKey(), val);
 			}
 		}
 		return mapping;
@@ -358,13 +405,13 @@ public class TuneUtils {
 		}
 	}
 
-	private static List<SingleValuedMetric> listAllMetrics(GridSearchResult results) {
-		List<SingleValuedMetric> mets = new ArrayList<>();
-		mets.add(results.getOptimizationType());
-		List<SingleValuedMetric> secondaryMetrics = results.getBestParameters().get(0).getSecondaryMetrics();
+	private static List<Metric> listAllMetrics(GridSearchResult results) {
+		List<Metric> metrics = new ArrayList<>();
+		metrics.add(results.getOptimizationType());
+		List<Metric> secondaryMetrics = results.getBestParameters().get(0).getSecondaryMetrics();
 		if (secondaryMetrics != null)
-			mets.addAll(secondaryMetrics);
-		return mets;
+			metrics.addAll(secondaryMetrics);
+		return metrics;
 	}
 
 	private static boolean checkIfUsesConf(List<? extends Metric> mets) {
@@ -599,12 +646,12 @@ public class TuneUtils {
 	 * @param numGridPoints the total number of grid points (i.e. parameter combinations)
 	 * @return the configured {@link GridSearch} instance
 	 */
-	public static GridSearch initAndConfigGS(TestingStrategyMixin testing, SingleValuedMetric optMetric, List<SingleValuedMetric> secondaryMetrics,
+	public static GridSearch initAndConfigGS(TestingStrategyMixin testing, Metric optMetric, List<Metric> secondaryMetrics,
 			int numResultsToPrint, CLIConsole console, int numGridPoints) {
 		return initAndConfigGS(testing, optMetric, secondaryMetrics, numResultsToPrint, CLIParameters.DEFAULT_CONFIDENCE, 1d, console, numGridPoints);
 	}
 
-	public static GridSearch initAndConfigGS(TestingStrategyMixin testing, SingleValuedMetric optMetric, List<SingleValuedMetric> secondaryMetrics,
+	public static GridSearch initAndConfigGS(TestingStrategyMixin testing, Metric optMetric, List<Metric> secondaryMetrics,
 			int numResultsToPrint, double cvConf, double cvTol, CLIConsole console, int numGridPoints) {
 
 		testing.testStrategy.setSeed(GlobalConfig.getInstance().getRNGSeed());

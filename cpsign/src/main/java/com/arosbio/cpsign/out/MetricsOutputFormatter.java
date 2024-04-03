@@ -20,7 +20,6 @@ import com.arosbio.commons.MathUtils;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.metrics.classification.ROC_AUC;
-import com.arosbio.ml.metrics.cp.CPAccuracy;
 import com.arosbio.ml.metrics.cp.classification.ObservedFuzziness;
 import com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth;
 import com.arosbio.ml.metrics.plots.MergedPlot;
@@ -170,8 +169,8 @@ public class MetricsOutputFormatter {
 	}
 
 	public boolean isConformalResult(){
-		for (SingleValuedMetric svm : singleMetrics){
-			if (svm instanceof CPAccuracy || svm instanceof ObservedFuzziness || svm instanceof MeanPredictionIntervalWidth){
+		for (Metric m : singleMetrics){
+			if (m instanceof ObservedFuzziness || m instanceof MeanPredictionIntervalWidth){
 				return true;
 			}
 		}

@@ -79,7 +79,6 @@ import com.arosbio.ml.cp.nonconf.regression.NCMRegression;
 import com.arosbio.ml.cp.tcp.TCPClassifier;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.MetricFactory;
-import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.sampling.SamplingStrategy;
 import com.arosbio.ml.testing.TestingStrategy;
 import com.arosbio.ml.vap.avap.AVAPClassifier;
@@ -645,8 +644,7 @@ public class ExplainArgument implements Named {
 			addSubHeading(sb, "Conformal Prediction Classification Metrics");
 			TextTable table = getTable();
 			for (Metric m : MetricFactory.getCPClassificationMetrics(false)) {
-				if (m instanceof SingleValuedMetric)
-					appendImplementation(table, m);
+				appendImplementation(table, m);
 			}
 			table.toString(sb);
 		}
@@ -655,8 +653,7 @@ public class ExplainArgument implements Named {
 			addSubHeading(sb, "Conformal Prediction Regression Metrics");
 			TextTable table = getTable();
 			for (Metric m : MetricFactory.getACPRegressionMetrics()) {
-				if (m instanceof SingleValuedMetric)
-					appendImplementation(table, m);
+				appendImplementation(table, m);
 			}
 			table.toString(sb);
 		}
@@ -665,8 +662,7 @@ public class ExplainArgument implements Named {
 			addSubHeading(sb, "Venn-ABERS Probabilistic Metrics");
 			TextTable table = getTable();
 			for (Metric m : MetricFactory.getAVAPClassificationMetrics()) {
-				if (m instanceof SingleValuedMetric)
-					appendImplementation(table, m);
+				appendImplementation(table, m);
 			}
 			table.toString(sb);
 		}
@@ -1726,64 +1722,6 @@ public class ExplainArgument implements Named {
 		}
 	}
 
-	/*
-	private String compileMLAlgorithmExplain() {
-		StringBuilder text = new StringBuilder();
-		centerHeading(text, "ML ALGORITHMS");
-		String before_text = 
-				"CPSign currently supports a few learning algorithms implemented in the LIBSVM and LIBLINEAR packages. These algorithms have parameters that can be altered by using the ':'-syntax (explain syntax), E.g.:%n"
-						+ "\"[algorithm_name]:[parameter_name]=[parameter_value]:\"%nOR if supplying the parameters in the listed order using the short hand syntax:%n"
-						+ "\"[algorithm_name]:[parameter_1_value]:[parameter_2_value]...\"%n"
-						+ "E.g. --scorer "+LinearSVC.ALG_NAME+":100  (change the cost-value to 100)%n";
-
-		text.append(WordUtils.wrap(before_text, textWidth));
-
-
-		Iterator<MLAlgorithm> algsIter = FuzzyServiceLoader.iterator(MLAlgorithm.class); 
-		List<MLAlgorithm> classifiers = new ArrayList<>();
-		List<MLAlgorithm> regressors = new ArrayList<>();
-		while (algsIter.hasNext()) {
-			MLAlgorithm alg = algsIter.next();
-			if (alg instanceof Classifier) {
-				classifiers.add(alg);
-			} else if (alg instanceof Regressor) {
-				regressors.add(alg);
-			}
-		}
-
-		text.append("%n");
-		centerSubHeading(text, "Regression algorithms");
-		for (MLAlgorithm reg : regressors) {
-			appendMLInfo(text, reg);
-			text.append("%n");
-		}
-
-		centerSubHeading(text, "Classification algorithms");
-		for (MLAlgorithm clf : classifiers) {
-			appendMLInfo(text, clf);
-			text.append("%n");
-		}
-
-		return text.toString();
-	}
-
-	private void appendMLInfo(StringBuilder text, MLAlgorithm d) {
-
-		appendNames(text, d);
-		appendDescription(text, d);
-		if (d instanceof MultiLabelClassifier) {
-			text.append(SUPPORTS_MULTICLASS);
-			text.append("%n");
-		}
-		if (d instanceof PseudoProbabilisticClassifier) {
-			text.append(PROBABILITY_ML);
-			text.append("%n");
-		}
-
-		appendConfigStuff(text, d.getConfigParameters());
-
-	} 
-	 */
 
 	@Command(helpCommand=true,
 			name = SamplingStratInfo.SUB_NAME,

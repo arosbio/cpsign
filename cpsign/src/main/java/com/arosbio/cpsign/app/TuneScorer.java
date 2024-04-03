@@ -237,7 +237,7 @@ public class TuneScorer implements RunnableCmd, SupportsProgressBar {
 		predictor = algorithmSection.getMLAlg(isClassification, console);
 
 		// Set up the optimization metric and (optionally) secondary metrics
-		Pair<SingleValuedMetric, List<SingleValuedMetric>> metrics = setupMetrics();
+		Pair<Metric, List<Metric>> metrics = setupMetrics();
 
 		// INIT GRID-SEARCH
 		Map<String,List<?>> grid = TuneUtils.setupParamGrid(predictor, gridMixin.paramGrid);
@@ -265,9 +265,9 @@ public class TuneScorer implements RunnableCmd, SupportsProgressBar {
 	}
 
 	@SuppressWarnings("null")
-	private Pair<SingleValuedMetric, List<SingleValuedMetric>> setupMetrics() {
+	private Pair<Metric, List<Metric>> setupMetrics() {
 		LOGGER.debug("Setting up metric for ML Alg: {}",predictor.getClass().getName());
-		SingleValuedMetric optMetric = null;
+		Metric optMetric = null;
 
 		if (inputOptMetric == null) {
 			LOGGER.debug("No explicit metric given - falling back to default metric for the given algorithm");
@@ -280,11 +280,12 @@ public class TuneScorer implements RunnableCmd, SupportsProgressBar {
 		} else {
 			LOGGER.debug("Given an explicit metric: {}",inputOptMetric.getName());
 			
-			if (! (inputOptMetric instanceof SingleValuedMetric)) {
-				LOGGER.debug("Got opt-metric of class {} which is not a single-valued-metric - failing!",inputOptMetric.getClass().getName());
-				console.failWithArgError("Parameter "+CLIProgramUtils.getParamName(this, "inputOptMetric", "--opt-metric") + 
-						" must be a single valued metric, please pick a different metric");
-			} else {
+			// TODO - remove?
+			// if (! (inputOptMetric instanceof Metric)) {
+			// 	LOGGER.debug("Got opt-metric of class {} which is not a single-valued-metric - failing!",inputOptMetric.getClass().getName());
+			// 	console.failWithArgError("Parameter "+CLIProgramUtils.getParamName(this, "inputOptMetric", "--opt-metric") + 
+			// 			" must be a single valued metric, please pick a different metric");
+			// } else {
 				// Correct 'base type' 
 				optMetric = (SingleValuedMetric) inputOptMetric;
 
@@ -300,22 +301,23 @@ public class TuneScorer implements RunnableCmd, SupportsProgressBar {
 					}
 					console.failWithArgError(sb.toString());
 				}
-			}
+			// }
 		}
 		LOGGER.debug("Using {} as optimization metric",optMetric.getName());
 
 		
-		List<SingleValuedMetric> secondaryMetrics = null;
+		List<Metric> secondaryMetrics = null;
 		if (calculateSecondaryMetrics) {
 			// Setup secondary metrics
 			secondaryMetrics = new ArrayList<>();
 			boolean isMulticlass = DataUtils.checkDataType(data) == DataType.MULTI_CLASS;
 			// Only use SingleValuedMetrics
-			List<SingleValuedMetric> mets = MetricFactory.filterToSingleValuedMetrics(MetricFactory.getMetrics(predictor, isMulticlass));
+			// MetricFactory.filterToSingleValuedMetrics(
+			List<Metric> mets = MetricFactory.getMetrics(predictor, isMulticlass);
 			// Remove the optimization metric - so no duplicates
-			for (SingleValuedMetric m : mets) {
+			for (Metric m : mets) {
 				if (optMetric.getClass() != m.getClass()) {
-					secondaryMetrics.add((SingleValuedMetric) m);
+					secondaryMetrics.add(m);
 				}
 			}
 		}

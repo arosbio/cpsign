@@ -118,18 +118,13 @@ import com.arosbio.ml.metrics.classification.ClassifierMetric;
 import com.arosbio.ml.metrics.classification.LabelDependent;
 import com.arosbio.ml.metrics.classification.PointClassifierMetric;
 import com.arosbio.ml.metrics.classification.ROC_AUC;
-import com.arosbio.ml.metrics.cp.CPAccuracy;
 import com.arosbio.ml.metrics.cp.CPMetric;
 import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
-import com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictions;
-import com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictions;
 import com.arosbio.ml.metrics.cp.regression.CIWidthBasedMetric;
-import com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth;
-import com.arosbio.ml.metrics.cp.regression.MedianPredictionIntervalWidth;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 import com.arosbio.ml.metrics.regression.PointPredictionMetric;
 import com.arosbio.ml.metrics.regression.RegressionMetric;
-import com.arosbio.ml.metrics.vap.VAPCalibrationPlotBuilder;
+import com.arosbio.ml.metrics.vap.VAPCalibration;
 import com.arosbio.ml.vap.avap.AVAPClassifier;
 
 import picocli.CommandLine.ArgGroup;
@@ -1325,8 +1320,8 @@ public class CLIProgramUtils {
 		
 		for (Metric m : metricBuilders) {
 			
-			if (m instanceof VAPCalibrationPlotBuilder && points.calibrationPointWidth != null){
-				((VAPCalibrationPlotBuilder)m).setEvaluationPoints(points.calibrationPoints,points.calibrationPointWidth);
+			if (m instanceof VAPCalibration && points.calibrationPointWidth != null){
+				((VAPCalibration)m).setEvaluationPoints(points.calibrationPoints,points.calibrationPointWidth);
 			} else if (m instanceof PlotMetric) {
 				((PlotMetric) m).setEvaluationPoints(points.calibrationPoints);
 			}
@@ -1345,12 +1340,12 @@ public class CLIProgramUtils {
 				}
 			}
 				
-			// These are already present in the plot-versions of the same metrics
-			if (m instanceof CPAccuracy || m instanceof ProportionMultiLabelPredictions
-			|| m instanceof ProportionSingleLabelPredictions || m instanceof MedianPredictionIntervalWidth
-			|| m instanceof MeanPredictionIntervalWidth) {
-				metricsToRm.add(m);
-			}
+			// These are already present in the plot-versions of the same metrics TODO - this is OK right?
+			// if (m instanceof CPAccuracy || m instanceof ProportionMultiLabelPredictions
+			// || m instanceof ProportionSingleLabelPredictions || m instanceof MedianPredictionIntervalWidth
+			// || m instanceof MeanPredictionIntervalWidth) {
+			// 	metricsToRm.add(m);
+			// }
 			// Update single valued confidence-dependent metrics after the closest
 			// calibration-point
 			if (m instanceof ConfidenceDependentMetric) {

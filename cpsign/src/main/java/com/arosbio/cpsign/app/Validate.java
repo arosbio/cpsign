@@ -77,7 +77,6 @@ import com.arosbio.ml.metrics.classification.PointClassifierMetric;
 import com.arosbio.ml.metrics.classification.ProbabilisticMetric;
 import com.arosbio.ml.metrics.classification.ScoringClassifierMetric;
 import com.arosbio.ml.metrics.cp.classification.CPClassifierMetric;
-import com.arosbio.ml.metrics.cp.regression.CPRegressionMetric;
 import com.arosbio.ml.metrics.cp.regression.CPRegressionMultiMetric;
 import com.arosbio.ml.metrics.regression.PointPredictionMetric;
 import com.arosbio.ml.metrics.vap.VAPMetric;
@@ -591,10 +590,8 @@ public class Validate implements RunnableCmd, SupportsProgressBar {
 
 			// Update metrics
 			for (Metric m : validationMetrics) {
-				if (m instanceof PointPredictionMetric)
+				if (m instanceof PointPredictionMetric) {
 					((PointPredictionMetric) m).addPrediction(trueValue, resultList.getY_hat());
-				else if (m instanceof CPRegressionMetric) {
-					((CPRegressionMetric) m).addPrediction(trueValue, intervals.get(((CPRegressionMetric) m).getConfidence()));
 				} else if (m instanceof CPRegressionMultiMetric) {
 					((CPRegressionMultiMetric) m).addPrediction(trueValue, intervals);
 				}

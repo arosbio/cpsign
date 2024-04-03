@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -89,8 +90,8 @@ import com.arosbio.ml.metrics.classification.ROC_AUC;
 import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
 import com.arosbio.ml.metrics.cp.classification.AverageC;
 import com.arosbio.ml.metrics.cp.classification.ObservedFuzziness;
-import com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictions;
-import com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictions;
+import com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictionSets;
+import com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictionSets;
 import com.arosbio.ml.metrics.cp.regression.CIWidthBasedMetric;
 import com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth;
 import com.arosbio.ml.metrics.cp.regression.MedianPredictionIntervalWidth;
@@ -170,8 +171,8 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(3) "+RMSE.METRIC_NAME+"%n"+
 					// CP Classification
 					"CP Classification:%n" +
-					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION_C_BEFORE + "(1) "+ProportionSingleLabelPredictions.METRIC_ALIAS + "%n"+
-					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION_C_BEFORE + "(2) "+ProportionMultiLabelPredictions.METRIC_ALIAS + "%n"+
+					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION_C_BEFORE + "(1) "+ProportionSingleLabelPredictionSets.METRIC_ALIAS + "%n"+
+					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION_C_BEFORE + "(2) "+ProportionMultiLabelPredictionSets.METRIC_ALIAS + "%n"+
 					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION + "(3) "+ObservedFuzziness.METRIC_ALIAS+"%n"+
 					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION_C_BEFORE + "(4) "+AverageC.METRIC_NAME+"%n"+
 					// VAP Classification:
@@ -343,7 +344,7 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 		loadData(predictor);
 		
 		// Set up the optimization metric and (optionally) secondary metrics
-		Pair<SingleValuedMetric, List<SingleValuedMetric>> metrics = setupMetrics(predictor);
+		Pair<Metric, List<Metric>> metrics = setupMetrics(predictor);
 		// INIT GRID-SEARCH 
 		Map<String,List<?>> grid = TuneUtils.setupParamGrid(predictor.getPredictor(), gridMixin.paramGrid);
 		int numGridPoints = TuneUtils.calcNumGridPoints(grid);
@@ -376,28 +377,28 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 			GlobalConfig.getInstance().getRNGSeed());
 	}
 
-	private Pair<SingleValuedMetric, List<SingleValuedMetric>> setupMetrics(ChemPredictor chemPred) {
+	private Pair<Metric, List<Metric>> setupMetrics(ChemPredictor chemPred) {
 		LOGGER.debug("Converting metric string into implementation: {}", optimizationString);
 
 		Predictor predictor = chemPred.getPredictor();
-		SingleValuedMetric optMetric = null;
+		Metric optMetric = null;
 
 		// If input was an integer
 		try {
 			int id = Integer.parseInt(optimizationString);
 			if (predictor instanceof ACPRegressor) {
 				if (id == 1) {
-					optMetric = new MedianPredictionIntervalWidth(cvConfidence);
+					optMetric = new MedianPredictionIntervalWidth(Arrays.asList(cvConfidence));
 				} else if (id == 2) {
-					optMetric = new MeanPredictionIntervalWidth(cvConfidence);
+					optMetric = new MeanPredictionIntervalWidth(Arrays.asList(cvConfidence));
 				} else if (id == 3) {
 					optMetric = new RMSE();
 				}
 			} else if (predictor instanceof ConformalClassifier) {
 				if (id == 1) {
-					optMetric = new ProportionSingleLabelPredictions(cvConfidence);
+					optMetric = new ProportionSingleLabelPredictionSets(Arrays.asList(cvConfidence));
 				} else if (id == 2) {
-					optMetric = new ProportionMultiLabelPredictions(cvConfidence);
+					optMetric = new ProportionMultiLabelPredictionSets(Arrays.asList(cvConfidence));
 				} else if (id == 3) {
 					optMetric = new ObservedFuzziness();
 				} else if (id == 4){
@@ -445,14 +446,14 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 				((ConfidenceDependentMetric) loaded).setConfidence(cvConfidence);
 			}
 
-			optMetric = (SingleValuedMetric) loaded;
+			optMetric = loaded;
 		}
 
 		// Here check if tune allows given criteria for given predictor type
 		if (! EvaluationUtils.validateMetrics(predictor, optMetric)) 
 			console.failWithArgError("Optimization metric '%s' not allowed for given predictor type", optMetric.getName());
 
-		List<SingleValuedMetric> secondaryMetrics = null;
+		List<Metric> secondaryMetrics = null;
 		if (calculateSecondaryMetrics) {
 			// Setup secondary metrics
 			ValidationPointsMixin fake = new ValidationPointsMixin();
