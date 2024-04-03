@@ -30,6 +30,23 @@ CPSign is a machine learning and cheminformatics software package written purely
 - CPSign is now available as a preprint at bioRxiv: [CPSign - Conformal Prediction for Cheminformatics Modeling](https://www.biorxiv.org/content/10.1101/2023.11.21.568108v1). 
 - CPSign has a [Readthedocs](https://cpsign.readthedocs.io/) web page with user documentation.
 
+## Cite
+If you use CPSign in a scientific publication, we appreciate citations made to our pre-print paper:
+
+Arvidsson McShane, S., Norinder, U., Alvarsson, J., Ahlberg, E., Carlsson, L., & Spjuth, O. (2023). [CPSign-Conformal Prediction for Cheminformatics Modeling](https://www.biorxiv.org/content/10.1101/2023.11.21.568108v1.abstract). *bioRxiv*, 2023-11.
+
+**BibTex entry:**
+```bibtex
+@article{mcshane2023cpsign,
+  title={CPSign-Conformal Prediction for Cheminformatics Modeling},
+  author={Arvidsson McShane, Staffan and Norinder, Ulf and Alvarsson, Jonathan and Ahlberg, Ernst and Carlsson, Lars and Spjuth, Ola},
+  journal={bioRxiv},
+  pages={2023--11},
+  year={2023},
+  publisher={Cold Spring Harbor Laboratory}
+}
+```
+
 ## License
 CPSign is dual licensed, where the user can choose between the [GNU General Public License](http://www.gnu.org/licenses/gpl-3.0.html) with additional terms (which can be found at the [Aros Bio website](https://arosbio.com/cpsign/license)) or a [commercial license](license/META-INF/comm-license.txt). See further details at the [Aros Bio website](https://arosbio.com/cpsign/license).
 
