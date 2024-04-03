@@ -22,8 +22,9 @@ import com.google.common.collect.Range;
 
 public class ModelCalibration implements LabelsMixin, CPClassifierMetric, CPRegressionMultiMetric, Aliased {
 
-	public static final String METRIC_NAME = "Calibration plot";
-    public static final String METRIC_ALIAS = "Model calibration";
+	public static final String METRIC_NAME = "Model calibration";
+    public static final String METRIC_ALIAS = "Calibration plot";
+	public final static String METRIC_DESCRIPTION = "Conformal model calibration, computes the accuracy based on desired confidence level. Note: not a measure for model efficiency, only for model calibration (i.e., should not be used for e.g. tuning hyper-parameters).";
 
 	private static final X_Axis X_AXIS = X_Axis.CONFIDENCE;
 	private static final String Y_AXIS = "Accuracy";
@@ -98,6 +99,11 @@ public class ModelCalibration implements LabelsMixin, CPClassifierMetric, CPRegr
     public String[] getAliases(){
         return new String[]{METRIC_ALIAS};
     }
+
+	@Override
+	public String getDescription(){
+		return METRIC_DESCRIPTION;
+	}
 	@Override
 	public boolean supportsMulticlass() {
 		return true;

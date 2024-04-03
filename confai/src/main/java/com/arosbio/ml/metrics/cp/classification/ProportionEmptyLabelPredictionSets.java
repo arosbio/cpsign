@@ -28,6 +28,7 @@ public class ProportionEmptyLabelPredictionSets implements PlotMetric, CPClassif
 	
 	public static final X_Axis X_AXIS = X_Axis.CONFIDENCE;
 	public static final String Y_AXIS = "Proportion empty-label prediction sets";
+	public final static String METRIC_DESCRIPTION = "The fraction of empty-label prediction sets for each confidence level";
 	
 	public static final String METRIC_NAME = Y_AXIS;
 	public static final String METRIC_ALIAS = "PropEmptyLabel";
@@ -48,6 +49,11 @@ public class ProportionEmptyLabelPredictionSets implements PlotMetric, CPClassif
 	@Override
 	public String getName() {
 		return METRIC_NAME;
+	}
+
+	@Override
+	public String getDescription(){
+		return METRIC_DESCRIPTION;
 	}
 
 	@Override
@@ -96,7 +102,10 @@ public class ProportionEmptyLabelPredictionSets implements PlotMetric, CPClassif
 		return true;
 	}
 	@Override
-	public EfficiencyPlot buildPlot() {
+	public EfficiencyPlot buildPlot() throws IllegalStateException {
+		if (getNumExamples() == 0){
+			throw new IllegalStateException("Cannot build plot without evaluation data");
+		}
 
 		List<Number> fraqEmptyLabel = new ArrayList<>();
 		List<Double> confs = new ArrayList<>(numExamples.keySet());

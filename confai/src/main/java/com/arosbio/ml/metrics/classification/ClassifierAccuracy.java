@@ -12,14 +12,13 @@ package com.arosbio.ml.metrics.classification;
 import java.util.List;
 import java.util.Map;
 
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
-public class ClassifierAccuracy implements PointClassifierMetric, SingleValuedMetric, Described {
+public class ClassifierAccuracy implements PointClassifierMetric, SingleValuedMetric {
 
 	public final static String METRIC_NAME = "Classifier Accuracy";
-	public final static String METRIC_DESCRIPTION = "Calculates the percentage of accurate predictions out of all predictions";
+	public final static String METRIC_DESCRIPTION = "Calculates the percentage of accurate predictions out of all predictions.";
 	
 	private int numCorrect = 0, numTotal=0;
 	

@@ -254,6 +254,10 @@ Proportion multi-label prediction sets builder
 			return xAndDiff.size();
 		}
 
+		public String getDescription(){
+			return "only for testing";
+		}
+
 		@Override
 		public void clear() {
 			xAndDiff.clear();

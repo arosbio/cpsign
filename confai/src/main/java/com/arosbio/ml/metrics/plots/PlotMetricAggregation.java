@@ -100,6 +100,11 @@ public class PlotMetricAggregation implements PlotMetric {
 		return type.getName();
 	}
 
+	@Override
+	public String getDescription() {
+		return type.getDescription();
+	}
+
 	public PlotMetric spawnNewMetricInstance() {
 		return type.clone();
 	}

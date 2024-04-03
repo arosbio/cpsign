@@ -27,6 +27,7 @@ public class ProportionMultiLabelPredictionSets implements PlotMetric, CPClassif
 	
 	public static final X_Axis X_AXIS = X_Axis.CONFIDENCE;
 	public static final String Y_AXIS = "Proportion multi-label prediction sets";
+	public final static String METRIC_DESCRIPTION = "The fraction of multi-label prediction sets (i.e. 2 or more labels) for each confidence level";
 	public static final String METRIC_NAME = Y_AXIS;
 	public static final String METRIC_ALIAS = "PropMultiLabel";
 
@@ -44,6 +45,11 @@ public class ProportionMultiLabelPredictionSets implements PlotMetric, CPClassif
 	@Override
 	public String getName() {
 		return METRIC_NAME;
+	}
+
+	@Override
+	public String getDescription(){
+		return METRIC_DESCRIPTION;
 	}
 
 	@Override

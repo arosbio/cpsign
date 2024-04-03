@@ -11,11 +11,10 @@ package com.arosbio.ml.metrics.regression;
 
 import java.util.Map;
 
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
-public class RMSE implements SingleValuedMetric, PointPredictionMetric, Described {
+public class RMSE implements SingleValuedMetric, PointPredictionMetric {
 
 	public static final String METRIC_NAME = "RMSE";
 	public static final String METRIC_DESCRIPTION = "Root-Mean-Square Error (RMSE). One of the most common metrics used for evaluating the performance of regression point predictions. Smaller values are preferable.";

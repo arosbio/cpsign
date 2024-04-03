@@ -34,6 +34,7 @@ public class VAPCalibration implements PlotMetric, VAPMetric {
 	private static final int MAX_NUM_BINS = 100;
 
 	public static final String METRIC_NAME = "VAP calibration plot";
+	public static final String METRIC_DESCRIPTION = "Model calibration for a probabilistic model, uses binning in order to calculate the frequency of classes for each bin of expected probability (i.e. predicted probability)";
 	public static final String NUM_EX_PER_BIN_LABEL = "Num examples in bin";
 
 	// Settings 
@@ -186,6 +187,11 @@ public class VAPCalibration implements PlotMetric, VAPMetric {
 		return false;
 	}
 
+	@Override
+	public String getDescription(){
+		return METRIC_DESCRIPTION;
+	}
+
 	public Set<String> getYLabels(){
 		return Set.of(Y_AXIS,NUM_EX_PER_BIN_LABEL);
 	}
@@ -230,7 +236,11 @@ public class VAPCalibration implements PlotMetric, VAPMetric {
 	}
 	
 	@Override
-	public CalibrationPlot buildPlot() throws IllegalArgumentException {
+	public CalibrationPlot buildPlot() throws IllegalArgumentException, IllegalStateException {
+		if (getNumExamples() <= 0){
+			throw new IllegalStateException("Cannot build plot without evaluation data");
+		}
+
 		List<Number> expected = new ArrayList<>(),
 				obs = new ArrayList<>(),
 				examples = new ArrayList<>();

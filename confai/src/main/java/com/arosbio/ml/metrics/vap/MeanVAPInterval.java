@@ -15,10 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.arosbio.commons.MathUtils;
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 
-public class MeanVAPInterval implements SingleValuedMetric, VAPMetric, Described {
+public class MeanVAPInterval implements SingleValuedMetric, VAPMetric {
 
 	public static final String METRIC_NAME = "Mean P0-P1 width";
 	public static final String METRIC_DESCRIPTION = "The Venn-ABERS algorithm produces two probabilities, and the P0-P1 width adds information about how much the prediction can be trusted. The smaller the difference between P0 and P1, the more stable the result is and the more the prediction can be trusted.";

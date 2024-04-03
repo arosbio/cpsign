@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -24,6 +25,7 @@ import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
 import com.arosbio.commons.MathUtils;
+import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.classification.BalancedAccuracy;
 import com.arosbio.ml.metrics.classification.BinaryBrierScore;
 import com.arosbio.ml.metrics.classification.BrierScore;
@@ -198,8 +200,8 @@ public class TestMetrics {
 
 			Assert.assertTrue(MetricFactory.getCPClassificationMetrics(true).size() > 5);
 			// System.err.println("Class:");
-			// for (Metric m : MetricFactory.getCPClassificationMetrics()) {
-			// System.err.println(m);
+			// for (Metric m : MetricFactory.getCPClassificationMetrics(true)) {
+			// 	System.err.println(m);
 			// }
 
 			Assert.assertTrue(MetricFactory.getAVAPClassificationMetrics().size() > 5);
@@ -1910,6 +1912,29 @@ public class TestMetrics {
 			Assert.assertEquals(evalPoints, b.getEvaluationPoints());
 		}
 
+	}
+
+	@Category(UnitTest.class)
+	public static class TestPlotMetrics {
+
+		@Test
+		public void testAllPlotsShouldThrowExceptionWhenEmpty(){
+			ServiceLoader<Metric> metricsLoader = ServiceLoader.load(Metric.class);
+			Iterator<Metric> iterator = metricsLoader.iterator();
+			while (iterator.hasNext()){
+				Metric m = iterator.next();
+				if (! (m instanceof PlotMetric)){
+					// Skip non-plot metrics
+					continue;
+				}
+				// the metric should be empty - check the buildPlot method
+				PlotMetric pm = (PlotMetric)m;
+				try {
+					pm.buildPlot();
+					Assert.fail("Metric " + pm + " did not throw an exception");
+				} catch (IllegalStateException e){}
+			}
+		}
 	}
 
 }

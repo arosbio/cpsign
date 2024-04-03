@@ -26,6 +26,7 @@ public class ProportionSingleLabelPredictionSets implements PlotMetric, CPClassi
 	
 	public static final X_Axis X_AXIS = X_Axis.CONFIDENCE;
 	public static final String Y_AXIS = "Proportion single-label prediction sets";
+	public final static String METRIC_DESCRIPTION = "The fraction of single-label prediction sets for each confidence level";
 	
 	public static final String METRIC_NAME = Y_AXIS;
 	public static final String METRIC_ALIAS = "PropSingleLabel";
@@ -52,6 +53,10 @@ public class ProportionSingleLabelPredictionSets implements PlotMetric, CPClassi
 		return Y_AXIS;
 	}
 
+	@Override
+	public String getDescription(){
+		return METRIC_DESCRIPTION;
+	}
 	
 
 	@Override

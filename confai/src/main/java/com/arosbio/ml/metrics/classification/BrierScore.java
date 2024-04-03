@@ -12,11 +12,10 @@ package com.arosbio.ml.metrics.classification;
 import java.util.Map;
 
 import com.arosbio.commons.mixins.Aliased;
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
-public class BrierScore implements SingleValuedMetric, ProbabilisticMetric, Aliased, Described {
+public class BrierScore implements SingleValuedMetric, ProbabilisticMetric, Aliased {
 
 	public final static String METRIC_NAME = "Brier Score";
 	public final static String METRIC_ALIAS = "BrierScore";

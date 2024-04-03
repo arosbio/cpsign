@@ -12,11 +12,10 @@ package com.arosbio.ml.metrics.classification;
 import java.util.Map;
 
 import com.arosbio.commons.mixins.Aliased;
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
-public class Recall implements SingleValuedMetric, PointClassifierMetric, LabelDependent, Described, Aliased { //ProbabilityMetric,  
+public class Recall implements SingleValuedMetric, PointClassifierMetric, LabelDependent, Aliased {
 
 	public static final String METRIC_NAME = "Recall";
 	public static final String[] METRIC_ALIASES = new String[] {"Sensitivity","TPR"};

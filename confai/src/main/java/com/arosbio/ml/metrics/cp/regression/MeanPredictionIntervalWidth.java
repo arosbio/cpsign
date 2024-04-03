@@ -30,6 +30,7 @@ public class MeanPredictionIntervalWidth implements CPRegressionMultiMetric {
 	public static final X_Axis X_AXIS = X_Axis.CONFIDENCE;
 	public static final String Y_AXIS = "Mean prediction interval width";
 	public static final String METRIC_ALIAS = "MeanPredWidth";
+	public final static String METRIC_DESCRIPTION = "The mean interval width computed for each confidence level";
 	public static final String METRIC_NAME = Y_AXIS;
 
 	private Map<Double, List<Double>> intervalWidths = new HashMap<>();
@@ -66,6 +67,11 @@ public class MeanPredictionIntervalWidth implements CPRegressionMultiMetric {
 	@Override
 	public String getName() {
 		return Y_AXIS;
+	}
+
+	@Override 
+	public String getDescription(){
+		return METRIC_DESCRIPTION;
 	}
 
 	@Override

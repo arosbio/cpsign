@@ -15,11 +15,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.arosbio.commons.MathUtils;
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
-public class BalancedAccuracy implements PointClassifierMetric, SingleValuedMetric, Described {
+public class BalancedAccuracy implements PointClassifierMetric, SingleValuedMetric {
 
 	public final static String METRIC_NAME = "Balanced Accuracy"; 
 	public final static String METRIC_DESCRIPTION = "Computes the accuracy of a standard classifier, balanced so that each class has the same impact on the score, thus works well for imbalanced data sets.";

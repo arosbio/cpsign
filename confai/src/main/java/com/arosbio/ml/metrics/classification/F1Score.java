@@ -13,18 +13,17 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.ClassificationUtils;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
-public class F1Score implements SingleValuedMetric, PointClassifierMetric, ProbabilisticMetric, Described {
+public class F1Score implements SingleValuedMetric, PointClassifierMetric, ProbabilisticMetric {
 
 	public static final String METRIC_NAME = "F1Score";
 	private static final String MICRO_SUFFIX = "_micro";
 	private static final String MACRO_SUFFIX = "_macro";
 	private static final String WEIGHTED_SUFFIX = "_weighted";
-	public static final String METRIC_DESCRIPTION = "F1 score, when used for optimization the Macro F1 score is used, but calculates both the micro and the weighted F1 score as well.";
+	public static final String METRIC_DESCRIPTION = "F1 score, when used for optimization the Macro F1 score is used, but this metric calculates both the macro, micro and weighted F1.";
 
 	private int numPredictionsDone=0;
 	boolean setupDone = false;

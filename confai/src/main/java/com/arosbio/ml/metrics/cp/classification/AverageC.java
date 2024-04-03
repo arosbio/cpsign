@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.arosbio.commons.mixins.Aliased;
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.cp.PValueTools;
 import com.arosbio.ml.metrics.plots.Plot;
 import com.arosbio.ml.metrics.plots.Plot2D;
@@ -20,13 +19,13 @@ import com.arosbio.ml.metrics.plots.Plot2D.X_Axis;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 import com.google.common.collect.ImmutableList;
 
-public class AverageC implements PlotMetric, CPClassifierMetric, Aliased, Described {
+public class AverageC implements PlotMetric, CPClassifierMetric, Aliased {
 
     private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(AverageC.class);
 
     public final static String METRIC_NAME = "AverageC";
     public final static String METRIC_ALIAS = "AvgC";
-    public final static String METRIC_DESCRIPTION = "The average number of classes in the prediction set for every confidence level";
+    public final static String METRIC_DESCRIPTION = "The average number of classes in the prediction set for each confidence level.";
 
 
     // private List<Double> confidenceLevels = new ArrayList<>();

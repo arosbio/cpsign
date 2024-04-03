@@ -12,16 +12,15 @@ package com.arosbio.ml.metrics.cp.classification;
 import java.util.Map;
 
 import com.arosbio.commons.mixins.Aliased;
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
 public class ObservedFuzziness implements SingleValuedMetric, 
-	CPClassifierMetric, Aliased, Described { 
+	CPClassifierMetric, Aliased { 
 
 	public static final String METRIC_NAME = "Observed Fuzziness";
 	public static final String METRIC_ALIAS = "OF";
-	public final static String METRIC_DESCRIPTION = "Observed Fuzziness (OF) is a confidence-independet metric for conformal classifiers. Smaller values are preferable.";
+	public final static String METRIC_DESCRIPTION = "Observed Fuzziness (OF) is a confidence-independent metric for conformal classifiers. Smaller values are preferable.";
 
 	private double fuzzinessSum = 0d;
 	private int numExamples = 0;

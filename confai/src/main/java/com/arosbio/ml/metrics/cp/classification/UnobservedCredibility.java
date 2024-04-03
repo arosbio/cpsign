@@ -13,11 +13,10 @@ import java.util.Collections;
 import java.util.Map;
 
 import com.arosbio.commons.mixins.Aliased;
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
-public class UnobservedCredibility implements SingleValuedMetric, CPClassifierMetric, Described, Aliased {
+public class UnobservedCredibility implements SingleValuedMetric, CPClassifierMetric, Aliased {
 
 	public static final String METRIC_NAME = "Unobserved Credibility";
 	public final static String METRIC_DESCRIPTION = "An unobserved metric that aims to evaluate the efficiency of a Conformal classifier without knowing the true label of the test examples. This metric computes the average of the largest p-value in the predictions. Larger values are preferable.";

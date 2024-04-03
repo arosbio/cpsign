@@ -11,11 +11,10 @@ package com.arosbio.ml.metrics.classification;
 
 import java.util.Map;
 
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
-public class NPV implements SingleValuedMetric, PointClassifierMetric, LabelDependent, Described { 
+public class NPV implements SingleValuedMetric, PointClassifierMetric, LabelDependent { 
 
 	public static final String METRIC_NAME = "NPV";
 	public static final String METRIC_DESCRIPTION = "Negative Predictive Value (NPV) - calculated as TN/(TN+FP), TN=True Negative, FP=False Positive. Note that the 'negative' label is set to be the first label given to the CLI, or the smallest numerical label when using the API.";

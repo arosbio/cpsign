@@ -13,11 +13,10 @@ import java.util.Map;
 
 import com.arosbio.commons.MathUtils;
 import com.arosbio.commons.mixins.Aliased;
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
-public class LogLoss implements SingleValuedMetric, ProbabilisticMetric, Aliased, Described {
+public class LogLoss implements SingleValuedMetric, ProbabilisticMetric, Aliased {
 
 	public static final String METRIC_NAME = "Log loss";
 	public static final String METRIC_ALIAS = "Cross-entropy";

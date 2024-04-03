@@ -14,11 +14,10 @@ import java.util.List;
 import java.util.Map;
 
 import com.arosbio.commons.MathUtils;
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
-public class R2 implements SingleValuedMetric, PointPredictionMetric, Described {
+public class R2 implements SingleValuedMetric, PointPredictionMetric {
 	
 	public static final String METRIC_NAME = "R^2";
 	public static final String METRIC_DESCRIPTION = "The coefficient of determination, where 1.0 is the perfect score and smaller values are worse.";

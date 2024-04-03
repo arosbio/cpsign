@@ -27,11 +27,10 @@ import com.google.common.collect.Range;
 public class MedianPredictionIntervalWidth implements CPRegressionMultiMetric {
 
 	
-
-
 	public static final X_Axis X_AXIS = X_Axis.CONFIDENCE;
 	public static final String Y_AXIS = "Efficiency (Median prediction interval width)";
 	public static final String METRIC_ALIAS = "MedianPredWidth";
+	public final static String METRIC_DESCRIPTION = "The median interval width computed for each confidence level";
 	public static final String METRIC_NAME = Y_AXIS;
 
 	private Map<Double, List<Double>> intervalWidths = new HashMap<>();
@@ -108,6 +107,11 @@ public class MedianPredictionIntervalWidth implements CPRegressionMultiMetric {
 
 	public String toString() {
 		return PlotMetric.toString(this);
+	}
+
+	@Override
+	public String getDescription() {
+		return METRIC_DESCRIPTION;
 	}
 
 	@Override

@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 
 import com.arosbio.commons.mixins.Aliased;
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
@@ -27,7 +26,7 @@ import com.google.common.collect.ImmutableMap;
  * @author staffan
  *
  */
-public class UnobservedConfidence implements SingleValuedMetric, CPClassifierMetric, Described, Aliased {
+public class UnobservedConfidence implements SingleValuedMetric, CPClassifierMetric, Aliased {
 	
 	public final static String METRIC_NAME = "Unobserved Confidence";
 	public final static String METRIC_DESCRIPTION = "An unobserved metric that aims to evaluate the efficiency of a Conformal classifier without knowing the true label of the test examples. This metric computes the average of 1 - 'the second largest p-value' in the predictions. Larger values are preferable.";

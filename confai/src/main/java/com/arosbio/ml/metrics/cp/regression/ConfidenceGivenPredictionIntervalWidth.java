@@ -16,12 +16,11 @@ import java.util.Map;
 
 import com.arosbio.commons.MathUtils;
 import com.arosbio.commons.mixins.Aliased;
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.Range;
 
 public class ConfidenceGivenPredictionIntervalWidth implements SingleValuedMetric, 
-	CIWidthBasedMetric, Described, Aliased {
+	CIWidthBasedMetric, Aliased {
 	
 	public final static String METRIC_NAME = "Confidence for given prediction interval width";
 	public final static String METRIC_DESCRIPTION = "Calculates the confidence in predictions, based on a given interval width. The metric should be maximized, but is very dependent on the particular data set and the range of the label space.";

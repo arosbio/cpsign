@@ -12,7 +12,6 @@ package com.arosbio.ml.metrics.classification;
 import java.util.Map;
 
 import com.arosbio.commons.mixins.Aliased;
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
@@ -22,7 +21,7 @@ import com.google.common.collect.ImmutableMap;
  * @author staffan
  * @see {@link BrierScore}
  */
-public class BinaryBrierScore implements SingleValuedMetric, ProbabilisticMetric, Aliased, Described {
+public class BinaryBrierScore implements SingleValuedMetric, ProbabilisticMetric, Aliased {
 
 	public final static String METRIC_NAME = "Binary Brier Score";
 	public final static String METRIC_ALIAS = "BrierScore";

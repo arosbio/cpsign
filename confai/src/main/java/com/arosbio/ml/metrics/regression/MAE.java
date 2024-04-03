@@ -12,7 +12,6 @@ package com.arosbio.ml.metrics.regression;
 import java.util.Map;
 
 import com.arosbio.commons.mixins.Aliased;
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
@@ -21,8 +20,7 @@ import com.google.common.collect.ImmutableMap;
  * @author staffan
  *
  */
-public class MAE implements SingleValuedMetric, PointPredictionMetric, 
-	Described, Aliased {
+public class MAE implements SingleValuedMetric, PointPredictionMetric, Aliased {
 
 	public static final String METRIC_NAME = "MAE";
 	public static final String METRIC_DESCRIPTION = "Mean Absolute Error (MAE). One of the most common metrics used for evaulating the performance of a regression point prediction. Smaller values are preferable.";

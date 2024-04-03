@@ -84,6 +84,10 @@ public class MetricAggregation<T extends SingleValuedMetric> implements SingleVa
 		return type.getName();
 	}
 
+	@Override
+	public String getDescription() {
+		return type.getDescription();
+	}
 	public List<Double> getScores(){
 		return new ArrayList<>(scores);
 	}

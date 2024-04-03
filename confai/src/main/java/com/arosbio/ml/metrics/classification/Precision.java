@@ -12,11 +12,10 @@ package com.arosbio.ml.metrics.classification;
 import java.util.Map;
 
 import com.arosbio.commons.mixins.Aliased;
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.google.common.collect.ImmutableMap;
 
-public class Precision implements SingleValuedMetric, PointClassifierMetric, LabelDependent, Described, Aliased { 
+public class Precision implements SingleValuedMetric, PointClassifierMetric, LabelDependent, Aliased { 
 
 	public static final String METRIC_NAME = "Precision";
 	public static final String METRIC_ALIAS = "PPV";

@@ -21,7 +21,6 @@ import org.apache.commons.lang3.tuple.Pair;
 
 import com.arosbio.commons.MathUtils;
 import com.arosbio.commons.mixins.Aliased;
-import com.arosbio.commons.mixins.Described;
 import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.metrics.plots.Plot;
 import com.arosbio.ml.metrics.plots.Plot2D;
@@ -29,7 +28,7 @@ import com.arosbio.ml.metrics.plots.Plot2D.X_Axis;
 import com.github.cliftonlabs.json_simple.JsonObject;
 import com.google.common.collect.ImmutableMap;
 
-public class ROC_AUC implements ScoringClassifierMetric, SingleValuedMetric, LabelDependent, Aliased, Described {
+public class ROC_AUC implements ScoringClassifierMetric, SingleValuedMetric, LabelDependent, Aliased {
 
 	public final static String METRIC_NAME = "ROC AUC";
 	public final static String METRIC_DESCRIPTION = "The area under curve (AUC) of the receiver operating characteristic (ROC). This metric can both calculate the area and give the full ROC curve as a plot. Only available for binary classification problems.";
