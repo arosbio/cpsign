@@ -52,11 +52,9 @@ import com.arosbio.ml.interfaces.Predictor;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.MetricFactory;
 import com.arosbio.ml.metrics.SingleValuedMetric;
-import com.arosbio.ml.metrics.cp.CalibrationPlot;
 import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
 import com.arosbio.ml.metrics.cp.ModelCalibration;
 import com.arosbio.ml.metrics.plots.PlotMetric;
-import com.arosbio.ml.metrics.plots.PlotMetricAggregation;
 import com.arosbio.ml.testing.KFoldCV;
 import com.arosbio.ml.testing.TestRunner;
 import com.arosbio.ml.testing.TestingStrategy;
@@ -812,7 +810,7 @@ public class GridSearch {
 
 			EvalStatus currentStatus = EvalStatus.IN_PROGRESS;
 			Map<String, Object> currentParams = new HashMap<>();
-			List<? extends Metric> paramResult = null;
+			List<Metric> paramResult = null;
 
 			while (paramsIterator.hasNext()) {
 				currentParams = paramsIterator.next();
@@ -860,7 +858,7 @@ public class GridSearch {
 								: GSResult.Builder.failed(currentParams, paramResult.get(0), currentStatus,
 										errorMsg));
 						if (paramResult.size() > 1) {
-							builder.secondary(getSecondaryMetrics(paramResult));
+							builder.secondary(paramResult.subList(1, paramResult.size()));
 						}
 						GSResult r = builder.build();
 						results.add(r);
@@ -1127,18 +1125,6 @@ public class GridSearch {
 		}
 	}
 
-	private List<Metric> getSecondaryMetrics(List<?> ms) {
-		if (ms == null || ms.size() < 2)
-			return new ArrayList<>();
-		List<Metric> s = new ArrayList<>();
-		for (int i = 1; i < ms.size(); i++) {
-			if (ms.get(i) instanceof SingleValuedMetric) {
-				s.add((SingleValuedMetric) ms.get(i));
-			}
-		}
-		return s;
-	}
-
 	private static double getScore(Metric m){
 		if (m instanceof SingleValuedMetric){
 			return ((SingleValuedMetric)m).getScore();
@@ -1200,14 +1186,7 @@ public class GridSearch {
 		for (Metric m : metrics) {
 			if (m instanceof ModelCalibration) {
 				return getAccuracy((ModelCalibration) m, confidence);
-			} else if (m instanceof PlotMetricAggregation) {
-				if ( ((PlotMetricAggregation)m).spawnNewMetricInstance() instanceof ModelCalibration){
-					// we want this one
-					CalibrationPlot calib = (CalibrationPlot) ((PlotMetricAggregation)m).buildPlot();
-					return calib.getAccuracy(confidence);
-				}
-			} 
-
+			}
 		}
 		LOGGER.debug("No ModelCalibration metric found - cannot calculate the accuracy for the current run");
 		return -1;
@@ -1237,8 +1216,8 @@ public class GridSearch {
 		if (clone instanceof PlotMetric){
 			List<Double> evalPoints = ((PlotMetric)clone).getEvaluationPoints();
 			if (evalPoints.size() != 1){
-				LOGGER.debug("Given optimization metric with faulty number of evaluation points ({}), should only be 1! Overwriting with evaluation point = {}", 
-					evalPoints.size(),confidence);
+				LOGGER.debug("Given optimization metric {} with faulty number of evaluation points ({}), should only be 1! Overwriting with evaluation point = {}", 
+					clone.getName(),evalPoints.size(),confidence);
 				((PlotMetric)clone).setEvaluationPoints(Arrays.asList(confidence));
 			}
 		}
@@ -1248,19 +1227,6 @@ public class GridSearch {
 				if (! m.getClass().equals(opt.getClass())) {
 					l.add(m);
 				}
-
-				// 	// If same class - check confidence is different - otherwise skip it
-				// 	if (m instanceof ConfidenceDependentMetric) {
-				// 		double c1 = ((ConfidenceDependentMetric) m).getConfidence();
-				// 		double c2 = ((ConfidenceDependentMetric) opt).getConfidence();
-
-				// 		if (!MathUtils.equals(c1, c2)) {
-				// 			l.add(m);
-				// 		}
-				// 	}
-				// } else {
-				// 	l.add(m);
-				// }
 			}
 		}
 		return l;

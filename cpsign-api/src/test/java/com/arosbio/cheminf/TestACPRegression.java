@@ -64,8 +64,7 @@ import com.arosbio.ml.cp.nonconf.regression.AbsDiffNCM;
 import com.arosbio.ml.cp.nonconf.regression.LogNormalizedNCM;
 import com.arosbio.ml.cp.nonconf.regression.NormalizedNCM;
 import com.arosbio.ml.metrics.Metric;
-import com.arosbio.ml.metrics.cp.regression.CPRegressionCalibrationPlotBuilder;
-import com.arosbio.ml.metrics.cp.regression.CPRegressionEfficiencyPlotBuilder;
+import com.arosbio.ml.metrics.cp.regression.MedianPredictionIntervalWidth;
 import com.arosbio.ml.metrics.regression.RMSE;
 import com.arosbio.ml.sampling.FoldedSampling;
 import com.arosbio.ml.sampling.RandomSampling;
@@ -494,8 +493,8 @@ public class TestACPRegression extends UnitTestBase {
 		System.out.println("Normal CV: " + normCV);
 
 		double rmse = getEfficiency(normCV, confidence, new RMSE()),
-				eff= getEfficiency(normCV, confidence, new CPRegressionEfficiencyPlotBuilder()), 
-				acc= getAccuracy(normCV, confidence, new CPRegressionCalibrationPlotBuilder());
+				eff= getEfficiency(normCV, confidence, new MedianPredictionIntervalWidth()), //new CPRegressionEfficiencyPlotBuilder()), 
+				acc= getAccuracy(normCV, confidence, new MedianPredictionIntervalWidth()); //new CPRegressionCalibrationPlotBuilder());
 
 		acpImpl.setICPImplementation(new ICPRegressor(new AbsDiffNCM(mlModel))); 
 		List<Metric> absDiffCV = cv.evaluate(acpReg.getDataset(),acpReg.getPredictor()); 
@@ -508,12 +507,12 @@ public class TestACPRegression extends UnitTestBase {
 
 		// Make sure CV results are similar
 		double rmseABS = getEfficiency(absDiffCV, confidence, new RMSE()),
-				effABS= getEfficiency(absDiffCV, confidence, new CPRegressionEfficiencyPlotBuilder()), 
-				accABS= getAccuracy(absDiffCV, confidence, new CPRegressionCalibrationPlotBuilder());
+				effABS= getEfficiency(absDiffCV, confidence, new MedianPredictionIntervalWidth()), // CPRegressionEfficiencyPlotBuilder()), 
+				accABS= getAccuracy(absDiffCV, confidence, new MedianPredictionIntervalWidth()); // new CPRegressionCalibrationPlotBuilder());
 		
 		double rmseLOG = getEfficiency(logNormCV, confidence, new RMSE()),
-				effLOG= getEfficiency(logNormCV, confidence, new CPRegressionEfficiencyPlotBuilder()), 
-				accLOG= getAccuracy(logNormCV, confidence, new CPRegressionCalibrationPlotBuilder());
+				effLOG= getEfficiency(logNormCV, confidence, new MedianPredictionIntervalWidth()), //new CPRegressionEfficiencyPlotBuilder()), 
+				accLOG= getAccuracy(logNormCV, confidence, new MedianPredictionIntervalWidth()); //new CPRegressionCalibrationPlotBuilder());
 		
 		Assert.assertEquals(rmse, rmseABS, 0.2);
 		Assert.assertEquals(eff, effABS, 1d);

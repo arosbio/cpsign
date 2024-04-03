@@ -137,13 +137,23 @@ public class TestGridSearchUnitTest extends TestEnv {
 				new RandomStratifiedSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
 
 		doTestGridSearchNCMEstimator(acp, new ProportionSingleLabelPredictionSets(Arrays.asList(CV_CONF)));
-
 	}
 
 
 	public void doTestGridSearchNCMEstimator(Predictor pred, Metric metric) throws Exception {
 
 		Dataset prob = TestDataLoader.getInstance().getDataset(pred instanceof ClassificationPredictor, true);
+
+		List<Metric> tmp = MetricFactory.getMetrics(pred, false);
+		List<Metric> secondaryMetrics = new ArrayList<>();
+		
+		// Add all metrics of not the same type as the optimization metric
+		for (Metric m : tmp){
+			if (m.getClass() != metric.getClass()){
+				secondaryMetrics.add(m);
+			}
+		}
+		int sizeIn = secondaryMetrics.size();
 
 		Map<String, List<?>> paramGrid = new HashMap<>();
 		List<Object> cost_values = Arrays.asList(10., 100.);
@@ -161,6 +171,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 					.tolerance(1)
 					.maxNumResults(-1)
 					.evaluationMetric(metric)
+					.secondaryMetrics(secondaryMetrics)
 					.loggingWriter(resultsWriter).build();
 
 			// This should be OK
@@ -171,7 +182,8 @@ public class TestGridSearchUnitTest extends TestEnv {
 			String gsLog = baos.toString();
 			System.out.println(gsLog);
 			System.out.printf("best_res: %s%n", res.getBestParameters().get(0).getParams());
-			
+			List<Metric> metricsOut = res.getBestParameters().get(0).getSecondaryMetrics();
+			Assert.assertEquals(secondaryMetrics + " vs: " + metricsOut, sizeIn, metricsOut.size());
 		}
 		if (PRINT_GS_RES) {
 			printLogs();
@@ -431,7 +443,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		grid.put("c", Arrays.asList(.5, 10., 100.));
 		GridSearch gs = new GridSearch.Builder()
 				.testStrategy(new KFoldCV(3))
-				.secondaryMetrics(MetricFactory.getMetrics(svr, false)) //MetricFactory.filterToSingleValuedMetrics(
+				.secondaryMetrics(MetricFactory.getMetrics(svr, false))
 				.loggingWriter(new SystemOutWriter()).build();
 
 		GridSearchResult res = gs.search(ds, svr, grid);
