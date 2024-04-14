@@ -1,5 +1,11 @@
 # Change log for CPSign versions
 
+### 2.0.0 RC8 :
+- Refactor parts of metrics, by removing the conformal metrics that only used a single confidence level - instead all confidence dependent metrics are now of PlotMetric type.
+- Refactor `GridSearch` so that it works for both `SingleValueMetric` and `PlotMetric` types (i.e. all metrics from CPSign).
+- Fix various minor bugs for secondary metrics based on the above two updates to make e.g. the `GridResultCSVWriter` output the correct values for secondary metrics. 
+- Replace some metrics and update names, e.g. new `ModelCalibration` (for conformal models) replacing `CPRegressionCalibrationPlotBuilder` and `CPClassificationCalibrationPlotBuilder`. Remove the "PlotBuilder" suffix for all plot metrics, to have class names similar or identical to the `getName()` of the given class.
+
 ### 2.0.0 RC7 :
 - Massive improvement in runtime for duplicate resolving transformations - e.g. new cpLogD with 2.2M compounds took 19.5 hours with old algorithm and now less than 1 second using the same machine. 
 - Update slf4j and logback deps due to dependabot alert for new vulnerability.
