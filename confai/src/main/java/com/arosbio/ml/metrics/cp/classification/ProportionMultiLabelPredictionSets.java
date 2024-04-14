@@ -104,11 +104,11 @@ public class ProportionMultiLabelPredictionSets implements PlotMetric, CPClassif
 	public void addPrediction(int trueLabel, Map<Integer, Double> pValues) {
 		for (double confidence : numExamples.keySet()) {
 			numExamples.put(confidence, numExamples.getOrDefault(confidence,0)+1);
-			if (PValueTools.getPredictionSetSize(pValues, confidence)>1)
+			if (PValueTools.getPredictionSetSize(pValues, confidence)>1){
 				numMultiLabelPredictions.put(
 						confidence, 
 						numMultiLabelPredictions.getOrDefault(confidence,0)+1);
-			
+			}
 		}
 	}
 

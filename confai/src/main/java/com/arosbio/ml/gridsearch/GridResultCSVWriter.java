@@ -29,6 +29,7 @@ import com.arosbio.ml.gridsearch.GridSearch.EvalStatus;
 import com.arosbio.ml.gridsearch.GridSearch.GSResult;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.SingleValuedMetric;
+import com.arosbio.ml.metrics.plots.Plot2D;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 
 public class GridResultCSVWriter implements AutoCloseable {
@@ -241,22 +242,45 @@ public class GridResultCSVWriter implements AutoCloseable {
 		printer.flush();
 	}
 
-	private static void addMappings(Map<String,Object> target, Metric m) {
-		if (m instanceof PlotMetric){
-			Map<String,List<Number>> plot = ((PlotMetric)m).buildPlot().getCurves();
-			Set<String> labels = ((PlotMetric)m).getYLabels();
-			for (String header : labels) {
-				if (plot.containsKey(header)){
-					target.put(header, plot.get(header).get(0)); // These PlotMetrics should only contain a single value (i.e. using a single confidence level)
-				}
-			}
-		} else if (m instanceof SingleValuedMetric){
+	private void addMappings(Map<String,Object> target, Metric m) {
+		if (m instanceof SingleValuedMetric){
 			for (Map.Entry<String,?> keyVal : ((SingleValuedMetric)m).asMap().entrySet()){
 				Object val = keyVal.getValue();
 				if (val instanceof Double || val instanceof Float) {
 					val = MathUtils.roundToNSignificantFigures(TypeUtils.asDouble(keyVal.getValue()),NUM_SIGNIFICANT_FIGURES);
 				}
 				target.put(keyVal.getKey(), val);
+			}
+		} else if (m instanceof PlotMetric){
+			Plot2D plot2D = ((PlotMetric)m).buildPlot();
+			Map<String,List<Number>> plot = plot2D.getCurves();
+			Set<String> labels = ((PlotMetric)m).getYLabels();
+			for (String header : labels) {
+				if (plot.containsKey(header)){
+					List<Number> values = plot.get(header);
+					if (values.size()==1){
+						// A single confidence level used
+						target.put(header, values.get(0));
+					} else if (settings.conf == null) {
+						// this means we're running Venn-ABERS for instance, no confidence set
+						// the plot metric does not have a "meaning" in that way
+						target.put(header, NO_RESULT_INDICATOR);
+					} else {
+						// Several conf-values (or could be ROC/Venn-ABERS stuff as well)
+						List<Number> evalPoints = plot2D.getXvalues();
+						for (int i=0;i<evalPoints.size();i++){
+							double p = evalPoints.get(i).doubleValue();
+							if (MathUtils.equals(p, settings.conf)){
+								// If the x-value matches the confidence, use it
+								target.put(header, values.get(i));
+								break;
+							}
+						}
+						if (!target.containsKey(header)){
+							target.put(header, NO_RESULT_INDICATOR); // if it was not found, cannot add it
+						}
+					}
+				}
 			}
 		}
 		

@@ -33,7 +33,6 @@ import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.GlobalConfig;
 import com.arosbio.commons.MathUtils;
 import com.arosbio.commons.config.Configurable.ConfigParameter;
-import com.arosbio.commons.logging.LoggerUtils;
 import com.arosbio.data.DataUtils;
 import com.arosbio.data.Dataset;
 import com.arosbio.data.Dataset.SubSet;
@@ -72,6 +71,7 @@ import com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictionSe
 import com.arosbio.ml.metrics.cp.classification.ProportionSingleLabelPredictionSets;
 import com.arosbio.ml.metrics.cp.regression.MeanPredictionIntervalWidth;
 import com.arosbio.ml.metrics.cp.regression.MedianPredictionIntervalWidth;
+import com.arosbio.ml.metrics.plots.PlotMetric;
 import com.arosbio.ml.metrics.regression.MAE;
 import com.arosbio.ml.sampling.RandomSampling;
 import com.arosbio.ml.sampling.RandomStratifiedSampling;
@@ -91,7 +91,7 @@ import com.google.common.collect.ImmutableMap;
 public class TestGridSearchUnitTest extends TestEnv {
 
 	private static final int NUM_CV_FOLDS = 10;
-	private final static double CV_CONF = .8;
+	private final static double CV_CONF = .85;
 	private static final boolean PRINT_GS_RES = false;
 
 	@Test
@@ -136,7 +136,9 @@ public class TestGridSearchUnitTest extends TestEnv {
 		ACPClassifier acp = new ACPClassifier(new NegativeDistanceToHyperplaneNCM(new LinearSVC()),
 				new RandomStratifiedSampling(DEFAULT_NUM_MODELS, DEFAULT_CALIBRATION_RATIO));
 
-		doTestGridSearchNCMEstimator(acp, new ProportionSingleLabelPredictionSets(Arrays.asList(CV_CONF)));
+		doTestGridSearchNCMEstimator(acp, new ProportionSingleLabelPredictionSets(Arrays.asList(.8)));
+		if (PRINT_GS_RES)
+			printLogs();
 	}
 
 
@@ -144,16 +146,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 
 		Dataset prob = TestDataLoader.getInstance().getDataset(pred instanceof ClassificationPredictor, true);
 
-		List<Metric> tmp = MetricFactory.getMetrics(pred, false);
-		List<Metric> secondaryMetrics = new ArrayList<>();
-		
-		// Add all metrics of not the same type as the optimization metric
-		for (Metric m : tmp){
-			if (m.getClass() != metric.getClass()){
-				secondaryMetrics.add(m);
-			}
-		}
-		int sizeIn = secondaryMetrics.size();
+		List<Metric> secondaryMetrics = MetricFactory.getMetrics(pred, false);
 
 		Map<String, List<?>> paramGrid = new HashMap<>();
 		List<Object> cost_values = Arrays.asList(10., 100.);
@@ -182,8 +175,25 @@ public class TestGridSearchUnitTest extends TestEnv {
 			String gsLog = baos.toString();
 			System.out.println(gsLog);
 			System.out.printf("best_res: %s%n", res.getBestParameters().get(0).getParams());
+			Metric optMetricOut = res.getBestParameters().get(0).getOptimizationMetric();
+			List<Double> optPointsOut = ((PlotMetric)optMetricOut).getEvaluationPoints();
+			Assert.assertEquals(1, optPointsOut.size());
+			Assert.assertEquals(CV_CONF, optPointsOut.get(0),0.0001);
+			
 			List<Metric> metricsOut = res.getBestParameters().get(0).getSecondaryMetrics();
-			Assert.assertEquals(secondaryMetrics + " vs: " + metricsOut, sizeIn, metricsOut.size());
+			Assert.assertEquals("should have the same number of output metrics",secondaryMetrics.size(), metricsOut.size());
+			for (int i=0;i<metricsOut.size(); i++){
+				Metric in = secondaryMetrics.get(i);
+				Metric out = metricsOut.get(i);
+				Assert.assertEquals(in.getName(), out.getName()); // Output can be wrapped in Metric-aggregation wrapper class, use the "base name"
+				if (in instanceof PlotMetric){
+					// Verify they keep their given evaluation points
+					List<Double> pointsIn = ((PlotMetric)in).getEvaluationPoints();
+					List<Double> pointsOut = ((PlotMetric)out).getEvaluationPoints();
+					Assert.assertEquals(pointsIn.size(), pointsOut.size(),1);
+				}
+				
+			}
 		}
 		if (PRINT_GS_RES) {
 			printLogs();
@@ -720,7 +730,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		grid.put("c", Arrays.asList(1, 2, .5, 10., 100.));
 		GridSearch gs = new GridSearch.Builder()
 				.testStrategy(new RandomSplit())
-				.secondaryMetrics(MetricFactory.getMetrics(acp, false)) //MetricFactory.filterToSingleValuedMetrics(
+				.secondaryMetrics(MetricFactory.getMetrics(acp, false))
 				.register(new MyProgressCallback())
 				.register(new MyEarlyStoppingMonitor(3))
 				.loggingWriter(new SystemOutWriter())
@@ -741,7 +751,7 @@ public class TestGridSearchUnitTest extends TestEnv {
 		grid.put("c", Arrays.asList(.5, 10., 100.));
 		GridSearch gs = new GridSearch.Builder()
 				.testStrategy(new RandomSplit())
-				.secondaryMetrics(MetricFactory.getMetrics(svc, false)) //MetricFactory.filterToSingleValuedMetrics(
+				.secondaryMetrics(MetricFactory.getMetrics(svc, false)) 
 				.register(new MyProgressCallback())
 				.register(new MyEarlyStoppingMonitor(2))
 				.loggingWriter(new SystemOutWriter())

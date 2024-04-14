@@ -114,7 +114,7 @@ public class ProportionEmptyLabelPredictionSets implements PlotMetric, CPClassif
 		for (Double conf : confs) {
 			fraqEmptyLabel.add(((double)numEmptyPredictions.getOrDefault(conf,0))/numExamples.get(conf));
 		}
-		
+				
 		Map<String,List<Number>> plotValues = new HashMap<>();
 		plotValues.put(X_AXIS.label(), new ArrayList<>(confs));
 		plotValues.put(Y_AXIS, fraqEmptyLabel);
@@ -130,11 +130,11 @@ public class ProportionEmptyLabelPredictionSets implements PlotMetric, CPClassif
 	public void addPrediction(int trueLabel, Map<Integer, Double> pValues) {
 		for (double confidence : numExamples.keySet()) {
 			numExamples.put(confidence, numExamples.getOrDefault(confidence,0)+1);
-			if (PValueTools.getPredictionSetSize(pValues, confidence)==0)
+			if (PValueTools.getPredictionSetSize(pValues, confidence)==0){
 				numEmptyPredictions.put(
 						confidence, 
 						numEmptyPredictions.getOrDefault(confidence,0)+1);
-			
+			}
 		}
 	}
 
@@ -143,7 +143,6 @@ public class ProportionEmptyLabelPredictionSets implements PlotMetric, CPClassif
 	public int getNumExamples() {
 		return (int) MathUtils.mean(numExamples.values());
 	}
-
 	
 
 	@Override

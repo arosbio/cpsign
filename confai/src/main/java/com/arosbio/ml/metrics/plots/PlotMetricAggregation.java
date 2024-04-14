@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -77,7 +78,12 @@ public class PlotMetricAggregation implements PlotMetric {
 	}
 
 	public Set<String> getYLabels(){
-		return type.getYLabels();
+		Set<String> yLabels = new LinkedHashSet<>();
+		for (String label : type.getYLabels()){
+			yLabels.add(label);
+			yLabels.add(label+STANDARD_DEVIATION_NAME_SUFFIX);
+		}
+		return yLabels;
 	}
 
 	public String getPrimaryMetricName(){
@@ -140,7 +146,7 @@ public class PlotMetricAggregation implements PlotMetric {
 
 		// Find all x-ticks and y-labels first
 		Set<Number> allTicks = new HashSet<>();
-		Set<String> yLabels = new HashSet<>();
+		Set<String> yLabels = new LinkedHashSet<>();
 		for (Plot2D p : results) {
 			allTicks.addAll(p.getXvalues());
 			yLabels.addAll(p.getYlabels());

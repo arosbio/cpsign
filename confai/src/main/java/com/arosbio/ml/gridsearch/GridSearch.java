@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.arosbio.commons.CollectionUtils;
 import com.arosbio.commons.LazyListsPermutationIterator;
+import com.arosbio.commons.MathUtils;
 import com.arosbio.commons.Stopwatch;
 import com.arosbio.commons.StringUtils;
 import com.arosbio.commons.config.Configurable;
@@ -52,7 +53,6 @@ import com.arosbio.ml.interfaces.Predictor;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.MetricFactory;
 import com.arosbio.ml.metrics.SingleValuedMetric;
-import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
 import com.arosbio.ml.metrics.cp.ModelCalibration;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 import com.arosbio.ml.testing.KFoldCV;
@@ -106,7 +106,7 @@ public class GridSearch {
 
 	private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(GridSearch.class);
 
-	public static final double MIN_ALLOWED_TOLERANCE = 0.0, MAX_ALLOWED_TOLERANCE = 1.0;
+	public static final double MIN_ALLOWED_TOLERANCE = 0.0, MAX_ALLOWED_TOLERANCE = 1.0, DEFAULT_CONFIDENCE = 0.8;
 
 	public static enum EvalStatus {
 		IN_PROGRESS("in progress"), VALID("valid"), NOT_VALID("not valid"), FAILED("failed");
@@ -354,7 +354,7 @@ public class GridSearch {
 		private Metric optMetric;
 		private List<Metric> secondaryMetrics;
 		private Writer customWriter;
-		private double confidence = ConfidenceDependentMetric.DEFAULT_CONFIDENCE;
+		private double confidence = DEFAULT_CONFIDENCE;
 		private double tolerance = 0.05;
 		private int maxNumGSresults = 10;
 		private ProgressCallback callback;
@@ -564,7 +564,7 @@ public class GridSearch {
 			if (!(optimalParams.get(p) instanceof Number))
 				continue;
 
-			Pair<List<Number>, List<Object>> lists = getOrderedListAndErronious(grid.get(p));
+			Pair<List<Number>, List<Object>> lists = getOrderedListAndErroneous(grid.get(p));
 
 			if (!lists.getRight().isEmpty()) {
 				// If the list contains invalid parameters - write that as error
@@ -596,7 +596,7 @@ public class GridSearch {
 		return (warningBuilder.length() > 0 ? warningBuilder.toString() : null);
 	}
 
-	protected static Pair<List<Number>, List<Object>> getOrderedListAndErronious(List<?> unchecked) {
+	protected static Pair<List<Number>, List<Object>> getOrderedListAndErroneous(List<?> unchecked) {
 		List<Number> valid = new ArrayList<>();
 		List<Object> illegal = new ArrayList<>();
 		for (Object o : unchecked) {
@@ -704,9 +704,9 @@ public class GridSearch {
 
 
 		/**
-		 * This method retuns the index (0-based) of the next parameter 
-		 * combination that will be returned. I.e. before the first has been retreieved this index is 0,
-		 * after the fist combation has been given by calling {@link #next()} it will return 1 and so on.
+		 * This method returns the index (0-based) of the next parameter 
+		 * combination that will be returned. I.e. before the first has been retrieved this index is 0,
+		 * after the fist combination has been given by calling {@link #next()} it will return 1 and so on.
 		 * @return the current (0-index based) index.
 		 */
 		public int getCurrentIndex(){
@@ -762,7 +762,7 @@ public class GridSearch {
 		boolean foundValidResult = false;
 
 		// Metrics
-		List<Metric> metrics = getAllMetrics(optimizationMetric);
+		List<Metric> metrics = getAllMetrics(optimizationMetric, predictor instanceof ConformalPredictor);
 
 		// Add accuracy-metric if CP & Add confidence as field
 		if (predictor instanceof ConformalPredictor) {
@@ -770,8 +770,6 @@ public class GridSearch {
 			boolean isPresent = false;
 			for (Metric m : metrics) {
 				if (m instanceof ModelCalibration) {
-					// override the confidence level if set
-					((ModelCalibration)m).setEvaluationPoints(Arrays.asList(confidence));
 					isPresent = true;
 					break;
 				}
@@ -967,7 +965,7 @@ public class GridSearch {
 				alg.getClass(), optimizationMetric.getName(), parameterGrid);
 
 		// Metrics
-		List<Metric> metrics = getAllMetrics(optimizationMetric);
+		List<Metric> metrics = getAllMetrics(optimizationMetric, false);
 		boolean foundValid = false;
 
 		verifyMetricsOfCorrectType(metrics, alg);
@@ -1125,6 +1123,11 @@ public class GridSearch {
 		}
 	}
 
+	/**
+	 * Gets the score of the optimization metric
+	 * @param m
+	 * @return
+	 */
 	private static double getScore(Metric m){
 		if (m instanceof SingleValuedMetric){
 			return ((SingleValuedMetric)m).getScore();
@@ -1204,28 +1207,65 @@ public class GridSearch {
 
 	
 	/**
-	 * Cleans all metrics and makes sure to only use the fixed confidence level (if applicable)
+	 * Clones the optimization metric and sets the desired confidence level in case needed, adds any secondary metrics 
+	 * so they are added in the evaluation and returned in the end
 	 * @param opt
 	 * @return
 	 */
-	private List<Metric> getAllMetrics(Metric opt) {
+	private List<Metric> getAllMetrics(Metric opt, boolean usesConfidence) {
 		List<Metric> l = new ArrayList<>();
-		l.add(opt);
-		// Check correct type of metric
+		
+		// Check the optimization metric
 		Metric clone = opt.clone();
-		if (clone instanceof PlotMetric){
-			List<Double> evalPoints = ((PlotMetric)clone).getEvaluationPoints();
-			if (evalPoints.size() != 1){
-				LOGGER.debug("Given optimization metric {} with faulty number of evaluation points ({}), should only be 1! Overwriting with evaluation point = {}", 
-					clone.getName(),evalPoints.size(),confidence);
-				((PlotMetric)clone).setEvaluationPoints(Arrays.asList(confidence));
-			}
+		if (clone instanceof SingleValuedMetric){
+			// Then we should be fine
+			l.add(clone);
+		} else if (clone instanceof PlotMetric){
+			// Overwrite to use the configured confidence level
+			((PlotMetric)clone).setEvaluationPoints(Arrays.asList(confidence));
+			l.add(clone);
+		} else {
+			LOGGER.debug("Was given and optimization metric of class {}, which does not implement either SingleValuedMetric nor PlotMetric - not supported", 
+				opt.getClass());
+			throw new IllegalArgumentException("Unsupported metric given for hyper-parameter tuning: "+opt.getName());
 		}
-		if (secondaryMetrics != null) {
+		
+		// SECONDARY METRICS
+		if (secondaryMetrics != null && ! secondaryMetrics.isEmpty()) {
+			// Verify type of the secondary metrics and them to the list
+			LOGGER.debug("Attempting to add {} secondary metrics", secondaryMetrics.size());
 			for (Metric m : secondaryMetrics) {
-				// only add if a new type of metric
-				if (! m.getClass().equals(opt.getClass())) {
+				if (m instanceof SingleValuedMetric){
 					l.add(m);
+				} else if (m instanceof PlotMetric){
+					if (!usesConfidence){
+						// If the metric does not rely on confidence, no alterations necessary
+						l.add(m);
+					} else {
+						// Verify the desired confidence is set also in the secondary plot metrics
+						List<Double> points = ((PlotMetric)m).getEvaluationPoints();
+						boolean foundConfidence = false;
+						for (double p : points){
+							if (MathUtils.equals(p, confidence)){
+								foundConfidence = true;
+								break;
+							}
+						}
+						if (foundConfidence){
+							l.add(m);
+						} else {
+							// we need to modify the evaluation points by adding the confidence level
+							List<Double> newPoints = new ArrayList<>(points);
+							newPoints.add(confidence);
+							Collections.sort(newPoints);
+							PlotMetric mClone = ((PlotMetric)m).clone();
+							mClone.setEvaluationPoints(newPoints);
+							l.add(mClone);
+						}
+
+					}
+				} else {
+					LOGGER.warn("Was given secondary metric {} which does not implement either SingleValuedMetric nor PlotMetric - not supported and will be removed from the list");
 				}
 			}
 		}

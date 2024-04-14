@@ -63,11 +63,11 @@ public class ProportionSingleLabelPredictionSets implements PlotMetric, CPClassi
 	public void addPrediction(int trueLabel, Map<Integer, Double> pValues) {
 		for (double confidence : numExamples.keySet()) {
 			numExamples.put(confidence, numExamples.getOrDefault(confidence,0)+1);
-			if (PValueTools.getPredictionSetSize(pValues, confidence)==1)
+			if (PValueTools.getPredictionSetSize(pValues, confidence)==1){
 				numSingleLabelPredictions.put(
 						confidence, 
 						numSingleLabelPredictions.getOrDefault(confidence,0)+1);
-			
+			}
 		}
 	}
 	
