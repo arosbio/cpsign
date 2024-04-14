@@ -119,7 +119,6 @@ import com.arosbio.ml.metrics.classification.LabelDependent;
 import com.arosbio.ml.metrics.classification.PointClassifierMetric;
 import com.arosbio.ml.metrics.classification.ROC_AUC;
 import com.arosbio.ml.metrics.cp.CPMetric;
-import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
 import com.arosbio.ml.metrics.cp.regression.CIWidthBasedMetric;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 import com.arosbio.ml.metrics.regression.PointPredictionMetric;
@@ -1332,26 +1331,13 @@ public class CLIProgramUtils {
 				metricsToRm.add(m); // Always remove the actual metric - clone and set widths if set
 				if (points.predictionWidths != null && !points.predictionWidths.isEmpty()) {
 					for (double w : points.predictionWidths) {
-						CIWidthBasedMetric clone = (CIWidthBasedMetric) met
-						.clone();
+						CIWidthBasedMetric clone = (CIWidthBasedMetric) met.clone();
 						clone.setCIWidth(w);
 						metricsToAdd.add(clone);
 					}
 				}
 			}
-				
-			// These are already present in the plot-versions of the same metrics TODO - this is OK right?
-			// if (m instanceof CPAccuracy || m instanceof ProportionMultiLabelPredictions
-			// || m instanceof ProportionSingleLabelPredictions || m instanceof MedianPredictionIntervalWidth
-			// || m instanceof MeanPredictionIntervalWidth) {
-			// 	metricsToRm.add(m);
-			// }
-			// Update single valued confidence-dependent metrics after the closest
-			// calibration-point
-			if (m instanceof ConfidenceDependentMetric) {
-				((ConfidenceDependentMetric) m).setConfidence(
-				getClosest(points.calibrationPoints, ((ConfidenceDependentMetric) m).getConfidence()));
-			}
+			
 		}
 		if (!metricsToRm.isEmpty()) {
 			metricBuilders.removeAll(metricsToRm);
@@ -1585,18 +1571,8 @@ public class CLIProgramUtils {
 			
 	}
 	
-	private static double getClosest(List<Double> valPoints, double original) {
-		double best = valPoints.get(0);
-		for (double c : valPoints) {
-			if (Math.abs(c - original) < Math.abs(best - original)) {
-				best = c;
-			}
-		}
-		return best;
-	}
-	
 	public static int getProgressInterval(int totalNum, int numProgress) {
-		// If we dont have numProgress in total
+		// If we don't have numProgress in total
 		if (totalNum < numProgress)
 		return 1;
 		

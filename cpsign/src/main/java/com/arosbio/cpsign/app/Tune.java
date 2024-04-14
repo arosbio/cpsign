@@ -82,12 +82,10 @@ import com.arosbio.ml.interfaces.ClassificationPredictor;
 import com.arosbio.ml.interfaces.Predictor;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.MetricFactory;
-import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.metrics.classification.BrierScore;
 import com.arosbio.ml.metrics.classification.LabelDependent;
 import com.arosbio.ml.metrics.classification.LogLoss;
 import com.arosbio.ml.metrics.classification.ROC_AUC;
-import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
 import com.arosbio.ml.metrics.cp.classification.AverageC;
 import com.arosbio.ml.metrics.cp.classification.ObservedFuzziness;
 import com.arosbio.ml.metrics.cp.classification.ProportionMultiLabelPredictionSets;
@@ -434,19 +432,8 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 		if (optMetric == null) {
 			// If not a integer-value, try assuming it's the name of a metric
 
-			Metric loaded = FuzzyServiceLoader.load(Metric.class, optimizationString);
+			optMetric = FuzzyServiceLoader.load(Metric.class, optimizationString);
 
-			if ( ! (loaded instanceof SingleValuedMetric)) {
-				LOGGER.debug("Got opt-metric of class {} which is not a single-valued-metric - failing!",loaded.getClass());
-				console.failWithArgError("Parameter "+CLIProgramUtils.getParamName(this, "optimizationString", "--opt-metric") + 
-						" must be a single valued metrics, please pick a different metric");
-			}
-
-			if (loaded instanceof ConfidenceDependentMetric) {
-				((ConfidenceDependentMetric) loaded).setConfidence(cvConfidence);
-			}
-
-			optMetric = loaded;
 		}
 
 		// Here check if tune allows given criteria for given predictor type
@@ -462,10 +449,10 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 			List<Metric> mets = CLIProgramUtils.setupMetrics(chemPred, fake);
 			secondaryMetrics = new ArrayList<>();
 			for (Metric m : mets) {
-				if (m instanceof SingleValuedMetric && optMetric.getClass() != m.getClass()) {
+				if (optMetric.getClass() != m.getClass()) {
 					if (m instanceof CIWidthBasedMetric)
 						continue; // Skip the width-based ones in tune
-					secondaryMetrics.add((SingleValuedMetric) m);
+					secondaryMetrics.add(m);
 				}
 			}
 		}

@@ -64,7 +64,7 @@ import com.arosbio.ml.gridsearch.GridSearch.ProgressInfo;
 import com.arosbio.ml.gridsearch.GridSearchResult;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.SingleValuedMetric;
-import com.arosbio.ml.metrics.cp.ConfidenceDependentMetric;
+import com.arosbio.ml.metrics.cp.CPMetric;
 import com.arosbio.ml.metrics.plots.PlotMetric;
 import com.github.cliftonlabs.json_simple.JsonArray;
 import com.github.cliftonlabs.json_simple.JsonObject;
@@ -416,7 +416,7 @@ public class TuneUtils {
 
 	private static boolean checkIfUsesConf(List<? extends Metric> mets) {
 		for (Metric m : mets) {
-			if (m instanceof ConfidenceDependentMetric) {
+			if (m instanceof CPMetric) {
 				return true;
 			}
 		}
@@ -632,7 +632,7 @@ public class TuneUtils {
 			return new ArrayList<>(MultiArgumentSplitter.split(input));
 		}
 
-		LOGGER.error("Config type of unregognizable type: {}, class: {}", p.getType(), p.getClass());
+		LOGGER.error("Config type of unrecognizable type: {}, class: {}", p.getType(), p.getClass());
 		throw new RuntimeException(String.format("Parameter %s of unrecognized/unsupported type", p.getNames().get(0)));
 	}
 
