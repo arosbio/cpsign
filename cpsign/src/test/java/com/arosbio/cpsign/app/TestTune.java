@@ -108,9 +108,6 @@ public class TestTune extends CLIBaseTest {
 				"-pt", ACP_CLASSIFICATION_TYPE,
 				"--cv-folds", "10",
 				"-ds", Classification.getAmes123().getAbsolutePath(),
-				//				"-td", SDFile.FORMAT_NAME, AmesBinaryClass.MINI_FILE_PATH,
-				//				"-pr", AmesBinaryClass.PROPERTY,
-				//				"-l", AmesBinaryClass.LABELS_STRING,
 				"--grid=gamma=b2:-1:-2:1.5",
 		}
 				);
@@ -236,7 +233,7 @@ public class TestTune extends CLIBaseTest {
 							"--generate@file", atFile.getAbsolutePath(), 
 							"--confidence", ""+conf,
 							"-v",
-//							"--calc-all"
+							"--calc-all"
 					}
 					);
 		} catch (Exception e) {

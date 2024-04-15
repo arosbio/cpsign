@@ -603,11 +603,10 @@ public class ExplainArgument implements Named {
 		}
 
 		private void appendInfo(StringBuilder sb) {
-			StringBuilder internal = new StringBuilder("There are several metrics that can be used to report statistics for a model, given a test set of withheld test examples. ")
+			StringBuilder internal = new StringBuilder("There are several metrics that can be used to report statistics for a model, given a test set of withheld test examples (created by e.g. k-fold CV). ")
 					.append("Different models can be evaluated using a sub-set of the metrics, which is handled out of the box with most of CPSign commands. ")
 					.append("However, certain tasks such as tuning parameters allows the user to set their desired metric, even though good defaults are given, ")
-					.append("and as such, we here provide the full list of available metrics - and which predictor models they can be used for. ")
-					.append("Note, however, that there are more metrics - these are the only ones that produce single values that allows for easy comparison between models.");
+					.append("and as such, we here provide the full list of available metrics - and which predictor models they can be used for. ");
 
 			sb.append(WordUtils.wrap(internal.toString(), CONSOLE_WIDTH));
 			sb.append("%n");

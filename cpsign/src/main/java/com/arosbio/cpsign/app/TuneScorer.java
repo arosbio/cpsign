@@ -40,15 +40,15 @@ import com.arosbio.cpsign.app.params.mixins.TestingStrategyMixin;
 import com.arosbio.cpsign.app.params.mixins.TransformerMixin;
 import com.arosbio.cpsign.app.params.mixins.TuneGridMixin;
 import com.arosbio.cpsign.app.utils.CLIConsole;
+import com.arosbio.cpsign.app.utils.CLIConsole.PrintMode;
 import com.arosbio.cpsign.app.utils.CLIProgramUtils;
 import com.arosbio.cpsign.app.utils.CLIProgressBar;
+import com.arosbio.cpsign.app.utils.CLIProgressBar.SupportsProgressBar;
 import com.arosbio.cpsign.app.utils.NullProgress;
 import com.arosbio.cpsign.app.utils.ParameterUtils;
+import com.arosbio.cpsign.app.utils.ParameterUtils.ArgumentType;
 import com.arosbio.cpsign.app.utils.ProgramTimer;
 import com.arosbio.cpsign.app.utils.TuneUtils;
-import com.arosbio.cpsign.app.utils.CLIConsole.PrintMode;
-import com.arosbio.cpsign.app.utils.CLIProgressBar.SupportsProgressBar;
-import com.arosbio.cpsign.app.utils.ParameterUtils.ArgumentType;
 import com.arosbio.cpsign.out.OutputNamingSettings;
 import com.arosbio.cpsign.out.OutputNamingSettings.PB;
 import com.arosbio.cpsign.out.OutputNamingSettings.ProgressInfoTexts;
@@ -62,7 +62,6 @@ import com.arosbio.ml.gridsearch.GridSearch;
 import com.arosbio.ml.gridsearch.GridSearchResult;
 import com.arosbio.ml.metrics.Metric;
 import com.arosbio.ml.metrics.MetricFactory;
-import com.arosbio.ml.metrics.SingleValuedMetric;
 import com.arosbio.ml.metrics.classification.BalancedAccuracy;
 import com.arosbio.ml.metrics.classification.LabelDependent;
 import com.arosbio.ml.metrics.regression.RMSE;
@@ -280,28 +279,21 @@ public class TuneScorer implements RunnableCmd, SupportsProgressBar {
 		} else {
 			LOGGER.debug("Given an explicit metric: {}",inputOptMetric.getName());
 			
-			// TODO - remove?
-			// if (! (inputOptMetric instanceof Metric)) {
-			// 	LOGGER.debug("Got opt-metric of class {} which is not a single-valued-metric - failing!",inputOptMetric.getClass().getName());
-			// 	console.failWithArgError("Parameter "+CLIProgramUtils.getParamName(this, "inputOptMetric", "--opt-metric") + 
-			// 			" must be a single valued metric, please pick a different metric");
-			// } else {
-				// Correct 'base type' 
-				optMetric = (SingleValuedMetric) inputOptMetric;
+		
+			optMetric = inputOptMetric;
 
-				if (!TestRunner.metricSupportedByAlgorithm(optMetric, predictor)) {
-					LOGGER.debug("Metric not supported by ml algorithm {} vs {}",optMetric.getClass().getName(), predictor.getClass().getName());
+			if (!TestRunner.metricSupportedByAlgorithm(optMetric, predictor)) {
+				LOGGER.debug("Metric not supported by ml algorithm {} vs {}",optMetric.getClass().getName(), predictor.getClass().getName());
 
-					// Generate error message with allowed metrics
-					List<SingleValuedMetric> allowed = MetricFactory.filterToSingleValuedMetrics(MetricFactory.getMetrics(predictor, true));
-					StringBuilder sb = new StringBuilder("Invalid metric (").append(optMetric.getName()).append(") specified for algorithm ").append(predictor.getName()).append(", allowed values:%n");
+				// Generate error message with allowed metrics
+				List<Metric> allowed = MetricFactory.getMetrics(predictor, true);
+				StringBuilder sb = new StringBuilder("Invalid metric (").append(optMetric.getName()).append(") specified for algorithm ").append(predictor.getName()).append(", allowed values:%n");
 
-					for (SingleValuedMetric m : allowed) {
-						sb.append('\t').append(m.getName()).append("%n");
-					}
-					console.failWithArgError(sb.toString());
+				for (Metric m : allowed) {
+					sb.append('\t').append(m.getName()).append("%n");
 				}
-			// }
+				console.failWithArgError(sb.toString());
+			}
 		}
 		LOGGER.debug("Using {} as optimization metric",optMetric.getName());
 
@@ -311,8 +303,6 @@ public class TuneScorer implements RunnableCmd, SupportsProgressBar {
 			// Setup secondary metrics
 			secondaryMetrics = new ArrayList<>();
 			boolean isMulticlass = DataUtils.checkDataType(data) == DataType.MULTI_CLASS;
-			// Only use SingleValuedMetrics
-			// MetricFactory.filterToSingleValuedMetrics(
 			List<Metric> mets = MetricFactory.getMetrics(predictor, isMulticlass);
 			// Remove the optimization metric - so no duplicates
 			for (Metric m : mets) {
@@ -430,8 +420,6 @@ public class TuneScorer implements RunnableCmd, SupportsProgressBar {
 	private void writeAtParameterFile(GridSearchResult results) {
 
 		// The predictor should have all the optimal parameters set after the GridSearch finalized
-
-
 		try (
 				Writer fos = new FileWriterWithEncoding(generateAtFile, IOSettings.CHARSET);
 				PrintWriter pw = new PrintWriter(fos);
@@ -453,11 +441,7 @@ public class TuneScorer implements RunnableCmd, SupportsProgressBar {
 	}
 
 	private static void compileBestParamsAtFile(MLAlgorithm pred, PrintWriter writer) {
-
 		Tune.addScoring(pred, "--scorer", writer);
-
 	}
-
-
 
 }

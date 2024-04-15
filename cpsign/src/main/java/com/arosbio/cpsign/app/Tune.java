@@ -160,8 +160,8 @@ public class Tune implements RunnableCmd, SupportsProgressBar {
 	// Grid search params
 	@Option(names = {"-op", "--opt-metric"}, 
 			description = 
-			"The metric that should be used for optimizing the parameters. Some metrics are confidence-dependent and are marked with an '*'. Apart from these 'default' ones, all 'single-valued-metrics' from "+
-					ParameterUtils.RUN_EXPLAIN_ANSI_ON+"explain metrics"+ParameterUtils.ANSI_OFF+" can be used as well. Options:%n"+
+			"The metric that should be used for optimizing the parameters. Some metrics are confidence-dependent and are marked with an '*'. Apart from these default ones, additional ones can be listed by running "+
+					ParameterUtils.RUN_EXPLAIN_ANSI_ON+"explain metrics"+ParameterUtils.ANSI_OFF+" and can be used as well. Options:%n"+
 					// ACP Regression
 					"CP Regression:%n" +
 					ParameterUtils.MULTIPLE_OPTIONS_INDENTATION_C_BEFORE + "(1) "+MedianPredictionIntervalWidth.METRIC_ALIAS + "%n"+
