@@ -7,6 +7,7 @@ with the signatures molecular descriptor and SVM. <br>
 ## Table of Contents <!-- omit in toc -->
 - [Introduction](#introduction)
     - [Further reading](#further-reading)
+- [How to cite](#how-to-cite)
 - [License](#license)
 - [How to run CPSign](#how-to-run-cpsign)
     - [CLI/terminal](#running-from-cli)
@@ -30,7 +31,7 @@ CPSign is a machine learning and cheminformatics software package written purely
 - CPSign is now available as a preprint at bioRxiv: [CPSign - Conformal Prediction for Cheminformatics Modeling](https://www.biorxiv.org/content/10.1101/2023.11.21.568108v1). 
 - CPSign has a [Readthedocs](https://cpsign.readthedocs.io/) web page with user documentation.
 
-## Cite
+## How to cite
 If you use CPSign in a scientific publication, we appreciate citations made to our pre-print paper:
 
 Arvidsson McShane, S., Norinder, U., Alvarsson, J., Ahlberg, E., Carlsson, L., & Spjuth, O. (2023). [CPSign-Conformal Prediction for Cheminformatics Modeling](https://www.biorxiv.org/content/10.1101/2023.11.21.568108v1.abstract). *bioRxiv*, 2023-11.
@@ -103,15 +104,15 @@ A changelog can now be found in [changelog](changelog.md).
 
 ## Extension packages
 
-### Plot_utils
-In order to visualize the predictions and predictive performance from the conformal predictors we have created a python library for this task, located at [GitHub Plot_utils](https://github.com/pharmbio/plot_utils), building on top of the Matplotlib and numpy libraries. This way visualizations can be customized easily and in a high abstraction level. We have also created functions for loading results from CPSign to make it easy for users to evaluate their predictive models. Example figures generated using Plot_utils for displaying the prediction intervals at a single confidence level;
+### Conformal-eval
+In order to visualize the predictions and predictive performance from the conformal predictors we have created a python library for this task, located at [GitHub Conformal-eval](https://github.com/pharmbio/conformal-eval), building on top of the Matplotlib and numpy libraries. This way visualizations can be customized easily and in a high abstraction level. We have also created functions for loading results from CPSign to make it easy for users to evaluate their predictive models. Example figures generated using Conformal-eval for displaying the prediction intervals at a single confidence level;
 
 ![Regression prediction intervals](figures/reg_intervals.png)
 
 and the distribution of prediction sets depending on the confidence level, which allows the user to pick an appropriate confidence level as well as assessing the predictive efficiency of a given model.
 ![Classification label distribution](figures/clf_label_distribution.png)
 
-More examples of figures and metrics that can be calculated are shown in the [jupyter notebooks](https://github.com/pharmbio/plot_utils/tree/master/python), which also detail how to work with results from CPSign. 
+More examples of figures and metrics that can be calculated are shown in the [jupyter notebooks examples](https://github.com/pharmbio/conformal-eval/tree/master/examples), which also detail how to work with results from CPSign. 
 
 ### Micro services
 CPSign predictive models can be deployed as micro services using the [Predict services extension](https://github.com/arosbio/cpsign_predict_services), which exposes a REST interface for each deployed model. The servers can optionally be extended with a drawing interface:
