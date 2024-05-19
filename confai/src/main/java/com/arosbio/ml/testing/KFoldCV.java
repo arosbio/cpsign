@@ -26,7 +26,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Range;
 
 /**
- * k-fold cross-validation 
+ * <i>k</i>-fold cross-validation (CV)
  * 
  * @author staffan
  * @author Aros bio

@@ -26,6 +26,13 @@ import com.arosbio.ml.testing.utils.TestStrategiesUtils;
 import com.arosbio.ml.testing.utils.TestTrainWrapper;
 import com.google.common.collect.Range;
 
+/**
+ * Random test-train split. Can use either a fixed number of test-instances or a ratio 
+ * based on the total number of instances. The single test-train split can be repeated
+ * several times and optionally shuffle the records (done by default).
+ * 
+ * @author staffan
+ */
 public class RandomSplit implements TestingStrategy, Aliased {
 
 	public static final String NAME = "RandomSplit";

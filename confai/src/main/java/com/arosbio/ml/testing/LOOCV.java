@@ -27,6 +27,11 @@ import com.arosbio.data.splitting.LOOSplitter;
 import com.arosbio.ml.testing.utils.TestStrategiesUtils;
 import com.arosbio.ml.testing.utils.TestTrainWrapper;
 
+/**
+ * Leave-one-out cross-validation 
+ * 
+ * @author staffan
+ */
 public class LOOCV implements TestingStrategy, Aliased {
 	
 	public static final String NAME = "LOO_CV";
