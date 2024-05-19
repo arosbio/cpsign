@@ -485,14 +485,16 @@ public class ExplainArgument implements Named {
 					.append(CODE_EXAMPLE_LINE_START).append("--calibration-data    Mark compounds to calibration set%n%n")
 					.append("The compounds given to these flags will always be included in the specified training set, ")
 					.append("i.e. if specifying a set of compounds to --calibration-data, these compounds will always ")
-					.append("be added to calibration set (in all splits/models).");
+					.append("be added to calibration set (in all splits/models). These parameters are given using the same syntax as the standard --train-data parameter (see ")
+					.append(addRunCMDStyle("explain chem-formats"))
+					.append(" for more information).");
 			sb.append(com.arosbio.commons.StringUtils.wrap(toWrap.toString(), CONSOLE_WIDTH));
 
 			// end main text
 			sb.append("%n%n");
 
 			// Replace parts that should have other ansi-style
-			String text = addParamStyles(sb.toString(), "--model-data","--calibration-data");
+			String text = addParamStyles(sb.toString(), "--model-data","--calibration-data","--train-data");
 
 			CLIConsole.getInstance().println(text, PrintMode.NORMAL);
 
@@ -1528,7 +1530,7 @@ public class ExplainArgument implements Named {
 			StringBuilder text = new StringBuilder();
 			addHeading(text, SUB_NAME);
 			
-			StringBuilder toWrap = new StringBuilder("Apply one or several filters based on chemical structure, i.e. to filter out too small or too large molecules based on their Heavy Atom Count (HAC) or molecular mass. ")
+			StringBuilder toWrap = new StringBuilder("Apply one or several filters based on chemical structure, i.e., to filter out too small or large molecules based on their Heavy Atom Count (HAC) or molecular mass. ")
 				.append("One example is the HAC filter, where sub-parameters are set using the :-syntax, e.g.;");
 			text.append(
 				com.arosbio.commons.StringUtils.wrap(toWrap.toString(), CONSOLE_WIDTH))

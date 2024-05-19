@@ -9,7 +9,7 @@ public class EarlyTerminationMixin {
 
     @Option(names= {"--early-termination","--early-termination-after"}, 
             description = "Early termination stops parsing data once passing this number of failed records and fails execution of the program. "
-                + "Specifying a value less than 0 means there is no early termination and parsing will continue until input file is read completely.%n"
+                + "Specifying a value less than 0 means there is no early termination and parsing will continue until the input file is read completely.%n"
                 + ParameterUtils.DEFAULT_VALUE_LINE,
             paramLabel = ArgumentType.INTEGER,
             defaultValue = "-1")

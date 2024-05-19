@@ -1,5 +1,8 @@
 # Change log for CPSign versions
 
+### 2.0.0 - first stable release! 
+- Minor text-updates in README, explain texts and javadoc. No new functionality or changes.
+
 ### 2.0.0 RC8 :
 - Refactor parts of metrics, by removing the conformal metrics that only used a single confidence level - instead all confidence dependent metrics are now of PlotMetric type.
 - Refactor `GridSearch` so that it works for both `SingleValueMetric` and `PlotMetric` types (i.e. all metrics from CPSign).

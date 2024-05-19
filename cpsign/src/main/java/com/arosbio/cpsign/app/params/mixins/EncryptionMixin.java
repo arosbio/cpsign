@@ -52,7 +52,7 @@ public class EncryptionMixin {
 		}
 
 		@Option(names = {"--key"},
-			description = "Encryption key (as text) to use for encrypting/decrypting output/input",
+			description = "Encryption key (as text) to use for decrypting/encrypting input/output",
 			paramLabel = ArgumentType.TEXT
 		)
 		public void setEncryptKey(String key){
@@ -70,7 +70,7 @@ public class EncryptionMixin {
 
 
 		@Option(names = {"--key-file"},
-				description = "Encryption key (from file) to use for encrypting/decrypting output/input",
+				description = "Encryption key (from file) to use for decrypting/encrypting input/output",
 				paramLabel = ArgumentType.URI_OR_PATH,
 				converter = URIConverter.class
 		)
