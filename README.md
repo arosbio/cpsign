@@ -28,7 +28,7 @@ with the signatures molecular descriptor and SVM. <br>
 CPSign is a machine learning and cheminformatics software package written purely in Java, leveraging the popular [LIBSVM](https://github.com/cjlin1/libsvm) and [LIBLINEAR](https://github.com/bwaldvogel/liblinear-java) packages for machine learning and the [Chemistry Development Kit (CDK)](https://cdk.github.io/) for handling chemistry. CPSign allows directly reading in molecular data in CSV format (requiring SMILES for molecular structure) or SDF (v2000 and v3000), computing descriptors and building machine learning models. The generated model files contain all information for later predicting new compounds without having to manually compute descriptors and apply data transformations. CPSign implements the inductive [Conformal Prediction](http://www.alrw.net/) algorithms ICP and ACP (or their more recent name; Split Conformal Predictors) for both classification and regression problems, as well as transductive conformal prediction (TCP) and [Cross Venn-ABERS](http://www.alrw.net/articles/13.pdf) probabilistic prediction for binary classification problems. Being written in Java makes it platform-independent, and the LIBLINEAR/LIBSVM methods runs on CPU which makes it easy to run without requiring any special hardware. 
 
 ### Further reading
-- CPSign is now available as a preprint at bioRxiv: [CPSign - Conformal Prediction for Cheminformatics Modeling](https://www.biorxiv.org/content/10.1101/2023.11.21.568108v1). 
+- CPSign scientific manuscript in Journal of Cheminformatics: [CPSign-Conformal Prediction for Cheminformatics Modeling](https://doi.org/10.1186/s13321-024-00870-9). 
 - CPSign has a [Readthedocs](https://cpsign.readthedocs.io/) web page with user documentation.
 
 ## How to cite
