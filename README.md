@@ -2,7 +2,7 @@
 
 Conformal Prediction <br>
 with the signatures molecular descriptor and SVM. <br>
-(C) Copyright 2022, Aros Bio AB, [arosbio.com](https://arosbio.com)
+(C) Copyright 2024, Aros Bio AB, [arosbio.com](https://arosbio.com)
 
 ## Table of Contents <!-- omit in toc -->
 - [Introduction](#introduction)
@@ -32,21 +32,23 @@ CPSign is a machine learning and cheminformatics software package written purely
 - CPSign has a [Readthedocs](https://cpsign.readthedocs.io/) web page with user documentation.
 
 ## How to cite
-If you use CPSign in a scientific publication, we appreciate citations made to our pre-print paper:
+If you use CPSign in a scientific publication, we appreciate citations made to our paper:
 
-Arvidsson McShane, S., Norinder, U., Alvarsson, J., Ahlberg, E., Carlsson, L., & Spjuth, O. (2023). [CPSign-Conformal Prediction for Cheminformatics Modeling](https://www.biorxiv.org/content/10.1101/2023.11.21.568108v1.abstract). *bioRxiv*, 2023-11.
+Arvidsson McShane, S., Norinder, U., Alvarsson, J., Ahlberg, E., Carlsson, L., & Spjuth, O. (2024). [CPSign-Conformal Prediction for Cheminformatics Modeling](https://doi.org/10.1186/s13321-024-00870-9). J Cheminform 16, 75 (2024). https://doi.org/10.1186/s13321-024-00870-9
 
 **BibTex entry:**
 ```bibtex
-@article{mcshane2023cpsign,
-  title={CPSign-Conformal Prediction for Cheminformatics Modeling},
-  author={Arvidsson McShane, Staffan and Norinder, Ulf and Alvarsson, Jonathan and Ahlberg, Ernst and Carlsson, Lars and Spjuth, Ola},
-  journal={bioRxiv},
-  pages={2023--11},
-  year={2023},
-  publisher={Cold Spring Harbor Laboratory}
-}
+@article{Arvidsson-McShane:2024aa,
+	author = {Arvidsson McShane, Staffan and Norinder, Ulf and Alvarsson, Jonathan and Ahlberg, Ernst and Carlsson, Lars and Spjuth, Ola},
+	title = {CPSign: conformal prediction for cheminformatics modeling},
+	journal = {J Cheminform},
+	month = {Jun},
+	number = {1},
+	pages = {75},
+	volume = {16},
+	year = {2024}}
 ```
+
 
 ## License
 CPSign is dual licensed, where the user can choose between the [GNU General Public License](http://www.gnu.org/licenses/gpl-3.0.html) with additional terms (which can be found at the [Aros Bio website](https://arosbio.com/cpsign/license)) or a [commercial license](license/META-INF/comm-license.txt). See further details at the [Aros Bio website](https://arosbio.com/cpsign/license).
