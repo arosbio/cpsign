@@ -2,7 +2,7 @@
 
 Conformal Prediction <br>
 with the signatures molecular descriptor and SVM. <br>
-(C) Copyright 2024, Aros Bio AB, [arosbio.com](https://arosbio.com)
+(C) Copyright 2026, Aros Bio AB, [arosbio.com](https://arosbio.com)
 
 ## Table of Contents <!-- omit in toc -->
 - [Introduction](#introduction)
